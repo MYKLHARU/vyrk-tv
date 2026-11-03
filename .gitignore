@@ -1,0 +1,15 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.kotlin/
+/ci/out/
+/ci/media/
+*.hprof
+# Real signing material never belongs in the repo. The committed debug key lives in ci/debug-signing/.
+*.jks
+release.keystore
+keystore.properties
