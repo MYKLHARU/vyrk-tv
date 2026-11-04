@@ -60,6 +60,19 @@ class BrowseModel(
     var built by mutableStateOf(false)
         private set
 
+    /**
+     * Featured titles, locked once chosen so the hero stays put across overlays, playback and tab
+     * switches. Replaced only when none of the locked titles are offered any more.
+     */
+    var heroItems by mutableStateOf<List<com.vyrk.core.addon.MetaPreview>>(emptyList())
+        private set
+    var heroIndex by androidx.compose.runtime.mutableIntStateOf(0)
+    fun lockHero(candidates: List<com.vyrk.core.addon.MetaPreview>) {
+        if (candidates.isEmpty()) return
+        val ids = candidates.mapTo(HashSet()) { it.id }
+        if (heroItems.isEmpty() || heroItems.none { it.id in ids }) { heroItems = candidates; heroIndex = 0 }
+    }
+
     fun rebuild(addons: List<Descriptor>, hiddenRows: Set<String>) {
         val (top, rest) = CatalogRules.homeRows(addons)
         hasTop10Catalogs = top.isNotEmpty()

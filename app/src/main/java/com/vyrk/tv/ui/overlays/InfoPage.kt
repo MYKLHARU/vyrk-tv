@@ -175,7 +175,7 @@ fun InfoPage(o: Overlay.Info) {
                         Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 28.dp)) {
                             Text(typeLabel(meta.type), style = Vyrk.type.labelM, color = c.accent)
                             Spacer(Modifier.height(6.dp))
-                            TitleLogo(meta.copy(logo = full?.logo ?: meta.logo), 320.dp, 86.dp)
+                            TitleLogo(meta.copy(logo = full?.logo ?: meta.logo), 440.dp, 130.dp)
                         }
                     }
                     Column(Modifier.padding(horizontal = 28.dp, vertical = 14.dp)) {

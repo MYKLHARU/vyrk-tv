@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -86,10 +87,12 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     }
 
     // Hero: featured titles from the first catalogue that has artwork.
-    val heroItems by remember(model.rows) {
+    val heroCandidates by remember(model.rows) {
         derivedStateOf { model.rows.firstOrNull { r -> r.items.any { it.background != null } }?.items?.filter { it.background != null }?.take(6).orEmpty() }
     }
-    var heroIndex by remember { mutableIntStateOf(0) }
+    LaunchedEffect(heroCandidates.map { it.id }) { model.lockHero(heroCandidates) }
+    val heroItems = model.heroItems.ifEmpty { heroCandidates }
+    val heroIndex = model.heroIndex.coerceIn(0, (heroItems.size - 1).coerceAtLeast(0))
     var heroFocused by remember { mutableStateOf(false) }
     var focusedPoster by remember { mutableStateOf<MetaPreview?>(null) }
     var focusedRowKey by remember { mutableStateOf<String?>(null) }
@@ -106,7 +109,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
             while (true) {
                 delay(9_000)
                 val atTop = listState.firstVisibleItemIndex == 0 && focusedPoster == null
-                if (!heroFocused && app.overlays.isEmpty() && app.preview == null && atTop) heroIndex = (heroIndex + 1) % heroItems.size
+                if (!heroFocused && app.overlays.isEmpty() && app.preview == null && atTop) model.heroIndex = (model.heroIndex + 1) % model.heroItems.size.coerceAtLeast(1)
             }
         }
     }
@@ -181,7 +184,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
         // Backdrop: hero artwork, or the focused poster's artwork under the header.
         val backdropUrl = if (focusedPoster != null) (headerFull?.background ?: focusedPoster?.background) else heroFull?.background ?: heroMeta?.background
         val showBackdrop = focusedPoster == null && heroEnabled && listState.firstVisibleItemIndex == 0
-        if (showBackdrop) Backdrop(backdropUrl, Modifier.fillMaxWidth().height(heroH + 40.dp))
+        if (showBackdrop) Backdrop(backdropUrl, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(heroH + 40.dp + Dimens.navHeight))
 
         CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
             LazyColumn(
@@ -198,8 +201,8 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
                         onWatch = { heroMeta?.let { onPlay(it, null) } },
                         onInfo = { heroMeta?.let { app.push(Overlay.Info(it, null)) } },
                         onTrailer = { heroMeta?.let { app.preview = it } },
-                        onPrev = { heroIndex = (heroIndex - 1 + heroItems.size) % heroItems.size },
-                        onNext = { heroIndex = (heroIndex + 1) % heroItems.size },
+                        onPrev = { model.heroIndex = (heroIndex - 1 + heroItems.size) % heroItems.size },
+                        onNext = { model.heroIndex = (heroIndex + 1) % heroItems.size },
                         onFocusChanged = { f ->
                             heroFocused = f; flags.heroFocused.set(f)
                             if (f) flags.top10CardFocused.set(false)
@@ -272,11 +275,11 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
         val fp = focusedPoster
         if (fp != null && !heroFocused) {
             // Opaque: rows above the focused one scroll beneath it.
-            Box(Modifier.fillMaxWidth().height(headerH).background(com.vyrk.tv.ui.theme.Vyrk.colors.background)) {
+            Box(Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(headerH + Dimens.navHeight).background(com.vyrk.tv.ui.theme.Vyrk.colors.background)) {
                 Backdrop(headerFull?.background ?: fp.background, Modifier.fillMaxSize())
                 TitleHeader(fp, headerFull, headerH, trailerPlaying = false)
                 if (settings.previews == PreviewMode.AUTOMATIC && app.overlays.isEmpty()) {
-                    HeaderTrailer(meta = fp, full = headerFull, sound = settings.previewSound, modifier = Modifier.padding(end = Dimens.screenMargin, top = 12.dp))
+                    HeaderTrailer(meta = fp, full = headerFull, sound = settings.previewSound, modifier = Modifier.padding(end = Dimens.screenMargin, top = Dimens.navHeight + 12.dp))
                 }
             }
         }

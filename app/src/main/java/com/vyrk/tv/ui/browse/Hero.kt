@@ -124,12 +124,12 @@ fun Hero(
     val meta = items.getOrNull(index) ?: return
     val c = Vyrk.colors
     Box(Modifier.fillMaxWidth().height(height).onFocusChanged { onFocusChanged(it.hasFocus) }) {
-        Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 20.dp).width(470.dp)) {
-            TitleLogo(meta, 380.dp, 110.dp)
+        Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 20.dp).width(520.dp)) {
+            TitleLogo(meta, 480.dp, 140.dp)
             Box(Modifier.height(12.dp))
             MetaFacts(meta, full)
             Box(Modifier.height(10.dp))
-            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyM, color = c.textSecondary, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyM, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Box(Modifier.height(6.dp))
             CreditLines(full, meta)
             Box(Modifier.height(16.dp))
@@ -138,15 +138,23 @@ fun Hero(
                     if (hasProgress) str(R.string.resume) else str(R.string.watch_now),
                     onClick = onWatch, onLongClick = onInfo, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
                     modifier = Modifier.focusRequester(watchReq).traceFocus("hero:watch")
-                        .onPreviewKeyEvent { e -> if (e.type == KeyEventType.KeyUp && e.key == Key.Menu) { onInfo(); true } else false },
+                        .onPreviewKeyEvent { e ->
+                            when {
+                                e.type == KeyEventType.KeyUp && e.key == Key.Menu -> { onInfo(); true }
+                                // Left past the first button shows the previous featured title.
+                                e.type == KeyEventType.KeyDown && e.key == Key.DirectionLeft && items.size > 1 -> { onPrev(); true }
+                                else -> false
+                            }
+                        },
                 )
-                VyrkButton(str(R.string.trailer), onClick = onTrailer, icon = R.drawable.ic_trailer, modifier = Modifier.traceFocus("hero:trailer"))
+                VyrkButton(str(R.string.trailer), onClick = onTrailer, icon = R.drawable.ic_trailer, modifier = Modifier.traceFocus("hero:trailer")
+                    .onPreviewKeyEvent { e -> if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionRight && items.size > 1) { onNext(); true } else false })
                 if (items.size > 1) {
-                    VyrkIconButton(R.drawable.ic_left, str(R.string.previous), onPrev, size = 34.dp, modifier = Modifier.traceFocus("hero:prev"))
-                    VyrkIconButton(R.drawable.ic_right, str(R.string.next), onNext, size = 34.dp, modifier = Modifier.traceFocus("hero:next"))
-                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.padding(start = 6.dp)) {
+                    // Position dots only; Left on Watch and Right on Trailer move between titles.
+                    Row(Modifier.padding(start = 14.dp), horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
                         items.indices.forEach { i ->
-                            Box(Modifier.size(if (i == index) 16.dp else 6.dp, 6.dp).background(if (i == index) c.accent else c.textMuted, RoundedCornerShape(3.dp)))
+                            val on = i == index
+                            Box(Modifier.size(if (on) 22.dp else 8.dp, 8.dp).background(if (on) c.accent else c.text.copy(alpha = 0.35f), RoundedCornerShape(4.dp)))
                         }
                     }
                 }
@@ -159,14 +167,14 @@ fun Hero(
 @Composable
 fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, height: Dp, trailerPlaying: Boolean) {
     val c = Vyrk.colors
-    Box(Modifier.fillMaxWidth().height(height)) {
-        Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 14.dp).width(440.dp)) {
-            // Logo: 85% of the header width, at most 108 dp tall.
-            TitleLogo(meta, 374.dp, 92.dp)
+    Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(height)) {
+        Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 14.dp).width(470.dp)) {
+            // Logo: large, so short or square logos still read from the sofa.
+            TitleLogo(meta, 440.dp, 130.dp)
             Box(Modifier.height(10.dp))
             MetaFacts(meta, full)
             Box(Modifier.height(8.dp))
-            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyS, color = c.textSecondary, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyS, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Box(Modifier.height(4.dp))
             CreditLines(full, meta)
             Box(Modifier.height(6.dp))

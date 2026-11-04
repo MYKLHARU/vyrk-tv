@@ -120,10 +120,31 @@ fun MainScreen(session: ProfileSession) {
         }
     }
 
-    Column(Modifier.fillMaxSize()) {
-        // Fixed, opaque bar; pages scroll beneath it, never above.
+    Box(Modifier.fillMaxSize()) {
+        // Pages start under the bar; artwork may reach up behind it.
+        Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight)) {
+            if (!loaded) return@Box
+            when (app.section) {
+                Section.SEARCH -> SearchScreen(session)
+                Section.SETTINGS -> SettingsScreen(session)
+                Section.PROFILES -> ProfilesScreen(session)
+                Section.TABS -> when (app.tab) {
+                    Tab.LIBRARY -> LibraryScreen(session, onPlay)
+                    Tab.ADDONS -> AddonsScreen(session)
+                    else -> androidx.compose.runtime.key(app.tab) { BrowsePage(session, model(app.tab), app.tab.key, onPlay) }
+                }
+            }
+        }
+        // The bar has no solid edge: it fades from the page colour down into the artwork.
+        // Pages without artwork (Library, Add-ons, Search, Settings, Profiles) keep a plain bar.
+        val bg = Vyrk.colors.background
+        val artwork = app.section == Section.TABS && app.tab != Tab.LIBRARY && app.tab != Tab.ADDONS
+        if (artwork) Box(Modifier.fillMaxWidth().height(Dimens.navHeight + 56.dp).background(Brush.verticalGradient(
+            0f to bg.copy(alpha = 0.94f), 0.45f to bg.copy(alpha = 0.7f), 0.75f to bg.copy(alpha = 0.25f), 1f to Color.Transparent,
+        )))
+        else Box(Modifier.fillMaxWidth().height(Dimens.navHeight).background(bg))
         Row(
-            Modifier.fillMaxWidth().height(Dimens.navHeight).background(Vyrk.colors.background)
+            Modifier.fillMaxWidth().height(Dimens.navHeight)
                 .padding(horizontal = Dimens.screenMargin)
                 .onFocusChanged { navHasFocus = it.hasFocus; app.navFocused = it.hasFocus }
                 .focusProperties {
@@ -158,19 +179,7 @@ fun MainScreen(session: ProfileSession) {
             Spacer(Modifier.width(6.dp))
             NavIcon(R.drawable.ic_settings, str(R.string.settings), app.section == Section.SETTINGS, settingsReq, "nav:settings") { app.section = Section.SETTINGS }
         }
-        Box(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
-            if (!loaded) return@Box
-            when (app.section) {
-                Section.SEARCH -> SearchScreen(session)
-                Section.SETTINGS -> SettingsScreen(session)
-                Section.PROFILES -> ProfilesScreen(session)
-                Section.TABS -> when (app.tab) {
-                    Tab.LIBRARY -> LibraryScreen(session, onPlay)
-                    Tab.ADDONS -> AddonsScreen(session)
-                    else -> androidx.compose.runtime.key(app.tab) { BrowsePage(session, model(app.tab), app.tab.key, onPlay) }
-                }
-            }
-        }
+
     }
 }
 

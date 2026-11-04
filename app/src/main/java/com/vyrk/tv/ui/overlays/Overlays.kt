@@ -114,7 +114,20 @@ fun OverlayWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) {
         androidx.compose.runtime.CompositionLocalProvider(com.vyrk.tv.ui.LocalTraceLayer provides layer) {
             ReprovideAppDensity {
                 // Dialog windows bypass the activity, so report their keys to the focus trace here.
-                Box(Modifier.fillMaxSize().onPreviewKeyEvent { com.vyrk.tv.ui.KeyBus.onKey(it.nativeKeyEvent); false }) { content() }
+                // OK only counts once this window has seen it pressed: a long press that opened the
+                // window keeps repeating and releasing here, and must not click Resume or Play.
+                var okArmed by remember { androidx.compose.runtime.mutableStateOf(false) }
+                Box(Modifier.fillMaxSize().onPreviewKeyEvent {
+                    com.vyrk.tv.ui.KeyBus.onKey(it.nativeKeyEvent)
+                    val ne = it.nativeKeyEvent
+                    val ok = ne.keyCode == android.view.KeyEvent.KEYCODE_DPAD_CENTER || ne.keyCode == android.view.KeyEvent.KEYCODE_ENTER ||
+                        ne.keyCode == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER || ne.keyCode == android.view.KeyEvent.KEYCODE_BUTTON_A
+                    when {
+                        !ok -> false
+                        ne.action == android.view.KeyEvent.ACTION_DOWN && ne.repeatCount == 0 -> { okArmed = true; false }
+                        else -> !okArmed
+                    }
+                }) { content() }
             }
         }
     }
