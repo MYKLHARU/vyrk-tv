@@ -22,6 +22,9 @@ FAILURES=0
 source "$(dirname "$0")/lib.sh"
 
 # ---------------------------------------------------------------- setup
+"$ADB" wait-for-device
+for _ in $(seq 1 60); do [[ "$(adbs getprop sys.boot_completed)" == 1 ]] && break; sleep 2; done
+for _ in $(seq 1 30); do adbs pm path android >/dev/null 2>&1 && break; sleep 2; done
 log "device: $(adbs getprop ro.product.model) API $(adbs getprop ro.build.version.sdk), $(adbs wm size)"
 if [[ -n "$APK" ]]; then
   "$ADB" uninstall "$PKG" >/dev/null 2>&1 || true
@@ -86,9 +89,9 @@ if [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]]; then
   tail -n +"$((ADDON_START + 1))" "$ADDON_LOG" > "$OUT/addon-requests-during-play.txt"
   PLAYLOG="$OUT/addon-requests-during-play.txt"
   if grep -q 'broken-2160p.mkv HTTP/1.1" 404' "$PLAYLOG" && grep -q 'sample-720p.mp4 HTTP/1.1" 20[06]' "$PLAYLOG"; then
-    b=$(grep -n 'broken-2160p' "$PLAYLOG" | head -1 | cut -d: -f1)
-    r=$(grep -n 'GET /stream/' "$PLAYLOG" | tail -1 | cut -d: -f1)
-    s=$(grep -n 'sample-720p' "$PLAYLOG" | head -1 | cut -d: -f1)
+    b=$(awk '/broken-2160p/ { print NR; exit }' "$PLAYLOG")
+    r=$(awk '/GET \/stream\// { n = NR } END { print n }' "$PLAYLOG")
+    s=$(awk '/sample-720p/ { print NR; exit }' "$PLAYLOG")
     if (( b < r && r < s )); then log "ok: broken 4K failed, link refreshed, fell over to 720p"; else fail "fail-over order wrong (broken=$b refresh=$r sample=$s)"; fi
   else
     fail "fail-over not seen in add-on log"
@@ -172,7 +175,8 @@ key KEYCODE_BACK 1.5 "back to tabs"
 
 # ---------------------------------------------------------------- results
 "$ADB" logcat -d > "$OUT/logcat.txt" || true
-APP_UID=$(adbs cmd package list packages -U "$PKG" | grep -m1 -oE 'uid:[0-9]+' | cut -d: -f2)
+PKGS=$(adbs cmd package list packages -U "$PKG" || true)
+APP_UID=$(printf '%s\n' "$PKGS" | grep -oE 'uid:[0-9]+' | head -n 1 | cut -d: -f2 || true)
 "$ADB" logcat -d --uid="$APP_UID" > "$OUT/logcat-app.txt" 2>/dev/null || grep -i vyrk "$OUT/logcat.txt" > "$OUT/logcat-app.txt" || true
 if grep -qiE 'authKey|password=|token=|10\.0\.2\.2:7000/[^ ]*manifest' "$OUT/logcat-app.txt"; then fail "secret-like text or an unredacted add-on URL in VYRK's logcat"; fi
 if grep -q 'FATAL EXCEPTION' "$OUT/logcat.txt"; then fail "app crashed (see logcat.txt)"; fi

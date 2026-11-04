@@ -17,6 +17,9 @@ source "$(dirname "$0")/lib.sh"
 
 cap() { "$ADB" exec-out screencap -p > "$OUT/$1.png"; log "capture $1"; }
 
+"$ADB" wait-for-device
+for _ in $(seq 1 60); do [[ "$(adbs getprop sys.boot_completed)" == 1 ]] && break; sleep 2; done
+for _ in $(seq 1 30); do adbs pm path android >/dev/null 2>&1 && break; sleep 2; done
 if [[ -n "$APK" ]]; then "$ADB" uninstall "$PKG" >/dev/null 2>&1 || true; "$ADB" install -r "$APK"; fi
 adbs pm clear "$PKG" >/dev/null || true
 "$ADB" logcat -c

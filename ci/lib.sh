@@ -13,8 +13,10 @@ shot() {
   log "screenshot $name"
 }
 
-focus_now() { "$ADB" logcat -d -s VyrkFocus:I | tail -n 1 | sed 's/.*VyrkFocus: [A-Z_0-9]* -> //' | tr -d '\r'; }
-window_now() { adbs dumpsys window | grep -m1 'mCurrentFocus' | sed 's/.*{//; s/}.*//' ; }
+# Capture whole outputs before filtering: an early-exiting grep under pipefail kills the
+# producer with SIGPIPE (exit 141) on Linux.
+focus_now() { local o; o=$("$ADB" logcat -d -s VyrkFocus:I 2>/dev/null || true); printf '%s\n' "$o" | tail -n 1 | sed 's/.*VyrkFocus: [A-Z_0-9]* -> //' | tr -d '\r'; }
+window_now() { local o; o=$(adbs dumpsys window 2>/dev/null || true); printf '%s\n' "$o" | grep 'mCurrentFocus' | head -n 1 | sed 's/.*{//; s/}.*//' || true; }
 
 # Press a key (name or code), wait, record "key | focused element | focused window".
 key() {
