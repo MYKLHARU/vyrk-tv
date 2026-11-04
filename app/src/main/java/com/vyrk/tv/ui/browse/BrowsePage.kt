@@ -200,7 +200,6 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
                         watchReq = watchReq,
                         onWatch = { heroMeta?.let { onPlay(it, null) } },
                         onInfo = { heroMeta?.let { app.push(Overlay.Info(it, null)) } },
-                        onTrailer = { heroMeta?.let { app.preview = it } },
                         onPrev = { model.heroIndex = (heroIndex - 1 + heroItems.size) % heroItems.size },
                         onNext = { model.heroIndex = (heroIndex + 1) % heroItems.size },
                         onFocusChanged = { f ->

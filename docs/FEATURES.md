@@ -45,7 +45,7 @@ pushed), so nothing below is verified by CI.
 | Fixed opaque 68dp bar, tabs, search/avatar/settings, Live only with TV catalogues | `MainScreen` | Done | E2E |
 | Tab focus: radial light, underline, never a pill; one permanent FocusRequester per tab | `MainScreen.NavTab` | Done | E2E, showcase |
 | Up into the bar lands on the active tab; Back on a tab → Home; Back on Home → tab strip | `MainScreen` | Done | E2E |
-| Hero: backdrop, large logo (up to 480×140), facts, IMDb, genres, synopsis, Starring, Director, Watch now/Resume, Trailer, position dots; Left on Watch now / Right on Trailer change title (no arrow buttons, unlike the brief) | `browse/Hero.kt` | Done | emulator check (Left/Right change title), showcase |
+| Hero: backdrop, large logo (up to 480×140), facts, IMDb, genres, synopsis, Starring, Director, Watch now/Resume as the only button, position dots; Left/Right on Watch now change title (no Trailer or arrow buttons, unlike the brief; trailers stay on posters and in the item menu) | `browse/Hero.kt` | Done | emulator check (Left/Right change title), showcase |
 | Top bar fades into the artwork on browse pages (no solid edge); plain bar on Library, Add-ons, Search, Settings, Profiles | `MainScreen` | Done | emulator capture |
 | Hero titles and position stay locked across the info page, playback and tab switches | `BrowseModel.lockHero` | Done | emulator check (Home → Movies → Home keeps the title) |
 | Hero rotates every 9 s, pauses when focused, under overlays/previews, scrolled away, in background, Reduce motion | `BrowsePage` | Built | — |

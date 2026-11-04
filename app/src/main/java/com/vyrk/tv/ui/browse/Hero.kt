@@ -116,7 +116,6 @@ fun Hero(
     watchReq: FocusRequester,
     onWatch: () -> Unit,
     onInfo: () -> Unit,
-    onTrailer: () -> Unit,
     onPrev: () -> Unit,
     onNext: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
@@ -141,16 +140,15 @@ fun Hero(
                         .onPreviewKeyEvent { e ->
                             when {
                                 e.type == KeyEventType.KeyUp && e.key == Key.Menu -> { onInfo(); true }
-                                // Left past the first button shows the previous featured title.
+                                // Left and Right on the only button move between featured titles.
                                 e.type == KeyEventType.KeyDown && e.key == Key.DirectionLeft && items.size > 1 -> { onPrev(); true }
+                                e.type == KeyEventType.KeyDown && e.key == Key.DirectionRight && items.size > 1 -> { onNext(); true }
                                 else -> false
                             }
                         },
                 )
-                VyrkButton(str(R.string.trailer), onClick = onTrailer, icon = R.drawable.ic_trailer, modifier = Modifier.traceFocus("hero:trailer")
-                    .onPreviewKeyEvent { e -> if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionRight && items.size > 1) { onNext(); true } else false })
                 if (items.size > 1) {
-                    // Position dots only; Left on Watch and Right on Trailer move between titles.
+                    // Position dots only.
                     Row(Modifier.padding(start = 14.dp), horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
                         items.indices.forEach { i ->
                             val on = i == index
