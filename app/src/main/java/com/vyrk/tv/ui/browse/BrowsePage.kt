@@ -89,10 +89,31 @@ fun BrowsePage(
 
     LaunchedEffect(addons, settings.hiddenRows) { model.rebuild(session.effectiveAddons(), settings.hiddenRows); model.prefetch(HERO_SOURCE_ROWS) }
 
-    // Continue Watching follows the live library at once.
-    val cwItems = remember(library, hiddenCw) {
-        LibraryRules.continueWatching(library.values).filter { it.id !in hiddenCw }
-            .map { MetaPreview(id = it.id, type = it.type, name = it.name, poster = it.poster) }
+    // Continue Watching follows the live library at once. Library entries carry only a name and a
+    // poster, and entries written by other apps can have neither (Game of Thrones showed a blank
+    // card with no title): fill them from the title's full meta, then Cinemeta's poster by IMDb id.
+    val cwLibrary = remember(library, hiddenCw) { LibraryRules.continueWatching(library.values).filter { it.id !in hiddenCw } }
+    // Changes only when one of these titles' metas arrives (not on every header fetch), so the page
+    // doesn't recompose as focus moves.
+    val cwMetas by remember(cwLibrary) {
+        derivedStateOf { graph.metaCache.version; cwLibrary.count { graph.metaCache.peek(it.type, it.id) != null } }
+    }
+    val cwItems = remember(cwLibrary, cwMetas) {
+        cwLibrary.map { li ->
+            val full = graph.metaCache.peek(li.type, li.id)
+            MetaPreview(
+                id = li.id, type = li.type,
+                name = li.name.ifBlank { full?.name.orEmpty() },
+                poster = li.poster ?: full?.poster ?: com.vyrk.core.art.Artwork.metahubPoster(li.id),
+                background = full?.background, logo = full?.logo,
+            )
+        }
+    }
+    // One at a time, so these never take the request slots the rows need.
+    LaunchedEffect(cwLibrary.filter { it.name.isBlank() || it.poster == null }.map { it.type to it.id }) {
+        val addons = session.effectiveAddons()
+        cwLibrary.filter { it.name.isBlank() || it.poster == null }.take(24)
+            .forEach { li -> graph.metaCache.get(addons, li.type, li.id) }
     }
     val cwRow = remember { RowState(CW_ROW, RowKind.CONTINUE, null, "") }
     val cwTitle = com.vyrk.tv.ui.str(com.vyrk.tv.R.string.continue_watching)
@@ -117,6 +138,8 @@ fun BrowsePage(
     val heroMeta = heroItems.getOrNull(heroIndex)
     val heroFull by produceMeta(session, heroMeta)
     val headerFull by produceMeta(session, focusedPoster, debounceMs = 250)
+    val heroArt = rememberTitleArt(heroMeta, heroFull)
+    val headerArt = rememberTitleArt(focusedPoster, headerFull, debounceMs = 300)
     val heroEnabled = settings.heroEnabled && heroItems.isNotEmpty() && model.tab != Tab.LIVE
     // The hero keeps its slot while its titles load. Inserting it later above rows that are
     // already on screen left it scrolled out of view (lazy lists keep the first visible item in
@@ -208,9 +231,10 @@ fun BrowsePage(
     val posterPx = with(LocalDensity.current) { settings.posterSize.dp.roundToPx() }
     LaunchedEffect(heroItems.map { it.id }) {
         val dm = context.resources.displayMetrics
+        val size = backdropSize(dm.widthPixels)
         heroItems.forEach { m ->
-            m.background?.let { prefetchImage(context, model, it, dm.widthPixels, dm.heightPixels) }
-            m.logo?.let { prefetchImage(context, model, it, null, null) }
+            com.vyrk.core.art.Artwork.forBackdrop(m.background, size)?.let { prefetchImage(context, model, it, dm.widthPixels, dm.heightPixels) }
+            com.vyrk.core.art.Artwork.forLogo(m.logo)?.let { prefetchImage(context, model, it, null, null) }
         }
     }
     LaunchedEffect(rows.take(8).map { it.key to it.items.size }, posterPx) {
@@ -237,10 +261,9 @@ fun BrowsePage(
         val rowTitleH = 30.dp
         flags.posterTarget.set(with(density) { (headerH + rowTitleH).toPx() })
 
-        // Backdrop: hero artwork, or the focused poster's artwork under the header.
-        val backdropUrl = if (focusedPoster != null) (headerFull?.background ?: focusedPoster?.background) else heroFull?.background ?: heroMeta?.background
+        // Backdrop: hero artwork (the focused poster's artwork is drawn under the header below).
         val showBackdrop = focusedPoster == null && heroEnabled && listState.firstVisibleItemIndex == 0
-        if (showBackdrop && active) Backdrop(backdropUrl, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(heroH + 40.dp + Dimens.navHeight))
+        if (showBackdrop && active) Backdrop(heroArt.backdrops, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(heroH + 40.dp + Dimens.navHeight))
 
         CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
             LazyColumn(
@@ -252,7 +275,7 @@ fun BrowsePage(
                 if (heroPending) item(key = "hero") { Box(Modifier.fillMaxWidth().height(heroH)) }
                 if (heroEnabled) item(key = "hero") {
                     Hero(
-                        items = heroItems, index = heroIndex.coerceAtMost(heroItems.lastIndex), full = heroFull, height = heroH,
+                        items = heroItems, index = heroIndex.coerceAtMost(heroItems.lastIndex), full = heroFull, art = heroArt, height = heroH,
                         hasProgress = heroMeta?.let { library[it.id]?.isInContinueWatching } == true,
                         watchReq = watchReq,
                         onWatch = { heroMeta?.let { onPlay(it, null) } },
@@ -336,8 +359,8 @@ fun BrowsePage(
         if (fp != null && !heroFocused && active) {
             // Opaque: rows above the focused one scroll beneath it.
             Box(Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(headerH + Dimens.navHeight).background(com.vyrk.tv.ui.theme.Vyrk.colors.background)) {
-                Backdrop(headerFull?.background ?: fp.background, Modifier.fillMaxSize())
-                TitleHeader(fp, headerFull, headerH, trailerPlaying = false)
+                Backdrop(headerArt.backdrops, Modifier.fillMaxSize())
+                TitleHeader(fp, headerFull, headerArt, headerH, trailerPlaying = false)
                 if (settings.previews == PreviewMode.AUTOMATIC && app.overlays.isEmpty()) {
                     HeaderTrailer(meta = fp, full = headerFull, sound = settings.previewSound, modifier = Modifier.padding(end = Dimens.screenMargin, top = Dimens.navHeight + 12.dp))
                 }
@@ -355,6 +378,37 @@ fun produceMeta(session: ProfileSession, meta: MetaPreview?, debounceMs: Long = 
         value = null
         if (debounceMs > 0) delay(debounceMs)
         value = graph.metaCache.get(session.effectiveAddons(), m.type, m.id)
+    }
+}
+
+/** TMDB backdrop size for this screen: original on screens wider than 1280 px (1080p and 4K), else w1280. */
+fun backdropSize(screenWidthPx: Int): String = if (screenWidthPx > 1280) "original" else "w1280"
+
+/**
+ * Logo and backdrop candidates for a title, best first: the add-on's own artwork (asked for at a
+ * size sharp enough for the hero), then TMDB's English-first pick when the build has a TMDB key
+ * and the add-on gave none, then Cinemeta's by IMDb id. Each is tried in turn if one fails to load.
+ */
+@Composable
+fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, debounceMs: Long = 0): TitleArt {
+    val graph = LocalGraph.current
+    val size = backdropSize(androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels)
+    val addonLogo = com.vyrk.core.art.Artwork.forLogo(full?.logo ?: meta?.logo)
+    val addonBackdrop = com.vyrk.core.art.Artwork.forBackdrop(full?.background ?: meta?.background, size)
+    val needTmdb = meta != null && graph.tmdb.enabled && (addonLogo == null || addonBackdrop == null)
+    val tmdb by androidx.compose.runtime.produceState<com.vyrk.core.tmdb.TmdbArtwork?>(null, meta?.id, needTmdb) {
+        value = null
+        val m = meta ?: return@produceState
+        if (!needTmdb) return@produceState
+        if (debounceMs > 0) delay(debounceMs)
+        value = graph.tmdb.artwork(m.id, m.type, size)
+    }
+    val id = meta?.id ?: return TitleArt.NONE
+    return remember(id, addonLogo, addonBackdrop, tmdb) {
+        TitleArt(
+            logos = listOfNotNull(addonLogo, tmdb?.logo, com.vyrk.core.art.Artwork.metahubLogo(id)).distinct(),
+            backdrops = listOfNotNull(addonBackdrop, tmdb?.backdrop, com.vyrk.core.art.Artwork.metahubBackground(id)).distinct(),
+        )
     }
 }
 

@@ -57,6 +57,18 @@ data class PersonCredit(
     val voteCount: Int,
 )
 
+/** One image from `/movie/{id}/images` or `/tv/{id}/images`. [language] is ISO 639-1, or null for none. */
+data class TmdbImage(
+    val path: String,
+    val language: String?,
+    val voteAverage: Double,
+    val voteCount: Int,
+    val width: Int,
+)
+
+/** Artwork chosen for a title, as full image URLs; each is null when TMDB has none. */
+data class TmdbArtwork(val logo: String?, val backdrop: String?, val poster: String?)
+
 /**
  * TMDB v3 API (https://developer.themoviedb.org/reference). Requests carry either a v3 API key
  * (`api_key` query) or a v4 read access token (`Authorization: Bearer`). The key comes from the
@@ -98,6 +110,29 @@ class TmdbClient(private val http: HttpTransport, private val key: String) {
 
     suspend fun personCredits(id: Long): List<PersonCredit> = get("/person/$id/combined_credits")?.let { parsePersonCredits(it) }.orEmpty()
 
+    private val artworkCache = java.util.concurrent.ConcurrentHashMap<String, TmdbArtwork>()
+
+    /**
+     * Logo, backdrop and poster for a Stremio meta id ("tt…" via /find, or "tmdb:…"), English
+     * first (`include_image_language=en,null`). Answers are cached for the session, including
+     * "TMDB has none"; failed requests are not, so they are tried again later.
+     */
+    suspend fun artwork(metaId: String, type: String, backdropSize: String = "w1280"): TmdbArtwork? {
+        if (!enabled) return null
+        val cacheKey = "$type:$metaId:$backdropSize"
+        artworkCache[cacheKey]?.let { return it }
+        val base = metaId.substringBefore(':')
+        val target: Pair<Long, String> = when {
+            base.startsWith("tt") -> findByImdb(base, preferTv = type == "series") ?: return null
+            metaId.startsWith("tmdb:") -> (metaId.removePrefix("tmdb:").substringBefore(':').toLongOrNull() ?: return null) to (if (type == "series") "tv" else "movie")
+            else -> return null
+        }
+        val o = get("/${target.second}/${target.first}/images", "include_image_language=en,null") ?: return null
+        val art = parseArtwork(o, backdropSize)
+        artworkCache[cacheKey] = art
+        return art
+    }
+
     /** IMDb id of a film or show, so VYRK can open it through the user's add-ons. */
     suspend fun imdbId(tmdbId: Long, type: String): String? {
         val path = if (type == "series") "/tv/$tmdbId/external_ids" else "/movie/$tmdbId/external_ids"
@@ -113,6 +148,37 @@ class TmdbClient(private val http: HttpTransport, private val key: String) {
         private fun JsonObject.s(k: String): String? = (this[k] as? JsonPrimitive)?.takeIf { it !is JsonNull }?.contentOrNull?.takeIf { it.isNotBlank() }
         private fun JsonObject.l(k: String): Long? = (this[k] as? JsonPrimitive)?.longOrNull
         private fun JsonObject.arr(k: String): List<JsonObject> = (this[k] as? JsonArray)?.mapNotNull { it as? JsonObject }.orEmpty()
+
+        fun parseImages(o: JsonObject, key: String): List<TmdbImage> = o.arr(key).mapNotNull { i ->
+            TmdbImage(
+                path = i.s("file_path") ?: return@mapNotNull null,
+                language = i.s("iso_639_1"),
+                voteAverage = (i["vote_average"] as? JsonPrimitive)?.doubleOrNull ?: 0.0,
+                voteCount = (i["vote_count"] as? JsonPrimitive)?.intOrNull ?: 0,
+                width = (i["width"] as? JsonPrimitive)?.intOrNull ?: 0,
+            )
+        }
+
+        private fun best(images: List<TmdbImage>, languageOrder: List<String?>): TmdbImage? =
+            images.sortedWith(
+                compareBy<TmdbImage> { languageOrder.indexOf(it.language).let { r -> if (r < 0) languageOrder.size else r } }
+                    .thenByDescending { it.voteAverage }.thenByDescending { it.voteCount }.thenByDescending { it.width },
+            ).firstOrNull()
+
+        /** English logos first, then logos with no language; SVG files are skipped (not decodable here). */
+        fun pickLogo(logos: List<TmdbImage>): TmdbImage? = best(logos.filterNot { it.path.endsWith(".svg", ignoreCase = true) }, listOf("en", null))
+
+        /** Backdrops without text first (a logo goes over them), then English ones. */
+        fun pickBackdrop(backdrops: List<TmdbImage>): TmdbImage? = best(backdrops, listOf(null, "en"))
+
+        fun pickPoster(posters: List<TmdbImage>): TmdbImage? = best(posters, listOf("en", null))
+
+        /** Logo at original size, backdrop at [backdropSize], poster at w500. */
+        fun parseArtwork(o: JsonObject, backdropSize: String): TmdbArtwork = TmdbArtwork(
+            logo = image(pickLogo(parseImages(o, "logos"))?.path, "original"),
+            backdrop = image(pickBackdrop(parseImages(o, "backdrops"))?.path, backdropSize),
+            poster = image(pickPoster(parseImages(o, "posters"))?.path, "w500"),
+        )
 
         fun parseFind(o: JsonObject, preferTv: Boolean): Pair<Long, String>? {
             val movie = o.arr("movie_results").firstOrNull()?.l("id")?.let { it to "movie" }

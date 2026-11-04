@@ -25,6 +25,8 @@ class AddonClient(
     private val timeoutMs: (Descriptor, String) -> Long = { _, resource -> if (resource == "stream") 20_000 else 12_000 },
     /** Timing hook: resource, decode milliseconds, response size, thread name. */
     private val onDecoded: ((String, Long, Int, String) -> Unit)? = null,
+    /** Failure hook: resource, add-on id, redacted reason, milliseconds from the call (queue included). */
+    private val onFailed: ((String, String, String, Long) -> Unit)? = null,
 ) {
     private val permits = Semaphore(maxConcurrent)
 
@@ -48,8 +50,17 @@ class AddonClient(
             return AddonResult.Failed(addon.manifest.id, "unsupported transport")
         }
         val t = timeoutMs(addon, resource)
+        val called = System.nanoTime()
+        return resourceCall(addon, resource, url, t, serializer).also { r ->
+            if (r is AddonResult.Failed) onFailed?.invoke(resource, addon.manifest.id, r.reason, (System.nanoTime() - called) / 1_000_000)
+        }
+    }
+
+    private suspend fun <T> resourceCall(addon: Descriptor, resource: String, url: String, t: Long, serializer: KSerializer<T>): AddonResult<T> {
         return try {
-            val res = withTimeout(t) { permits.withPermit { http.get(url, timeoutMs = t) } }
+            // The timeout starts once the request has a slot: counting the wait for one let a few
+            // slow add-ons time out every other request queued behind them (rows "didn't load").
+            val res = permits.withPermit { withTimeout(t) { http.get(url, timeoutMs = t) } }
             if (!res.isSuccess) AddonResult.Failed(addon.manifest.id, "HTTP ${res.code}")
             else {
                 // Decoded on a background thread whoever calls: metas for long series are large,

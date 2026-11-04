@@ -183,8 +183,10 @@ fun MainScreen(session: ProfileSession) {
         // Pages without artwork (Library, Add-ons, Search, Settings, Profiles) keep a plain bar.
         val bg = Vyrk.colors.background
         val artwork = app.section == Section.TABS && shownTab != Tab.LIBRARY && shownTab != Tab.ADDONS
+        // Light enough not to tint the artwork (it was 94 % navy at the top), dark enough for the tabs.
+        val shade = Vyrk.colors.shade
         if (artwork) Box(Modifier.fillMaxWidth().height(Dimens.navHeight + 56.dp).background(Brush.verticalGradient(
-            0f to bg.copy(alpha = 0.94f), 0.45f to bg.copy(alpha = 0.7f), 0.75f to bg.copy(alpha = 0.25f), 1f to Color.Transparent,
+            0f to shade.copy(alpha = 0.78f), 0.45f to shade.copy(alpha = 0.42f), 0.75f to shade.copy(alpha = 0.12f), 1f to Color.Transparent,
         )))
         else Box(Modifier.fillMaxWidth().height(Dimens.navHeight).background(bg))
         Row(

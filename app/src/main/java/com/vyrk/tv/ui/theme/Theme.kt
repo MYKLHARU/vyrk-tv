@@ -37,6 +37,8 @@ data class VyrkColors(
     val warning: Color = Color(0xFFFFC266),
     val danger: Color = Color(0xFFFF7A7A),
     val scrim: Color = Color(0xFF07080B).copy(alpha = 0.80f),
+    /** Black-navy fade over artwork (left and top of the hero); darker and less blue than [background]. */
+    val shade: Color = Color(0xFF060B10),
 )
 
 /** Accent choices offered in Settings. Frost is VYRK's own; the rest follow the spec. */

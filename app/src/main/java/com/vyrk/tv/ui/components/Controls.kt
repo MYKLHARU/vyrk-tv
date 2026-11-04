@@ -34,6 +34,7 @@ import androidx.tv.material3.Text
 import com.vyrk.tv.R
 import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
+import androidx.compose.ui.draw.shadow
 
 /** Focus is a soft accent glow plus a slight zoom. Never a white border. */
 @Composable
@@ -51,6 +52,9 @@ fun VyrkButton(
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     horizontalPadding: Dp = 16.dp,
+    height: Dp = Dimens.buttonHeight,
+    /** A soft accent halo even without focus: for the one call to action on a screen. */
+    glow: Boolean = false,
 ) {
     val c = Vyrk.colors
     val (bg, fg) = when (style) {
@@ -58,11 +62,12 @@ fun VyrkButton(
         ButtonStyle.SECONDARY -> c.raised to c.text
         ButtonStyle.GHOST -> Color.Transparent to c.text
     }
+    val halo = if (glow) Modifier.shadow(18.dp, Dimens.buttonShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
         enabled = enabled,
-        modifier = modifier.height(Dimens.buttonHeight).defaultMinSize(minWidth = 40.dp),
+        modifier = modifier.then(halo).height(height).defaultMinSize(minWidth = 40.dp),
         shape = ClickableSurfaceDefaults.shape(Dimens.buttonShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = bg, contentColor = fg,

@@ -17,7 +17,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -37,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.AsyncImage
+import coil3.request.transformations
 import com.vyrk.core.addon.MetaItem
 import com.vyrk.core.addon.MetaPreview
 import com.vyrk.tv.R
@@ -50,17 +58,67 @@ import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 
-/** Backdrop with a left and bottom fade into the page background. */
+/** Artwork candidates for one title, best first; the next one is tried when one fails to load. */
+@Immutable
+data class TitleArt(val logos: List<String>, val backdrops: List<String>) {
+    companion object { val NONE = TitleArt(emptyList(), emptyList()) }
+}
+
+/**
+ * Cinematic backdrop: the picture fills the right of the hero (subjects usually sit right of
+ * centre) and stays untinted there. A black-navy fade comes in from the left under the text and
+ * from the bottom into the page; nothing covers the whole image.
+ */
 @Composable
-fun Backdrop(url: String?, modifier: Modifier = Modifier) {
+fun Backdrop(urls: List<String>, modifier: Modifier = Modifier) {
     val bg = Vyrk.colors.background
+    val shade = Vyrk.colors.shade
+    var attempt by remember(urls) { mutableIntStateOf(0) }
+    val url = urls.getOrNull(attempt)
     Box(modifier) {
         Crossfade(url, label = "backdrop") { u ->
-            if (u != null) AsyncImage(u, null, contentScale = ContentScale.Crop, alignment = Alignment.TopEnd, modifier = Modifier.fillMaxSize())
+            if (u != null) Box(Modifier.fillMaxSize()) {
+                AsyncImage(
+                    u, null, contentScale = ContentScale.Crop, alignment = Alignment.Center,
+                    onError = { if (urls.getOrNull(attempt) == u) attempt += 1 },
+                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().fillMaxWidth(0.80f),
+                )
+            }
         }
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to bg, 0.45f to bg.copy(alpha = 0.75f), 1f to Color.Transparent)))
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.55f to Color.Transparent, 1f to bg)))
+        // Left: solid under the title and text, clear from about two-thirds across.
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
+            0f to shade, 0.22f to shade, 0.36f to shade.copy(alpha = 0.82f), 0.50f to shade.copy(alpha = 0.40f), 0.64f to Color.Transparent,
+        )))
+        // Bottom: into the page colour, where the first row starts.
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.52f to Color.Transparent, 0.80f to bg.copy(alpha = 0.70f), 1f to bg)))
     }
+}
+
+/**
+ * Title logo for the hero and header: fitted into [maxWidth] × the height it is given (up to
+ * [maxHeight]), so small logo files are scaled up instead of drawn at their own pixel size; aspect
+ * ratio kept, anchored bottom-left. Falls back through [logos], then to the title in large bold type.
+ */
+@Composable
+fun HeroLogo(name: String, logos: List<String>, maxWidth: Dp, maxHeight: Dp, textStyle: TextStyle, modifier: Modifier = Modifier) {
+    var attempt by remember(logos) { mutableIntStateOf(0) }
+    val url = logos.getOrNull(attempt)
+    if (url == null) {
+        Box(modifier.widthIn(max = maxWidth), contentAlignment = Alignment.BottomStart) {
+            Text(name.ifBlank { " " }, style = textStyle, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        return
+    }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val request = remember(url) {
+        coil3.request.ImageRequest.Builder(context).data(url)
+            .transformations(com.vyrk.tv.ui.components.TrimTransparent()).build()
+    }
+    AsyncImage(
+        model = request, contentDescription = name, contentScale = ContentScale.Fit, alignment = Alignment.BottomStart,
+        onError = { if (logos.getOrNull(attempt) == url) attempt += 1 },
+        modifier = modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight(),
+    )
 }
 
 /** Logo artwork if the title has one, else the title as text. */
@@ -106,11 +164,20 @@ fun CreditLines(full: MetaItem?, meta: MetaPreview) {
     if (director.isNotEmpty()) Text(str(R.string.director_line, director.joinToString(", ")), style = Vyrk.type.bodyS, color = Vyrk.colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
+/**
+ * Hero logo box. Logos are trimmed of empty margins and scaled to fill it, so a typical logo is
+ * about 1.7× the size it had (it was drawn at its own pixel size, padding included).
+ */
+private val HERO_LOGO_W = 480.dp
+private val HERO_LOGO_H = 200.dp
+private val HERO_TEXT_W = 520.dp
+
 @Composable
 fun Hero(
     items: List<MetaPreview>,
     index: Int,
     full: MetaItem?,
+    art: TitleArt,
     height: Dp,
     hasProgress: Boolean,
     watchReq: FocusRequester,
@@ -123,19 +190,24 @@ fun Hero(
     val meta = items.getOrNull(index) ?: return
     val c = Vyrk.colors
     Box(Modifier.fillMaxWidth().height(height).onFocusChanged { onFocusChanged(it.hasFocus) }) {
-        Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 20.dp).width(520.dp)) {
-            TitleLogo(meta, 480.dp, 140.dp)
-            Box(Modifier.height(12.dp))
+        // Bottom-anchored; the logo takes whatever height the text leaves, up to its cap.
+        Column(
+            Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
+            verticalArrangement = Arrangement.Bottom,
+        ) {
+            HeroLogo(full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f, fill = false))
+            Box(Modifier.height(14.dp))
             MetaFacts(meta, full)
             Box(Modifier.height(10.dp))
-            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyM, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyM, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = HERO_TEXT_W))
             Box(Modifier.height(6.dp))
-            CreditLines(full, meta)
-            Box(Modifier.height(16.dp))
+            Column(Modifier.widthIn(max = HERO_TEXT_W)) { CreditLines(full, meta) }
+            Box(Modifier.height(18.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 VyrkButton(
                     if (hasProgress) str(R.string.resume) else str(R.string.watch_now),
                     onClick = onWatch, onLongClick = onInfo, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
+                    height = 44.dp, horizontalPadding = 22.dp, glow = true,
                     modifier = Modifier.focusRequester(watchReq).traceFocus("hero:watch")
                         .onPreviewKeyEvent { e ->
                             when {
@@ -163,12 +235,15 @@ fun Hero(
 
 /** Header shown while a poster has focus: artwork, logo and facts for that title. */
 @Composable
-fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, height: Dp, trailerPlaying: Boolean) {
+fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, height: Dp, trailerPlaying: Boolean) {
     val c = Vyrk.colors
     Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(height)) {
-        Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 14.dp).width(470.dp)) {
-            // Logo: large, so short or square logos still read from the sofa.
-            TitleLogo(meta, 440.dp, 130.dp)
+        Column(
+            Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 12.dp, bottom = 14.dp).width(500.dp),
+            verticalArrangement = Arrangement.Bottom,
+        ) {
+            // Logo: as large as the header allows, so short or square logos still read from the sofa.
+            HeroLogo(meta.name.ifBlank { full?.name.orEmpty() }, art.logos, 420.dp, 170.dp, Vyrk.type.displayM, Modifier.weight(1f, fill = false))
             Box(Modifier.height(10.dp))
             MetaFacts(meta, full)
             Box(Modifier.height(8.dp))

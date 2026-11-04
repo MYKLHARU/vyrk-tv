@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -135,15 +136,26 @@ fun Poster(
         border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
         glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
     ) {
+        // Never a blank card: the add-on's poster, then Cinemeta's by IMDb id, then the title on
+        // a tinted card (or the type, when even the name is missing).
         val fallback: @Composable () -> Unit = {
-            Box(Modifier.fillMaxSize().padding(8.dp), contentAlignment = Alignment.Center) {
-                Text(meta.name, style = Vyrk.type.titleS, color = c.textSecondary, maxLines = 4, overflow = TextOverflow.Ellipsis)
+            Box(
+                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(c.raised, c.panel))).padding(10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    meta.name.ifBlank { str(if (meta.type == "series") R.string.type_series else R.string.type_movie) },
+                    style = Vyrk.type.titleM, color = c.text, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                )
             }
         }
         // AsyncImage rather than SubcomposeAsyncImage: no subcomposition per poster while rows scroll.
-        var failed by remember(meta.poster) { mutableStateOf(false) }
-        if (meta.poster != null && !failed) {
-            AsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { failed = true })
+        val candidates = remember(meta.poster, meta.id) { listOfNotNull(meta.poster, com.vyrk.core.art.Artwork.metahubPoster(meta.id)).distinct() }
+        var attempt by remember(candidates) { mutableIntStateOf(0) }
+        val url = candidates.getOrNull(attempt)
+        if (url != null) {
+            AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
         } else fallback()
         if (state.isNew) {
             Box(Modifier.align(Alignment.TopStart).padding(6.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
@@ -156,8 +168,13 @@ fun Poster(
             }
         }
         if (state.progress > 0f) {
-            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp).background(Color.Black.copy(alpha = 0.55f))) {
-                Box(Modifier.fillMaxWidth(state.progress.coerceIn(0.02f, 1f)).height(4.dp).background(c.accent))
+            // Slim blue bar inset from the edges, on a soft shade so it reads on bright posters.
+            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(28.dp).background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)))))
+            Box(
+                Modifier.align(Alignment.BottomCenter).padding(start = 9.dp, end = 9.dp, bottom = 9.dp).fillMaxWidth().height(3.dp)
+                    .clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.28f)),
+            ) {
+                Box(Modifier.fillMaxWidth(state.progress.coerceIn(0.03f, 1f)).height(3.dp).clip(RoundedCornerShape(2.dp)).background(c.accent))
             }
         }
     }

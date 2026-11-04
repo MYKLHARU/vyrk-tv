@@ -70,4 +70,53 @@ class TmdbTest {
         assertFalse(off.enabled); assertNull(off.person(1)); assertEquals(2, f.urls.size)
         assertEquals("https://image.tmdb.org/t/p/w185/p.jpg", TmdbClient.image("/p.jpg"))
     }
+
+    private val imagesJson = """{"id":1399,
+        "backdrops":[{"aspect_ratio":1.778,"height":2160,"iso_639_1":"en","file_path":"/en-bd.jpg","vote_average":5.9,"vote_count":20,"width":3840},
+                     {"aspect_ratio":1.778,"height":1080,"iso_639_1":null,"file_path":"/textless-low.jpg","vote_average":5.1,"vote_count":3,"width":1920},
+                     {"aspect_ratio":1.778,"height":2160,"iso_639_1":null,"file_path":"/textless.jpg","vote_average":5.6,"vote_count":12,"width":3840}],
+        "logos":[{"aspect_ratio":2.6,"height":400,"iso_639_1":null,"file_path":"/nolang.png","vote_average":9.0,"vote_count":5,"width":1040},
+                 {"aspect_ratio":2.6,"height":500,"iso_639_1":"en","file_path":"/en.svg","vote_average":9.9,"vote_count":9,"width":1300},
+                 {"aspect_ratio":2.6,"height":400,"iso_639_1":"en","file_path":"/en-low.png","vote_average":5.2,"vote_count":2,"width":1040},
+                 {"aspect_ratio":2.6,"height":600,"iso_639_1":"en","file_path":"/en.png","vote_average":5.4,"vote_count":4,"width":1560}],
+        "posters":[{"aspect_ratio":0.667,"height":3000,"iso_639_1":"de","file_path":"/de.jpg","vote_average":6.0,"vote_count":9,"width":2000},
+                   {"aspect_ratio":0.667,"height":3000,"iso_639_1":"en","file_path":"/en-p.jpg","vote_average":5.5,"vote_count":9,"width":2000}]}"""
+
+    @Test
+    fun artworkPrefersEnglishLogosTextlessBackdropsAndSkipsSvg() {
+        val art = TmdbClient.parseArtwork(obj(imagesJson), "original")
+        // English beats no-language even with fewer votes; the SVG is skipped; then by rating.
+        assertEquals("https://image.tmdb.org/t/p/original/en.png", art.logo)
+        // Textless first for backdrops (a logo goes on top), best rated among them.
+        assertEquals("https://image.tmdb.org/t/p/original/textless.jpg", art.backdrop)
+        assertEquals("https://image.tmdb.org/t/p/w500/en-p.jpg", art.poster)
+        val empty = TmdbClient.parseArtwork(obj("""{"id":1,"backdrops":[],"logos":[],"posters":[]}"""), "w1280")
+        assertEquals(TmdbArtwork(null, null, null), empty)
+    }
+
+    private class ImagesFake(private val images: String) : HttpTransport {
+        val urls = mutableListOf<String>()
+        override suspend fun get(url: String, headers: Map<String, String>, timeoutMs: Long): HttpResult {
+            urls += url
+            return if ("/find/" in url) HttpResult(200, """{"movie_results":[],"tv_results":[{"id":1399}]}""") else HttpResult(200, images)
+        }
+        override suspend fun postJson(url: String, body: String, timeoutMs: Long) = HttpResult(404, "")
+    }
+
+    @Test
+    fun artworkLooksUpImdbIdsAndCachesTheAnswer() = runTest {
+        val f = ImagesFake(imagesJson)
+        val tmdb = TmdbClient(f, "v3key")
+        val art = tmdb.artwork("tt0944947", "series", "w1280")
+        assertEquals("https://image.tmdb.org/t/p/w1280/textless.jpg", art?.backdrop)
+        assertTrue(f.urls[1].startsWith("https://api.themoviedb.org/3/tv/1399/images?include_image_language=en,null&api_key="))
+        tmdb.artwork("tt0944947", "series", "w1280")
+        assertEquals(2, f.urls.size)
+        // tmdb: ids skip /find; other ids are not looked up.
+        tmdb.artwork("tmdb:603", "movie", "w1280")
+        assertTrue(f.urls[2].startsWith("https://api.themoviedb.org/3/movie/603/images?"))
+        assertNull(tmdb.artwork("kitsu:1", "series"))
+        assertNull(TmdbClient(f, "").artwork("tt0944947", "series"))
+        assertEquals(3, f.urls.size)
+    }
 }
