@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.1
 
 - Add-ons moved from the top bar into Settings › Add-ons, with the profile sharing switches.
 - Settings is translucent: its panels sit over the artwork you were last looking at, blurred.
