@@ -8,6 +8,10 @@ set -euo pipefail
 ADB=${ADB:-adb}; PKG=com.vyrk.tv; OUT=${OUT:-ci/out/perf}
 mkdir -p "$OUT"; TRACE="$OUT/focus-trace.txt"; : > "$TRACE"; STEP=0; FAILURES=0
 source ci/lib.sh
+# The resumed activity, not mCurrentFocus: some TVs (SHIELD) list a stale window per display.
+front() { local o; o=$(adbs dumpsys activity activities 2>/dev/null || true); printf '%s\n' "$o" | grep -m1 'mResumedActivity' || true; }
+# Never send keys to another app: stop if VYRK is not in front.
+ensure_front() { local f; f=$(front); if [[ "$f" != *"$PKG"* ]]; then fail "VYRK is not in front: $f"; exit 1; fi; }
 "$ADB" shell setprop log.tag.VyrkPerf DEBUG
 if [[ "${KEEP:-0}" != 1 ]]; then
   "$ADB" uninstall "$PKG" >/dev/null 2>&1 || true
@@ -15,9 +19,12 @@ if [[ "${KEEP:-0}" != 1 ]]; then
   adbs am start -n "$PKG/.MainActivity" >/dev/null; sleep 8
   key KEYCODE_DPAD_RIGHT 1.2; key KEYCODE_DPAD_CENTER 2 "guest"
 else
-  "$ADB" shell am force-stop "$PKG"; adbs am start -n "$PKG/.MainActivity" >/dev/null; sleep 8
+  # A start right after force-stop can land behind the launcher (it retakes the front as the task closes).
+  "$ADB" shell am force-stop "$PKG"; sleep 2; adbs am start -n "$PKG/.MainActivity" >/dev/null; sleep 8
+  [[ "$(front)" == *"$PKG"* ]] || { adbs am start -n "$PKG/.MainActivity" >/dev/null; sleep 4; }
 fi
-wait_focus '^(hero:watch|poster:.*)$' 45
+ensure_front
+wait_focus '^(hero:watch|poster:.*|tab:home)$' 45
 sleep 6
 until_focus KEYCODE_DPAD_UP '^tab:home$' 8
 "$ADB" logcat -c; "$ADB" shell dumpsys gfxinfo "$PKG" reset >/dev/null
@@ -25,6 +32,7 @@ k() { "$ADB" shell input keyevent "KEYCODE_DPAD_$1"; sleep "$2"; }
 for pace in 1.5 0.45; do
   echo "== pace $pace" >> "$OUT/marks.txt"
   for r in 1 2 3; do
+    ensure_front
     # Home -> Movies -> Series -> Anime -> Home
     k RIGHT $pace; k RIGHT $pace; k RIGHT $pace; k LEFT $pace; k LEFT $pace; k LEFT $pace
     # Movies -> Home -> Movies
@@ -38,6 +46,7 @@ for pace in 1.5 0.45; do
 done
 expect '^tab:home$' "ends on the Home tab"
 echo "== posters" >> "$OUT/marks.txt"
+ensure_front
 k RIGHT 1.5; k RIGHT 1.5; k DOWN 1.5; k DOWN 1.5
 for i in 1 2 3 4 5 6 7 8; do k RIGHT 0.6; done
 "$ADB" logcat -d -s VyrkPerf:I > "$OUT/perf.txt" || true

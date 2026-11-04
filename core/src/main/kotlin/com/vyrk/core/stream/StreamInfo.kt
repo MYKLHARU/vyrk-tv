@@ -88,6 +88,7 @@ object StreamParser {
     private val multi = rx("""\b(multi|dual[-\s]?audio)\b""")
     private val cachedRx = rx("""(\[(rd|ad|pm|dl|tb|ed|oc|pp)\+\]|⚡|instant|cached)""")
     private val uncachedRx = rx("""(\[(rd|ad|pm|dl|tb|ed|oc|pp)\s?download\]|uncached|not\s+cached|⏳)""")
+    private val resolutionTag = Regex("""\d+p""")
     private val groupRx = Regex("""-([A-Za-z0-9]{2,12})(?:\.(?:mkv|mp4|avi|m4v|ts)\b|\s*$)""")
 
     fun delivery(s: Stream): Delivery = when {
@@ -162,7 +163,7 @@ object StreamParser {
         }
         val filename = s.behaviorHints.filename ?: text.lines().firstOrNull { it.contains('.') && groupRx.containsMatchIn(it) }
         val group = filename?.let { f -> groupRx.findAll(f.trim()).lastOrNull()?.groupValues?.get(1) }
-            ?.takeUnless { it.equals("mkv", true) || it.equals("mp4", true) || it.matches(Regex("\\d+p")) }
+            ?.takeUnless { it.equals("mkv", true) || it.equals("mp4", true) || it.matches(resolutionTag) }
         return StreamInfo(
             delivery = delivery(s),
             resolution = resolution,

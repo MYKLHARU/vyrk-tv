@@ -52,4 +52,59 @@ object Perf {
             }
         }, Handler(thread.looper))
     }
+
+    /**
+     * Main-thread stalls, off unless `log.tag.VyrkPerf` is DEBUG when the app starts: any
+     * main-thread message that runs [minMs] or more is logged with what dispatched it and where it
+     * spent its time, from stacks sampled every 10 ms (raw names: retrace with the build's
+     * mapping.txt). Diagnostics only; no content or identifiers.
+     */
+    fun watchStalls(minMs: Long = 150) {
+        if (!Log.isLoggable(TAG, Log.DEBUG)) return
+        val main = android.os.Looper.getMainLooper()
+        val mainThread = main.thread
+        val lock = Any()
+        var start = 0L
+        var what = ""
+        val samples = ArrayList<Array<StackTraceElement>>()
+        val reporter = Handler(HandlerThread("VyrkStallReport").apply { start() }.looper)
+        main.setMessageLogging { s ->
+            if (s.startsWith(">")) synchronized(lock) { start = SystemClock.uptimeMillis(); what = s; samples.clear() }
+            else if (s.startsWith("<")) {
+                var report: (() -> Unit)? = null
+                synchronized(lock) {
+                    val ms = SystemClock.uptimeMillis() - start
+                    if (start != 0L && ms >= minMs) { val w = what; val got = ArrayList(samples); report = { reportStall(ms, w, got) } }
+                    start = 0L
+                }
+                report?.let { reporter.post(it) }
+            }
+        }
+        Thread({
+            while (true) {
+                Thread.sleep(10)
+                val s0 = synchronized(lock) { start }
+                if (s0 != 0L && SystemClock.uptimeMillis() - s0 >= 20) {
+                    val st = mainThread.stackTrace
+                    synchronized(lock) { if (start == s0) samples += st }
+                }
+            }
+        }, "VyrkStallSampler").apply { isDaemon = true; start() }
+    }
+
+    private val genericFrame = Regex("^(java\\.lang\\.(Thread|reflect)|android\\.os\\.(Looper|Handler)|android\\.app\\.ActivityThread|com\\.android\\.internal\\.os\\.)")
+
+    private fun reportStall(ms: Long, what: String, samples: List<Array<StackTraceElement>>) {
+        val n = samples.size
+        log("stall ${ms}ms samples=$n ${what.take(240)}")
+        if (n == 0) return
+        val incl = HashMap<String, Int>()
+        val self = HashMap<String, Int>()
+        for (st in samples) {
+            st.firstOrNull()?.let { self.merge(it.toString(), 1, Int::plus) }
+            st.map { it.toString() }.filterNot { genericFrame.containsMatchIn(it) }.distinct().forEach { incl.merge(it, 1, Int::plus) }
+        }
+        self.entries.sortedByDescending { it.value }.take(10).forEach { log("stall self ${it.value}/$n at ${it.key}") }
+        incl.entries.sortedByDescending { it.value }.take(40).forEach { log("stall incl ${it.value}/$n at ${it.key}") }
+    }
 }

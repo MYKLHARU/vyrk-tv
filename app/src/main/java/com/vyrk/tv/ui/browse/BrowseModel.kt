@@ -98,7 +98,13 @@ class BrowseModel(
         if (heroItems.isEmpty() || heroItems.none { it.id in ids }) { heroItems = candidates; heroIndex = 0 }
     }
 
+    private var builtFrom: Pair<List<Descriptor>, Set<String>>? = null
+
     fun rebuild(addons: List<Descriptor>, hiddenRows: Set<String>) {
+        // The page asks again when it first shows; same add-ons and hidden rows mean same rows.
+        val input = addons to hiddenRows
+        if (built && input == builtFrom) return
+        builtFrom = input
         val (top, rest) = CatalogRules.homeRows(addons)
         hasTop10Catalogs = top.isNotEmpty()
         val catalogs: List<Pair<CatalogRef, RowKind>> = when (tab) {

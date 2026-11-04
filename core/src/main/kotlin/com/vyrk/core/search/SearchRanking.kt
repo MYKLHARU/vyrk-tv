@@ -5,9 +5,13 @@ import java.text.Normalizer
 
 /** Merges search results from several catalogues and ranks them per type. */
 object SearchRanking {
+    // Compiled once, not per result: Android's regex compiler is slow on TV hardware.
+    private val marks = Regex("""\p{M}+""")
+    private val nonWord = Regex("""[^\p{L}\p{N}]+""")
+
     fun normalise(s: String): String =
-        Normalizer.normalize(s, Normalizer.Form.NFD).replace(Regex("""\p{M}+"""), "")
-            .lowercase().replace(Regex("""[^\p{L}\p{N}]+"""), " ").trim()
+        Normalizer.normalize(s, Normalizer.Form.NFD).replace(marks, "")
+            .lowercase().replace(nonWord, " ").trim()
 
     /** Higher is better. Exact > prefix > all tokens > some tokens; earlier source rank breaks ties. */
     fun score(query: String, name: String): Int {

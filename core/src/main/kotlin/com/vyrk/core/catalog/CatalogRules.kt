@@ -30,16 +30,18 @@ object CatalogRules {
         "Starz" to listOf("starz"),
     )
 
-    private fun wordMatch(name: String, alias: String): Boolean {
-        val n = " " + name.lowercase().replace(Regex("""[^\p{L}\p{N}+]+"""), " ") + " "
-        val a = alias.lowercase().replace(Regex("""[^\p{L}\p{N}+]+"""), " ").trim()
-        return n.contains(" $a ")
-    }
+    // Compiled once: building a Regex per catalogue and alias cost about 1.2 s on the UI thread of
+    // an NVIDIA SHIELD (Android's ICU regex compiler is slow) each time a tab's rows were built.
+    private val nonWord = Regex("""[^\p{L}\p{N}+]+""")
+    /** Aliases as whole words: lowercased, punctuation folded to spaces, padded (" disney plus "). */
+    private val serviceWords: List<Pair<String, List<String>>> =
+        SERVICES.map { (service, aliases) -> service to aliases.map { " " + it.lowercase().replace(nonWord, " ").trim() + " " } }
 
     /** The service a catalogue is named after, or null. */
     fun streamingService(catalogName: String?): String? {
         if (catalogName.isNullOrBlank()) return null
-        return SERVICES.firstOrNull { (_, aliases) -> aliases.any { wordMatch(catalogName, it) } }?.first
+        val n = " " + catalogName.lowercase().replace(nonWord, " ") + " "
+        return serviceWords.firstOrNull { (_, words) -> words.any { n.contains(it) } }?.first
     }
 
     const val TOP_N = 10

@@ -15,6 +15,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - Restyled player: round centred controls with a large Play button, clock, time left and a side panel for audio and subtitles.
 - Home: the top bar fades into the artwork, title logos are much larger, the featured row has just Watch now with dots (Left/Right change title) and keeps its place when you come back.
 - Category switching answers the remote at once: visited pages are kept instead of rebuilt, the tab highlight never waits for a page, and add-on data is decoded off the UI thread. Measured with ci/perf_tabs.sh (docs/PERFORMANCE.md).
+- On TV hardware, opening a category no longer stalls for over a second: catalogue names were matched against streaming services by compiling thousands of patterns on the UI thread. On an NVIDIA SHIELD a tab switch went from about 1.2 s to 46 ms (first visit 250 ms). Search ranking and source parsing had the same pattern and were fixed too.
 - Faster categories: rows are shared between tabs and fetched ahead, images load ahead at the size they are shown, the featured row appears on the first visit to a tab, and each tab keeps its place when you come back.
 - Holding OK on a title opens its menu without starting playback.
 - While a title loads, its logo fills like a loading bar instead of showing loading text.
