@@ -80,8 +80,11 @@ shot info-page
 # ---------------------------------------------------------------- play: broken 4K fails over
 ADDON_START=0
 [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]] && ADDON_START=$(wc -l < "$ADDON_LOG")
-key KEYCODE_DPAD_CENTER 3 "Play"
-sleep 30
+# The player is a new activity: wait for it to take focus rather than sampling at a fixed time.
+"$ADB" shell input keyevent KEYCODE_DPAD_CENTER
+echo "KEYCODE_DPAD_CENTER | (player starting) | $(window_now) | Play" >> "$TRACE"
+wait_focus '^player:' 30
+sleep 25
 shot player
 probe "player"
 expect '^player:' "player has focus"
