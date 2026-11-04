@@ -109,7 +109,10 @@ jobs:
             echo "::error::Refusing to publish a versioned release without the real signing secrets (VYRK_KEYSTORE_B64, VYRK_KEYSTORE_PASSWORD, VYRK_KEY_ALIAS, VYRK_KEY_PASSWORD)."
             exit 1
           fi
-          gh release create "$GITHUB_REF_NAME" dist/* --title "VYRK $GITHUB_REF_NAME" --notes-file CHANGELOG.md
+          # Release notes are this version's CHANGELOG section ("## vX.Y.Z" up to the next "## ").
+          NOTES="$RUNNER_TEMP/notes.md"
+          bash ci/release_notes.sh "$GITHUB_REF_NAME" CHANGELOG.md > "$NOTES"
+          gh release create "$GITHUB_REF_NAME" dist/* --title "VYRK $GITHUB_REF_NAME" --notes-file "$NOTES"
 
   e2e:
     needs: build

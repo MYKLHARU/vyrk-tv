@@ -2,9 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.0
 
-- First VYRK build: Android TV client for Stremio add-ons, Kotlin and Compose for TV.
+First public release: an Android TV client for Stremio add-ons, built with Kotlin and Compose for TV. Installing over a `ci-latest` test build needs an uninstall first, because test builds are signed with a public key. What has and hasn't been verified, and how, is in [docs/FEATURES.md](https://github.com/MYKLHARU/vyrk-tv/blob/main/docs/FEATURES.md).
+
 - Sign in with Stremio by QR code and link, or use VYRK without an account (Cinemeta and OpenSubtitles).
 - Home with a featured hero, Continue Watching, Top 10 rows per streaming service and catalogue rows.
 - Title header with an optional muted trailer while a poster has focus.

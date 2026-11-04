@@ -58,7 +58,7 @@ The full list, with what is verified and how, is in [docs/FEATURES.md](docs/FEAT
 | `vyrk-<version>-x86_64.apk` | Emulators and x86 boxes |
 | `vyrk-<version>-universal.apk` | Any device, larger download |
 
-Builds are on [Releases](https://github.com/MYKLHARU/vyrk-tv/releases). Until the first signed release, the `ci-latest` pre-release has test builds signed with a public debug key.
+Builds are on [Releases](https://github.com/MYKLHARU/vyrk-tv/releases). The `ci-latest` pre-release has test builds signed with a public debug key; Android won't update one of those to a signed release, so uninstall it first (you'll sign in again).
 
 **With adb**
 
