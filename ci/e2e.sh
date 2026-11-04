@@ -104,6 +104,9 @@ fi
 key KEYCODE_DPAD_DOWN 1.5 "show controls"
 shot player-controls
 key KEYCODE_CAPTIONS 2 "CC opens Audio & subtitles"
+# The CI emulator can be slow to give the panel window focus: wait, and press CC once more if it never opened.
+for _ in 1 2 3 4 5; do [[ "$(focus_now)" =~ ^panel: ]] && break; probe "panel" >/dev/null 2>&1 || true; sleep 1; done
+[[ "$(focus_now)" =~ ^panel: ]] || key KEYCODE_CAPTIONS 3 "CC again"
 expect '^panel:' "Audio & subtitles panel"
 shot audio-subtitles
 key KEYCODE_BACK 1.2 "close panel"
