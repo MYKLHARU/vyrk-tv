@@ -93,9 +93,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete ci-latest --yes --cleanup-tag 2>/dev/null || true
-          sleep 5
-          gh release create ci-latest --prerelease --target "$GITHUB_SHA" \
+          recreate() { local tag=$1; shift; for i in 1 2 3 4 5; do gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true; gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" >/dev/null 2>&1 || true; sleep $((i * 4)); gh release create "$tag" "$@" && return 0; echo "create retry $i"; done; return 1; }
+          recreate ci-latest --prerelease --target "$GITHUB_SHA" \
             --title "Latest CI build (${{ steps.version.outputs.name }})" \
             --notes "Automatic build of $GITHUB_SHA. Signed with: $SIGNED key. Not a release."
           # A just-created release can 404 for a moment; retry the upload.
@@ -160,9 +159,8 @@ jobs:
           (cd ci/out/e2e && zip -q -r ../e2e-results.zip . || true)
           files=(ci/out/e2e/*.png ci/out/e2e/focus-trace.txt ci/out/e2e/logcat-app.txt ci/out/e2e/logcat.txt ci/out/e2e/addon.log ci/out/e2e-results.zip)
           existing=(); for f in "${files[@]}"; do [[ -f "$f" ]] && existing+=("$f"); done
-          gh release delete ci-screens --yes --cleanup-tag 2>/dev/null || true
-          sleep 5
-          gh release create ci-screens --prerelease --target "$GITHUB_SHA" --title "Emulator journey (${{ needs.build.outputs.version }})" \
+          recreate() { local tag=$1; shift; for i in 1 2 3 4 5; do gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true; gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" >/dev/null 2>&1 || true; sleep $((i * 4)); gh release create "$tag" "$@" && return 0; echo "create retry $i"; done; return 1; }
+          recreate ci-screens --prerelease --target "$GITHUB_SHA" --title "Emulator journey (${{ needs.build.outputs.version }})" \
             --notes "Screenshots, per-key focus trace and logcat from ci/e2e.sh on an Android TV API 34 emulator (tv_1080p)."
           for i in 1 2 3 4 5; do gh release upload ci-screens "${existing[@]}" --clobber && break; echo "upload retry $i"; sleep $((i * 5)); done
 
@@ -213,8 +211,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete ci-showcase --yes --cleanup-tag 2>/dev/null || true
-          sleep 5
-          gh release create ci-showcase --prerelease --target "$GITHUB_SHA" --title "Showcase captures (${{ needs.build.outputs.version }})" \
+          recreate() { local tag=$1; shift; for i in 1 2 3 4 5; do gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true; gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" >/dev/null 2>&1 || true; sleep $((i * 4)); gh release create "$tag" "$@" && return 0; echo "create retry $i"; done; return 1; }
+          recreate ci-showcase --prerelease --target "$GITHUB_SHA" --title "Showcase captures (${{ needs.build.outputs.version }})" \
             --notes "Real app, live catalogues, captured by ci/showcase.sh. Review before copying into docs/images."
           for i in 1 2 3 4 5; do gh release upload ci-showcase ci/out/showcase/*.png docs/images/banner.png docs/images/social-preview.png docs/images/screenshots/*.jpg --clobber && break; echo "upload retry $i"; sleep $((i * 5)); done
