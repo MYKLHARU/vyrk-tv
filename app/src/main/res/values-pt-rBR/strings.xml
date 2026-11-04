@@ -132,6 +132,7 @@
     <string name="max_resolution">Resolução máxima</string>
     <string name="mono">Mono</string>
     <string name="more">Mais</string>
+    <string name="more_count">+%1$d mais</string>
     <string name="more_info">Mais informações</string>
     <string name="move_down">Mover para baixo</string>
     <string name="move_up">Mover para cima</string>
@@ -144,7 +145,7 @@
     <string name="no_sources_found">Nenhum complemento encontrou uma fonte para este título.</string>
     <string name="no_sources_playable">Foram encontradas fontes, mas nenhuma toca nesta TV.</string>
     <string name="no_sources_torrent">Só há fontes torrent. Elas precisam de um servidor de streaming.</string>
-    <string name="no_stream_addons">Nenhum complemento instalado oferece streams para este título. Instale um em Complementos.</string>
+    <string name="no_stream_addons">Nenhum complemento instalado oferece streams para este título. Instale um em Configurações › Complementos.</string>
     <string name="no_trailer">Este título não tem trailer.</string>
     <string name="none">Nenhum</string>
     <string name="not_affiliated">O VYRK não hospeda mídia e não é afiliado ao Stremio.</string>
@@ -186,7 +187,6 @@
     <string name="preview_manual">Manual</string>
     <string name="preview_sound">Som da prévia</string>
     <string name="previews">Prévias</string>
-    <string name="previous">Anterior</string>
     <string name="profile_name_hint">Nome do perfil</string>
     <string name="rating_attribution">Nota do IMDb, pelos seus complementos.</string>
     <string name="ready_when_you_are">Pronto quando você quiser</string>
@@ -256,7 +256,6 @@
     <string name="source_failed_body">A fonte escolhida não tocou.</string>
     <string name="source_failed_title">Esta fonte não tocou</string>
     <string name="source_preset">Escolha da fonte</string>
-    <string name="sources">Fontes</string>
     <string name="sources_addons_failed">Seus complementos não responderam. Tente Atualizar.</string>
     <string name="sources_available">%1$d fontes disponíveis</string>
     <string name="sources_on_info">Mostrar fontes na página de informações</string>
@@ -284,7 +283,6 @@
     <string name="synced_with_account">Sincronizado com sua conta do Stremio</string>
     <string name="syncing">Sincronizando…</string>
     <string name="system_default">Padrão do sistema</string>
-    <string name="tab_addons">Complementos</string>
     <string name="tab_anime">Anime</string>
     <string name="tab_home">Início</string>
     <string name="tab_library">Biblioteca</string>

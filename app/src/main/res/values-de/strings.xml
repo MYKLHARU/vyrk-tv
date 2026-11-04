@@ -132,6 +132,7 @@
     <string name="max_resolution">Maximale Auflösung</string>
     <string name="mono">Mono</string>
     <string name="more">Mehr</string>
+    <string name="more_count">+%1$d weitere</string>
     <string name="more_info">Mehr Infos</string>
     <string name="move_down">Nach unten</string>
     <string name="move_up">Nach oben</string>
@@ -144,7 +145,7 @@
     <string name="no_sources_found">Kein Add-on hat eine Quelle für diesen Titel gefunden.</string>
     <string name="no_sources_playable">Es wurden Quellen gefunden, aber keine läuft auf diesem Fernseher.</string>
     <string name="no_sources_torrent">Es wurden nur Torrent-Quellen gefunden. Sie brauchen einen Streaming-Server.</string>
-    <string name="no_stream_addons">Kein installiertes Add-on liefert Streams für diesen Titel. Installiere eins unter Add-ons.</string>
+    <string name="no_stream_addons">Kein installiertes Add-on liefert Streams für diesen Titel. Installiere eins unter Einstellungen › Add-ons.</string>
     <string name="no_trailer">Kein Trailer für diesen Titel.</string>
     <string name="none">Keine</string>
     <string name="not_affiliated">VYRK hostet keine Medien und ist nicht mit Stremio verbunden.</string>
@@ -186,7 +187,6 @@
     <string name="preview_manual">Manuell</string>
     <string name="preview_sound">Ton der Vorschau</string>
     <string name="previews">Vorschauen</string>
-    <string name="previous">Zurück</string>
     <string name="profile_name_hint">Profilname</string>
     <string name="rating_attribution">Bewertung von IMDb, über deine Add-ons.</string>
     <string name="ready_when_you_are">Bereit, wenn du es bist</string>
@@ -256,7 +256,6 @@
     <string name="source_failed_body">Die ausgewählte Quelle lief nicht.</string>
     <string name="source_failed_title">Diese Quelle lief nicht</string>
     <string name="source_preset">Quellenwahl</string>
-    <string name="sources">Quellen</string>
     <string name="sources_addons_failed">Deine Add-ons haben nicht geantwortet. Versuche Aktualisieren.</string>
     <string name="sources_available">%1$d Quellen verfügbar</string>
     <string name="sources_on_info">Quellen auf der Infoseite anzeigen</string>
@@ -284,7 +283,6 @@
     <string name="synced_with_account">Mit deinem Stremio-Konto synchronisiert</string>
     <string name="syncing">Synchronisiere…</string>
     <string name="system_default">Systemstandard</string>
-    <string name="tab_addons">Add-ons</string>
     <string name="tab_anime">Anime</string>
     <string name="tab_home">Start</string>
     <string name="tab_library">Mediathek</string>

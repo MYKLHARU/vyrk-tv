@@ -132,6 +132,7 @@
     <string name="max_resolution">Resolución máxima</string>
     <string name="mono">Mono</string>
     <string name="more">Más</string>
+    <string name="more_count">+%1$d más</string>
     <string name="more_info">Más información</string>
     <string name="move_down">Bajar</string>
     <string name="move_up">Subir</string>
@@ -144,7 +145,7 @@
     <string name="no_sources_found">Ningún complemento encontró una fuente para este título.</string>
     <string name="no_sources_playable">Se encontraron fuentes, pero ninguna se puede reproducir en este televisor.</string>
     <string name="no_sources_torrent">Solo hay fuentes torrent. Necesitan un servidor de streaming.</string>
-    <string name="no_stream_addons">Ningún complemento instalado ofrece streams para este título. Instala uno en Complementos.</string>
+    <string name="no_stream_addons">Ningún complemento instalado ofrece streams para este título. Instala uno en Ajustes › Complementos.</string>
     <string name="no_trailer">Este título no tiene tráiler.</string>
     <string name="none">Ninguno</string>
     <string name="not_affiliated">VYRK no aloja contenido y no está afiliado a Stremio.</string>
@@ -186,7 +187,6 @@
     <string name="preview_manual">Manual</string>
     <string name="preview_sound">Sonido de la vista previa</string>
     <string name="previews">Vistas previas</string>
-    <string name="previous">Anterior</string>
     <string name="profile_name_hint">Nombre del perfil</string>
     <string name="rating_attribution">Puntuación de IMDb, a través de tus complementos.</string>
     <string name="ready_when_you_are">Listo cuando tú quieras</string>
@@ -256,7 +256,6 @@
     <string name="source_failed_body">La fuente que elegiste no se reprodujo.</string>
     <string name="source_failed_title">Esta fuente no se reprodujo</string>
     <string name="source_preset">Elección de fuente</string>
-    <string name="sources">Fuentes</string>
     <string name="sources_addons_failed">Tus complementos no respondieron. Prueba Actualizar.</string>
     <string name="sources_available">%1$d fuentes disponibles</string>
     <string name="sources_on_info">Mostrar fuentes en la página de información</string>
@@ -284,7 +283,6 @@
     <string name="synced_with_account">Sincronizado con tu cuenta de Stremio</string>
     <string name="syncing">Sincronizando…</string>
     <string name="system_default">Predeterminado del sistema</string>
-    <string name="tab_addons">Complementos</string>
     <string name="tab_anime">Anime</string>
     <string name="tab_home">Inicio</string>
     <string name="tab_library">Biblioteca</string>

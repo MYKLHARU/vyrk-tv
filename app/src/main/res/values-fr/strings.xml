@@ -132,6 +132,7 @@
     <string name="max_resolution">Résolution maximale</string>
     <string name="mono">Mono</string>
     <string name="more">Plus</string>
+    <string name="more_count">+%1$d autres</string>
     <string name="more_info">Plus d\'infos</string>
     <string name="move_down">Descendre</string>
     <string name="move_up">Monter</string>
@@ -144,7 +145,7 @@
     <string name="no_sources_found">Aucun module n\'a trouvé de source pour ce titre.</string>
     <string name="no_sources_playable">Des sources ont été trouvées, mais aucune ne peut être lue sur ce téléviseur.</string>
     <string name="no_sources_torrent">Seules des sources torrent ont été trouvées. Elles nécessitent un serveur de streaming.</string>
-    <string name="no_stream_addons">Aucun module installé ne propose de flux pour ce titre. Installez-en un dans Modules.</string>
+    <string name="no_stream_addons">Aucun module installé ne propose de flux pour ce titre. Installez-en un dans Paramètres › Modules.</string>
     <string name="no_trailer">Pas de bande-annonce pour ce titre.</string>
     <string name="none">Aucun</string>
     <string name="not_affiliated">VYRK n\'héberge aucun contenu et n\'est pas affilié à Stremio.</string>
@@ -186,7 +187,6 @@
     <string name="preview_manual">Manuel</string>
     <string name="preview_sound">Son de l\'aperçu</string>
     <string name="previews">Aperçus</string>
-    <string name="previous">Précédent</string>
     <string name="profile_name_hint">Nom du profil</string>
     <string name="rating_attribution">Note IMDb, via vos modules.</string>
     <string name="ready_when_you_are">Prêt quand vous l\'êtes</string>
@@ -256,7 +256,6 @@
     <string name="source_failed_body">La source choisie n\'a pas été lue.</string>
     <string name="source_failed_title">Cette source n\'a pas été lue</string>
     <string name="source_preset">Choix de la source</string>
-    <string name="sources">Sources</string>
     <string name="sources_addons_failed">Vos modules n\'ont pas répondu. Essayez Actualiser.</string>
     <string name="sources_available">%1$d sources disponibles</string>
     <string name="sources_on_info">Afficher les sources sur la page d\'infos</string>
@@ -284,7 +283,6 @@
     <string name="synced_with_account">Synchronisé avec votre compte Stremio</string>
     <string name="syncing">Synchronisation…</string>
     <string name="system_default">Langue du système</string>
-    <string name="tab_addons">Modules</string>
     <string name="tab_anime">Anime</string>
     <string name="tab_home">Accueil</string>
     <string name="tab_library">Bibliothèque</string>

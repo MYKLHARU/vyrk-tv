@@ -35,7 +35,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Browse** — a featured hero, Continue Watching, Top 10 rows per streaming service and your catalogue rows. A title header with an optional muted trailer follows focus. Rows load lazily and page as you scroll.
 
-**Details and sources** — a translucent info page with credits and every source ranked and explained. Play always starts the best one; choosing is optional. Series get a season guide. With a TMDB key, cast and crew get photos and their own pages.
+**Details and sources** — a full-screen title page over the title's own artwork, with cast photos; below it, every source ranked and explained. Play always starts the best one; choosing is optional. Series get a season guide. With a TMDB key, cast and crew get photos and their own pages.
 
 **Playback** — Media3 with the FFmpeg audio decoder, HLS and DASH. Broken links are refreshed or skipped automatically; a source you picked asks before switching. Skip intro and recap from IntroDB timings, a timeline with chapter markers and smart scrubbing, and if an audio track breaks mid-film VYRK switches to the next best one at the same second. Audio and subtitle preferences, subtitle sync, Up Next, sleep timers.
 

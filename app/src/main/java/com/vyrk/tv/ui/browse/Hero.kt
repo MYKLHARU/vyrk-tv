@@ -95,14 +95,25 @@ fun Backdrop(urls: List<String>, modifier: Modifier = Modifier) {
 }
 
 /**
- * Title logo for the hero and header: fitted into [maxWidth] × the height it is given (up to
- * [maxHeight]), so small logo files are scaled up instead of drawn at their own pixel size; aspect
- * ratio kept, anchored bottom-left. Falls back through [logos], then to the title in large bold type.
+ * The logo each title showed first, by title id. The candidates change while a title loads (the
+ * row's logo, then the one in its full details, then TMDB's), and following them made the logo
+ * swap to a different picture moments after it appeared. Once a logo has loaded it stays, here
+ * and wherever else the title is shown (hero, header, info page).
+ */
+private val shownLogos = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+/**
+ * Title logo for the hero, header and info page: fitted into [maxWidth] × the height it is given
+ * (up to [maxHeight]), so small logo files are scaled up instead of drawn at their own pixel size;
+ * aspect ratio kept, anchored bottom-left. Falls back through [logos], then to the title in large
+ * bold type. The first logo that loads for [titleId] is kept (see [shownLogos]).
  */
 @Composable
-fun HeroLogo(name: String, logos: List<String>, maxWidth: Dp, maxHeight: Dp, textStyle: TextStyle, modifier: Modifier = Modifier) {
-    var attempt by remember(logos) { mutableIntStateOf(0) }
-    val url = logos.getOrNull(attempt)
+fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, maxHeight: Dp, textStyle: TextStyle, modifier: Modifier = Modifier) {
+    val kept = shownLogos[titleId]
+    val candidates = remember(titleId, logos, kept) { (listOfNotNull(kept) + logos).distinct() }
+    var failed by remember(titleId) { androidx.compose.runtime.mutableStateOf(emptySet<String>()) }
+    val url = if (kept != null && kept !in failed) kept else candidates.firstOrNull { it !in failed }
     if (url == null) {
         Box(modifier.widthIn(max = maxWidth), contentAlignment = Alignment.BottomStart) {
             Text(name.ifBlank { " " }, style = textStyle, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -116,7 +127,8 @@ fun HeroLogo(name: String, logos: List<String>, maxWidth: Dp, maxHeight: Dp, tex
     }
     AsyncImage(
         model = request, contentDescription = name, contentScale = ContentScale.Fit, alignment = Alignment.BottomStart,
-        onError = { if (logos.getOrNull(attempt) == url) attempt += 1 },
+        onSuccess = { shownLogos.putIfAbsent(titleId, url) },
+        onError = { if (shownLogos[titleId] == url) shownLogos.remove(titleId); failed = failed + url },
         modifier = modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight(),
     )
 }
@@ -135,33 +147,49 @@ fun TitleLogo(meta: MetaPreview, maxWidth: Dp, maxHeight: Dp) {
     )
 }
 
-/** Year · type · runtime · IMDb rating, then genre chips. */
+/** Height of the facts line and of the genre line when they are [reserve]d. */
+private val FACTS_H = 24.dp
+
+/**
+ * Year · type · runtime · IMDb rating, then genre chips. With [reserve], both lines keep their
+ * height before the title's details arrive (genres and rating come later), so text below and the
+ * logo above don't move when they do.
+ */
 @Composable
-fun MetaFacts(meta: MetaPreview, full: MetaItem?) {
+fun MetaFacts(meta: MetaPreview, full: MetaItem?, reserve: Boolean = false) {
     val c = Vyrk.colors
     val parts = listOfNotNull(
         (full?.releaseInfo ?: meta.releaseInfo)?.takeIf { it.isNotBlank() },
         when (meta.type) { "movie" -> str(R.string.type_movie); "series" -> str(R.string.type_series); "tv" -> str(R.string.type_live); else -> meta.type.replaceFirstChar { it.uppercase() } },
-        (full?.runtime ?: meta.runtime)?.takeIf { it.isNotBlank() },
+        com.vyrk.core.addon.RuntimeText.format(full?.runtime ?: meta.runtime),
     )
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(parts.joinToString("  ·  "), style = Vyrk.type.labelL, color = c.textSecondary)
+    Row(if (reserve) Modifier.height(FACTS_H) else Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(parts.joinToString("  ·  "), style = Vyrk.type.labelL, color = c.textSecondary, maxLines = 1)
         val rating = full?.imdbRating ?: meta.imdbRating
         if (!rating.isNullOrBlank()) Tag("IMDb $rating", color = c.background, background = c.warning)
     }
     val genres = (full?.allGenres ?: meta.genres).take(4)
-    if (genres.isNotEmpty()) {
+    if (reserve) {
+        Box(Modifier.height(6.dp))
+        // One line, always there: genres fill it when they arrive.
+        Row(Modifier.height(FACTS_H), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) { genres.forEach { Tag(it) } }
+    } else if (genres.isNotEmpty()) {
         Box(Modifier.height(8.dp))
         WrapRow(spacing = 6.dp) { genres.forEach { Tag(it) } }
     }
 }
 
+/** Starring and Director lines. With [reserve], both lines keep their height while empty. */
 @Composable
-fun CreditLines(full: MetaItem?, meta: MetaPreview) {
+fun CreditLines(full: MetaItem?, meta: MetaPreview, reserve: Boolean = false) {
     val cast = (full?.castNames ?: meta.cast).take(5)
     val director = (full?.directorNames ?: meta.director).take(2)
-    if (cast.isNotEmpty()) Text(str(R.string.starring, cast.joinToString(", ")), style = Vyrk.type.bodyS, color = Vyrk.colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    if (director.isNotEmpty()) Text(str(R.string.director_line, director.joinToString(", ")), style = Vyrk.type.bodyS, color = Vyrk.colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    val style = Vyrk.type.bodyS
+    val color = Vyrk.colors.textSecondary
+    if (cast.isNotEmpty()) Text(str(R.string.starring, cast.joinToString(", ")), style = style, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    else if (reserve) Text(" ", style = style)
+    if (director.isNotEmpty()) Text(str(R.string.director_line, director.joinToString(", ")), style = style, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    else if (reserve) Text(" ", style = style)
 }
 
 /**
@@ -190,18 +218,19 @@ fun Hero(
     val meta = items.getOrNull(index) ?: return
     val c = Vyrk.colors
     Box(Modifier.fillMaxWidth().height(height).onFocusChanged { onFocusChanged(it.hasFocus) }) {
-        // Bottom-anchored; the logo takes whatever height the text leaves, up to its cap.
+        // Bottom-anchored. Every line below the logo keeps a fixed height, so the logo's share (all
+        // that's left) never changes and nothing moves when the title's details arrive.
         Column(
             Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            HeroLogo(full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f, fill = false))
+            HeroLogo(meta.id, full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f))
             Box(Modifier.height(14.dp))
-            MetaFacts(meta, full)
+            MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(10.dp))
-            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyM, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = HERO_TEXT_W))
+            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyM, color = c.textSecondary, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = HERO_TEXT_W))
             Box(Modifier.height(6.dp))
-            Column(Modifier.widthIn(max = HERO_TEXT_W)) { CreditLines(full, meta) }
+            Column(Modifier.widthIn(max = HERO_TEXT_W)) { CreditLines(full, meta, reserve = true) }
             Box(Modifier.height(18.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 VyrkButton(
@@ -242,14 +271,15 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
             Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 12.dp, bottom = 14.dp).width(500.dp),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            // Logo: as large as the header allows, so short or square logos still read from the sofa.
-            HeroLogo(meta.name.ifBlank { full?.name.orEmpty() }, art.logos, 420.dp, 170.dp, Vyrk.type.displayM, Modifier.weight(1f, fill = false))
+            // Logo: everything the fixed-height lines below leave, so short or square logos still read
+            // from the sofa and the text never shifts as a title's details load.
+            HeroLogo(meta.id, meta.name.ifBlank { full?.name.orEmpty() }, art.logos, 420.dp, 170.dp, Vyrk.type.displayM, Modifier.weight(1f))
             Box(Modifier.height(10.dp))
-            MetaFacts(meta, full)
+            MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(8.dp))
-            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyS, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyS, color = c.textSecondary, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Box(Modifier.height(4.dp))
-            CreditLines(full, meta)
+            CreditLines(full, meta, reserve = true)
             Box(Modifier.height(6.dp))
             Text(str(R.string.header_hint), style = Vyrk.type.labelS, color = c.textMuted)
         }

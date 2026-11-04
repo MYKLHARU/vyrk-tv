@@ -216,6 +216,14 @@ adbs am start -a android.intent.action.VIEW -d "'vyrk://open?type=series&id=tt09
 sleep 7
 probe "series info"
 expect '^info:play$' "vyrk://open opens the series info page"
+shot info-series
+# The title page is two pages: the more button (or Down) slides up episodes and details; Back returns.
+until_focus KEYCODE_DPAD_RIGHT '^info:more$' 4
+key KEYCODE_DPAD_CENTER 1.6 "page two"
+expect '^info:watched$' "more opens page two"
+shot info-series-page-two
+key KEYCODE_BACK 1.6 "back to page one"
+expect '^info:play$' "Back on page two returns to Play"
 "$ADB" shell input keyevent KEYCODE_DPAD_CENTER
 wait_focus '^player:' 40
 sleep 12

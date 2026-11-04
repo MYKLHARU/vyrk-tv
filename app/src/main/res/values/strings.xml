@@ -132,6 +132,7 @@
     <string name="max_resolution">Maximum resolution</string>
     <string name="mono">Mono</string>
     <string name="more">More</string>
+    <string name="more_count">+%1$d more</string>
     <string name="more_info">More info</string>
     <string name="move_down">Move down</string>
     <string name="move_up">Move up</string>
@@ -144,7 +145,7 @@
     <string name="no_sources_found">No add-on found a source for this title.</string>
     <string name="no_sources_playable">Sources were found, but none can play on this TV.</string>
     <string name="no_sources_torrent">Only torrent sources were found. They need a streaming server.</string>
-    <string name="no_stream_addons">No installed add-on provides streams for this title. Install one in Add-ons.</string>
+    <string name="no_stream_addons">No installed add-on provides streams for this title. Install one in Settings › Add-ons.</string>
     <string name="no_trailer">No trailer for this title.</string>
     <string name="none">None</string>
     <string name="not_affiliated">VYRK hosts no media and isn\'t affiliated with Stremio.</string>
@@ -186,7 +187,6 @@
     <string name="preview_manual">Manual</string>
     <string name="preview_sound">Preview sound</string>
     <string name="previews">Previews</string>
-    <string name="previous">Previous</string>
     <string name="profile_name_hint">Profile name</string>
     <string name="rating_attribution">Rating from IMDb, via your add-ons.</string>
     <string name="ready_when_you_are">Ready when you are</string>
@@ -256,7 +256,6 @@
     <string name="source_failed_body">The source you picked didn\'t play.</string>
     <string name="source_failed_title">This source didn\'t play</string>
     <string name="source_preset">Source choice</string>
-    <string name="sources">Sources</string>
     <string name="sources_addons_failed">Your add-ons didn\'t answer. Try Refresh.</string>
     <string name="sources_available">%1$d sources available</string>
     <string name="sources_on_info">Show sources on the info page</string>
@@ -284,7 +283,6 @@
     <string name="synced_with_account">Synced with your Stremio account</string>
     <string name="syncing">Syncing…</string>
     <string name="system_default">System default</string>
-    <string name="tab_addons">Add-ons</string>
     <string name="tab_anime">Anime</string>
     <string name="tab_home">Home</string>
     <string name="tab_library">Library</string>

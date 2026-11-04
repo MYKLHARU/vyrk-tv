@@ -132,6 +132,7 @@
     <string name="max_resolution">Risoluzione massima</string>
     <string name="mono">Mono</string>
     <string name="more">Altro</string>
+    <string name="more_count">+%1$d altri</string>
     <string name="more_info">Altre informazioni</string>
     <string name="move_down">Sposta giù</string>
     <string name="move_up">Sposta su</string>
@@ -144,7 +145,7 @@
     <string name="no_sources_found">Nessun componente ha trovato una fonte per questo titolo.</string>
     <string name="no_sources_playable">Sono state trovate fonti, ma nessuna si riproduce su questo televisore.</string>
     <string name="no_sources_torrent">Ci sono solo fonti torrent. Richiedono un server di streaming.</string>
-    <string name="no_stream_addons">Nessun componente installato offre stream per questo titolo. Installane uno in Componenti.</string>
+    <string name="no_stream_addons">Nessun componente installato offre stream per questo titolo. Installane uno in Impostazioni › Componenti.</string>
     <string name="no_trailer">Nessun trailer per questo titolo.</string>
     <string name="none">Nessuno</string>
     <string name="not_affiliated">VYRK non ospita contenuti e non è affiliato a Stremio.</string>
@@ -186,7 +187,6 @@
     <string name="preview_manual">Manuale</string>
     <string name="preview_sound">Audio dell\'anteprima</string>
     <string name="previews">Anteprime</string>
-    <string name="previous">Precedente</string>
     <string name="profile_name_hint">Nome del profilo</string>
     <string name="rating_attribution">Voto di IMDb, tramite i tuoi componenti.</string>
     <string name="ready_when_you_are">Pronto quando vuoi</string>
@@ -256,7 +256,6 @@
     <string name="source_failed_body">La fonte che hai scelto non è partita.</string>
     <string name="source_failed_title">Questa fonte non è partita</string>
     <string name="source_preset">Scelta della fonte</string>
-    <string name="sources">Fonti</string>
     <string name="sources_addons_failed">I tuoi componenti non hanno risposto. Prova Aggiorna.</string>
     <string name="sources_available">%1$d fonti disponibili</string>
     <string name="sources_on_info">Mostra le fonti nella pagina informazioni</string>
@@ -284,7 +283,6 @@
     <string name="synced_with_account">Sincronizzato con il tuo account Stremio</string>
     <string name="syncing">Sincronizzazione…</string>
     <string name="system_default">Predefinita di sistema</string>
-    <string name="tab_addons">Componenti</string>
     <string name="tab_anime">Anime</string>
     <string name="tab_home">Home</string>
     <string name="tab_library">Libreria</string>

@@ -132,6 +132,7 @@
     <string name="max_resolution">अधिकतम रिज़ॉल्यूशन</string>
     <string name="mono">मोनो</string>
     <string name="more">और</string>
+    <string name="more_count">+%1$d और</string>
     <string name="more_info">और जानकारी</string>
     <string name="move_down">नीचे ले जाएँ</string>
     <string name="move_up">ऊपर ले जाएँ</string>
@@ -144,7 +145,7 @@
     <string name="no_sources_found">किसी ऐड-ऑन को इस टाइटल का स्रोत नहीं मिला।</string>
     <string name="no_sources_playable">स्रोत मिले, लेकिन कोई भी इस टीवी पर नहीं चलता।</string>
     <string name="no_sources_torrent">केवल टॉरेंट स्रोत मिले। इनके लिए स्ट्रीमिंग सर्वर चाहिए।</string>
-    <string name="no_stream_addons">कोई इंस्टॉल ऐड-ऑन इस टाइटल की स्ट्रीम नहीं देता। ऐड-ऑन में जाकर एक इंस्टॉल करें।</string>
+    <string name="no_stream_addons">कोई इंस्टॉल ऐड-ऑन इस टाइटल की स्ट्रीम नहीं देता। सेटिंग › ऐड-ऑन में जाकर एक इंस्टॉल करें।</string>
     <string name="no_trailer">इस टाइटल का कोई ट्रेलर नहीं।</string>
     <string name="none">कोई नहीं</string>
     <string name="not_affiliated">VYRK कोई मीडिया होस्ट नहीं करता और Stremio से संबद्ध नहीं है।</string>
@@ -186,7 +187,6 @@
     <string name="preview_manual">मैन्युअल</string>
     <string name="preview_sound">प्रीव्यू की आवाज़</string>
     <string name="previews">प्रीव्यू</string>
-    <string name="previous">पिछला</string>
     <string name="profile_name_hint">प्रोफ़ाइल का नाम</string>
     <string name="rating_attribution">IMDb की रेटिंग, आपके ऐड-ऑन के ज़रिए।</string>
     <string name="ready_when_you_are">आप तैयार, तो हम तैयार</string>
@@ -256,7 +256,6 @@
     <string name="source_failed_body">आपका चुना हुआ स्रोत नहीं चला।</string>
     <string name="source_failed_title">यह स्रोत नहीं चला</string>
     <string name="source_preset">स्रोत चुनाव</string>
-    <string name="sources">स्रोत</string>
     <string name="sources_addons_failed">आपके ऐड-ऑन ने जवाब नहीं दिया। रीफ़्रेश आज़माएँ।</string>
     <string name="sources_available">%1$d स्रोत उपलब्ध</string>
     <string name="sources_on_info">जानकारी पेज पर स्रोत दिखाएँ</string>
@@ -284,7 +283,6 @@
     <string name="synced_with_account">आपके Stremio खाते से सिंक है</string>
     <string name="syncing">सिंक हो रहा है…</string>
     <string name="system_default">सिस्टम डिफ़ॉल्ट</string>
-    <string name="tab_addons">ऐड-ऑन</string>
     <string name="tab_anime">एनिमे</string>
     <string name="tab_home">होम</string>
     <string name="tab_library">लाइब्रेरी</string>

@@ -58,6 +58,8 @@ not run yet.
 | Hero rotates every 9 s, pauses when focused, under overlays/previews, scrolled away, in background, Reduce motion | `BrowsePage` | Built | — |
 | Hold Select / Menu on Watch now opens info | `Hero` | Built | — |
 | Title header (56%), large logo, facts, two-line synopsis, hint line | `browse/Hero.kt` | Done | emulator capture, showcase |
+| Header and hero hold still while a title loads: facts, genres, two synopsis lines, Starring and Director keep fixed heights, so the logo's share never changes; the first logo that loads for a title is kept (it used to be replaced by another logo when the full details arrived) and is the one the hero and title page show too | `Hero.HeroLogo`, `MetaFacts(reserve)`, `CreditLines(reserve)` | Done | screen recording along a row on an API 36 emulator: no line moved and no logo changed |
+| Runtimes shown one way ("1h 35m", "2h", "45m") whatever form the add-on uses ("95 min", "1.6h", "2h 10min") | `core/addon/RuntimeText` | Done | core |
 | Byte downloads (Matroska chapter reads) keep at most the bytes asked for, 4 MB without a range; a server that ignores Range no longer streams the whole video into memory (CI OutOfMemoryError while playing) | `core/net/ByteRange`, `OkHttpTransport.getBytes` | Done | core; local journey peak heap measured before/after |
 | Add-on request timeout starts when the request has a slot (waiting behind slow add-ons no longer times rows out); add-on failures logged as `VyrkPerf` lines with the redacted reason | `AddonClient`, `AppGraph` | Done | core; SHIELD log showed the real cause of empty rows (an add-on answering HTTP 500) |
 | A held OK that opens a menu or info page never clicks inside it (no accidental Resume/Play) | `OverlayWindow` | Done | emulator check (long press on a poster opens the menu, player not started) |
@@ -83,7 +85,8 @@ not run yet.
 
 | Requirement | Where | Status | Evidence |
 |---|---|---|---|
-| Overlay window ~92%×90%, 54/46 split, blurred art (Android 12+) under 55% tint, translucent panel, alpha-masked artwork | `overlays/InfoPage.kt` | Done | E2E, showcase |
+| Full-screen title page: the title's own backdrop across the screen (dark left and bottom), logo, certificate · year · genre · runtime · IMDb, three-line synopsis, people chips with photos and "+N more" (as many as fit), Play/Resume, Trailer, library and more buttons, clock; fixed slots so nothing moves while details load | `overlays/InfoPage.kt` | Done | emulator check and captures, API 36 (local build without a TMDB key: people chips show initials; TMDB photos not seen) |
+| Page two (Down or the more button): episodes for a series, sources for a film (when sources are shown on the info page), beside the full synopsis, Mark watched, credits and cast; Back on page two returns to page one | `InfoPage` | Done | emulator check, API 36; E2E steps added (series page two) |
 | No close button; Back returns to the poster | `Overlays` | Done | E2E |
 | Below 760dp wide: info and sources as tabs | `InfoPage` | Not done | — |
 | Play always starts the best-ranked source | `Playback` | Done | E2E |
