@@ -58,6 +58,7 @@ pushed), so nothing below is verified by CI.
 | Every catalogue tab is built when add-ons are known; the open tab fetches its first 6 rows at once, other tabs their first 3 | `MainScreen`, `BrowseModel.prefetch` | Done | emulator capture |
 | Hero keeps its slot while its titles load and focus waits for it, so it shows on the first visit to a tab | `BrowsePage` | Done | E2E (Movies and Series open on the featured row) |
 | Each tab keeps its scroll, row scroll and selected title; Down from the tab strip returns to that title | `BrowseModel`, `BrowsePage` | Done | E2E (Home → Movies → Home keeps the poster) |
+| Visited catalogue pages stay composed while hidden; revisits switch in the same frame as the tab highlight, first visits one frame after it; add-on JSON decoded off the main thread | `MainScreen.keepAlive`, `BrowsePage(active)`, `AddonClient` | Done | `ci/perf_tabs.sh` on the emulator: revisit 30 ms median, UI-thread work 4 ms (was 37 ms, 9 ms); see docs/PERFORMANCE.md |
 | Images requested ahead at drawn size: hero backdrops and logos, first 8 posters of the first 8 rows; posters use AsyncImage; up to 16 requests per host | `BrowsePage.prefetchImage`, `Rows.kt`, `OkHttpTransport` | Done | emulator capture |
 | Focused row sits below the header; vertical moves land on the first title | `browse/Scrolling.kt`, `Rows.kt` | Done | E2E |
 | Comfort-zone BringIntoViewSpec (12%/10%) and page spec with atomic flags | `browse/Scrolling.kt` | Done | E2E |

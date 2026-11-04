@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
             }
         })
         val graph = VyrkApp.graph(this)
+        com.vyrk.tv.ui.Perf.watchFrames(this) { "main" }
         setContent {
             val ready by graph.ready.collectAsState()
             AppRoot(graph = graph, ready = ready, activity = this)

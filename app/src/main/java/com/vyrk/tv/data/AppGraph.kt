@@ -25,7 +25,9 @@ class AppGraph(val context: Context) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val http: OkHttpClient = OkHttpTransport.client("VYRK/${BuildConfig.VERSION_NAME} (Android TV)")
     val transport = OkHttpTransport(http)
-    val addonClient = AddonClient(transport, maxConcurrent = 8)
+    val addonClient = AddonClient(transport, maxConcurrent = 8, onDecoded = { resource, ms, size, thread ->
+        com.vyrk.tv.ui.Perf.log("decode $resource ${ms}ms ${size / 1024}KB on $thread")
+    })
     val accountApi = StremioAccountApi(transport)
     val vault = SecretVault()
     val device = DeviceCapabilities(context)

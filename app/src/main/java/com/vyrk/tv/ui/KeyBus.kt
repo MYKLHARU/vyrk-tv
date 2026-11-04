@@ -43,6 +43,7 @@ object KeyBus {
     private val main = Handler(Looper.getMainLooper())
 
     fun onKey(event: KeyEvent): Boolean {
+        Perf.onKey(event)
         if (event.action == KeyEvent.ACTION_UP) {
             val key = KeyEvent.keyCodeToString(event.keyCode)
             // Read focus after the event has been handled and focus has moved.

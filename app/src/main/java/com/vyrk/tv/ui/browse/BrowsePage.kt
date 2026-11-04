@@ -50,6 +50,8 @@ import com.vyrk.tv.ui.preview.HeaderTrailer
 import com.vyrk.tv.ui.theme.Dimens
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 const val CW_ROW = "cw"
@@ -58,14 +60,26 @@ const val HERO_SOURCE_ROWS = 6
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPlay: (MetaPreview, Origin?) -> Unit) {
+fun BrowsePage(
+    session: ProfileSession,
+    model: BrowseModel,
+    tabKey: String,
+    onPlay: (MetaPreview, Origin?) -> Unit,
+    /** False while the page is kept alive but hidden behind another tab. */
+    active: Boolean = true,
+) {
     val app = LocalApp.current
     val graph = LocalGraph.current
     val scope = rememberCoroutineScope()
     val settings by session.settings.collectAsState()
     val addons by session.addons.collectAsState()
     val library by session.library.collectAsState()
-    val sstate by session.state.collectAsState()
+    // Only the parts of the session state this page draws. Focus memory is rewritten on every
+    // poster focus; reading the whole state here recomposed the page (and every kept page) each time.
+    val hiddenCw by remember(session) { session.state.map { it.hiddenContinueWatching }.distinctUntilChanged() }
+        .collectAsState(session.state.value.hiddenContinueWatching)
+    val newEpisodes by remember(session) { session.state.map { it.newEpisodes }.distinctUntilChanged() }
+        .collectAsState(session.state.value.newEpisodes)
     val listState = model.listState
     val flags = remember { PageFocusFlags() }
     val pageSpec = remember { PageSpec(flags) }
@@ -76,8 +90,8 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     LaunchedEffect(addons, settings.hiddenRows) { model.rebuild(session.effectiveAddons(), settings.hiddenRows); model.prefetch(HERO_SOURCE_ROWS) }
 
     // Continue Watching follows the live library at once.
-    val cwItems = remember(library, sstate.hiddenContinueWatching) {
-        LibraryRules.continueWatching(library.values).filter { it.id !in sstate.hiddenContinueWatching }
+    val cwItems = remember(library, hiddenCw) {
+        LibraryRules.continueWatching(library.values).filter { it.id !in hiddenCw }
             .map { MetaPreview(id = it.id, type = it.type, name = it.name, poster = it.poster) }
     }
     val cwRow = remember { RowState(CW_ROW, RowKind.CONTINUE, null, "") }
@@ -113,8 +127,8 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     // Rotation every 9 s, paused while focused, under overlays/previews, scrolled away, in the background or with Reduce motion.
-    LaunchedEffect(heroItems.size, settings.heroRotation, settings.reduceMotion) {
-        if (heroItems.size < 2 || !settings.heroRotation || settings.reduceMotion) return@LaunchedEffect
+    LaunchedEffect(heroItems.size, settings.heroRotation, settings.reduceMotion, active) {
+        if (!active || heroItems.size < 2 || !settings.heroRotation || settings.reduceMotion) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             while (true) {
                 delay(9_000)
@@ -133,7 +147,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     LaunchedEffect(firstLoaded, rows.size) {
 
         if (initialDone || !firstLoaded) return@LaunchedEffect
-        val mem = sstate.focus[tabKey]
+        val mem = session.state.value.focus[tabKey]
         initialDone = true
         // Opened from the tab strip: focus stays there; Down enters the content.
         if (app.navFocused) return@LaunchedEffect
@@ -169,7 +183,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     // on an old request now that its hero can be ready on the first frame.
     val heroTickAtStart = remember { app.focusHeroTick }
     LaunchedEffect(app.focusHeroTick) {
-        if (app.focusHeroTick > heroTickAtStart && heroEnabled) { listState.scrollToItem(0); runCatching { watchReq.requestFocus() } }
+        if (app.focusHeroTick > heroTickAtStart && heroEnabled && active) { listState.scrollToItem(0); runCatching { watchReq.requestFocus() } }
     }
     // Resolve a restore to a row index, falling back to a neighbour or the hero.
     LaunchedEffect(restoreTarget, rows.map { it.key to it.items.size }) {
@@ -207,7 +221,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
         // Down from the tab strip returns to the title you left, not whatever row is nearest.
         .focusProperties {
             onEnter = {
-                val mem = sstate.focus[tabKey]
+                val mem = session.state.value.focus[tabKey]
                 if (requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Down && focusedPoster != null && mem != null &&
                     rows.any { it.key == mem.rowKey && it.items.isNotEmpty() }) {
                     cancelFocusChange()
@@ -226,7 +240,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
         // Backdrop: hero artwork, or the focused poster's artwork under the header.
         val backdropUrl = if (focusedPoster != null) (headerFull?.background ?: focusedPoster?.background) else heroFull?.background ?: heroMeta?.background
         val showBackdrop = focusedPoster == null && heroEnabled && listState.firstVisibleItemIndex == 0
-        if (showBackdrop) Backdrop(backdropUrl, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(heroH + 40.dp + Dimens.navHeight))
+        if (showBackdrop && active) Backdrop(backdropUrl, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(heroH + 40.dp + Dimens.navHeight))
 
         CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
             LazyColumn(
@@ -278,14 +292,17 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
                         row = row,
                         posterWidth = settings.posterSize.dp,
                         library = library,
-                        newEpisodes = sstate.newEpisodes,
-                        callbacks = PosterCallbacks(
+                        newEpisodes = newEpisodes,
+                        // One instance per row, reading live values when called, so rows can skip
+                        // recomposition when the page recomposes (a new instance each time forced
+                        // every visible poster to recompose on every focus move).
+                        callbacks = remember(row) { PosterCallbacks(
                             onClick = { m, i ->
-                                val inCw = library[m.id]?.isInContinueWatching == true
+                                val inCw = session.library.value[m.id]?.isInContinueWatching == true
                                 app.push(Overlay.Info(m, origin(i, m), focusResume = row.kind == RowKind.CONTINUE || inCw))
                             },
                             onLongClick = { m, i -> app.push(Overlay.ItemMenu(m, origin(i, m))) },
-                            onPlayPause = { m, _ -> if (settings.previews != PreviewMode.OFF) app.preview = if (app.preview?.id == m.id) null else m },
+                            onPlayPause = { m, _ -> if (session.settings.value.previews != PreviewMode.OFF) app.preview = if (app.preview?.id == m.id) null else m },
                             onFocused = { m, i ->
                                 if (app.preview != null && app.preview?.id != m.id) app.preview = null
                                 focusedPoster = m; focusedRowKey = row.key
@@ -293,7 +310,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
                                 session.rememberFocus(tabKey, FocusMemory(row.key, i, m.id))
                                 if (row.kind != RowKind.CONTINUE && i >= row.items.size - 6) model.loadMore(row)
                             },
-                        ),
+                        ) },
                         listState = model.rowListState(row.key),
                         onEnsureLoaded = { model.ensureLoaded(row) },
                         onLoadMore = { model.loadMore(row) },
@@ -310,13 +327,13 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
         }
 
         // Preview card: below the bar, never takes focus; Back or any focus move closes it.
-        app.preview?.let { pm ->
+        if (active) app.preview?.let { pm ->
             androidx.activity.compose.BackHandler { app.preview = null }
             com.vyrk.tv.ui.preview.PreviewCard(pm, sound = settings.previewSound, modifier = Modifier.padding(top = 12.dp, end = Dimens.screenMargin))
         }
         // Title header over the list while a poster has focus.
         val fp = focusedPoster
-        if (fp != null && !heroFocused) {
+        if (fp != null && !heroFocused && active) {
             // Opaque: rows above the focused one scroll beneath it.
             Box(Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(headerH + Dimens.navHeight).background(com.vyrk.tv.ui.theme.Vyrk.colors.background)) {
                 Backdrop(headerFull?.background ?: fp.background, Modifier.fillMaxSize())

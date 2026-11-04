@@ -23,6 +23,8 @@ class AddonClient(
     private val http: HttpTransport,
     maxConcurrent: Int = 8,
     private val timeoutMs: (Descriptor, String) -> Long = { _, resource -> if (resource == "stream") 20_000 else 12_000 },
+    /** Timing hook: resource, decode milliseconds, response size, thread name. */
+    private val onDecoded: ((String, Long, Int, String) -> Unit)? = null,
 ) {
     private val permits = Semaphore(maxConcurrent)
 
@@ -49,7 +51,17 @@ class AddonClient(
         return try {
             val res = withTimeout(t) { permits.withPermit { http.get(url, timeoutMs = t) } }
             if (!res.isSuccess) AddonResult.Failed(addon.manifest.id, "HTTP ${res.code}")
-            else AddonResult.Ok(ProtocolJson.decodeFromString(serializer, res.body))
+            else {
+                // Decoded on a background thread whoever calls: metas for long series are large,
+                // and callers include composition coroutines on the main thread.
+                val value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    val start = System.nanoTime()
+                    ProtocolJson.decodeFromString(serializer, res.body).also {
+                        onDecoded?.invoke(resource, (System.nanoTime() - start) / 1_000_000, res.body.length, Thread.currentThread().name)
+                    }
+                }
+                AddonResult.Ok(value)
+            }
         } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
             AddonResult.Failed(addon.manifest.id, "timed out", timedOut = true)
         } catch (e: kotlinx.coroutines.CancellationException) {

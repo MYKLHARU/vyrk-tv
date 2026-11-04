@@ -36,6 +36,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -119,6 +120,30 @@ fun MainScreen(session: ProfileSession) {
             .forEach { t -> model(t).rebuild(list, settings.hiddenRows); model(t).prefetch(if (t == app.tab) com.vyrk.tv.ui.browse.HERO_SOURCE_ROWS else 3) }
     }
 
+
+    // Catalogue pages visited this session stay composed while hidden (not measured, drawn or
+    // focusable), so coming back shows them as they were instead of rebuilding them.
+    val keptPages = remember(session) { mutableListOf<Tab>() }
+    // A kept page is shown in the same frame as the tab highlight (it costs a few milliseconds).
+    // A page not built yet follows one frame later, so the highlight is never held back by
+    // building it; a further press before then skips it (Home → Anime builds neither Movies nor
+    // Series on the way).
+    var laggedTab by remember { mutableStateOf(app.tab) }
+    val shownTab = if (app.tab in keptPages) app.tab else laggedTab
+    LaunchedEffect(app.tab) {
+        val target = app.tab
+        val kept = target in keptPages
+        if (kept) laggedTab = target
+        androidx.compose.runtime.withFrameNanos { }
+        com.vyrk.tv.ui.Perf.log("tab ${target.key} key=${com.vyrk.tv.ui.Perf.keyName} highlight+${com.vyrk.tv.ui.Perf.sinceKey()}ms")
+        if (!kept && app.tab == target) laggedTab = target
+    }
+    LaunchedEffect(shownTab) {
+        androidx.compose.runtime.withFrameNanos { }
+        com.vyrk.tv.ui.Perf.log("page ${shownTab.key} key=${com.vyrk.tv.ui.Perf.keyName} drawn+${com.vyrk.tv.ui.Perf.sinceKey()}ms")
+    }
+
+
     val onPlay: (MetaPreview, Origin?) -> Unit = { meta, origin -> Playback.start(activity, graph, session, meta, origin = origin) }
 
     // Back: innermost layer first (overlays handle their own), then section → Home → tab strip.
@@ -138,17 +163,26 @@ fun MainScreen(session: ProfileSession) {
                 Section.SEARCH -> SearchScreen(session)
                 Section.SETTINGS -> SettingsScreen(session)
                 Section.PROFILES -> ProfilesScreen(session)
-                Section.TABS -> when (app.tab) {
+                Section.TABS -> when (shownTab) {
                     Tab.LIBRARY -> LibraryScreen(session, onPlay)
                     Tab.ADDONS -> AddonsScreen(session)
-                    else -> androidx.compose.runtime.key(app.tab) { BrowsePage(session, model(app.tab), app.tab.key, onPlay) }
+                    else -> Unit
+                }
+            }
+            val onTabs = app.section == Section.TABS
+            if (onTabs && shownTab.isCatalogue() && shownTab !in keptPages) keptPages += shownTab
+            keptPages.removeAll { it !in tabs }
+            keptPages.forEach { t ->
+                androidx.compose.runtime.key(t) {
+                    val visible = onTabs && shownTab == t
+                    Box(Modifier.fillMaxSize().keepAlive(visible)) { BrowsePage(session, model(t), t.key, onPlay, active = visible) }
                 }
             }
         }
         // The bar has no solid edge: it fades from the page colour down into the artwork.
         // Pages without artwork (Library, Add-ons, Search, Settings, Profiles) keep a plain bar.
         val bg = Vyrk.colors.background
-        val artwork = app.section == Section.TABS && app.tab != Tab.LIBRARY && app.tab != Tab.ADDONS
+        val artwork = app.section == Section.TABS && shownTab != Tab.LIBRARY && shownTab != Tab.ADDONS
         if (artwork) Box(Modifier.fillMaxWidth().height(Dimens.navHeight + 56.dp).background(Brush.verticalGradient(
             0f to bg.copy(alpha = 0.94f), 0.45f to bg.copy(alpha = 0.7f), 0.75f to bg.copy(alpha = 0.25f), 1f to Color.Transparent,
         )))
@@ -271,3 +305,17 @@ private fun NavAvatar(session: ProfileSession, active: Boolean, requester: Focus
         contentAlignment = Alignment.Center,
     ) { ProfileAvatar(session.profile, 28.dp) }
 }
+
+private fun Tab.isCatalogue() = this == Tab.HOME || this == Tab.MOVIES || this == Tab.SERIES || this == Tab.ANIME || this == Tab.LIVE
+
+/**
+ * Hidden pages are not measured or placed: no layout or drawing work, and lazy lists keep their
+ * composed items. Unplaced nodes are skipped by focus search, so the remote never reaches them.
+ */
+private fun Modifier.keepAlive(visible: Boolean): Modifier = this.then(
+    Modifier.layout { measurable, constraints ->
+        if (!visible) return@layout layout(0, 0) {}
+        val p = measurable.measure(constraints)
+        layout(p.width, p.height) { p.place(0, 0) }
+    }
+)
