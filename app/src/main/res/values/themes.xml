@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Vyrk" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/vyrk_background</item>
+        <item name="android:colorBackground">@color/vyrk_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+    <style name="Theme.Vyrk.Player" parent="Theme.Vyrk">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+    <color name="vyrk_background">#FF0B141D</color>
+</resources>

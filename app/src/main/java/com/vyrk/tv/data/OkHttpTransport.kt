@@ -1,0 +1,64 @@
+package com.vyrk.tv.data
+
+import com.vyrk.core.net.HttpResult
+import com.vyrk.core.net.HttpTransport
+import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.io.IOException
+import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+
+/** [HttpTransport] on OkHttp with coroutine cancellation and per-call timeouts. */
+class OkHttpTransport(private val client: OkHttpClient) : HttpTransport {
+
+    override suspend fun get(url: String, headers: Map<String, String>, timeoutMs: Long): HttpResult {
+        val req = Request.Builder().url(url).apply { headers.forEach { (k, v) -> header(k, v) } }.build()
+        return execute(req, timeoutMs)
+    }
+
+    override suspend fun postJson(url: String, body: String, timeoutMs: Long): HttpResult {
+        val req = Request.Builder().url(url).post(body.toRequestBody(JSON)).build()
+        return execute(req, timeoutMs)
+    }
+
+    private suspend fun execute(req: Request, timeoutMs: Long): HttpResult = suspendCancellableCoroutine { cont ->
+        val call = client.newCall(req)
+        call.timeout().timeout(timeoutMs, TimeUnit.MILLISECONDS)
+        cont.invokeOnCancellation { call.cancel() }
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                if (cont.isActive) cont.resumeWithException(e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val r = try {
+                    response.use { HttpResult(it.code, it.body.string()) }
+                } catch (e: IOException) {
+                    if (cont.isActive) cont.resumeWithException(e)
+                    return
+                }
+                if (cont.isActive) cont.resume(r)
+            }
+        })
+    }
+
+    companion object {
+        private val JSON = "application/json; charset=utf-8".toMediaType()
+
+        fun client(userAgent: String): OkHttpClient = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .followRedirects(true)
+            .addInterceptor { chain ->
+                chain.proceed(chain.request().newBuilder().header("User-Agent", userAgent).build())
+            }
+            .build()
+    }
+}

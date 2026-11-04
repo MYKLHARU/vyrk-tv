@@ -1,0 +1,38 @@
+VYRK is free software under the GNU General Public License v3.0.
+It includes the following third-party components:
+
+AndroidX Media3 (ExoPlayer, HLS, DASH, session, UI, OkHttp data source)
+  Copyright The Android Open Source Project. Apache License 2.0.
+
+Jellyfin Media3 FFmpeg decoder (org.jellyfin.media3:media3-ffmpeg-decoder)
+  Includes FFmpeg built with GPL components. GNU General Public License v3.0.
+  https://github.com/jellyfin/jellyfin-androidx-media
+
+Jetpack Compose, Compose for TV (androidx.tv:tv-material), AndroidX libraries
+  Copyright The Android Open Source Project. Apache License 2.0.
+
+OkHttp
+  Copyright Square, Inc. Apache License 2.0.
+
+Coil
+  Copyright Coil Contributors. Apache License 2.0.
+
+kotlinx.serialization, kotlinx.coroutines, Kotlin standard library
+  Copyright JetBrains s.r.o. and contributors. Apache License 2.0.
+
+ZXing (com.google.zxing:core)
+  Copyright ZXing authors. Apache License 2.0.
+
+android-youtube-player (com.pierfrancescosoffritti.androidyoutubeplayer:core)
+  Copyright Pierfrancesco Soffritti. MIT License.
+  Trailers play through YouTube's official IFrame player and YouTube's terms apply.
+
+Plus Jakarta Sans
+  Copyright The Plus Jakarta Sans Project Authors. SIL Open Font License 1.1.
+  https://github.com/tokotype/PlusJakartaSans
+
+Watched-state and library rules are ported from stremio-core
+  (https://github.com/Stremio/stremio-core), MIT License, Copyright Smart Code OOD.
+
+VYRK is not affiliated with Stremio. VYRK hosts, indexes and provides no media.
+Titles, artwork and ratings come from the add-ons you install.
