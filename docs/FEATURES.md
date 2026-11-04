@@ -56,6 +56,7 @@ pushed), so nothing below is verified by CI.
 | Hero rotates every 9 s, pauses when focused, under overlays/previews, scrolled away, in background, Reduce motion | `BrowsePage` | Built | — |
 | Hold Select / Menu on Watch now opens info | `Hero` | Built | — |
 | Title header (56%), large logo, facts, two-line synopsis, hint line | `browse/Hero.kt` | Done | emulator capture, showcase |
+| Byte downloads (Matroska chapter reads) keep at most the bytes asked for, 4 MB without a range; a server that ignores Range no longer streams the whole video into memory (CI OutOfMemoryError while playing) | `core/net/ByteRange`, `OkHttpTransport.getBytes` | Done | core; local journey peak heap measured before/after |
 | Add-on request timeout starts when the request has a slot (waiting behind slow add-ons no longer times rows out); add-on failures logged as `VyrkPerf` lines with the redacted reason | `AddonClient`, `AppGraph` | Done | core; SHIELD log showed the real cause of empty rows (an add-on answering HTTP 500) |
 | A held OK that opens a menu or info page never clicks inside it (no accidental Resume/Play) | `OverlayWindow` | Done | emulator check (long press on a poster opens the menu, player not started) |
 | Automatic muted trailer after 850 ms, artwork until it plays | `preview/Trailers.kt` | Done | showcase (trailer playing on the emulator) |

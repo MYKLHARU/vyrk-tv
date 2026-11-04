@@ -36,10 +36,19 @@ class OkHttpTransport(private val client: OkHttpClient) : HttpTransport {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { if (cont.isActive) cont.resume(null) }
             override fun onResponse(call: Call, response: Response) {
-                val bytes = runCatching { response.use { if (it.isSuccessful) it.body.bytes() else null } }.getOrNull()
+                val bytes = runCatching { response.use { readCapped(it, headers["Range"]) } }.getOrNull()
                 if (cont.isActive) cont.resume(bytes)
             }
         })
+    }
+
+    /** Never more than was asked for: a server that ignores Range would otherwise send the whole file into memory. */
+    private fun readCapped(response: Response, range: String?): ByteArray? {
+        if (!response.isSuccessful) return null
+        val limit = com.vyrk.core.net.ByteRange.readLimit(range, response.code) ?: return null
+        val source = response.body.source()
+        source.request(limit)
+        return source.buffer.readByteArray(minOf(limit, source.buffer.size))
     }
 
     private suspend fun execute(req: Request, timeoutMs: Long): HttpResult = suspendCancellableCoroutine { cont ->
