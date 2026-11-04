@@ -135,11 +135,14 @@ fun Poster(
         border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
         glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
     ) {
-        if (meta.poster != null) {
-            AsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-        } else {
-            Text(meta.name, style = Vyrk.type.titleS, color = c.textSecondary, modifier = Modifier.align(Alignment.Center).padding(8.dp), maxLines = 3)
+        val fallback: @Composable () -> Unit = {
+            Box(Modifier.fillMaxSize().padding(8.dp), contentAlignment = Alignment.Center) {
+                Text(meta.name, style = Vyrk.type.titleS, color = c.textSecondary, maxLines = 4, overflow = TextOverflow.Ellipsis)
+            }
         }
+        if (meta.poster != null) {
+            coil3.compose.SubcomposeAsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), error = { fallback() })
+        } else fallback()
         if (state.isNew) {
             Box(Modifier.align(Alignment.TopStart).padding(6.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                 Text(newLabel, style = Vyrk.type.labelS, color = c.onAccent)

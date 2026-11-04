@@ -50,6 +50,7 @@ fun VyrkButton(
     style: ButtonStyle = ButtonStyle.SECONDARY,
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
+    horizontalPadding: Dp = 16.dp,
 ) {
     val c = Vyrk.colors
     val (bg, fg) = when (style) {
@@ -75,7 +76,7 @@ fun VyrkButton(
         glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
     ) {
         Row(
-            Modifier.padding(horizontal = 16.dp).align(Alignment.Center),
+            Modifier.padding(horizontal = horizontalPadding).align(Alignment.Center),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {

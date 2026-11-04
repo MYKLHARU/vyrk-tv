@@ -41,6 +41,25 @@ object Languages {
         Lang("tel", "te", "Telugu", "🇮🇳", listOf("telugu", "tel", "te")),
         Lang("mal", "ml", "Malayalam", "🇮🇳", listOf("malayalam", "mal", "ml")),
         Lang("ben", "bn", "Bengali", "🇧🇩", listOf("bengali", "ben", "bn", "🇧🇩")),
+        Lang("bul", "bg", "Bulgarian", "🇧🇬", listOf("bulgarian", "bul", "bg", "🇧🇬")),
+        Lang("hrv", "hr", "Croatian", "🇭🇷", listOf("croatian", "hrv", "hr", "scr", "🇭🇷")),
+        Lang("srp", "sr", "Serbian", "🇷🇸", listOf("serbian", "srp", "sr", "scc", "🇷🇸")),
+        Lang("slv", "sl", "Slovenian", "🇸🇮", listOf("slovenian", "slv", "sl", "🇸🇮")),
+        Lang("slo", "sk", "Slovak", "🇸🇰", listOf("slovak", "slo", "slk", "sk", "🇸🇰")),
+        Lang("est", "et", "Estonian", "🇪🇪", listOf("estonian", "est", "et", "🇪🇪")),
+        Lang("lav", "lv", "Latvian", "🇱🇻", listOf("latvian", "lav", "lv", "🇱🇻")),
+        Lang("lit", "lt", "Lithuanian", "🇱🇹", listOf("lithuanian", "lit", "lt", "🇱🇹")),
+        Lang("per", "fa", "Persian", "🇮🇷", listOf("persian", "farsi", "per", "fas", "fa", "🇮🇷")),
+        Lang("may", "ms", "Malay", "🇲🇾", listOf("malay", "may", "msa", "ms", "🇲🇾")),
+        Lang("ice", "is", "Icelandic", "🇮🇸", listOf("icelandic", "ice", "isl", "is", "🇮🇸")),
+        Lang("cat", "ca", "Catalan", "🏴", listOf("catalan", "cat", "ca")),
+        Lang("baq", "eu", "Basque", "🏴", listOf("basque", "baq", "eus", "eu")),
+        Lang("glg", "gl", "Galician", "🏴", listOf("galician", "glg", "gl")),
+        Lang("mac", "mk", "Macedonian", "🇲🇰", listOf("macedonian", "mac", "mkd", "mk", "🇲🇰")),
+        Lang("alb", "sq", "Albanian", "🇦🇱", listOf("albanian", "alb", "sqi", "sq", "🇦🇱")),
+        Lang("bos", "bs", "Bosnian", "🇧🇦", listOf("bosnian", "bos", "bs", "🇧🇦")),
+        Lang("urd", "ur", "Urdu", "🇵🇰", listOf("urdu", "urd", "ur", "🇵🇰")),
+        Lang("tgl", "tl", "Filipino", "🇵🇭", listOf("filipino", "tagalog", "tgl", "fil", "tl", "🇵🇭")),
     )
 
     private val byAlias: Map<String, Lang> = buildMap { all.forEach { l -> l.aliases.forEach { put(it, l) } } }
@@ -80,5 +99,5 @@ object Languages {
     }
 
     /** Three-letter codes that are also ordinary words or names in release titles. */
-    private val AMBIGUOUS = setOf("dan", "ind", "tam", "tel", "mal", "ben", "nor", "hun", "pol", "tha", "ara", "fin", "vie", "rum", "deu", "ron")
+    private val AMBIGUOUS = setOf("dan", "ind", "tam", "tel", "mal", "ben", "nor", "hun", "pol", "tha", "ara", "fin", "vie", "rum", "deu", "ron", "cat", "may", "ice", "per", "est", "lit", "mac", "bos", "alb", "glg", "baq", "slo")
 }

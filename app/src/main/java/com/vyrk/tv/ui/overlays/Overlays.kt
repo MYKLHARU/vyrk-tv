@@ -250,7 +250,7 @@ private fun PinPad(o: Overlay.Pin) {
         keys.chunked(3).forEachIndexed { ri, row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
                 row.forEachIndexed { ci, k ->
-                    VyrkButton(k, modifier = Modifier.width(96.dp).then(if (ri == 0 && ci == 0) Modifier.focusRequester(first) else Modifier).traceFocus("pin:$k"), onClick = {
+                    VyrkButton(k, horizontalPadding = 0.dp, modifier = Modifier.width(96.dp).then(if (ri == 0 && ci == 0) Modifier.focusRequester(first) else Modifier).traceFocus("pin:$k"), onClick = {
                         when (k) {
                             "⌫" -> pin = pin.dropLast(1)
                             "OK" -> when (val r = graph.checkPin(o.profile.id, pin)) {

@@ -208,7 +208,7 @@ fun UrlKeyboard(onChar: (Char) -> Unit, onBackspace: () -> Unit, onClear: () -> 
         keys.chunked(8).forEachIndexed { r, row ->
             Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 row.forEachIndexed { i, ch ->
-                    VyrkButton(ch.toString(), onClick = { onChar(ch) }, modifier = Modifier.width(36.dp).then(if (r == 0 && i == 0) Modifier.focusRequester(first) else Modifier).traceFocus("urlkey:$ch"))
+                    VyrkButton(ch.toString(), onClick = { onChar(ch) }, horizontalPadding = 0.dp, modifier = Modifier.width(36.dp).then(if (r == 0 && i == 0) Modifier.focusRequester(first) else Modifier).traceFocus("urlkey:$ch"))
                 }
             }
         }

@@ -82,7 +82,7 @@ fun AlphaKeyboard(
         keys.chunked(7).forEachIndexed { r, row ->
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 row.forEachIndexed { i, ch ->
-                    VyrkButton(ch.toString(), onClick = { onChar(ch) }, modifier = Modifier.width(40.dp).then(if (r == 0 && i == 0) Modifier.focusRequester(firstKey) else Modifier).traceFocus("key:$ch"))
+                    VyrkButton(ch.toString(), onClick = { onChar(ch) }, horizontalPadding = 0.dp, modifier = Modifier.width(40.dp).then(if (r == 0 && i == 0) Modifier.focusRequester(firstKey) else Modifier).traceFocus("key:$ch"))
                 }
             }
         }
@@ -132,8 +132,13 @@ fun SearchScreen(session: ProfileSession) {
         }
         results = SearchRanking.merge(q, sources)
         searching = false
-        session.updateState { s -> s.copy(recentSearches = (listOf(q) + s.recentSearches.filterNot { it.equals(q, true) }).take(10)) }
     }
+    // Remember the query when leaving Search or opening a result, never partial words.
+    fun remember() {
+        val q = query.trim()
+        if (q.length >= 2 && results.isNotEmpty()) session.updateState { s -> s.copy(recentSearches = (listOf(q) + s.recentSearches.filterNot { it.equals(q, true) }).take(10)) }
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { remember() } }
 
     Row(
         Modifier.fillMaxSize().padding(start = Dimens.screenMargin, top = 12.dp)
@@ -187,7 +192,7 @@ fun SearchScreen(session: ProfileSession) {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp), contentPadding = PaddingValues(end = 40.dp, top = 6.dp, bottom = 6.dp)) {
                             itemsIndexed(list, key = { _, m -> m.type + m.id }) { i, m ->
                                 Poster(m, 112.dp, posterState(library[m.id], sstate.newEpisodes[m.id].orEmpty()),
-                                    onClick = { app.push(Overlay.Info(m, null, focusResume = library[m.id]?.isInContinueWatching == true)) },
+                                    onClick = { remember(); app.push(Overlay.Info(m, null, focusResume = library[m.id]?.isInContinueWatching == true)) },
                                     onLongClick = { app.push(Overlay.ItemMenu(m, null)) }, onPlayPause = {},
                                     traceLabel = "search:$type#$i")
                             }

@@ -375,8 +375,11 @@ private fun AudioSubsPanel(m: PlayerModel) {
                 val tracks = com.vyrk.core.playback.TrackSelector.sortForDisplay(m.allTextTracks(), settings)
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     item { OptionRow(stringResource(R.string.off), m.selectedSub == null, "panel:sub_off") { m.selectSubtitle(null) } }
-                    items(tracks, key = { it.id }) { t ->
-                        val lang = t.language?.let { Languages.label(it) } ?: (t.label ?: "—")
+                    val seen = mutableMapOf<String, Int>()
+                    val numbered = tracks.map { t -> val k = (t.language ?: "") + t.source; val n = (seen[k] ?: 0) + 1; seen[k] = n; t to n }
+                    items(numbered, key = { it.first.id }) { (t, n) ->
+                        val base = t.language?.let { Languages.label(it) } ?: (t.label ?: "—")
+                        val lang = if (n > 1 || numbered.count { (o, _) -> o.language == t.language && o.source == t.source } > 1) "$base · $n" else base
                         val src = if (t.source == "Embedded") stringResource(R.string.embedded) else stringResource(R.string.addon_source, t.source)
                         OptionRow("$lang\n$src", m.selectedSub == t.id, "panel:sub:${t.id}") { m.selectSubtitle(t.id) }
                     }

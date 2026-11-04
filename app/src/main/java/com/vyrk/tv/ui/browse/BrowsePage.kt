@@ -106,7 +106,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
             while (true) {
                 delay(9_000)
                 val atTop = listState.firstVisibleItemIndex == 0 && focusedPoster == null
-                if (!heroFocused && app.overlays.isEmpty() && atTop) heroIndex = (heroIndex + 1) % heroItems.size
+                if (!heroFocused && app.overlays.isEmpty() && app.preview == null && atTop) heroIndex = (heroIndex + 1) % heroItems.size
             }
         }
     }
@@ -141,6 +141,15 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
         androidx.compose.runtime.snapshotFlow { windowInfo.isWindowFocused }.first { it }
         app.restore = null
         restoreTarget = r
+    }
+    // When the Top 10 card goes away while focused (rows were added, or Not now), focus the hero.
+    val windowInfoForCard = androidx.compose.ui.platform.LocalWindowInfo.current
+    LaunchedEffect(showTop10Card) {
+        if (!showTop10Card && flags.top10CardFocused.getAndSet(false)) {
+            androidx.compose.runtime.snapshotFlow { windowInfoForCard.isWindowFocused }.first { it }
+            listState.scrollToItem(0); delay(150)
+            if (!runCatching { watchReq.requestFocus() }.isSuccess || !heroEnabled) restoreTarget = rows.firstOrNull()?.let { Origin(tabKey, it.key, 0, "") }
+        }
     }
     LaunchedEffect(app.focusHeroTick) {
         if (app.focusHeroTick > 0 && heroEnabled) { listState.scrollToItem(0); runCatching { watchReq.requestFocus() } }
@@ -193,6 +202,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
                         onNext = { heroIndex = (heroIndex + 1) % heroItems.size },
                         onFocusChanged = { f ->
                             heroFocused = f; flags.heroFocused.set(f)
+                            if (f) flags.top10CardFocused.set(false)
                             if (f) { focusedPoster = null; scope.launch { listState.animateScrollToItem(0) } } else if (app.preview?.id == heroMeta?.id) Unit
                         },
                     )
@@ -211,8 +221,9 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
                         },
                         onNotNow = { session.updateSettings { it.copy(top10CardDismissed = true) }; runCatching { watchReq.requestFocus() } },
                         onFocus = { f ->
-                            flags.top10CardFocused.set(f)
-                            if (f) { focusedPoster = null; scope.launch { listState.animateScrollToItem(0) } }
+                            // Cleared only when something else on the page takes focus, so removal of the
+                            // card while focused is still known.
+                            if (f) { flags.top10CardFocused.set(true); focusedPoster = null; scope.launch { listState.animateScrollToItem(0) } }
                         },
                     )
                 }
