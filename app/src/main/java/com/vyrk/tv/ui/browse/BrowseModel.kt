@@ -44,13 +44,38 @@ class MetaCache(private val client: AddonClient) {
     fun put(m: MetaItem) { cache["${m.type}:${m.id}"] = m }
 }
 
+/**
+ * One [RowState] per catalogue for the whole session, shared by every tab. "Popular - Movies"
+ * loaded on Home is the same row on Movies, so switching tabs shows it at once instead of
+ * fetching it again.
+ */
+class RowStore {
+    private val rows = HashMap<String, RowState>()
+    fun row(ref: CatalogRef, kind: RowKind): RowState {
+        val key = ref.key + kind
+        rows[key]?.takeIf { it.ref?.addon?.transportUrl == ref.addon.transportUrl }?.let { return it }
+        val title = if (kind == RowKind.TOP10) CatalogRules.top10Title(ref) ?: CatalogRules.rowTitle(ref) else CatalogRules.rowTitle(ref)
+        return RowState(key, kind, ref, title).also { rows[key] = it }
+    }
+}
+
 /** Catalogue rows for one tab, loaded lazily and paged with the `skip` extra. */
 class BrowseModel(
     private val session: ProfileSession,
     private val client: AddonClient,
     val tab: Tab,
     private val scope: CoroutineScope,
+    private val store: RowStore = RowStore(),
 ) {
+    // Page state kept with the model, so leaving a tab and coming back finds it as it was:
+    // scroll position, each row's scroll, the selected title under the header.
+    val listState = androidx.compose.foundation.lazy.LazyListState()
+    private val rowListStates = HashMap<String, androidx.compose.foundation.lazy.LazyListState>()
+    fun rowListState(key: String) = rowListStates.getOrPut(key) { androidx.compose.foundation.lazy.LazyListState() }
+    var focusedPoster by mutableStateOf<MetaPreview?>(null)
+    var focusedRowKey by mutableStateOf<String?>(null)
+    /** Image URLs already requested ahead of time. */
+    internal val prefetchedImages = HashSet<String>()
     var rows by mutableStateOf<List<RowState>>(emptyList())
         private set
     var hasTop10Catalogs by mutableStateOf(false)
@@ -88,13 +113,16 @@ class BrowseModel(
         val sig = visible.joinToString("|") { it.first.key + it.second } + "#" + addons.joinToString { it.transportUrl.hashCode().toString() }
         if (sig == signature) { built = true; return }
         signature = sig
-        val old = rows.associateBy { it.key }
-        rows = visible.map { (ref, kind) ->
-            old[ref.key + kind]?.takeIf { it.ref?.addon?.transportUrl == ref.addon.transportUrl }
-                ?: RowState(ref.key + kind, kind, ref, if (kind == RowKind.TOP10) CatalogRules.top10Title(ref) ?: CatalogRules.rowTitle(ref) else CatalogRules.rowTitle(ref))
-        }
+        rows = visible.map { (ref, kind) -> store.row(ref, kind) }
         built = true
     }
+
+    /**
+     * Starts the first [count] rows now instead of when each scrolls into view, so the hero has
+     * its titles and the rows below are ready before focus reaches them. Requests share the
+     * add-on client's concurrency limit; rows already loaded or loading are skipped.
+     */
+    fun prefetch(count: Int) { rows.take(count).forEach { ensureLoaded(it) } }
 
     fun ensureLoaded(row: RowState) {
         if (row.loadedOnce || row.loading) return

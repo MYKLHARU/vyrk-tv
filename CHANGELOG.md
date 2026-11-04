@@ -14,6 +14,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - Player with controls, Audio & subtitles panel, subtitle sync for add-on subtitles, Up Next and sleep timers.
 - Restyled player: round centred controls with a large Play button, clock, time left and a side panel for audio and subtitles.
 - Home: the top bar fades into the artwork, title logos are much larger, the featured row has just Watch now with dots (Left/Right change title) and keeps its place when you come back.
+- Faster categories: rows are shared between tabs and fetched ahead, images load ahead at the size they are shown, the featured row appears on the first visit to a tab, and each tab keeps its place when you come back.
 - Holding OK on a title opens its menu without starting playback.
 - While a title loads, its logo fills like a loading bar instead of showing loading text.
 - Remove from Continue Watching from the item menu, synced the way Stremio does it.

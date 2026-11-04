@@ -151,10 +151,25 @@ fi
 key KEYCODE_DPAD_DOWN 1.5
 if [[ "$(focus_now)" == poster:cw* ]]; then fail "Continue Watching row still present"; else log "ok: Continue Watching row is gone"; fi
 
+# ---------------------------------------------------------------- categories keep their place
+until_focus KEYCODE_DPAD_DOWN '^poster:' 4
+key KEYCODE_DPAD_RIGHT 1.0; key KEYCODE_DPAD_RIGHT 1.2
+KEEP=$(focus_now); log "selected on Home: $KEEP"
+key KEYCODE_BACK 1.5 "to the tab strip"
+expect '^tab:home$' "Back from a row goes to the tab strip"
+key KEYCODE_DPAD_RIGHT 1.5 "Movies"; key KEYCODE_DPAD_LEFT 1.5 "Home again"
+key KEYCODE_DPAD_DOWN 2.5 "back into Home"
+if [[ "$(focus_now)" == "$KEEP" ]]; then log "ok: Home kept the selected title across a tab switch ($KEEP)"; else fail "Home lost its place: expected '$KEEP', focus is '$(focus_now)'"; fi
+
 # ---------------------------------------------------------------- tour every tab
 until_focus KEYCODE_DPAD_UP '^tab:home$' 8
 for t in movies series anime library addons; do
-  until_focus KEYCODE_DPAD_RIGHT "^tab:$t\$" 3 && { sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"; probe "$t content"; until_focus KEYCODE_DPAD_UP "^tab:$t\$" 6; }
+  until_focus KEYCODE_DPAD_RIGHT "^tab:$t\$" 3 && {
+    sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"; probe "$t content"
+    # The featured row is there on the first visit, without scrolling or a second visit.
+    [[ $t == movies || $t == series ]] && expect '^hero:watch$' "$t opens with its featured row"
+    until_focus KEYCODE_DPAD_UP "^tab:$t\$" 6
+  }
 done
 
 # ---------------------------------------------------------------- search "matrix"

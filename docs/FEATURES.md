@@ -42,7 +42,7 @@ pushed), so nothing below is verified by CI.
 
 | Requirement | Where | Status | Evidence |
 |---|---|---|---|
-| Fixed opaque 68dp bar, tabs, search/avatar/settings, Live only with TV catalogues | `MainScreen` | Done | E2E |
+| Fixed 68dp bar, tabs, search/avatar/settings, Live only with TV catalogues | `MainScreen` | Done | E2E |
 | Tab focus: radial light, underline, never a pill; one permanent FocusRequester per tab | `MainScreen.NavTab` | Done | E2E, showcase |
 | Up into the bar lands on the active tab; Back on a tab → Home; Back on Home → tab strip | `MainScreen` | Done | E2E |
 | Hero: backdrop, large logo (up to 480×140), facts, IMDb, genres, synopsis, Starring, Director, Watch now/Resume as the only button, position dots; Left/Right on Watch now change title (no Trailer or arrow buttons, unlike the brief; trailers stay on posters and in the item menu) | `browse/Hero.kt` | Done | emulator check (Left/Right change title), showcase |
@@ -54,6 +54,11 @@ pushed), so nothing below is verified by CI.
 | A held OK that opens a menu or info page never clicks inside it (no accidental Resume/Play) | `OverlayWindow` | Done | emulator check (long press on a poster opens the menu, player not started) |
 | Automatic muted trailer after 850 ms, artwork until it plays | `preview/Trailers.kt` | Done | showcase (trailer playing on the emulator) |
 | Rows: "<catalogue> - <type>", lazy load, placeholders, paging, retry, empty state, See all, hide row | `browse/Rows.kt`, `BrowseModel` | Built | E2E (load), showcase |
+| Rows shared across tabs (one row per catalogue for the session), so a catalogue loaded on Home appears at once on Movies or Series | `RowStore`, `BrowseModel` | Done | emulator capture (Movies complete 0.25 s after the first switch) |
+| Every catalogue tab is built when add-ons are known; the open tab fetches its first 6 rows at once, other tabs their first 3 | `MainScreen`, `BrowseModel.prefetch` | Done | emulator capture |
+| Hero keeps its slot while its titles load and focus waits for it, so it shows on the first visit to a tab | `BrowsePage` | Done | E2E (Movies and Series open on the featured row) |
+| Each tab keeps its scroll, row scroll and selected title; Down from the tab strip returns to that title | `BrowseModel`, `BrowsePage` | Done | E2E (Home → Movies → Home keeps the poster) |
+| Images requested ahead at drawn size: hero backdrops and logos, first 8 posters of the first 8 rows; posters use AsyncImage; up to 16 requests per host | `BrowsePage.prefetchImage`, `Rows.kt`, `OkHttpTransport` | Done | emulator capture |
 | Focused row sits below the header; vertical moves land on the first title | `browse/Scrolling.kt`, `Rows.kt` | Done | E2E |
 | Comfort-zone BringIntoViewSpec (12%/10%) and page spec with atomic flags | `browse/Scrolling.kt` | Done | E2E |
 | Poster progress, watched tick, "New" badge with text | `Rows.kt` | Partial | E2E (progress); New badge not exercised with real data |

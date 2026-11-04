@@ -70,6 +70,9 @@ class OkHttpTransport(private val client: OkHttpClient) : HttpTransport {
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .followRedirects(true)
+            // OkHttp's default of 5 requests per host queued posters (and catalogue pages from the
+            // same add-on) behind each other; image hosts serve many small files at once.
+            .dispatcher(okhttp3.Dispatcher().apply { maxRequests = 64; maxRequestsPerHost = 16 })
             .addInterceptor { chain ->
                 chain.proceed(chain.request().newBuilder().header("User-Agent", userAgent).build())
             }

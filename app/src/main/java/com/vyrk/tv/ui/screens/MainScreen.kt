@@ -106,8 +106,18 @@ fun MainScreen(session: ProfileSession) {
         }
     }
 
+    val rowStore = remember(session) { com.vyrk.tv.ui.browse.RowStore() }
     val models = remember(session) { mutableMapOf<Tab, BrowseModel>() }
-    fun model(t: Tab) = models.getOrPut(t) { BrowseModel(session, graph.addonClient, t, session.scope) }
+    fun model(t: Tab) = models.getOrPut(t) { BrowseModel(session, graph.addonClient, t, session.scope, rowStore) }
+
+    // Build every catalogue tab as soon as the add-ons are known and start its first rows,
+    // the open tab first, so switching to Movies or Series finds them already loaded.
+    LaunchedEffect(addons, settings.hiddenRows, tabs) {
+        val list = session.effectiveAddons()
+        (listOf(app.tab) + tabs).distinct()
+            .filter { it == Tab.HOME || it == Tab.MOVIES || it == Tab.SERIES || it == Tab.ANIME || it == Tab.LIVE }
+            .forEach { t -> model(t).rebuild(list, settings.hiddenRows); model(t).prefetch(if (t == app.tab) com.vyrk.tv.ui.browse.HERO_SOURCE_ROWS else 3) }
+    }
 
     val onPlay: (MetaPreview, Origin?) -> Unit = { meta, origin -> Playback.start(activity, graph, session, meta, origin = origin) }
 

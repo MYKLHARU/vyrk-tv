@@ -140,8 +140,10 @@ fun Poster(
                 Text(meta.name, style = Vyrk.type.titleS, color = c.textSecondary, maxLines = 4, overflow = TextOverflow.Ellipsis)
             }
         }
-        if (meta.poster != null) {
-            coil3.compose.SubcomposeAsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), error = { fallback() })
+        // AsyncImage rather than SubcomposeAsyncImage: no subcomposition per poster while rows scroll.
+        var failed by remember(meta.poster) { mutableStateOf(false) }
+        if (meta.poster != null && !failed) {
+            AsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { failed = true })
         } else fallback()
         if (state.isNew) {
             Box(Modifier.align(Alignment.TopStart).padding(6.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {

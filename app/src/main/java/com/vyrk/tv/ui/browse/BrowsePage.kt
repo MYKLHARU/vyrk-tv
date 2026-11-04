@@ -28,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -51,6 +53,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 const val CW_ROW = "cw"
+/** Rows fetched as soon as a tab is built; the hero takes its titles from these. */
+const val HERO_SOURCE_ROWS = 6
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -62,14 +66,14 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     val addons by session.addons.collectAsState()
     val library by session.library.collectAsState()
     val sstate by session.state.collectAsState()
-    val listState = rememberLazyListState()
+    val listState = model.listState
     val flags = remember { PageFocusFlags() }
     val pageSpec = remember { PageSpec(flags) }
     val watchReq = remember { FocusRequester() }
     val top10Req = remember { FocusRequester() }
     val isHome = model.tab == Tab.HOME
 
-    LaunchedEffect(addons, settings.hiddenRows) { model.rebuild(session.effectiveAddons(), settings.hiddenRows) }
+    LaunchedEffect(addons, settings.hiddenRows) { model.rebuild(session.effectiveAddons(), settings.hiddenRows); model.prefetch(HERO_SOURCE_ROWS) }
 
     // Continue Watching follows the live library at once.
     val cwItems = remember(library, sstate.hiddenContinueWatching) {
@@ -94,12 +98,18 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     val heroItems = model.heroItems.ifEmpty { heroCandidates }
     val heroIndex = model.heroIndex.coerceIn(0, (heroItems.size - 1).coerceAtLeast(0))
     var heroFocused by remember { mutableStateOf(false) }
-    var focusedPoster by remember { mutableStateOf<MetaPreview?>(null) }
-    var focusedRowKey by remember { mutableStateOf<String?>(null) }
+    var focusedPoster by model::focusedPoster
+    var focusedRowKey by model::focusedRowKey
     val heroMeta = heroItems.getOrNull(heroIndex)
     val heroFull by produceMeta(session, heroMeta)
     val headerFull by produceMeta(session, focusedPoster, debounceMs = 250)
     val heroEnabled = settings.heroEnabled && heroItems.isNotEmpty() && model.tab != Tab.LIVE
+    // The hero keeps its slot while its titles load. Inserting it later above rows that are
+    // already on screen left it scrolled out of view (lazy lists keep the first visible item in
+    // place), which is why it sometimes never showed on the first visit to a tab.
+    // Decided once the rows fetched up front have answered (or failed); none with artwork means no hero.
+    val heroSourcesDone = model.built && model.rows.take(HERO_SOURCE_ROWS).all { it.loadedOnce }
+    val heroPending = settings.heroEnabled && model.tab != Tab.LIVE && heroItems.isEmpty() && !heroSourcesDone
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     // Rotation every 9 s, paused while focused, under overlays/previews, scrolled away, in the background or with Reduce motion.
@@ -118,7 +128,8 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     var initialDone by remember { mutableStateOf(false) }
     var restoreTarget by remember { mutableStateOf<Origin?>(null) }
     // Decide only once the first catalogue has answered, so the hero's presence is known.
-    val firstLoaded = model.built && (model.rows.firstOrNull()?.loadedOnce == true || model.rows.isEmpty())
+    // Also wait for the hero to be decided, so focus never lands on a row the hero then pushes down.
+    val firstLoaded = model.built && (model.rows.firstOrNull()?.loadedOnce == true || model.rows.isEmpty()) && !heroPending
     LaunchedEffect(firstLoaded, rows.size) {
 
         if (initialDone || !firstLoaded) return@LaunchedEffect
@@ -154,8 +165,11 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
             if (!runCatching { watchReq.requestFocus() }.isSuccess || !heroEnabled) restoreTarget = rows.firstOrNull()?.let { Origin(tabKey, it.key, 0, "") }
         }
     }
+    // Only requests made while this page is open: a page built later (another tab) must not act
+    // on an old request now that its hero can be ready on the first frame.
+    val heroTickAtStart = remember { app.focusHeroTick }
     LaunchedEffect(app.focusHeroTick) {
-        if (app.focusHeroTick > 0 && heroEnabled) { listState.scrollToItem(0); runCatching { watchReq.requestFocus() } }
+        if (app.focusHeroTick > heroTickAtStart && heroEnabled) { listState.scrollToItem(0); runCatching { watchReq.requestFocus() } }
     }
     // Resolve a restore to a row index, falling back to a neighbour or the hero.
     LaunchedEffect(restoreTarget, rows.map { it.key to it.items.size }) {
@@ -169,11 +183,39 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
             return@LaunchedEffect
         }
         val headerItems = (if (heroEnabled) 1 else 0) + (if (showTop10Card) 1 else 0)
-        listState.scrollToItem(idx + headerItems)
+        // Already on screen (back from the info page, or from the tab strip): don't jump the page.
+        if (listState.layoutInfo.visibleItemsInfo.none { it.key == t.rowKey }) listState.scrollToItem(idx + headerItems)
     }
 
 
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    // Images ahead of time: hero backdrops and logos, and the first posters of the first rows, at
+    // the size they are drawn, so they come from memory when they appear.
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val posterPx = with(LocalDensity.current) { settings.posterSize.dp.roundToPx() }
+    LaunchedEffect(heroItems.map { it.id }) {
+        val dm = context.resources.displayMetrics
+        heroItems.forEach { m ->
+            m.background?.let { prefetchImage(context, model, it, dm.widthPixels, dm.heightPixels) }
+            m.logo?.let { prefetchImage(context, model, it, null, null) }
+        }
+    }
+    LaunchedEffect(rows.take(8).map { it.key to it.items.size }, posterPx) {
+        rows.take(8).forEach { r -> r.items.take(8).forEach { m -> m.poster?.let { prefetchImage(context, model, it, posterPx, (posterPx * 1.5f).toInt()) } } }
+    }
+
+    BoxWithConstraints(Modifier.fillMaxSize()
+        // Down from the tab strip returns to the title you left, not whatever row is nearest.
+        .focusProperties {
+            onEnter = {
+                val mem = sstate.focus[tabKey]
+                if (requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Down && focusedPoster != null && mem != null &&
+                    rows.any { it.key == mem.rowKey && it.items.isNotEmpty() }) {
+                    cancelFocusChange()
+                    restoreTarget = Origin(tabKey, mem.rowKey, mem.index, mem.itemId ?: "")
+                }
+            }
+        }
+        .focusGroup()) {
         val screenH = maxHeight + Dimens.navHeight
         val heroH = (screenH * (if (isHome) 0.66f else 0.72f)) - Dimens.navHeight
         val headerH = screenH * 0.56f - Dimens.navHeight
@@ -193,6 +235,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
                 contentPadding = PaddingValues(bottom = 200.dp),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Dimens.rowGap),
             ) {
+                if (heroPending) item(key = "hero") { Box(Modifier.fillMaxWidth().height(heroH)) }
                 if (heroEnabled) item(key = "hero") {
                     Hero(
                         items = heroItems, index = heroIndex.coerceAtMost(heroItems.lastIndex), full = heroFull, height = heroH,
@@ -251,6 +294,7 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
                                 if (row.kind != RowKind.CONTINUE && i >= row.items.size - 6) model.loadMore(row)
                             },
                         ),
+                        listState = model.rowListState(row.key),
                         onEnsureLoaded = { model.ensureLoaded(row) },
                         onLoadMore = { model.loadMore(row) },
                         onRetry = { model.retry(row) },
@@ -295,4 +339,12 @@ fun produceMeta(session: ProfileSession, meta: MetaPreview?, debounceMs: Long = 
         if (debounceMs > 0) delay(debounceMs)
         value = graph.metaCache.get(session.effectiveAddons(), m.type, m.id)
     }
+}
+
+/** Fetches an image into Coil's caches once per model; null size means the image's own size. */
+private fun prefetchImage(context: android.content.Context, model: BrowseModel, url: String, w: Int?, h: Int?) {
+    if (!model.prefetchedImages.add("$url@$w")) return
+    val b = coil3.request.ImageRequest.Builder(context).data(url)
+    if (w != null && h != null && w > 0 && h > 0) b.size(w, h)
+    coil3.SingletonImageLoader.get(context).enqueue(b.build())
 }
