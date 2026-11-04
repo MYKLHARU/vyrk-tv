@@ -107,9 +107,25 @@ class PlayerActivity : ComponentActivity() {
         })
         val accent = runCatching { AccentChoice.valueOf(session.settings.value.accent) }.getOrDefault(AccentChoice.FROST)
         val size = runCatching { InterfaceSize.valueOf(dev.interfaceSize) }.getOrDefault(InterfaceSize.MEDIUM)
+        FocusTrace.enter(PLAYER_LAYER)
         setContent {
-            VyrkTheme(accent) { FittedCanvas(size) { PlayerScreen(m) { finish() } } }
+            androidx.compose.runtime.CompositionLocalProvider(com.vyrk.tv.ui.LocalTraceLayer provides PLAYER_LAYER) {
+                VyrkTheme(accent) { FittedCanvas(size) { PlayerScreen(m) { finish() } } }
+            }
         }
+        // Android 16 delivers Back through the back dispatcher, not as a key event.
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                KeyBus.onKey(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
+                when {
+                    m.phase == Phase.PLAYING && m.panel != Panel.NONE -> { m.panel = Panel.NONE; m.showControls() }
+                    m.phase == Phase.PLAYING && m.stallPrompt -> m.stallPrompt = false
+                    m.phase == Phase.PLAYING && m.upNext -> { m.upNext = false; m.upNextCountdown = 10_000 }
+                    m.phase == Phase.PLAYING && m.controlsVisible -> { m.controlsVisible = false; FocusTrace.set(PLAYER_LAYER, "player:video") }
+                    else -> finish()
+                }
+            }
+        })
         m.start()
     }
 
@@ -137,14 +153,9 @@ class PlayerActivity : ComponentActivity() {
     private fun handleKey(m: PlayerModel, e: KeyEvent): Boolean {
         val code = e.keyCode
         fun consume(block: () -> Unit): Boolean { block(); consumedUp += code; return true }
-        if (m.phase != Phase.PLAYING) {
-            if (code == KeyEvent.KEYCODE_BACK && m.phase == Phase.CONNECTING) return consume { finish() }
-            return false
-        }
-        if (m.panel != Panel.NONE) {
-            if (code == KeyEvent.KEYCODE_BACK) return consume { m.panel = Panel.NONE; m.showControls() }
-            return false
-        }
+        if (code == KeyEvent.KEYCODE_BACK) return false // handled by the back dispatcher
+        if (m.phase != Phase.PLAYING) return false
+        if (m.panel != Panel.NONE) return false
         when (code) {
             KeyEvent.KEYCODE_CAPTIONS, KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK -> return consume { m.panel = Panel.AUDIO_SUBS; m.showControls() }
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> return consume { m.togglePlay(); m.showControls() }
@@ -158,8 +169,6 @@ class PlayerActivity : ComponentActivity() {
                 KeyEvent.KEYCODE_DPAD_RIGHT -> return consume { m.seekBy(10_000) }
                 KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> return consume { m.showControls() }
             }
-        } else if (code == KeyEvent.KEYCODE_BACK) {
-            return consume { m.controlsVisible = false; FocusTrace.set("player:video") }
         }
         return false
     }
@@ -171,12 +180,15 @@ class PlayerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        FocusTrace.exit(PLAYER_LAYER)
         if (originalModeId != 0 || window.attributes.preferredDisplayModeId != 0) window.attributes = window.attributes.apply { preferredDisplayModeId = originalModeId }
         mediaSession?.release()
         model?.engine?.release()
         model = null
     }
 }
+
+private const val PLAYER_LAYER = 1_000_000
 
 private fun fmt(ms: Long): String {
     val s = (ms / 1000).coerceAtLeast(0)

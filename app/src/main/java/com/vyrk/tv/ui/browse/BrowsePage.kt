@@ -46,6 +46,7 @@ import com.vyrk.tv.ui.Overlay
 import com.vyrk.tv.ui.preview.HeaderTrailer
 import com.vyrk.tv.ui.theme.Dimens
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 const val CW_ROW = "cw"
@@ -96,9 +97,9 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
     val heroFull by produceMeta(session, heroMeta)
     val headerFull by produceMeta(session, focusedPoster, debounceMs = 250)
     val heroEnabled = settings.heroEnabled && heroItems.isNotEmpty() && model.tab != Tab.LIVE
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     // Rotation every 9 s, paused while focused, under overlays/previews, scrolled away, in the background or with Reduce motion.
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(heroItems.size, settings.heroRotation, settings.reduceMotion) {
         if (heroItems.size < 2 || !settings.heroRotation || settings.reduceMotion) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -120,6 +121,8 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
         if (initialDone || !firstLoaded) return@LaunchedEffect
         val mem = sstate.focus[tabKey]
         initialDone = true
+        // Opened from the tab strip: focus stays there; Down enters the content.
+        if (app.navFocused) return@LaunchedEffect
         when {
             mem != null && rows.any { it.key == mem.rowKey && it.items.isNotEmpty() } ->
                 restoreTarget = Origin(tabKey, mem.rowKey, mem.index, mem.itemId ?: "")
@@ -129,9 +132,13 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
             else -> app.focusTabsTick++
         }
     }    // Restores requested by overlays and playback.
+    val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
     LaunchedEffect(app.restore) {
         val r = app.restore ?: return@LaunchedEffect
         if (r.tab != tabKey) return@LaunchedEffect
+        // Apply only once this window is visible and focused again (after the player or a dialog).
+        lifecycle.currentStateFlow.first { it.isAtLeast(Lifecycle.State.RESUMED) }
+        androidx.compose.runtime.snapshotFlow { windowInfo.isWindowFocused }.first { it }
         app.restore = null
         restoreTarget = r
     }

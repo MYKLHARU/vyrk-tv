@@ -154,9 +154,14 @@ class ProfileSession(
         if (list.isNotEmpty()) setAddons(list, push = false)
     }
 
-    suspend fun fetchManifest(input: String): Result<Descriptor> = runCatching {
+    suspend fun fetchManifest(input: String): Result<Descriptor> = try {
         val url = AddonUrls.normaliseInstallUrl(input) ?: error("not an add-on URL")
-        Descriptor(addonClient.manifest(url), url)
+        Result.success(Descriptor(addonClient.manifest(url), url))
+    } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Diagnostics.log("addons", "manifest fetch failed: ${e.message}")
+        Result.failure(e)
     }
 
     suspend fun install(d: Descriptor) {

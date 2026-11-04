@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -107,7 +108,14 @@ fun OverlayWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) {
             window?.setDimAmount(0f)
             window?.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
         }
-        ReprovideAppDensity { Box(Modifier.fillMaxSize()) { content() } }
+        val layer = remember { com.vyrk.tv.ui.FocusTrace.enter() }
+        androidx.compose.runtime.DisposableEffect(layer) { onDispose { com.vyrk.tv.ui.FocusTrace.exit(layer) } }
+        androidx.compose.runtime.CompositionLocalProvider(com.vyrk.tv.ui.LocalTraceLayer provides layer) {
+            ReprovideAppDensity {
+                // Dialog windows bypass the activity, so report their keys to the focus trace here.
+                Box(Modifier.fillMaxSize().onPreviewKeyEvent { com.vyrk.tv.ui.KeyBus.onKey(it.nativeKeyEvent); false }) { content() }
+            }
+        }
     }
 }
 
@@ -184,7 +192,7 @@ private fun InstallConfirm(o: Overlay.InstallConfirm) {
     val scope = rememberCoroutineScope()
     val first = remember { FocusRequester() }
     val d = o.descriptor
-    LaunchedEffect(d != null, o.error) { runCatching { first.requestFocus() } }
+    LaunchedEffect(d != null, o.error) { kotlinx.coroutines.delay(60); runCatching { first.requestFocus() } }
     val installedMsg = d?.let { str(R.string.installed_addon, it.manifest.name) }.orEmpty()
     val needsServer = d?.let { CatalogRules.needsStreamingServer(it) } == true
     CenterCard(560.dp) {

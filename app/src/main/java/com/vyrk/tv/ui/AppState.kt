@@ -50,6 +50,8 @@ class AppState {
     /** Non-focusable trailer preview card; any focus move or Back closes it. */
     var preview by mutableStateOf<MetaPreview?>(null)
     var searchQuery by mutableStateOf("")
+    /** True while the top navigation bar holds focus; pages never steal it then. */
+    var navFocused by mutableStateOf(false)
     var pendingLink: String? = null
     var pendingLinkExternal: Boolean = true
 

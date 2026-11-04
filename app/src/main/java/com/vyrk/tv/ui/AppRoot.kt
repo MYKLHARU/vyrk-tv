@@ -74,7 +74,8 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
         val s = session
         if (app.screen != Screen.Main || s == null) { app.pendingLink = l.uri; app.pendingLinkExternal = l.external; return@LaunchedEffect }
         activity.incomingLinks.value = null
-        handleLink(app, s, l.uri, l.external)
+        // Not in this effect's scope: clearing the link above restarts the effect.
+        s.scope.launch { handleLink(app, s, l.uri, l.external) }
     }
     LaunchedEffect(app.screen, session) {
         val s = session ?: return@LaunchedEffect
@@ -82,7 +83,8 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
         if (app.screen != Screen.Main) return@LaunchedEffect
         app.pendingLink = null
         activity.incomingLinks.value = null
-        handleLink(app, s, pending, app.pendingLinkExternal)
+        val external = app.pendingLinkExternal
+        s.scope.launch { handleLink(app, s, pending, external) }
     }
 
     VyrkTheme(accent) {
@@ -106,10 +108,16 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
     }
 }
 
-private suspend fun handleLink(app: AppState, s: ProfileSession, uri: String, external: Boolean) {
-    if (uri.startsWith("vyrk://open")) return
+private suspend fun handleLink(app: AppState, s: ProfileSession, uri: String, external: Boolean) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+    if (uri.startsWith("vyrk://open")) {
+        // Watch Next and other launchers: open the info page for that title.
+        val q = android.net.Uri.parse(uri)
+        val id = q.getQueryParameter("id"); val type = q.getQueryParameter("type")
+        if (id != null && type != null) app.push(Overlay.Info(com.vyrk.core.addon.MetaPreview(id = id, type = type, name = s.item(id)?.name ?: ""), null))
+        return@withContext
+    }
     val url = AddonUrls.normaliseInstallUrl(uri)
-    if (url == null) { app.push(Overlay.InstallConfirm(null, uri, external, error = "invalid")); return }
+    if (url == null) { app.push(Overlay.InstallConfirm(null, uri, external, error = "invalid")); return@withContext }
     app.push(Overlay.InstallConfirm(null, url, external))
     val d = s.fetchManifest(url)
     val top = app.overlays.lastOrNull()

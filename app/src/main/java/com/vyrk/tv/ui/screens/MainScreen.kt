@@ -125,7 +125,7 @@ fun MainScreen(session: ProfileSession) {
         Row(
             Modifier.fillMaxWidth().height(Dimens.navHeight).background(Vyrk.colors.background)
                 .padding(horizontal = Dimens.screenMargin)
-                .onFocusChanged { navHasFocus = it.hasFocus }
+                .onFocusChanged { navHasFocus = it.hasFocus; app.navFocused = it.hasFocus }
                 .focusProperties {
                     onEnter = {
                         val target = when (app.section) {
