@@ -24,7 +24,7 @@ VYRK is a free, open-source Android TV client for Stremio add-ons. Sign in to yo
 | ![Home](docs/images/screenshots/home.jpg)<br>**Home** — featured hero with live artwork and credits | ![Top 10](docs/images/screenshots/top10-rows.jpg)<br>**Top 10 rows** — ranked per service, with the title header and a muted trailer | ![Info page](docs/images/screenshots/info-page.jpg)<br>**Info page** — details and ranked sources side by side |
 | ![Series](docs/images/screenshots/series-info.jpg)<br>**Series** — season guide with stills, air dates and watched state | ![Player](docs/images/screenshots/player.jpg)<br>**Player** — elapsed, remaining and "Ends at" | ![Audio & subtitles](docs/images/screenshots/audio-subtitles.jpg)<br>**Audio & subtitles** — languages as names, flags as a supplement |
 | ![Search](docs/images/screenshots/search.jpg)<br>**Search** — on-screen keyboard, results per type | ![Library](docs/images/screenshots/library.jpg)<br>**Library** — filters, sorts and progress | ![Top 10 suggestion](docs/images/screenshots/top10-suggestion.jpg)<br>**Top 10 suggestion** — one press adds the rows |
-| ![Add-ons](docs/images/screenshots/addons.jpg)<br>**Add-ons** — reorder, configure by QR, redacted URLs | ![Settings](docs/images/screenshots/settings.jpg)<br>**Settings** — source choice and stream limits | ![Profiles](docs/images/screenshots/profiles.jpg)<br>**Profiles** — up to five, each with its own add-ons and PIN |
+| ![Add-ons](docs/images/screenshots/addons.jpg)<br>**Settings › Add-ons** — reorder, configure by QR, redacted URLs | ![Settings](docs/images/screenshots/settings.jpg)<br>**Settings** — source choice and stream limits | ![Profiles](docs/images/screenshots/profiles.jpg)<br>**Profiles** — up to five, each with its own add-ons and PIN |
 | ![First run](docs/images/screenshots/first-run.jpg)<br>**First run** — sign in by QR or start without an account | | |
 
 Screenshots are captures of the real app on an Android TV emulator with live catalogues, made by [`ci/showcase.sh`](ci/showcase.sh). Big Buck Bunny © Blender Foundation, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Posters, logos and artwork belong to their owners and come from the installed add-ons.
@@ -41,7 +41,9 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Accounts, profiles and library** — Stremio sign-in by QR code, or no account at all. Up to five profiles with PINs. Watched state and Continue Watching follow Stremio's own rules, so progress reads correctly in other Stremio apps.
 
-**Add-ons** — install from a URL, a `stremio://` link or `vyrk://install?url=…`, reorder, configure by QR on your phone, and save the list back to your account.
+**Add-ons** — in **Settings › Add-ons**: install from a URL, a `stremio://` link or `vyrk://install?url=…`, reorder, configure by QR on your phone, and save the list back to your account.
+
+**Settings** — translucent panels over the artwork you were last looking at, blurred.
 
 **TV integration** — Watch Next on the launcher, MediaSession, frame-rate matching, passthrough, in-app updates from GitHub Releases.
 
@@ -75,7 +77,7 @@ adb install -r vyrk-<version>-arm64-v8a.apk
 ## Getting started
 
 1. Open VYRK and choose **Sign in with Stremio** (scan the QR code or open the link and confirm the code) or **Use without an account**.
-2. Add a stream add-on in **Add-ons › Install from URL**, or from a `stremio://` link.
+2. Add a stream add-on in **Settings › Add-ons › Install from URL**, or from a `stremio://` link.
 3. Pick a title and press **Play**.
 
 ## Remote control

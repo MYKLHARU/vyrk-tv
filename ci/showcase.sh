@@ -99,16 +99,16 @@ key KEYCODE_CAPTIONS 2.5
 cap audio-subtitles
 back_from_player
 
-# Home, Library, Add-ons, Settings (Streams), Profiles
+# Home, Library, Settings (Streams, then Add-ons), Profiles
 until_focus KEYCODE_DPAD_UP '^(tab|nav):' 10
 until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8
 sleep 3
 until_focus KEYCODE_DPAD_RIGHT '^tab:library$' 8 && { sleep 3; cap library; }
-until_focus KEYCODE_DPAD_RIGHT '^tab:addons$' 3 && { sleep 2; cap addons; }
 until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
 key KEYCODE_DPAD_CENTER 2
 key KEYCODE_DPAD_DOWN 1.5 "streams"
 cap settings
+until_focus KEYCODE_DPAD_DOWN '^settings:addons$' 8 && { sleep 2; cap addons; }
 key KEYCODE_BACK 1.5
 until_focus KEYCODE_DPAD_UP '^(tab|nav):' 4 || true
 until_focus KEYCODE_DPAD_RIGHT '^nav:profile$' 8

@@ -2,6 +2,12 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Add-ons moved from the top bar into Settings › Add-ons, with the profile sharing switches.
+- Settings is translucent: its panels sit over the artwork you were last looking at, blurred.
+- Settings: pressing Left from a setting goes back to its own group. It used to land on whichever group was level with the setting and open that one instead. Right enters a group at its first setting.
+
 ## v0.1.0
 
 First public release: an Android TV client for Stremio add-ons, built with Kotlin and Compose for TV. Installing over a `ci-latest` test build needs an uninstall first, because test builds are signed with a public key. What has and hasn't been verified, and how, is in [docs/FEATURES.md](https://github.com/MYKLHARU/vyrk-tv/blob/main/docs/FEATURES.md).

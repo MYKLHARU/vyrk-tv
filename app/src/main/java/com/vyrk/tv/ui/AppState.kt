@@ -51,6 +51,8 @@ class AppState {
     /** Non-focusable trailer preview card; any focus move or Back closes it. */
     var preview by mutableStateOf<MetaPreview?>(null)
     var searchQuery by mutableStateOf("")
+    /** Backdrop of the title last featured on a catalogue page; Settings shows it blurred behind its glass panels. */
+    var backdrop by mutableStateOf<String?>(null)
     /** True while the top navigation bar holds focus; pages never steal it then. */
     var navFocused by mutableStateOf(false)
     var pendingLink: String? = null

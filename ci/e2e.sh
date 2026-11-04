@@ -163,7 +163,7 @@ if [[ "$(focus_now)" == "$KEEP" ]]; then log "ok: Home kept the selected title a
 
 # ---------------------------------------------------------------- tour every tab
 until_focus KEYCODE_DPAD_UP '^tab:home$' 8
-for t in movies series anime library addons; do
+for t in movies series anime library; do
   until_focus KEYCODE_DPAD_RIGHT "^tab:$t\$" 3 && {
     sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"; probe "$t content"
     # The featured row is there on the first visit, without scrolling or a second visit.
@@ -192,6 +192,22 @@ for g in streams picture languages subtitles previews addons about; do
   expect "^settings:$g\$" "settings group $g"
   shot "settings-$g"
 done
+# Right enters a group at its top; Left from any setting returns to that group's entry. Left used
+# to land on whichever entry was level with the setting, which opened another group.
+until_focus KEYCODE_DPAD_UP '^settings:picture$' 8
+key KEYCODE_DPAD_RIGHT 1.2 "into Picture & sound"
+expect '^set:ui_size:0$' "Right from a group enters its first setting"
+for _ in 1 2 3 4 5; do key KEYCODE_DPAD_DOWN 0.8; done
+probe "low in Picture & sound"
+key KEYCODE_DPAD_LEFT 1.2 "back to the groups"
+expect '^settings:picture$' "Left from a lower setting returns to its own group"
+# Add-ons live in Settings now (no Add-ons tab).
+until_focus KEYCODE_DPAD_DOWN '^settings:addons$' 6
+key KEYCODE_DPAD_RIGHT 1.2 "into Add-ons"
+expect '^addons:install_url$' "Settings › Add-ons opens on Install from URL"
+until_focus KEYCODE_DPAD_DOWN '^addon:[0-9]+:' 4 && shot settings-addons-list
+key KEYCODE_DPAD_LEFT 1.2; key KEYCODE_DPAD_LEFT 1.2; key KEYCODE_DPAD_LEFT 1.2
+expect '^settings:addons$' "Left from an add-on returns to the Add-ons group"
 key KEYCODE_BACK 1.5 "back to tabs"
 
 # ---------------------------------------------------------------- skip intro, timeline and chapters

@@ -14,7 +14,8 @@ val AppJson = Json {
     coerceInputValues = true
 }
 
-enum class Tab(val key: String) { HOME("home"), MOVIES("movies"), SERIES("series"), ANIME("anime"), LIVE("live"), LIBRARY("library"), ADDONS("addons") }
+/** Top-bar tabs. Add-on management lives in Settings › Add-ons, not here. */
+enum class Tab(val key: String) { HOME("home"), MOVIES("movies"), SERIES("series"), ANIME("anime"), LIVE("live"), LIBRARY("library") }
 enum class PreviewMode { OFF, MANUAL, AUTOMATIC }
 enum class SkipIntroMode { OFF, BUTTON, AUTOMATIC }
 

@@ -141,6 +141,9 @@ fun BrowsePage(
     val heroArt = rememberTitleArt(heroMeta, heroFull)
     val headerArt = rememberTitleArt(focusedPoster, headerFull, debounceMs = 300)
     val heroEnabled = settings.heroEnabled && heroItems.isNotEmpty() && model.tab != Tab.LIVE
+    // Settings draws the artwork you were last looking at, blurred, behind its glass panels.
+    val shownBackdrop = (if (heroEnabled) heroArt else headerArt).backdrops.firstOrNull()
+    LaunchedEffect(active, shownBackdrop) { if (active && shownBackdrop != null) app.backdrop = shownBackdrop }
     // The hero keeps its slot while its titles load. Inserting it later above rows that are
     // already on screen left it scrolled out of view (lazy lists keep the first visible item in
     // place), which is why it sometimes never showed on the first visit to a tab.

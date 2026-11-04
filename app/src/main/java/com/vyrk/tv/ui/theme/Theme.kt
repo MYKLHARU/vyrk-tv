@@ -39,6 +39,10 @@ data class VyrkColors(
     val scrim: Color = Color(0xFF07080B).copy(alpha = 0.80f),
     /** Black-navy fade over artwork (left and top of the hero); darker and less blue than [background]. */
     val shade: Color = Color(0xFF060B10),
+    /** Translucent panel over blurred artwork (Settings); the artwork's colour shows through. */
+    val glass: Color = Color(0xFF1B2B38).copy(alpha = 0.52f),
+    /** Hairline on [glass] panels so their edge reads over bright artwork. */
+    val glassEdge: Color = Color.White.copy(alpha = 0.10f),
 )
 
 /** Accent choices offered in Settings. Frost is VYRK's own; the rest follow the spec. */

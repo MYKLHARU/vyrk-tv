@@ -31,10 +31,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.os.Build
+import androidx.compose.foundation.border
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.size.Size
 import androidx.tv.material3.Text
 import com.vyrk.core.lang.Languages
 import com.vyrk.core.playback.SubtitleMode
@@ -74,22 +87,70 @@ private enum class Group(val title: Int) {
 @Composable
 fun SettingsScreen(session: ProfileSession) {
     var group by remember { mutableStateOf(Group.PROFILE) }
-    val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    // One requester per group, so Left from any setting returns to the group it belongs to.
+    val groupReqs = remember { Group.entries.associateWith { FocusRequester() } }
+    val contentReq = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { groupReqs.getValue(group).requestFocus() } }
+    val addons by session.addons.collectAsState()
+    var typing by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(group) { typing = null }
     val c = Vyrk.colors
+    // Not clipped: a focused chip's zoom and glow may reach past the panel edge.
+    val glass = Modifier.background(c.glass, PANEL_SHAPE).border(1.dp, c.glassEdge, PANEL_SHAPE)
     Row(Modifier.fillMaxSize().padding(horizontal = Dimens.screenMargin, vertical = 12.dp)) {
-        Column(Modifier.width(230.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Group.entries.forEachIndexed { i, g ->
+        Column(Modifier.width(230.dp).then(glass).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Group.entries.forEach { g ->
                 VyrkChip(str(g.title), group == g, { group = g },
-                    Modifier.fillMaxWidth().then(if (i == 0) Modifier.focusRequester(first) else Modifier).onFocusChanged { if (it.isFocused) group = g }.traceFocus("settings:${g.name.lowercase()}"))
+                    Modifier.fillMaxWidth()
+                        .focusRequester(groupReqs.getValue(g))
+                        .onFocusChanged { if (it.isFocused) group = g }
+                        // Right enters the page at its top, not at whichever setting is level with this entry.
+                        .focusProperties { right = contentReq }
+                        .traceFocus("settings:${g.name.lowercase()}"))
             }
         }
-        Spacer(Modifier.width(26.dp))
-        Box(Modifier.weight(1f).fillMaxHeight().background(c.panel, RoundedCornerShape(22.dp)).padding(22.dp)) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 60.dp)) {
-                item(key = group) { GroupContent(session, group) }
+        Spacer(Modifier.width(20.dp))
+        Box(Modifier.weight(1f).fillMaxHeight().then(glass).padding(22.dp)
+            // Focus search would pick the sidebar entry level with the focused setting, and the
+            // page follows sidebar focus, so Left from a lower setting used to open another group.
+            .focusProperties {
+                onExit = { if (requestedFocusDirection == FocusDirection.Left) runCatching { groupReqs.getValue(group).requestFocus() } }
+            }
+            .focusGroup()
+        ) {
+            LazyColumn(Modifier.focusRequester(contentReq).focusGroup(), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 60.dp)) {
+                if (group == Group.ADDONS) {
+                    item(key = "addon-actions") { AddonActions(session, typing) { typing = it } }
+                    itemsIndexed(addons, key = { _, d -> "addon:" + d.manifest.id }) { i, d -> AddonCard(session, d, i, addons.lastIndex) }
+                    item(key = "addon-sharing") { Column(Modifier.padding(top = 8.dp)) { GroupContent(session, Group.ADDONS) } }
+                } else {
+                    item(key = group) { GroupContent(session, group) }
+                }
             }
         }
+    }
+}
+
+private val PANEL_SHAPE = RoundedCornerShape(22.dp)
+
+/**
+ * Behind Settings: the artwork last featured on a catalogue page, decoded tiny and stretched so it
+ * is soft on every TV, blurred further on Android 12+, under a dark fade that keeps text readable.
+ * Before any artwork has loaded, a faint accent glow stands in for it.
+ */
+@Composable
+fun SettingsBackdrop(url: String?) {
+    val c = Vyrk.colors
+    Box(Modifier.fillMaxSize().background(c.background)) {
+        if (url != null) {
+            val ctx = LocalContext.current
+            val req = remember(url) { ImageRequest.Builder(ctx).data(url).size(Size(64, 36)).build() }
+            AsyncImage(req, null, contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize().then(if (Build.VERSION.SDK_INT >= 31) Modifier.blur(36.dp) else Modifier))
+        } else {
+            Box(Modifier.fillMaxSize().background(Brush.radialGradient(0f to c.accent.copy(alpha = 0.16f), 1f to Color.Transparent)))
+        }
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.45f to c.shade.copy(alpha = 0.58f), 1f to c.shade.copy(alpha = 0.42f))))
     }
 }
 
@@ -131,7 +192,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
             Group.PROFILE -> {
                 Choice(str(R.string.default_tab), listOf(Tab.HOME, Tab.MOVIES, Tab.SERIES, Tab.LIBRARY).map { it.key to tabLabel(it) }, s.defaultTab, "set:default_tab") { v -> upd { it.copy(defaultTab = v) } }
                 Setting(str(R.string.hidden_tabs)) {
-                    listOf(Tab.MOVIES, Tab.SERIES, Tab.ANIME, Tab.LIVE, Tab.LIBRARY, Tab.ADDONS).forEach { t ->
+                    listOf(Tab.MOVIES, Tab.SERIES, Tab.ANIME, Tab.LIVE, Tab.LIBRARY).forEach { t ->
                         VyrkChip(tabLabel(t), t.key in s.hiddenTabs, { upd { it.copy(hiddenTabs = if (t.key in it.hiddenTabs) it.hiddenTabs - t.key else it.hiddenTabs + t.key) } }, Modifier.traceFocus("set:hide_tab:${t.key}"))
                     }
                 }

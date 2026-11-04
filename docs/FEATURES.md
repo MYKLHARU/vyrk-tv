@@ -36,7 +36,7 @@ not run yet.
 | Share stream add-ons, receivers never see URLs | `AppGraph.refreshShared`, Settings › Add-ons | Built | — |
 | Add-on protocol: manifest, catalog/meta/stream/subtitles, IDs percent-encoded as stremio-core does | `core/addon` | Done | core, E2E |
 | Install from typed URL, `stremio://`, `vyrk://install?url=` with confirmation for external links | `AppRoot`, `InstallConfirm` | Done | E2E (deep link), core (normalisation) |
-| Add-ons tab: version, description, tags, redacted URL, reorder, configure QR, refresh, remove, save to account | `AddonsScreen` | Built | showcase |
+| Settings › Add-ons (no Add-ons tab): install from URL, version, description, tags, redacted URL, reorder, configure QR, refresh, remove, save to account, sharing between profiles | `SettingsScreen`, `AddonActions`, `AddonCard` | Done | emulator check, API 36: no Add-ons tab, opens on Install from URL, URL keyboard opens and Cancel returns focus, add-on cards reachable |
 | Streaming-server add-ons skipped with an explanation | `CatalogRules.needsStreamingServer` | Built | — |
 | AddonClient concurrency limit 8, per-provider timeouts | `core/addon/AddonClient.kt` | Done | core |
 
@@ -53,7 +53,7 @@ not run yet.
 | Artwork fallbacks: add-on art (TMDB/metahub URLs asked at hero size), then TMDB English-first logo/textless backdrop when the add-on gives none, then Cinemeta (metahub) by IMDb id; next candidate on load error | `core/art/Artwork`, `rememberTitleArt`, `TmdbClient.artwork` | Built | core (URL rules, TMDB picking and lookup against documented response shapes); metahub path seen on the SHIELD; live TMDB not exercised (local builds have no TMDB key) |
 | Continue Watching filled from the full meta when the library entry has no name or poster (Game of Thrones showed a blank card); posters fall back to Cinemeta's by IMDb id, then a titled card, never blank; header uses the full meta's logo and backdrop | `BrowsePage`, `Rows.Poster` | Done | SHIELD screenshot (Game of Thrones card, logo and backdrop) |
 | Continue Watching progress: slim 3 dp blue bar inset on a soft shade | `Rows.Poster` | Done | SHIELD screenshot |
-| Top bar fades into the artwork on browse pages (no solid edge); plain bar on Library, Add-ons, Search, Settings, Profiles | `MainScreen` | Done | emulator capture |
+| Top bar fades into the artwork on browse pages and Settings (no solid edge); plain bar on Library, Search, Profiles | `MainScreen` | Done | emulator capture |
 | Hero titles and position stay locked across the info page, playback and tab switches | `BrowseModel.lockHero` | Done | emulator check (Home → Movies → Home keeps the title) |
 | Hero rotates every 9 s, pauses when focused, under overlays/previews, scrolled away, in background, Reduce motion | `BrowsePage` | Built | — |
 | Hold Select / Menu on Watch now opens info | `Hero` | Built | — |
@@ -138,6 +138,8 @@ not run yet.
 | Search: search catalogues, debounce, cancellation, merged ranking per type | `SearchScreen`, `core/search` | Done | E2E ("matrix"), showcase, core |
 | Alphabetical keyboard takes focus; hardware keyboard types; voice; recent searches | `SearchScreen` | Built | E2E (keyboard) |
 | Settings: eight groups, profile vs device settings, read-only device report | `SettingsScreen` | Done | E2E (all groups) |
+| Settings focus: Right enters a group at its first setting; Left from any setting returns to that group (it used to land on the entry level with the setting and open another group) | `SettingsScreen` | Done | emulator check, API 36 (Picture & sound, Previews, Add-ons); E2E steps added |
+| Settings on glass: translucent sidebar and page over the last featured artwork, decoded tiny and stretched (soft on every TV), blurred 36 dp on Android 12+, under a dark fade; accent glow before any artwork loads | `SettingsBackdrop`, `VyrkColors.glass` | Built | emulator capture on API 36 (blurred); the unblurred look on Android 11 and older (e.g. the SHIELD) not seen yet |
 | Fitted 960×540 canvas, interface size 0.72/0.84/1.0, dialogs re-provide density | `ui/theme/FittedDensity.kt` | Done | 1080p emulator |
 | Glow + zoom focus, no white borders; overlays as separate windows | `ui/components` | Done | E2E, showcase |
 | Focus never lost, per-key focus trace | `KeyBus`, `ci/e2e.sh` | Done | E2E (104 keys) |

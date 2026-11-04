@@ -122,78 +122,85 @@ fun LibraryScreen(session: ProfileSession, onPlay: (MetaPreview, Origin?) -> Uni
     }
 }
 
+/**
+ * Settings › Add-ons, top: Install from URL and Save to account, or the URL keyboard while typing.
+ * [typing] is the URL so far, or null when not typing.
+ */
 @Composable
-fun AddonsScreen(session: ProfileSession) {
+fun AddonActions(session: ProfileSession, typing: String?, onTyping: (String?) -> Unit) {
     val app = LocalApp.current
-    val addons by session.addons.collectAsState()
     val account by session.account.collectAsState()
     val scope = rememberCoroutineScope()
-    var typing by remember { mutableStateOf<String?>(null) }
     val c = Vyrk.colors
     val savedMsg = str(R.string.saved_to_account)
+    // When the keyboard closes, its keys leave the screen: give focus back to Install from URL.
+    val installReq = remember { FocusRequester() }
+    var refocus by remember { mutableStateOf(false) }
+    LaunchedEffect(typing == null) { if (typing == null && refocus) { refocus = false; runCatching { installReq.requestFocus() } } }
+    if (typing == null) {
+        WrapRow(spacing = 6.dp) {
+            VyrkButton(str(R.string.install_from_url), icon = R.drawable.ic_plus, style = ButtonStyle.PRIMARY, onClick = { refocus = true; onTyping("") },
+                modifier = Modifier.focusRequester(installReq).traceFocus("addons:install_url"))
+            if (account is AccountState.Connected) VyrkButton(str(R.string.save_to_account), onClick = { scope.launch { if (session.saveAddonsToAccount()) app.showToast(savedMsg) } }, modifier = Modifier.traceFocus("addons:save"))
+        }
+        return
+    }
+    Column(Modifier.fillMaxWidth().background(c.glass, RoundedCornerShape(16.dp)).padding(14.dp)) {
+        Text(str(R.string.addon_url), style = Vyrk.type.labelL, color = c.textMuted)
+        Text(typing.ifEmpty { "https://…/manifest.json" }, style = Vyrk.type.titleM, color = if (typing.isEmpty()) c.textMuted else c.text, maxLines = 3)
+        Spacer(Modifier.height(10.dp))
+        UrlKeyboard(onChar = { onTyping(typing + it) }, onBackspace = { onTyping(typing.dropLast(1)) }, onClear = { onTyping("") })
+        Spacer(Modifier.height(10.dp))
+        WrapRow {
+            VyrkButton(str(R.string.next), style = ButtonStyle.PRIMARY, onClick = {
+                val input = typing; onTyping(null)
+                val url = com.vyrk.core.addon.AddonUrls.normaliseInstallUrl(input) ?: input
+                app.push(Overlay.InstallConfirm(null, url, external = false))
+                scope.launch {
+                    val d = session.fetchManifest(input)
+                    val top = app.overlays.lastOrNull()
+                    if (top is Overlay.InstallConfirm && top.input == url) app.replaceTop(top.copy(descriptor = d.getOrNull(), error = d.exceptionOrNull()?.let { "fetch" }))
+                }
+            }, modifier = Modifier.traceFocus("addons:url_next"))
+            VyrkButton(str(R.string.cancel), onClick = { onTyping(null) }, modifier = Modifier.traceFocus("addons:url_cancel"))
+        }
+    }
+}
+
+/** One installed add-on in Settings › Add-ons: details, tags and its actions. */
+@Composable
+fun AddonCard(session: ProfileSession, d: com.vyrk.core.addon.Descriptor, index: Int, lastIndex: Int) {
+    val app = LocalApp.current
+    val scope = rememberCoroutineScope()
+    val c = Vyrk.colors
     val refreshedMsg = str(R.string.addon_refreshed)
-    Row(Modifier.fillMaxSize().padding(horizontal = Dimens.screenMargin, vertical = 12.dp)) {
-        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 120.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            item {
-                WrapRow {
-                    VyrkButton(str(R.string.install_from_url), icon = R.drawable.ic_plus, style = ButtonStyle.PRIMARY, onClick = { typing = "" }, modifier = Modifier.traceFocus("addons:install_url"))
-                    if (account is AccountState.Connected) VyrkButton(str(R.string.save_to_account), onClick = { scope.launch { if (session.saveAddonsToAccount()) app.showToast(savedMsg) } }, modifier = Modifier.traceFocus("addons:save"))
-                }
+    val m = d.manifest
+    val skipped = CatalogRules.needsStreamingServer(d)
+    Column(Modifier.fillMaxWidth().background(c.glass, RoundedCornerShape(16.dp)).padding(14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(40.dp).background(c.raised.copy(alpha = 0.7f), RoundedCornerShape(10.dp))) {
+                m.logo?.let { AsyncImage(it, null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(4.dp)) }
             }
-            itemsIndexed(addons, key = { _, d -> d.manifest.id }) { i, d ->
-                val m = d.manifest
-                val skipped = CatalogRules.needsStreamingServer(d)
-                Column(Modifier.fillMaxWidth().background(c.panel, RoundedCornerShape(16.dp)).padding(14.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(40.dp).background(c.raised, RoundedCornerShape(10.dp))) {
-                            m.logo?.let { AsyncImage(it, null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(4.dp)) }
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("${m.name}  ·  v${m.version}", style = Vyrk.type.titleM, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(Redact.url(d.transportUrl), style = Vyrk.type.labelS, color = c.textMuted)
-                        }
-                    }
-                    m.description?.let { Text(it, style = Vyrk.type.bodyS, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp)) }
-                    Spacer(Modifier.height(6.dp))
-                    WrapRow(spacing = 5.dp) {
-                        m.resources.forEach { Tag(it.name) }
-                        m.types.forEach { Tag(it, background = c.accent.copy(alpha = 0.18f), color = c.accent) }
-                    }
-                    if (skipped) Text(str(R.string.needs_streaming_server), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
-                    Spacer(Modifier.height(8.dp))
-                    WrapRow(spacing = 6.dp) {
-                        if (i > 0) VyrkButton(str(R.string.move_up), icon = R.drawable.ic_up, onClick = { scope.launch { session.move(m.id, -1) } }, modifier = Modifier.traceFocus("addon:$i:up"))
-                        if (i < addons.lastIndex) VyrkButton(str(R.string.move_down), icon = R.drawable.ic_down, onClick = { scope.launch { session.move(m.id, 1) } }, modifier = Modifier.traceFocus("addon:$i:down"))
-                        if (m.behaviorHints.configurable) VyrkButton(str(R.string.configure), icon = R.drawable.ic_qr, onClick = { app.push(Overlay.AddonQr(d)) }, modifier = Modifier.traceFocus("addon:$i:configure"))
-                        VyrkButton(str(R.string.refresh), icon = R.drawable.ic_refresh, onClick = { scope.launch { if (session.refreshAddon(m.id)) app.showToast(refreshedMsg) } }, modifier = Modifier.traceFocus("addon:$i:refresh"))
-                        if (!d.flags.protected) VyrkButton(str(R.string.remove), icon = R.drawable.ic_trash, onClick = { scope.launch { session.remove(m.id) } }, modifier = Modifier.traceFocus("addon:$i:remove"))
-                    }
-                }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("${m.name}  ·  v${m.version}", style = Vyrk.type.titleM, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(Redact.url(d.transportUrl), style = Vyrk.type.labelS, color = c.textMuted)
             }
         }
-        if (typing != null) {
-            Spacer(Modifier.width(24.dp))
-            Column(Modifier.width(360.dp).background(c.panel, RoundedCornerShape(18.dp)).padding(18.dp)) {
-                Text(str(R.string.addon_url), style = Vyrk.type.labelL, color = c.textMuted)
-                Text(typing!!.ifEmpty { "https://…/manifest.json" }, style = Vyrk.type.titleM, color = if (typing!!.isEmpty()) c.textMuted else c.text, maxLines = 3)
-                Spacer(Modifier.height(10.dp))
-                UrlKeyboard(onChar = { typing = typing + it }, onBackspace = { typing = typing!!.dropLast(1) }, onClear = { typing = "" })
-                Spacer(Modifier.height(10.dp))
-                WrapRow {
-                    VyrkButton(str(R.string.next), style = ButtonStyle.PRIMARY, onClick = {
-                        val input = typing!!; typing = null
-                        val url = com.vyrk.core.addon.AddonUrls.normaliseInstallUrl(input) ?: input
-                        app.push(Overlay.InstallConfirm(null, url, external = false))
-                        scope.launch {
-                            val d = session.fetchManifest(input)
-                            val top = app.overlays.lastOrNull()
-                            if (top is Overlay.InstallConfirm && top.input == url) app.replaceTop(top.copy(descriptor = d.getOrNull(), error = d.exceptionOrNull()?.let { "fetch" }))
-                        }
-                    }, modifier = Modifier.traceFocus("addons:url_next"))
-                    VyrkButton(str(R.string.cancel), onClick = { typing = null })
-                }
-            }
+        m.description?.let { Text(it, style = Vyrk.type.bodyS, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp)) }
+        Spacer(Modifier.height(6.dp))
+        WrapRow(spacing = 5.dp) {
+            m.resources.forEach { Tag(it.name) }
+            m.types.forEach { Tag(it, background = c.accent.copy(alpha = 0.18f), color = c.accent) }
+        }
+        if (skipped) Text(str(R.string.needs_streaming_server), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
+        Spacer(Modifier.height(8.dp))
+        WrapRow(spacing = 6.dp) {
+            if (index > 0) VyrkButton(str(R.string.move_up), icon = R.drawable.ic_up, onClick = { scope.launch { session.move(m.id, -1) } }, modifier = Modifier.traceFocus("addon:$index:up"))
+            if (index < lastIndex) VyrkButton(str(R.string.move_down), icon = R.drawable.ic_down, onClick = { scope.launch { session.move(m.id, 1) } }, modifier = Modifier.traceFocus("addon:$index:down"))
+            if (m.behaviorHints.configurable) VyrkButton(str(R.string.configure), icon = R.drawable.ic_qr, onClick = { app.push(Overlay.AddonQr(d)) }, modifier = Modifier.traceFocus("addon:$index:configure"))
+            VyrkButton(str(R.string.refresh), icon = R.drawable.ic_refresh, onClick = { scope.launch { if (session.refreshAddon(m.id)) app.showToast(refreshedMsg) } }, modifier = Modifier.traceFocus("addon:$index:refresh"))
+            if (!d.flags.protected) VyrkButton(str(R.string.remove), icon = R.drawable.ic_trash, onClick = { scope.launch { session.remove(m.id) } }, modifier = Modifier.traceFocus("addon:$index:remove"))
         }
     }
 }

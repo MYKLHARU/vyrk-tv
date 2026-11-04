@@ -156,6 +156,8 @@ fun MainScreen(session: ProfileSession) {
     }
 
     Box(Modifier.fillMaxSize()) {
+        // Settings sits on glass over the last featured artwork, blurred, reaching up behind the bar.
+        if (app.section == Section.SETTINGS) SettingsBackdrop(app.backdrop)
         // Pages start under the bar; artwork may reach up behind it.
         Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight)) {
             if (!loaded) return@Box
@@ -163,11 +165,7 @@ fun MainScreen(session: ProfileSession) {
                 Section.SEARCH -> SearchScreen(session)
                 Section.SETTINGS -> SettingsScreen(session)
                 Section.PROFILES -> ProfilesScreen(session)
-                Section.TABS -> when (shownTab) {
-                    Tab.LIBRARY -> LibraryScreen(session, onPlay)
-                    Tab.ADDONS -> AddonsScreen(session)
-                    else -> Unit
-                }
+                Section.TABS -> if (shownTab == Tab.LIBRARY) LibraryScreen(session, onPlay)
             }
             val onTabs = app.section == Section.TABS
             if (onTabs && shownTab.isCatalogue() && shownTab !in keptPages) keptPages += shownTab
@@ -179,10 +177,10 @@ fun MainScreen(session: ProfileSession) {
                 }
             }
         }
-        // The bar has no solid edge: it fades from the page colour down into the artwork.
-        // Pages without artwork (Library, Add-ons, Search, Settings, Profiles) keep a plain bar.
+        // The bar has no solid edge: it fades from the page colour down into the artwork (catalogue
+        // pages, and Settings over its blurred backdrop). Library, Search and Profiles keep a plain bar.
         val bg = Vyrk.colors.background
-        val artwork = app.section == Section.TABS && shownTab != Tab.LIBRARY && shownTab != Tab.ADDONS
+        val artwork = (app.section == Section.TABS && shownTab != Tab.LIBRARY) || app.section == Section.SETTINGS
         // Light enough not to tint the artwork (it was 94 % navy at the top), dark enough for the tabs.
         val shade = Vyrk.colors.shade
         if (artwork) Box(Modifier.fillMaxWidth().height(Dimens.navHeight + 56.dp).background(Brush.verticalGradient(
@@ -237,7 +235,6 @@ fun tabLabel(t: Tab): String = when (t) {
     Tab.ANIME -> str(R.string.tab_anime)
     Tab.LIVE -> str(R.string.tab_live)
     Tab.LIBRARY -> str(R.string.tab_library)
-    Tab.ADDONS -> str(R.string.tab_addons)
 }
 
 /** Soft fading light on focus (white 20% → accent 16% → transparent) and an underline; never a pill. */
