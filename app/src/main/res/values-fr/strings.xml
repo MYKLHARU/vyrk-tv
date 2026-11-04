@@ -12,7 +12,6 @@
     <string name="add_profile">Ajouter un profil</string>
     <string name="add_to_library">Ajouter à la bibliothèque</string>
     <string name="addon_refreshed">Module actualisé</string>
-    <string name="addon_source">%1$s · Module</string>
     <string name="addon_url">URL du module</string>
     <string name="airs_on">Diffusion le %1$s</string>
     <string name="always_show_sources">Toujours afficher les sources</string>
@@ -24,6 +23,7 @@
     <string name="audio_languages">Langues audio</string>
     <string name="audio_subtitles">Audio et sous-titres</string>
     <string name="audio_switched">Cette piste audio ne fonctionne plus. Passage à %1$s.</string>
+    <string name="audio_track_n">Piste %1$d</string>
     <string name="automatic_checks">Vérification automatique</string>
     <string name="autoplay_next">Lire l\'épisode suivant automatiquement</string>
     <string name="avoid_commentary">Éviter les pistes de commentaires</string>
@@ -75,7 +75,6 @@
     <string name="done">Terminé</string>
     <string name="download_install">Télécharger et installer</string>
     <string name="edit_profile">Modifier le profil</string>
-    <string name="embedded">Intégré</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Fin à %1$s</string>
     <string name="enter_pin_for">Saisissez le code PIN de %1$s</string>
@@ -100,6 +99,8 @@
     <string name="hidden_synopsis">Résumé masqué jusqu\'au visionnage</string>
     <string name="hidden_tabs">Onglets masqués</string>
     <string name="hide_row">Masquer cette rangée</string>
+    <string name="hint_play_pause">Lecture / pause</string>
+    <string name="hint_seek">Parcourir la barre</string>
     <string name="hold_ok_to_edit">Maintenez OK sur un profil pour le modifier</string>
     <string name="in_library">Dans la bibliothèque</string>
     <string name="install">Installer</string>
@@ -129,12 +130,14 @@
     <string name="max_channels">Canaux max.</string>
     <string name="max_file_size">Taille de fichier maximale</string>
     <string name="max_resolution">Résolution maximale</string>
+    <string name="mono">Mono</string>
     <string name="more">Plus</string>
     <string name="more_info">Plus d\'infos</string>
     <string name="move_down">Descendre</string>
     <string name="move_up">Monter</string>
     <string name="needs_streaming_server">Nécessite le serveur de streaming local de Stremio, que VYRK n\'inclut pas. Il est ignoré.</string>
     <string name="next">Suivant</string>
+    <string name="next_episode">Épisode suivant</string>
     <string name="no_account">Non connecté. Votre bibliothèque est enregistrée sur ce téléviseur.</string>
     <string name="no_hidden">Rien de masqué.</string>
     <string name="no_results">Aucun résultat pour « %1$s »</string>
@@ -161,6 +164,7 @@
     <string name="passthrough">Passthrough audio</string>
     <string name="passthrough_hint">Envoie l\'audio Dolby et DTS à votre ampli sans le modifier.</string>
     <string name="pause">Pause</string>
+    <string name="paused">En pause</string>
     <string name="person_unavailable">Impossible de charger les informations de cette personne.</string>
     <string name="pin_locked">Trop d\'essais. Réessayez dans %1$d s.</string>
     <string name="pin_rules">Utilisez 4 à 8 chiffres.</string>
@@ -260,6 +264,7 @@
     <string name="stall_prompt">La lecture s\'interrompt souvent. Essayer une qualité inférieure ?</string>
     <string name="starring">Avec : %1$s</string>
     <string name="starring_label">Distribution</string>
+    <string name="stereo">Stéréo</string>
     <string name="still_watching">Regardez-vous toujours ?</string>
     <string name="streams_count">Flux %1$d</string>
     <string name="stremio_account">Compte Stremio</string>
@@ -286,9 +291,15 @@
     <string name="tab_live">Direct</string>
     <string name="tab_movies">Films</string>
     <string name="tab_series">Séries</string>
+    <string name="tag_commentary">Commentaires</string>
+    <string name="tag_forced">Forcés</string>
+    <string name="tag_in_file">dans le fichier</string>
     <string name="tagline">Forgé pour le streaming</string>
     <string name="third_party_notices">Mentions des tiers</string>
     <string name="this_tv">Ce téléviseur</string>
+    <string name="time_hm">%1$d h %2$d min</string>
+    <string name="time_left">Reste %1$s</string>
+    <string name="time_m">%1$d min</string>
     <string name="timeline_hint">◀ ▶ Parcourir · ▲ Chapitres · OK Aller</string>
     <string name="top10_add">Ajouter les rangées Top 10</string>
     <string name="top10_card_body">Ajoute le module tiers gratuit Streaming Catalogs, qui liste les titres populaires de chaque service.</string>

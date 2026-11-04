@@ -64,6 +64,9 @@ class PlayerModel(
     private val strings: (Int, Array<out Any>) -> String,
 ) {
     var phase by mutableStateOf(Phase.CONNECTING)
+    /** 0..1 while connecting: drives the logo loading bar. Only ever moves forward for one title. */
+    var loadProgress by mutableStateOf(0f)
+    private fun progressTo(p: Float) { if (p > loadProgress) loadProgress = p.coerceAtMost(1f) }
     var connecting by mutableStateOf("")
     var message by mutableStateOf("")
     var meta by mutableStateOf<MetaItem?>(null)
@@ -130,10 +133,13 @@ class PlayerModel(
     private suspend fun load() {
         val req = request
         phase = Phase.CONNECTING
+        loadProgress = 0f
+        progressTo(0.06f)
         connecting = s(com.vyrk.tv.R.string.connecting)
         val addons = session.effectiveAddons()
         val m = graph.metaCache.get(addons, req.meta.type, req.meta.id)
         meta = m
+        progressTo(0.22f)
         val vid = req.videoId ?: m?.let { mm ->
             mm.videos.filter { (it.season ?: 1) > 0 }.sortedWith(compareBy({ it.season ?: 0 }, { it.episode ?: 0 })).firstOrNull()?.id
         } ?: req.meta.id
@@ -152,6 +158,7 @@ class PlayerModel(
             if (results.isEmpty()) { fail(Phase.NO_SOURCES, s(com.vyrk.tv.R.string.no_stream_addons)); return }
             StreamRanker.rank(cands, caps(), prefs(req.meta.id))
         }
+        progressTo(0.42f)
         userPicked = req.picked != null
         val playable = buildList {
             req.picked?.let { add(it) }
@@ -194,6 +201,7 @@ class PlayerModel(
         current = r
         phase = Phase.CONNECTING
         connecting = s(com.vyrk.tv.R.string.connecting_to, r.candidate.addonName, quality(r).ifEmpty { "—" })
+        progressTo(0.5f)
         firstFrame = false
         Diagnostics.log("player", "candidate ${index + 1}/${candidates.size} from ${r.candidate.addonId}")
         engine.prepare(r.candidate.stream, startMs)
@@ -208,6 +216,7 @@ class PlayerModel(
         if (firstFrame) return
         firstFrame = true
         firstFrameJob?.cancel()
+        progressTo(1f)
         phase = Phase.PLAYING
         stall.reset(); stall.onFirstFrame(SystemClock.elapsedRealtime())
         val r = current ?: return
@@ -533,6 +542,11 @@ class PlayerModel(
             playing = p.isPlaying
             if (controlsVisible && panel == Panel.NONE && !scrubber.active && SystemClock.elapsedRealtime() - lastInteraction > 5_000 && playing) controlsVisible = false
             val clock = SystemClock.elapsedRealtime()
+            // Loading bar: buffer ahead of the start point (Media3 starts at about 2.5 s), plus a slow creep.
+            if (phase == Phase.CONNECTING && loadProgress >= 0.5f) {
+                val ahead = (p.bufferedPosition - p.currentPosition).coerceAtLeast(0)
+                progressTo(maxOf(0.5f + 0.45f * (ahead / 2_500f).coerceAtMost(1f), (loadProgress + 0.006f).coerceAtMost(0.9f)))
+            } else if (phase == Phase.CONNECTING) progressTo((loadProgress + 0.004f).coerceAtMost(0.45f))
             if (scrubber.shouldAutoCommit(clock)) commitScrub()
             if (notice != null && clock - noticeAt > 3_500) notice = null
             if (markers.isNotEmpty() && duration > 0 && n % 20 == 0) rebuildMarkers()

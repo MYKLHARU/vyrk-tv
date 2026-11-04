@@ -81,12 +81,12 @@ pushed), so nothing below is verified by CI.
 | Device fit: decoder max height per codec, physical display HDR/DV, bandwidth from Media3 samples ≥512 KB, ±90/±35 points | `DeviceCapabilities`, `core/playback` | Built | core (rules); emulator values only |
 | Memory +1000, same release group +500 | `StreamRanker`, `TitleMemory` | Done | core |
 | PlayerActivity on Media3 with FFmpeg audio fallback, HLS/DASH, OkHttp | `player/` | Done | E2E (playback) |
-| Connecting screen with Other sources and Cancel | `PlayerActivity` | Done | E2E |
+| Connecting screen: the title's logo (or name) fills left to right as a loading bar (metadata → sources → buffer), Other sources and Cancel; status text kept for TalkBack only | `PlayerActivity.LogoLoader`, `PlayerModel.loadProgress` | Done | E2E, emulator capture |
 | Up to three candidates, 12 s first-frame timeout, retries, error classes, link refresh, resume position | `core/playback/Recovery.kt`, `PlayerModel` | Done | E2E (broken 4K → refresh → 720p), core |
 | Hand-picked source failure asks (Retry / Other sources / Exit); Link expired | `PlayerModel` | Built | core (policy) |
 | Stall prompt after three stalls in 60 s | `StallDetector` | Built | core |
-| Controls: title, progress with buffer, elapsed/remaining/Ends at, buttons, 5 s auto-hide; key map | `PlayerActivity` | Done | E2E, showcase |
-| Audio & subtitles panel (Subtitles / Audio / Sync & Style), languages as names with flags | `PlayerActivity` | Done | E2E, showcase |
+| Controls: logo and clock on top, title with year · time left · Ends at, progress with buffer, elapsed/−remaining, centred round buttons around a large Play (labels on focus), key hints, dimmed when paused, 5 s auto-hide; key map. Layout follows Alder-style round controls rather than the brief's button row | `PlayerActivity.Controls` | Done | E2E, emulator capture |
+| Audio & subtitles side panel (Audio / Subtitles / Sync & Style), languages as names with flags, unlabelled tracks numbered, codec and channels shown | `PlayerActivity` | Done | E2E, showcase |
 | Audio prefs, original language, avoid commentary, remember choice, passthrough, TV-speaker, Clear Dialogue | `core/playback/Tracks.kt`, `AudioEffects.kt` | Built | core (selection) |
 | Subtitle modes, forced-only, memory per title, delay ±10 s, size/colour/background, safe markup stripping | `core/subtitles`, `PlayerModel` | Partial | core; delay and style apply to add-on subtitles only, not embedded tracks |
 | Up Next with autoplay, binge continuity, Still Watching after three, sleep timers | `PlayerModel` | Built | — |

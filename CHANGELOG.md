@@ -12,6 +12,8 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - Info page with credits, ranked sources with reasons, and a season guide for series.
 - Play starts the best source for this TV; broken links are refreshed or skipped automatically.
 - Player with controls, Audio & subtitles panel, subtitle sync for add-on subtitles, Up Next and sleep timers.
+- Restyled player: round centred controls with a large Play button, clock, time left and a side panel for audio and subtitles.
+- While a title loads, its logo fills like a loading bar instead of showing loading text.
 - Remove from Continue Watching from the item menu, synced the way Stremio does it.
 - Focus returns to the same poster after the info page, playback or a restart.
 - Search with an on-screen keyboard, voice search and recent searches.

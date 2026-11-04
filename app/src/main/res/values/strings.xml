@@ -12,7 +12,6 @@
     <string name="add_profile">Add profile</string>
     <string name="add_to_library">Add to library</string>
     <string name="addon_refreshed">Add-on refreshed</string>
-    <string name="addon_source">%1$s · Add-on</string>
     <string name="addon_url">Add-on URL</string>
     <string name="airs_on">Airs %1$s</string>
     <string name="always_show_sources">Always show sources</string>
@@ -24,6 +23,7 @@
     <string name="audio_languages">Audio languages</string>
     <string name="audio_subtitles">Audio &amp; subtitles</string>
     <string name="audio_switched">That audio track stopped working. Switched to %1$s.</string>
+    <string name="audio_track_n">Track %1$d</string>
     <string name="automatic_checks">Automatic checks</string>
     <string name="autoplay_next">Play next episode automatically</string>
     <string name="avoid_commentary">Avoid commentary tracks</string>
@@ -75,7 +75,6 @@
     <string name="done">Done</string>
     <string name="download_install">Download and install</string>
     <string name="edit_profile">Edit profile</string>
-    <string name="embedded">Embedded</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Ends at %1$s</string>
     <string name="enter_pin_for">Enter the PIN for %1$s</string>
@@ -100,6 +99,8 @@
     <string name="hidden_synopsis">Synopsis hidden until you watch it</string>
     <string name="hidden_tabs">Hidden tabs</string>
     <string name="hide_row">Hide this row</string>
+    <string name="hint_play_pause">Play / pause</string>
+    <string name="hint_seek">Seek on the bar</string>
     <string name="hold_ok_to_edit">Hold OK on a profile to edit it</string>
     <string name="in_library">In library</string>
     <string name="install">Install</string>
@@ -129,12 +130,14 @@
     <string name="max_channels">Max channels</string>
     <string name="max_file_size">Maximum file size</string>
     <string name="max_resolution">Maximum resolution</string>
+    <string name="mono">Mono</string>
     <string name="more">More</string>
     <string name="more_info">More info</string>
     <string name="move_down">Move down</string>
     <string name="move_up">Move up</string>
     <string name="needs_streaming_server">Needs Stremio\'s local streaming server, which VYRK doesn\'t include. It is skipped.</string>
     <string name="next">Next</string>
+    <string name="next_episode">Next episode</string>
     <string name="no_account">Not signed in. Your library is saved on this TV.</string>
     <string name="no_hidden">Nothing hidden.</string>
     <string name="no_results">No results for \"%1$s\"</string>
@@ -161,6 +164,7 @@
     <string name="passthrough">Audio passthrough</string>
     <string name="passthrough_hint">Sends Dolby and DTS audio to your receiver untouched.</string>
     <string name="pause">Pause</string>
+    <string name="paused">Paused</string>
     <string name="person_unavailable">Details for this person couldn\'t load.</string>
     <string name="pin_locked">Too many tries. Try again in %1$d s.</string>
     <string name="pin_rules">Use 4 to 8 digits.</string>
@@ -260,6 +264,7 @@
     <string name="stall_prompt">Playback keeps pausing. Try a lower quality?</string>
     <string name="starring">Starring: %1$s</string>
     <string name="starring_label">Starring</string>
+    <string name="stereo">Stereo</string>
     <string name="still_watching">Are you still watching?</string>
     <string name="streams_count">Streams %1$d</string>
     <string name="stremio_account">Stremio account</string>
@@ -286,9 +291,15 @@
     <string name="tab_live">Live</string>
     <string name="tab_movies">Movies</string>
     <string name="tab_series">Series</string>
+    <string name="tag_commentary">Commentary</string>
+    <string name="tag_forced">Forced</string>
+    <string name="tag_in_file">in the file</string>
     <string name="tagline">Forged for Streaming</string>
     <string name="third_party_notices">Third-party notices</string>
     <string name="this_tv">This TV</string>
+    <string name="time_hm">%1$d h %2$d min</string>
+    <string name="time_left">%1$s left</string>
+    <string name="time_m">%1$d min</string>
     <string name="timeline_hint">◀ ▶ Scrub · ▲ Chapters · OK Go</string>
     <string name="top10_add">Add Top 10 rows</string>
     <string name="top10_card_body">Adds the free third-party Streaming Catalogs add-on, which lists what\'s popular on each service.</string>

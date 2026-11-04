@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,8 +46,16 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -279,22 +289,64 @@ private fun ConnectingView(m: PlayerModel, onExit: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         val bg = m.meta?.background ?: m.request.meta.background
         if (bg != null) AsyncImage(bg, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-        Box(Modifier.fillMaxSize().background(c.background.copy(alpha = 0.78f)))
+        Box(Modifier.fillMaxSize().background(c.background.copy(alpha = 0.82f)))
         Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-            TitleLogo(m.request.meta.copy(logo = m.meta?.logo ?: m.request.meta.logo), 360.dp, 110.dp)
-            Spacer(Modifier.height(24.dp))
-            Spinner(36.dp, c.accent)
-            Spacer(Modifier.height(16.dp))
-            Text(m.connecting, style = Vyrk.type.titleM, color = c.textSecondary)
-            Spacer(Modifier.height(22.dp))
+            // The title's logo is the loading bar: dim, filling left to right as playback gets ready.
+            LogoLoader(
+                logo = m.meta?.logo ?: m.request.meta.logo,
+                title = m.meta?.name ?: m.request.meta.name,
+                progress = m.loadProgress,
+                description = m.connecting,
+            )
+            Spacer(Modifier.height(40.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (m.candidates.size > 1) VyrkButton(stringResource(R.string.other_sources), onClick = { m.phase = Phase.PLAYING; m.panel = Panel.SOURCES }, modifier = Modifier.traceFocus("player:connecting_other"))
-                VyrkButton(stringResource(R.string.cancel), onClick = onExit, modifier = Modifier.focusRequester(cancelReq).traceFocus("player:connecting_cancel"))
+                if (m.candidates.size > 1) VyrkButton(stringResource(R.string.other_sources), onClick = { m.phase = Phase.PLAYING; m.panel = Panel.SOURCES }, style = ButtonStyle.GHOST, modifier = Modifier.traceFocus("player:connecting_other"))
+                VyrkButton(stringResource(R.string.cancel), onClick = onExit, style = ButtonStyle.GHOST, modifier = Modifier.focusRequester(cancelReq).traceFocus("player:connecting_cancel"))
             }
         }
     }
 }
 
+/**
+ * Draws the logo twice: a faint base and a full-brightness copy clipped to [progress] of its
+ * width, with a soft accent edge where the fill is. Falls back to the title in large type.
+ */
+@Composable
+private fun LogoLoader(logo: String?, title: String, progress: Float, description: String) {
+    val c = Vyrk.colors
+    val p by androidx.compose.animation.core.animateFloatAsState(progress, androidx.compose.animation.core.tween(700), label = "load")
+    val box = Modifier.width(460.dp).height(150.dp).semantics { contentDescription = description }
+    val painter = coil3.compose.rememberAsyncImagePainter(logo)
+    val state by painter.state.collectAsState()
+    val hasLogo = logo != null && state !is coil3.compose.AsyncImagePainter.State.Error
+    if (hasLogo) {
+        androidx.compose.foundation.Canvas(box) {
+            val intr = painter.intrinsicSize
+            if (state !is coil3.compose.AsyncImagePainter.State.Success || intr == androidx.compose.ui.geometry.Size.Unspecified || intr.width <= 0f || intr.height <= 0f) return@Canvas
+            val scale = minOf(size.width / intr.width, size.height / intr.height)
+            val w = intr.width * scale
+            val h = intr.height * scale
+            translate((size.width - w) / 2, (size.height - h) / 2) {
+                with(painter) { draw(androidx.compose.ui.geometry.Size(w, h), alpha = 0.18f) }
+                clipRect(right = w * p) { with(painter) { draw(androidx.compose.ui.geometry.Size(w, h)) } }
+                if (p in 0.01f..0.99f) {
+                    val x = w * p
+                    drawRect(
+                        Brush.horizontalGradient(listOf(Color.Transparent, c.accent.copy(alpha = 0.55f), Color.Transparent), startX = x - 18f, endX = x + 18f),
+                        topLeft = androidx.compose.ui.geometry.Offset(x - 18f, 0f), size = androidx.compose.ui.geometry.Size(36f, h),
+                    )
+                }
+            }
+        }
+    } else {
+        Box(box, contentAlignment = Alignment.Center) {
+            val style = Vyrk.type.displayM
+            Text(title, style = style, color = c.text.copy(alpha = 0.18f), textAlign = TextAlign.Center, maxLines = 2)
+            Text(title, style = style, color = c.text, textAlign = TextAlign.Center, maxLines = 2,
+                modifier = Modifier.drawWithContent { clipRect(right = size.width * p) { this@drawWithContent.drawContent() } })
+        }
+    }
+}
 @Composable
 private fun MessageView(title: String, body: String, buttons: @Composable (Modifier) -> Unit) {
     val c = Vyrk.colors
@@ -311,115 +363,291 @@ private fun MessageView(title: String, body: String, buttons: @Composable (Modif
     }
 }
 
+/** "1 h 39 min" / "39 min" from milliseconds. */
 @Composable
-private fun Controls(m: PlayerModel) {
+private fun timeLeft(ms: Long): String {
+    val min = (ms / 60_000).coerceAtLeast(0)
+    return if (min >= 60) stringResource(R.string.time_hm, (min / 60).toInt(), (min % 60).toInt()) else stringResource(R.string.time_m, min.toInt())
+}
+
+/** Round button; its label shows underneath while it has focus (space is reserved so nothing jumps). */
+@Composable
+private fun RoundButton(
+    icon: Int,
+    label: String,
+    onClick: () -> Unit,
+    trace: String,
+    modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp = 46.dp,
+    hero: Boolean = false,
+) {
     val c = Vyrk.colors
-    val playReq = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { playReq.requestFocus() } }
-    val title = m.meta?.name ?: m.request.meta.name
-    val ep = m.video?.let { v -> if (v.season != null && v.episode != null) "S${v.season}E${v.episode} ${v.displayTitle}" else v.displayTitle }
-    Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxWidth().height(120.dp).background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.7f), Color.Transparent))))
-        Column(Modifier.padding(start = 48.dp, top = 30.dp)) {
-            Text(title, style = Vyrk.type.headlineM, color = c.text)
-            if (!ep.isNullOrBlank()) Text(ep, style = Vyrk.type.bodyM, color = c.textSecondary)
-        }
-        Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))))
-                .padding(horizontal = 48.dp, vertical = 26.dp),
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        androidx.tv.material3.Surface(
+            onClick = onClick,
+            interactionSource = interaction,
+            modifier = modifier.size(size).traceFocus(trace).semantics { contentDescription = label },
+            shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(androidx.compose.foundation.shape.CircleShape),
+            colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
+                containerColor = if (hero) c.text else Color.White.copy(alpha = 0.10f),
+                contentColor = if (hero) c.background else c.text,
+                focusedContainerColor = if (hero) c.accent else c.text,
+                focusedContentColor = c.background,
+            ),
+            scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
+            border = androidx.tv.material3.ClickableSurfaceDefaults.border(
+                border = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = if (hero) 0f else 0.22f))),
+                focusedBorder = androidx.tv.material3.Border.None,
+            ),
+            glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
         ) {
-            Timeline(m)
-            Spacer(Modifier.height(8.dp))
-            Row {
-                Text(fmt(m.scrubTarget ?: m.position), style = Vyrk.type.labelL, color = if (m.scrubTarget != null) c.accent else c.text)
-                Spacer(Modifier.weight(1f))
-                if (m.duration > 0 && !m.isLive) {
-                    val ends = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(System.currentTimeMillis() + (m.duration - m.position)))
-                    Text("-" + fmt(m.duration - m.position) + "  ·  " + stringResource(R.string.ends_at, ends), style = Vyrk.type.labelL, color = c.textSecondary)
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.focusGroup()) {
-                VyrkIconButton(if (m.playing) R.drawable.ic_pause else R.drawable.ic_play, stringResource(if (m.playing) R.string.pause else R.string.play), { m.togglePlay(); m.touch() }, modifier = Modifier.focusRequester(playReq).traceFocus("player:play_pause"))
-                VyrkIconButton(R.drawable.ic_back10, stringResource(R.string.back_10), { m.seekBy(-10_000); m.touch() }, modifier = Modifier.traceFocus("player:back10"))
-                VyrkIconButton(R.drawable.ic_fwd10, stringResource(R.string.forward_10), { m.seekBy(10_000); m.touch() }, modifier = Modifier.traceFocus("player:fwd10"))
-                Spacer(Modifier.weight(1f))
-                m.skipSegment?.let { seg ->
-                    VyrkButton(stringResource(if (seg.kind == com.vyrk.core.playback.SegmentKind.RECAP) R.string.skip_recap else R.string.skip_intro), onClick = { m.skipNow() }, icon = R.drawable.ic_next, style = ButtonStyle.PRIMARY, modifier = Modifier.traceFocus("player:skip"))
-                }
-                VyrkButton(stringResource(R.string.audio_subtitles), onClick = { m.panel = Panel.AUDIO_SUBS }, icon = R.drawable.ic_subtitles, modifier = Modifier.traceFocus("player:audio_subs"))
-                VyrkButton(stringResource(R.string.other_sources), onClick = { m.panel = Panel.SOURCES }, icon = R.drawable.ic_sources, modifier = Modifier.traceFocus("player:sources"))
-                VyrkIconButton(R.drawable.ic_sleep, stringResource(R.string.sleep), { m.panel = Panel.SLEEP }, modifier = Modifier.traceFocus("player:sleep"))
-            }
+            com.vyrk.tv.ui.components.Icon(icon, null, Modifier.size(size * 0.42f).align(Alignment.Center), tint = androidx.tv.material3.LocalContentColor.current)
+        }
+        // The label overflows its slot instead of widening the column, so the row never shifts.
+        Box(Modifier.width(size).height(22.dp).padding(top = 5.dp), contentAlignment = Alignment.TopCenter) {
+            if (focused) Text(label, style = Vyrk.type.labelL, color = c.text, maxLines = 1, softWrap = false,
+                textAlign = TextAlign.Center, modifier = Modifier.requiredWidth(260.dp))
         }
     }
 }
 
 @Composable
+private fun Divider() = Box(Modifier.padding(horizontal = 6.dp, vertical = 0.dp).width(1.dp).height(26.dp).background(Color.White.copy(alpha = 0.22f)))
+
+@Composable
+private fun KeyHint(key: String, text: String) {
+    val c = Vyrk.colors
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(key, style = Vyrk.type.labelM, color = c.background,
+            modifier = Modifier.background(c.textSecondary, RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 1.dp))
+        Text(text, style = Vyrk.type.labelL, color = c.textSecondary)
+    }
+}
+
+@Composable
+private fun Controls(m: PlayerModel) {
+    val c = Vyrk.colors
+    val playReq = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { playReq.requestFocus() } }
+    val meta = m.meta
+    val title = meta?.name ?: m.request.meta.name
+    val v = m.video
+    val episode = v?.let { if (it.season != null && it.episode != null) "S${it.season}E${it.episode} · ${it.displayTitle}" else null }
+    val year = (meta?.releaseInfo ?: m.request.meta.releaseInfo)?.take(4)
+    val paused = !m.playing
+    var clock by remember { androidx.compose.runtime.mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) { while (true) { clock = System.currentTimeMillis(); kotlinx.coroutines.delay(20_000) } }
+    val timeFmt = DateFormat.getTimeInstance(DateFormat.SHORT)
+    Box(Modifier.fillMaxSize()) {
+        // Paused: the whole frame dims, so the title block reads like a paused film.
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = if (paused) 0.55f else 0f)))
+        Box(Modifier.fillMaxWidth().height(130.dp).background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.65f), Color.Transparent))))
+        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(0.62f).background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f)))))
+
+        // Top: the title's logo (or its name in spaced capitals) and the time of day.
+        Row(Modifier.fillMaxWidth().padding(horizontal = 48.dp, vertical = 28.dp), verticalAlignment = Alignment.CenterVertically) {
+            val logo = meta?.logo ?: m.request.meta.logo
+            if (logo != null) {
+                coil3.compose.SubcomposeAsyncImage(logo, title, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
+                    modifier = Modifier.height(30.dp).width(220.dp),
+                    error = { Text(title.uppercase(), style = Vyrk.type.labelL.copy(letterSpacing = androidx.compose.ui.unit.TextUnit(3f, androidx.compose.ui.unit.TextUnitType.Sp)), color = c.text) })
+            } else {
+                Text(title.uppercase(), style = Vyrk.type.labelL.copy(letterSpacing = androidx.compose.ui.unit.TextUnit(3f, androidx.compose.ui.unit.TextUnitType.Sp)), color = c.text, maxLines = 1)
+            }
+            Spacer(Modifier.weight(1f))
+            Text(timeFmt.format(Date(clock)), style = Vyrk.type.titleL, color = c.text)
+        }
+
+        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 48.dp, end = 48.dp, bottom = 18.dp)) {
+            Text(
+                if (paused) stringResource(R.string.paused).uppercase() else (episode ?: ""),
+                style = Vyrk.type.labelL.copy(letterSpacing = androidx.compose.ui.unit.TextUnit(if (paused) 2f else 0.5f, androidx.compose.ui.unit.TextUnitType.Sp)),
+                color = c.accent, maxLines = 1,
+            )
+            Text(title, style = Vyrk.type.displayS, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val facts = buildList {
+                if (paused && episode != null) add(episode)
+                year?.let { add(it) }
+                if (m.duration > 0 && !m.isLive) {
+                    add(timeLeft(m.duration - m.position).let { stringResource(R.string.time_left, it) })
+                    add(stringResource(R.string.ends_at, timeFmt.format(Date(clock + (m.duration - m.position)))))
+                }
+            }
+            Text(facts.joinToString("  ·  "), style = Vyrk.type.bodyL, color = c.textSecondary, maxLines = 1)
+            Spacer(Modifier.height(10.dp))
+            Timeline(m)
+            Row(Modifier.padding(top = 4.dp)) {
+                Text(fmt(m.scrubTarget ?: m.position), style = Vyrk.type.labelL, color = if (m.scrubTarget != null) c.accent else c.text)
+                Spacer(Modifier.weight(1f))
+                if (m.duration > 0 && !m.isLive) Text("−" + fmt(m.duration - (m.scrubTarget ?: m.position)), style = Vyrk.type.labelL, color = c.text)
+            }
+            Spacer(Modifier.height(6.dp))
+            Box(Modifier.fillMaxWidth()) {
+                Row(Modifier.align(Alignment.TopCenter).focusGroup(), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    RoundButton(R.drawable.ic_subtitles, stringResource(R.string.audio_subtitles), { m.panel = Panel.AUDIO_SUBS }, "player:audio_subs")
+                    RoundButton(R.drawable.ic_sources, stringResource(R.string.other_sources), { m.panel = Panel.SOURCES }, "player:sources")
+                    Box(Modifier.padding(top = 10.dp)) { Divider() }
+                    RoundButton(R.drawable.ic_back10, stringResource(R.string.back_10), { m.seekBy(-10_000); m.touch() }, "player:back10")
+                    RoundButton(if (m.playing) R.drawable.ic_pause else R.drawable.ic_play, stringResource(if (m.playing) R.string.pause else R.string.play),
+                        { m.togglePlay(); m.touch() }, "player:play_pause", Modifier.focusRequester(playReq), size = 64.dp, hero = true)
+                    RoundButton(R.drawable.ic_fwd10, stringResource(R.string.forward_10), { m.seekBy(10_000); m.touch() }, "player:fwd10")
+                    Box(Modifier.padding(top = 10.dp)) { Divider() }
+                    RoundButton(R.drawable.ic_sleep, stringResource(R.string.sleep), { m.panel = Panel.SLEEP }, "player:sleep")
+                    if (m.nextVideo != null) RoundButton(R.drawable.ic_next, stringResource(R.string.next_episode), { m.playNext(auto = false) }, "player:next")
+                    m.skipSegment?.let { seg ->
+                        Box(Modifier.padding(top = 4.dp)) {
+                            VyrkButton(stringResource(if (seg.kind == com.vyrk.core.playback.SegmentKind.RECAP) R.string.skip_recap else R.string.skip_intro), onClick = { m.skipNow() }, icon = R.drawable.ic_next, style = ButtonStyle.PRIMARY, modifier = Modifier.traceFocus("player:skip"))
+                        }
+                    }
+                }
+                Column(Modifier.align(Alignment.CenterEnd), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    KeyHint("OK", stringResource(R.string.hint_play_pause))
+                    KeyHint("◀ ▶", stringResource(R.string.hint_seek))
+                }
+            }
+        }
+    }
+}
+
+/** Side panel for Other sources and Sleep, matching the Audio & subtitles panel. */
+@Composable
 private fun SidePanel(title: String, content: @Composable () -> Unit) {
     val c = Vyrk.colors
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)), contentAlignment = Alignment.CenterEnd) {
-        Column(Modifier.fillMaxHeight().width(380.dp).background(c.panel.copy(alpha = 0.97f)).padding(24.dp).focusGroup()) {
-            Text(title, style = Vyrk.type.headlineM, color = c.text)
+        Column(
+            Modifier.padding(end = 28.dp, top = 24.dp, bottom = 24.dp).width(400.dp).fillMaxHeight()
+                .background(c.background.copy(alpha = 0.94f), RoundedCornerShape(22.dp))
+                .padding(22.dp).focusGroup(),
+        ) {
+            Text(title, style = Vyrk.type.headlineL, color = c.text)
             Spacer(Modifier.height(14.dp))
             content()
         }
     }
 }
 
+/** A row in the Audio & subtitles list: name, a plain tag ("Original", "Forced · in the file"), and a tick when chosen. */
 @Composable
-private fun AudioSubsPanel(m: PlayerModel) {
-    var tab by androidx.compose.runtime.remember { mutableIntStateOf(0) }
-    val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
-    SidePanel(stringResource(R.string.audio_subtitles)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            VyrkChip(stringResource(R.string.subtitles), tab == 0, { tab = 0 }, Modifier.focusRequester(first).traceFocus("panel:tab_subtitles"))
-            VyrkChip(stringResource(R.string.audio), tab == 1, { tab = 1 }, Modifier.traceFocus("panel:tab_audio"))
-            VyrkChip(stringResource(R.string.sync_style), tab == 2, { tab = 2 }, Modifier.traceFocus("panel:tab_sync"))
-        }
-        Spacer(Modifier.height(14.dp))
-        when (tab) {
-            0 -> {
-                val settings = m.sessionSettingsLanguages()
-                val tracks = com.vyrk.core.playback.TrackSelector.sortForDisplay(m.allTextTracks(), settings)
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    item { OptionRow(stringResource(R.string.off), m.selectedSub == null, "panel:sub_off") { m.selectSubtitle(null) } }
-                    val seen = mutableMapOf<String, Int>()
-                    val numbered = tracks.map { t -> val k = (t.language ?: "") + t.source; val n = (seen[k] ?: 0) + 1; seen[k] = n; t to n }
-                    items(numbered, key = { it.first.id }) { (t, n) ->
-                        val base = t.language?.let { Languages.label(it) } ?: (t.label ?: "—")
-                        val lang = if (n > 1 || numbered.count { (o, _) -> o.language == t.language && o.source == t.source } > 1) "$base · $n" else base
-                        val src = if (t.source == "Embedded") stringResource(R.string.embedded) else stringResource(R.string.addon_source, t.source)
-                        OptionRow("$lang\n$src", m.selectedSub == t.id, "panel:sub:${t.id}") { m.selectSubtitle(t.id) }
-                    }
-                }
+private fun TrackRow(name: String, tag: String?, selected: Boolean, trace: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val c = Vyrk.colors
+    androidx.tv.material3.Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().traceFocus(trace).semantics { contentDescription = listOfNotNull(name, tag).joinToString(", ") },
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(containerColor = Color.Transparent, contentColor = c.text, focusedContainerColor = c.raised, focusedContentColor = c.text),
+        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.02f),
+        border = androidx.tv.material3.ClickableSurfaceDefaults.border(border = androidx.tv.material3.Border.None, focusedBorder = androidx.tv.material3.Border.None),
+        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
+    ) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(name, style = Vyrk.type.titleL, color = c.text, maxLines = 1)
+            if (!tag.isNullOrBlank()) {
+                Spacer(Modifier.width(8.dp))
+                Text(tag, style = Vyrk.type.bodyM, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
             }
-            1 -> {
-                val tracks = m.engine.audioTracks()
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(tracks, key = { it.id }) { t ->
-                        val label = listOfNotNull(t.language?.let { Languages.label(it) }, t.label?.takeIf { l -> val lang = t.language; lang == null || !l.equals(Languages.name(lang), true) }, if (t.channels > 0) "${t.channels}ch" else null).joinToString(" · ")
-                        OptionRow(label.ifEmpty { "—" }, m.selectedAudio == t.id || (m.selectedAudio == null && t.isDefault), "panel:audio:${t.id}") { m.selectAudio(t.id) }
-                    }
-                }
-            }
-            else -> {
-                Text(stringResource(R.string.subtitle_delay, "%.1f".format(m.subDelayMs / 1000f)), style = Vyrk.type.titleM, color = Vyrk.colors.text)
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    VyrkButton("−0.5 s", onClick = { m.subDelayMs = (m.subDelayMs - 500).coerceAtLeast(-10_000) }, modifier = Modifier.traceFocus("panel:delay_minus"))
-                    VyrkButton("+0.5 s", onClick = { m.subDelayMs = (m.subDelayMs + 500).coerceAtMost(10_000) }, modifier = Modifier.traceFocus("panel:delay_plus"))
-                    VyrkButton(stringResource(R.string.reset), onClick = { m.subDelayMs = 0 })
-                }
-                Spacer(Modifier.height(10.dp))
-                Text(stringResource(R.string.delay_addon_only), style = Vyrk.type.bodyS, color = Vyrk.colors.textMuted)
-            }
+            Spacer(Modifier.weight(1f))
+            if (selected) com.vyrk.tv.ui.components.Icon(R.drawable.ic_check, null, Modifier.size(18.dp), tint = c.accent)
         }
     }
 }
 
+@Composable
+private fun SectionHeader(text: String) {
+    Text(text.uppercase(), style = Vyrk.type.labelL.copy(letterSpacing = androidx.compose.ui.unit.TextUnit(2f, androidx.compose.ui.unit.TextUnitType.Sp)),
+        color = Vyrk.colors.accent, modifier = Modifier.padding(start = 2.dp, top = 14.dp, bottom = 4.dp))
+}
+
+private fun codecName(mime: String?): String? {
+    val c = mime?.lowercase()?.replace("-", "") ?: return null
+    return when {
+        "truehd" in c -> "TrueHD"
+        "dts" in c -> "DTS"
+        "eac3" in c || "ec3" in c -> "Dolby Digital+"
+        "ac3" in c -> "Dolby Digital"
+        "mp4a" in c || "aac" in c -> "AAC"
+        "opus" in c -> "Opus"
+        "flac" in c -> "FLAC"
+        "mpeg" in c -> "MP3"
+        else -> null
+    }
+}
+
+@Composable
+private fun channelsName(n: Int): String? = when (n) {
+    1 -> stringResource(R.string.mono); 2 -> stringResource(R.string.stereo); 6 -> "5.1"; 8 -> "7.1"; 0 -> null; else -> "${n}ch"
+}
+
+@Composable
+private fun AudioSubsPanel(m: PlayerModel) {
+    val c = Vyrk.colors
+    val selectedReq = remember { FocusRequester() }
+    LaunchedEffect(Unit) { kotlinx.coroutines.delay(80); runCatching { selectedReq.requestFocus() } }
+    val title = m.meta?.name ?: m.request.meta.name
+    val sub = m.video?.let { v -> if (v.season != null && v.episode != null) "S${v.season}E${v.episode} · ${v.displayTitle}" else null }
+        ?: (m.meta?.releaseInfo ?: m.request.meta.releaseInfo)?.take(4)
+    val audio = m.engine.audioTracks()
+    val subs = com.vyrk.core.playback.TrackSelector.sortForDisplay(m.allTextTracks(), m.sessionSettingsLanguages())
+    val inFile = stringResource(R.string.tag_in_file)
+    val forced = stringResource(R.string.tag_forced)
+    val commentary = stringResource(R.string.tag_commentary)
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)), contentAlignment = Alignment.CenterStart) {
+        Column(
+            Modifier.padding(start = 28.dp, top = 24.dp, bottom = 24.dp).width(400.dp).fillMaxHeight()
+                .background(c.background.copy(alpha = 0.94f), RoundedCornerShape(22.dp))
+                .padding(horizontal = 22.dp, vertical = 22.dp).focusGroup(),
+        ) {
+            Text(stringResource(R.string.audio_subtitles), style = Vyrk.type.headlineL, color = c.text)
+            Text(listOfNotNull(title, sub).joinToString("  ·  "), style = Vyrk.type.bodyM, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val subsSelectedIndex = subs.indexOfFirst { it.id == m.selectedSub }
+            LazyColumn(Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                item { SectionHeader(stringResource(R.string.audio)) }
+                itemsIndexed(audio, key = { _, t -> "a" + t.id }) { i, t ->
+                    // "und" (undetermined) and friends aren't languages: number the track instead.
+                    val lang = t.language?.takeUnless { it.lowercase() in setOf("und", "mul", "zxx", "mis") }?.let { Languages.name(it) }
+                    val extra = t.label?.takeIf { l -> lang == null || !l.equals(lang, true) && !l.equals(t.language, true) }
+                    val tag = listOfNotNull(
+                        extra,
+                        if (com.vyrk.core.playback.TrackSelector.isCommentary(t) && extra?.contains(commentary, true) != true) commentary else null,
+                        codecName(t.codec), channelsName(t.channels),
+                    ).joinToString(" · ")
+                    val sel = m.selectedAudio == t.id || (m.selectedAudio == null && t.isDefault)
+                    TrackRow(lang ?: t.label ?: stringResource(R.string.audio_track_n, i + 1), tag, sel, "panel:audio:${t.id}") { m.selectAudio(t.id) }
+                }
+                item { SectionHeader(stringResource(R.string.subtitles)) }
+                item {
+                    TrackRow(stringResource(R.string.off), null, m.selectedSub == null, "panel:sub_off",
+                        if (subsSelectedIndex < 0) Modifier.focusRequester(selectedReq) else Modifier) { m.selectSubtitle(null) }
+                }
+                val counts = subs.groupingBy { (it.language ?: "") + "|" + it.source }.eachCount()
+                val seen = mutableMapOf<String, Int>()
+                val numbered = subs.map { t -> val k = (t.language ?: "") + "|" + t.source; val n = (seen[k] ?: 0) + 1; seen[k] = n; Triple(t, n, counts[k] ?: 1) }
+                items(numbered, key = { "s" + it.first.id }) { (t, n, total) ->
+                    val name = t.language?.let { Languages.name(it) } ?: t.label ?: "—"
+                    val where = if (t.source == "Embedded") inFile else t.source
+                    val tag = listOfNotNull(if (t.forced) forced else null, where, if (total > 1) "#$n" else null).joinToString(" · ")
+                    TrackRow(name, tag, m.selectedSub == t.id, "panel:sub:${t.id}",
+                        if (t.id == m.selectedSub) Modifier.focusRequester(selectedReq) else Modifier) { m.selectSubtitle(t.id) }
+                }
+                item { SectionHeader(stringResource(R.string.sync_style)) }
+                item {
+                    Column(Modifier.padding(horizontal = 4.dp)) {
+                        Text(stringResource(R.string.subtitle_delay, "%.1f".format(m.subDelayMs / 1000f)), style = Vyrk.type.titleM, color = c.text)
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            VyrkButton("−0.5 s", onClick = { m.subDelayMs = (m.subDelayMs - 500).coerceAtLeast(-10_000) }, modifier = Modifier.traceFocus("panel:delay_minus"))
+                            VyrkButton("+0.5 s", onClick = { m.subDelayMs = (m.subDelayMs + 500).coerceAtMost(10_000) }, modifier = Modifier.traceFocus("panel:delay_plus"))
+                            VyrkButton(stringResource(R.string.reset), onClick = { m.subDelayMs = 0 }, modifier = Modifier.traceFocus("panel:delay_reset"))
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(stringResource(R.string.delay_addon_only), style = Vyrk.type.bodyS, color = c.textMuted)
+                    }
+                }
+            }
+        }
+    }
+}
 fun PlayerModel.sessionSettingsLanguages(): List<String> = VyrkApp.graphOrNull()?.session?.value?.settings?.value?.subtitleLanguages.orEmpty()
 
 @Composable

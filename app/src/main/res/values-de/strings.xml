@@ -12,7 +12,6 @@
     <string name="add_profile">Profil hinzufügen</string>
     <string name="add_to_library">Zur Mediathek hinzufügen</string>
     <string name="addon_refreshed">Add-on aktualisiert</string>
-    <string name="addon_source">%1$s · Add-on</string>
     <string name="addon_url">Add-on-URL</string>
     <string name="airs_on">Läuft am %1$s</string>
     <string name="always_show_sources">Quellen immer anzeigen</string>
@@ -24,6 +23,7 @@
     <string name="audio_languages">Audiosprachen</string>
     <string name="audio_subtitles">Audio &amp; Untertitel</string>
     <string name="audio_switched">Diese Tonspur funktioniert nicht mehr. Gewechselt zu %1$s.</string>
+    <string name="audio_track_n">Spur %1$d</string>
     <string name="automatic_checks">Automatisch prüfen</string>
     <string name="autoplay_next">Nächste Folge automatisch abspielen</string>
     <string name="avoid_commentary">Kommentarspuren vermeiden</string>
@@ -75,7 +75,6 @@
     <string name="done">Fertig</string>
     <string name="download_install">Herunterladen und installieren</string>
     <string name="edit_profile">Profil bearbeiten</string>
-    <string name="embedded">Eingebettet</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Endet um %1$s</string>
     <string name="enter_pin_for">PIN für %1$s eingeben</string>
@@ -100,6 +99,8 @@
     <string name="hidden_synopsis">Inhalt verborgen, bis du die Folge siehst</string>
     <string name="hidden_tabs">Ausgeblendete Tabs</string>
     <string name="hide_row">Diese Reihe ausblenden</string>
+    <string name="hint_play_pause">Abspielen / Pause</string>
+    <string name="hint_seek">Auf der Leiste spulen</string>
     <string name="hold_ok_to_edit">OK auf einem Profil halten, um es zu bearbeiten</string>
     <string name="in_library">In der Mediathek</string>
     <string name="install">Installieren</string>
@@ -129,12 +130,14 @@
     <string name="max_channels">Max. Kanäle</string>
     <string name="max_file_size">Maximale Dateigröße</string>
     <string name="max_resolution">Maximale Auflösung</string>
+    <string name="mono">Mono</string>
     <string name="more">Mehr</string>
     <string name="more_info">Mehr Infos</string>
     <string name="move_down">Nach unten</string>
     <string name="move_up">Nach oben</string>
     <string name="needs_streaming_server">Braucht Stremios lokalen Streaming-Server, den VYRK nicht enthält. Es wird übersprungen.</string>
     <string name="next">Weiter</string>
+    <string name="next_episode">Nächste Folge</string>
     <string name="no_account">Nicht angemeldet. Deine Mediathek wird auf diesem Fernseher gespeichert.</string>
     <string name="no_hidden">Nichts ausgeblendet.</string>
     <string name="no_results">Keine Ergebnisse für „%1$s“</string>
@@ -161,6 +164,7 @@
     <string name="passthrough">Audio-Passthrough</string>
     <string name="passthrough_hint">Gibt Dolby- und DTS-Ton unverändert an deinen Receiver weiter.</string>
     <string name="pause">Pause</string>
+    <string name="paused">Pausiert</string>
     <string name="person_unavailable">Die Angaben zu dieser Person konnten nicht geladen werden.</string>
     <string name="pin_locked">Zu viele Versuche. Versuche es in %1$d s erneut.</string>
     <string name="pin_rules">Verwende 4 bis 8 Ziffern.</string>
@@ -260,6 +264,7 @@
     <string name="stall_prompt">Die Wiedergabe stockt oft. Niedrigere Qualität versuchen?</string>
     <string name="starring">Mit: %1$s</string>
     <string name="starring_label">Besetzung</string>
+    <string name="stereo">Stereo</string>
     <string name="still_watching">Schaust du noch?</string>
     <string name="streams_count">Streams %1$d</string>
     <string name="stremio_account">Stremio-Konto</string>
@@ -286,9 +291,15 @@
     <string name="tab_live">Live</string>
     <string name="tab_movies">Filme</string>
     <string name="tab_series">Serien</string>
+    <string name="tag_commentary">Kommentar</string>
+    <string name="tag_forced">Erzwungen</string>
+    <string name="tag_in_file">in der Datei</string>
     <string name="tagline">Geschmiedet fürs Streaming</string>
     <string name="third_party_notices">Hinweise zu Drittanbietern</string>
     <string name="this_tv">Dieser Fernseher</string>
+    <string name="time_hm">%1$d Std. %2$d Min.</string>
+    <string name="time_left">Noch %1$s</string>
+    <string name="time_m">%1$d Min.</string>
     <string name="timeline_hint">◀ ▶ Spulen · ▲ Kapitel · OK Los</string>
     <string name="top10_add">Top-10-Reihen hinzufügen</string>
     <string name="top10_card_body">Fügt das kostenlose Drittanbieter-Add-on Streaming Catalogs hinzu, das zeigt, was auf jedem Dienst beliebt ist.</string>
