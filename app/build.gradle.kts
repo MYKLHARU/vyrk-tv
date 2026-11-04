@@ -16,6 +16,9 @@ val verCode = prop("vyrk.versionCode", "1").toInt()
 val updateRepo = prop("vyrk.updateRepo")
 val top10Url = prop("vyrk.top10AddonUrl")
 val storeBuild = prop("vyrk.storeBuild", "false").toBoolean()
+// TMDB key for cast and crew pages: from -Pvyrk.tmdbApiKey or the TMDB_API_KEY environment variable.
+// Never committed; without it the cast pages are simply off.
+val tmdbKey = prop("vyrk.tmdbApiKey", System.getenv("TMDB_API_KEY") ?: "")
 
 // Release signing comes from the environment. Without it, builds are signed with the committed
 // debug key in ci/debug-signing/, which is NOT secret and only for testing.
@@ -35,6 +38,7 @@ android {
         buildConfigField("String", "UPDATE_REPO", "\"$updateRepo\"")
         buildConfigField("String", "TOP10_ADDON_URL", "\"$top10Url\"")
         buildConfigField("boolean", "STORE_BUILD", storeBuild.toString())
+        buildConfigField("String", "TMDB_API_KEY", "\"${tmdbKey.replace("\"", "")}\"")
         vectorDrawables.useSupportLibrary = true
     }
 

@@ -16,6 +16,7 @@ val AppJson = Json {
 
 enum class Tab(val key: String) { HOME("home"), MOVIES("movies"), SERIES("series"), ANIME("anime"), LIVE("live"), LIBRARY("library"), ADDONS("addons") }
 enum class PreviewMode { OFF, MANUAL, AUTOMATIC }
+enum class SkipIntroMode { OFF, BUTTON, AUTOMATIC }
 
 /** A local profile. No secrets here: the authKey and add-on URLs live in the vault. */
 @Serializable
@@ -53,6 +54,8 @@ data class ProfileSettings(
     val loadSourcesOnOpen: Boolean = true,
     val autoplayNext: Boolean = true,
     val askStillWatching: Boolean = true,
+    val skipIntro: SkipIntroMode = SkipIntroMode.BUTTON,
+    val chapterMarkers: Boolean = true,
     val audioLanguages: List<String> = listOf("eng"),
     val originalLanguage: Boolean = false,
     val avoidCommentary: Boolean = true,

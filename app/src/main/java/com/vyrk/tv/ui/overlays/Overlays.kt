@@ -88,6 +88,7 @@ fun Overlays() {
                     is Overlay.AddonQr -> AddonQr(o)
                     is Overlay.Message -> MessageBox(o)
                     is Overlay.SeeAll -> SeeAll(o)
+                    is Overlay.Person -> PersonPage(o)
                 }
             }
         }

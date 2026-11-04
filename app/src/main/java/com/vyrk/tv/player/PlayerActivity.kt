@@ -34,6 +34,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -119,6 +126,7 @@ class PlayerActivity : ComponentActivity() {
                 KeyBus.onKey(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
                 when {
                     m.phase == Phase.PLAYING && m.panel != Panel.NONE -> { m.panel = Panel.NONE; m.showControls() }
+                    m.phase == Phase.PLAYING && m.scrubTarget != null -> m.scrubCancel()
                     m.phase == Phase.PLAYING && m.stallPrompt -> m.stallPrompt = false
                     m.phase == Phase.PLAYING && m.upNext -> { m.upNext = false; m.upNextCountdown = 10_000 }
                     m.phase == Phase.PLAYING && m.controlsVisible -> { m.controlsVisible = false; FocusTrace.set(PLAYER_LAYER, "player:video") }
@@ -164,6 +172,7 @@ class PlayerActivity : ComponentActivity() {
             KeyEvent.KEYCODE_MEDIA_NEXT -> return consume { m.playNext(auto = false) }
         }
         if (!m.controlsVisible) {
+            if ((code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) && m.skipSegment != null) return consume { m.skipNow() }
             when (code) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> return consume { m.seekBy(-10_000) }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> return consume { m.seekBy(10_000) }
@@ -240,6 +249,9 @@ fun PlayerScreen(m: PlayerModel, onExit: () -> Unit) {
             }
             Phase.PLAYING -> {
                 if (m.controlsVisible && m.panel == Panel.NONE) Controls(m)
+                val seg = m.skipSegment
+                if (seg != null && !m.controlsVisible && m.panel == Panel.NONE) SkipPill(seg.kind == com.vyrk.core.playback.SegmentKind.RECAP)
+                m.notice?.let { Notice(it) }
                 if (m.panel == Panel.AUDIO_SUBS) AudioSubsPanel(m)
                 if (m.panel == Panel.SOURCES) SourcesPanel(m)
                 if (m.panel == Panel.SLEEP) SleepPanel(m)
@@ -317,14 +329,10 @@ private fun Controls(m: PlayerModel) {
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))))
                 .padding(horizontal = 48.dp, vertical = 26.dp),
         ) {
-            val dur = m.duration.coerceAtLeast(1)
-            Box(Modifier.fillMaxWidth().height(5.dp).background(Color.White.copy(alpha = 0.18f), RoundedCornerShape(3.dp))) {
-                Box(Modifier.fillMaxWidth((m.buffered.toFloat() / dur).coerceIn(0f, 1f)).height(5.dp).background(Color.White.copy(alpha = 0.35f), RoundedCornerShape(3.dp)))
-                Box(Modifier.fillMaxWidth((m.position.toFloat() / dur).coerceIn(0f, 1f)).height(5.dp).background(c.accent, RoundedCornerShape(3.dp)))
-            }
+            Timeline(m)
             Spacer(Modifier.height(8.dp))
             Row {
-                Text(fmt(m.position), style = Vyrk.type.labelL, color = c.text)
+                Text(fmt(m.scrubTarget ?: m.position), style = Vyrk.type.labelL, color = if (m.scrubTarget != null) c.accent else c.text)
                 Spacer(Modifier.weight(1f))
                 if (m.duration > 0 && !m.isLive) {
                     val ends = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(System.currentTimeMillis() + (m.duration - m.position)))
@@ -337,6 +345,9 @@ private fun Controls(m: PlayerModel) {
                 VyrkIconButton(R.drawable.ic_back10, stringResource(R.string.back_10), { m.seekBy(-10_000); m.touch() }, modifier = Modifier.traceFocus("player:back10"))
                 VyrkIconButton(R.drawable.ic_fwd10, stringResource(R.string.forward_10), { m.seekBy(10_000); m.touch() }, modifier = Modifier.traceFocus("player:fwd10"))
                 Spacer(Modifier.weight(1f))
+                m.skipSegment?.let { seg ->
+                    VyrkButton(stringResource(if (seg.kind == com.vyrk.core.playback.SegmentKind.RECAP) R.string.skip_recap else R.string.skip_intro), onClick = { m.skipNow() }, icon = R.drawable.ic_next, style = ButtonStyle.PRIMARY, modifier = Modifier.traceFocus("player:skip"))
+                }
                 VyrkButton(stringResource(R.string.audio_subtitles), onClick = { m.panel = Panel.AUDIO_SUBS }, icon = R.drawable.ic_subtitles, modifier = Modifier.traceFocus("player:audio_subs"))
                 VyrkButton(stringResource(R.string.other_sources), onClick = { m.panel = Panel.SOURCES }, icon = R.drawable.ic_sources, modifier = Modifier.traceFocus("player:sources"))
                 VyrkIconButton(R.drawable.ic_sleep, stringResource(R.string.sleep), { m.panel = Panel.SLEEP }, modifier = Modifier.traceFocus("player:sleep"))
@@ -505,3 +516,105 @@ fun Spinner(size: androidx.compose.ui.unit.Dp, color: Color) {
         drawArc(color, startAngle = angle, sweepAngle = 270f, useCenter = false, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
     }
 }
+@Composable
+private fun SkipPill(recap: Boolean) {
+    val c = Vyrk.colors
+    Box(Modifier.fillMaxSize().padding(end = 48.dp, bottom = 56.dp), contentAlignment = Alignment.BottomEnd) {
+        Row(
+            Modifier.background(c.accent, RoundedCornerShape(22.dp)).padding(horizontal = 18.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            com.vyrk.tv.ui.components.Icon(R.drawable.ic_next, null, Modifier.size(16.dp), tint = c.onAccent)
+            Text(stringResource(if (recap) R.string.skip_recap else R.string.skip_intro), style = Vyrk.type.titleM, color = c.onAccent)
+            Text(stringResource(R.string.press_ok), style = Vyrk.type.labelM, color = c.onAccent.copy(alpha = 0.7f))
+        }
+    }
+}
+
+@Composable
+private fun Notice(text: String) {
+    Box(Modifier.fillMaxSize().padding(top = 36.dp), contentAlignment = Alignment.TopCenter) {
+        Text(text, style = Vyrk.type.titleM, color = Vyrk.colors.text,
+            modifier = Modifier.background(Vyrk.colors.panel.copy(alpha = 0.92f), RoundedCornerShape(14.dp)).padding(horizontal = 18.dp, vertical = 10.dp))
+    }
+}
+
+/**
+ * Focusable timeline. Left/Right scrub a preview position (accelerating, snapping to chapters);
+ * Up switches to chapter mode (Left/Right jump between chapters); Down leaves chapter mode;
+ * OK seeks (or plays/pauses when not scrubbing). Ticks mark chapters; intro and recap are tinted.
+ */
+@Composable
+private fun Timeline(m: PlayerModel) {
+    val c = Vyrk.colors
+    var focused by remember { androidx.compose.runtime.mutableStateOf(false) }
+    val dur = m.duration.coerceAtLeast(1)
+    val shown = m.scrubTarget ?: m.position
+    val chapter = m.chapterTitleAt(shown)
+    val chapterLabel = when (chapter?.kind) {
+        com.vyrk.core.playback.SegmentKind.INTRO -> stringResource(R.string.chapter_intro)
+        com.vyrk.core.playback.SegmentKind.RECAP -> stringResource(R.string.chapter_recap)
+        com.vyrk.core.playback.SegmentKind.OUTRO, com.vyrk.core.playback.SegmentKind.POST_CREDITS -> stringResource(R.string.chapter_credits)
+        else -> chapter?.title ?: chapter?.let { stringResource(R.string.chapter_n, m.markers.indexOf(it) + 1) }
+    }
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val w = maxWidth
+        val frac = (shown.toFloat() / dur).coerceIn(0f, 1f)
+        Column {
+            // Chapter pill above the knob, clamped inside the bar.
+            Box(Modifier.fillMaxWidth().height(26.dp)) {
+                if ((focused || m.scrubTarget != null) && chapterLabel != null) {
+                    val pillW = 180.dp
+                    val x = (w * frac - pillW / 2).coerceIn(0.dp, w - pillW)
+                    Box(Modifier.padding(start = x).width(pillW), contentAlignment = Alignment.Center) {
+                        Text(chapterLabel, style = Vyrk.type.labelM, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            color = if (m.chapterMode) c.onAccent else c.text,
+                            modifier = Modifier.background(if (m.chapterMode) c.accent else c.raised.copy(alpha = 0.9f), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 2.dp))
+                    }
+                }
+            }
+            Box(
+                Modifier.fillMaxWidth().height(22.dp)
+                    .traceFocus("player:timeline") // must come before focusable() to see its focus
+                    .androidx_focus(onFocus = { focused = it }, m = m),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(if (focused) 8.dp else 5.dp)) {
+                    val h = size.height
+                    val r = androidx.compose.ui.geometry.CornerRadius(h / 2, h / 2)
+                    fun xOf(ms: Long) = size.width * (ms.toFloat() / dur).coerceIn(0f, 1f)
+                    drawRoundRect(Color.White.copy(alpha = 0.18f), cornerRadius = r)
+                    drawRoundRect(Color.White.copy(alpha = 0.35f), size = androidx.compose.ui.geometry.Size(xOf(m.buffered), h), cornerRadius = r)
+                    // Intro and recap spans, tinted so you can see where they are without scrubbing.
+                    m.segments.filter { it.kind == com.vyrk.core.playback.SegmentKind.INTRO || it.kind == com.vyrk.core.playback.SegmentKind.RECAP }.forEach { s ->
+                        drawRect(c.warning.copy(alpha = 0.55f), topLeft = androidx.compose.ui.geometry.Offset(xOf(s.startMs), 0f), size = androidx.compose.ui.geometry.Size(xOf(s.endMs) - xOf(s.startMs), h))
+                    }
+                    drawRoundRect(c.accent, size = androidx.compose.ui.geometry.Size(xOf(m.position), h), cornerRadius = r)
+                    // Chapter boundaries as small gaps in the bar.
+                    m.markers.filter { it.startMs > 0 }.forEach { mk ->
+                        val x = xOf(mk.startMs)
+                        drawRect(Color.Black.copy(alpha = 0.85f), topLeft = androidx.compose.ui.geometry.Offset(x - 1.5f, 0f), size = androidx.compose.ui.geometry.Size(3f, h))
+                    }
+                    m.scrubTarget?.let { t -> drawCircle(c.text, radius = h * 1.1f, center = androidx.compose.ui.geometry.Offset(xOf(t), h / 2)) }
+                    if (focused && m.scrubTarget == null) drawCircle(c.text, radius = h * 0.95f, center = androidx.compose.ui.geometry.Offset(xOf(m.position), h / 2))
+                }
+            }
+            if (focused) Text(stringResource(R.string.timeline_hint), style = Vyrk.type.labelS, color = c.textMuted, modifier = Modifier.padding(top = 2.dp))
+        }
+    }
+}
+
+private fun Modifier.androidx_focus(onFocus: (Boolean) -> Unit, m: PlayerModel): Modifier = this
+    .onFocusChanged { onFocus(it.isFocused); if (!it.isFocused && m.chapterMode) m.scrubExitChapters() }
+    .onKeyEvent { e ->
+        if (e.type != KeyEventType.KeyDown) return@onKeyEvent false
+        when (e.key) {
+            Key.DirectionLeft -> { m.scrubStep(false); true }
+            Key.DirectionRight -> { m.scrubStep(true); true }
+            Key.DirectionUp -> { if (!m.chapterMode) m.scrubEnterChapters(); true }
+            Key.DirectionDown -> if (m.chapterMode) { m.scrubExitChapters(); true } else { if (m.scrubTarget != null) m.scrubCancel(); false }
+            Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> { if (m.scrubTarget != null) m.commitScrub() else m.togglePlay(); m.touch(); true }
+            else -> false
+        }
+    }
+    .focusable()

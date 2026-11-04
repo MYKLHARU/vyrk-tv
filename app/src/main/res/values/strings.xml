@@ -23,6 +23,7 @@
     <string name="audio_formats">Audio formats</string>
     <string name="audio_languages">Audio languages</string>
     <string name="audio_subtitles">Audio &amp; subtitles</string>
+    <string name="audio_switched">That audio track stopped working. Switched to %1$s.</string>
     <string name="automatic_checks">Automatic checks</string>
     <string name="autoplay_next">Play next episode automatically</string>
     <string name="avoid_commentary">Avoid commentary tracks</string>
@@ -32,9 +33,17 @@
     <string name="bg_box">Box</string>
     <string name="bg_shadow">Shadow</string>
     <string name="blur_unwatched">Blur unwatched episodes</string>
+    <string name="born_on">Born %1$s</string>
     <string name="cancel">Cancel</string>
+    <string name="cant_open_title">VYRK can\'t open this title directly, so it searched for it.</string>
     <string name="cant_play_title">Can\'t play this title</string>
+    <string name="cast_and_crew">Cast &amp; crew</string>
     <string name="change_pin">Change PIN</string>
+    <string name="chapter_credits">Credits</string>
+    <string name="chapter_intro">Intro</string>
+    <string name="chapter_markers_hint">Marks chapters, intros and credits on the timeline.</string>
+    <string name="chapter_n">Chapter %1$d</string>
+    <string name="chapter_recap">Recap</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="clear">Clear</string>
     <string name="clear_dialogue">Clear Dialogue</string>
@@ -59,6 +68,7 @@
     <string name="delay_addon_only">The delay applies to add-on subtitles.</string>
     <string name="delete_profile">Delete profile</string>
     <string name="diagnostics_copied">Diagnostics copied</string>
+    <string name="died_on">Died %1$s</string>
     <string name="director">Director</string>
     <string name="director_line">Director: %1$s</string>
     <string name="display">Display</string>
@@ -103,6 +113,7 @@
     <string name="key_backspace">Delete</string>
     <string name="key_clear">Clear</string>
     <string name="key_space">Space</string>
+    <string name="known_for">Known for %1$s</string>
     <string name="languages_order_hint">Selected languages are preferred in the order you pick them.</string>
     <string name="less">Less</string>
     <string name="library_empty">Your library is empty. Add titles from their details page.</string>
@@ -150,6 +161,7 @@
     <string name="passthrough">Audio passthrough</string>
     <string name="passthrough_hint">Sends Dolby and DTS audio to your receiver untouched.</string>
     <string name="pause">Pause</string>
+    <string name="person_unavailable">Details for this person couldn\'t load.</string>
     <string name="pin_locked">Too many tries. Try again in %1$d s.</string>
     <string name="pin_rules">Use 4 to 8 digits.</string>
     <string name="pin_wrong">Wrong PIN</string>
@@ -163,6 +175,7 @@
     <string name="preset_best">Best picture</string>
     <string name="preset_fast">Fast start</string>
     <string name="preset_hint">How Play picks a source when you don\'t choose one.</string>
+    <string name="press_ok">OK</string>
     <string name="press_sources">Select Sources to find streams.</string>
     <string name="preview">Preview</string>
     <string name="preview_automatic">Automatic</string>
@@ -201,6 +214,8 @@
     <string name="see_all">See all</string>
     <string name="session_expired">Your Stremio session expired. Your data is kept. Reconnect to sync again.</string>
     <string name="set_pin">Set PIN</string>
+    <string name="setting_chapter_markers">Chapter markers</string>
+    <string name="setting_skip_intro">Skip intro</string>
     <string name="settings">Settings</string>
     <string name="settings_about">About &amp; updates</string>
     <string name="settings_addons">Add-ons</string>
@@ -219,6 +234,13 @@
     <string name="size_large">Large</string>
     <string name="size_medium">Medium</string>
     <string name="size_small">Small</string>
+    <string name="skip_automatic">Skip automatically</string>
+    <string name="skip_intro">Skip intro</string>
+    <string name="skip_intro_hint">Uses community timings from IntroDB for intros and recaps.</string>
+    <string name="skip_recap">Skip recap</string>
+    <string name="skip_show_button">Show button</string>
+    <string name="skipped_intro">Skipped intro</string>
+    <string name="skipped_recap">Skipped recap</string>
     <string name="sleep">Sleep</string>
     <string name="sleep_60">In 60 minutes</string>
     <string name="sleep_after_episode">After this episode</string>
@@ -267,6 +289,7 @@
     <string name="tagline">Forged for Streaming</string>
     <string name="third_party_notices">Third-party notices</string>
     <string name="this_tv">This TV</string>
+    <string name="timeline_hint">◀ ▶ Scrub · ▲ Chapters · OK Go</string>
     <string name="top10_add">Add Top 10 rows</string>
     <string name="top10_card_body">Adds the free third-party Streaming Catalogs add-on, which lists what\'s popular on each service.</string>
     <string name="top10_card_title">Top 10 on your streaming services</string>

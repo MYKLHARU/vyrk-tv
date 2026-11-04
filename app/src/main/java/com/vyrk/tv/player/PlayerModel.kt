@@ -16,6 +16,15 @@ import com.vyrk.core.library.LibraryItem
 import com.vyrk.core.library.LibraryRules
 import com.vyrk.core.library.nextVideo
 import com.vyrk.core.playback.AudioPrefs
+import com.vyrk.core.playback.Chapter
+import com.vyrk.core.playback.IntroDb
+import com.vyrk.core.playback.Markers
+import com.vyrk.core.playback.MkvChapters
+import com.vyrk.core.playback.Scrubber
+import com.vyrk.core.playback.Segment
+import com.vyrk.core.playback.SegmentKind
+import com.vyrk.core.playback.SkipOffer
+import com.vyrk.tv.data.SkipIntroMode
 import com.vyrk.core.subtitles.Cue
 import com.vyrk.core.playback.RecoveryAction
 import com.vyrk.core.playback.RecoveryPolicy
@@ -83,6 +92,21 @@ class PlayerModel(
     var cues by mutableStateOf<List<Cue>>(emptyList())
     var selectedAudio by mutableStateOf<String?>(null)
 
+    // Timeline: container chapters merged with IntroDB segments.
+    var markers by mutableStateOf<List<Chapter>>(emptyList())
+    var segments by mutableStateOf<List<Segment>>(emptyList())
+    var skipSegment by mutableStateOf<Segment?>(null)
+    private var skipOffer = SkipOffer(emptyList())
+    private var skipShownAt = 0L
+    private var fileChapters: List<Chapter> = emptyList()
+    private var chaptersFor: String? = null
+    val scrubber = Scrubber({ markers }, { duration })
+
+    /** Short message over the video ("Audio switched to …", "Skipped intro"). */
+    var notice by mutableStateOf<String?>(null)
+    private var noticeAt = 0L
+    private val failedAudio = mutableSetOf<String>()
+
     private val settings: ProfileSettings get() = session.settings.value
     private var policy = RecoveryPolicy(1, false)
     private var index = 0
@@ -115,6 +139,8 @@ class PlayerModel(
         } ?: req.meta.id
         video = m?.videos?.firstOrNull { it.id == vid }
         nextVideo = m?.nextVideo(vid, now)
+        resetTimeline()
+        scope.launch { loadSegments(req.meta.type, req.meta.id, vid) }
         item = session.itemFor(req.meta)
 
         val streamType = req.meta.type
@@ -195,13 +221,107 @@ class PlayerModel(
         }
         applyTrackPrefs()
         showControls()
+        r.candidate.stream.url?.let { url -> if (url != chaptersFor) { chaptersFor = url; scope.launch { loadChapters(r) } } }
+    }
+
+    private fun resetTimeline() {
+        markers = emptyList(); segments = emptyList(); fileChapters = emptyList(); chaptersFor = null
+        skipOffer = SkipOffer(emptyList()); skipSegment = null; scrubber.cancel(); failedAudio.clear()
+    }
+
+    /** IntroDB community timings for this episode or film (IMDb IDs only). */
+    private suspend fun loadSegments(type: String, metaId: String, videoId: String) {
+        if (settings.skipIntro == SkipIntroMode.OFF && !settings.chapterMarkers) return
+        val url = IntroDb.url(type, metaId, videoId) ?: return
+        val res = runCatching { graph.transport.get(url, timeoutMs = 8_000) }.getOrNull() ?: return
+        if (!res.isSuccess) return
+        val found = IntroDb.parse(res.body)
+        segments = found
+        skipOffer = SkipOffer(found)
+        rebuildMarkers()
+        Diagnostics.log("player", "introdb: ${found.size} segment(s)")
+        android.util.Log.i("VyrkEvent", "introdb_segments ${found.size}")
+    }
+
+    /** Matroska chapters from the playing file, read with HTTP range requests. */
+    private suspend fun loadChapters(r: Ranked) {
+        if (!settings.chapterMarkers) return
+        val url = r.candidate.stream.url ?: return
+        val headers = r.candidate.stream.behaviorHints.proxyHeaders?.request.orEmpty()
+        val chapters = runCatching {
+            MkvChapters.read { start, len -> graph.transport.getBytes(url, headers + ("Range" to "bytes=$start-${start + len - 1}"), 10_000) }
+        }.getOrDefault(emptyList())
+        if (url != chaptersFor) return
+        fileChapters = chapters
+        rebuildMarkers()
+        if (chapters.isNotEmpty()) Diagnostics.log("player", "file chapters: ${chapters.size}")
+    }
+
+    private fun rebuildMarkers() {
+        markers = if (settings.chapterMarkers) Markers.merge(fileChapters, segments, duration) else emptyList()
+    }
+
+    fun chapterTitleAt(ms: Long): Chapter? = Markers.at(markers, ms)
+
+    fun skipNow() {
+        val s = skipSegment ?: return
+        skipOffer.dismiss(s)
+        skipSegment = null
+        stall.onSeek(SystemClock.elapsedRealtime())
+        engine.player.seekTo(skipOffer.target(s))
+    }
+
+    fun showNotice(text: String) { notice = text; noticeAt = SystemClock.elapsedRealtime() }
+
+    // Scrubbing state mirrored into Compose state so the timeline redraws.
+    var scrubTarget by mutableStateOf<Long?>(null)
+    var chapterMode by mutableStateOf(false)
+    private fun syncScrub() { scrubTarget = scrubber.targetMs; chapterMode = scrubber.chapterMode }
+    fun scrubStep(forward: Boolean) { scrubber.step(forward, position, SystemClock.elapsedRealtime()); syncScrub(); touch() }
+    fun scrubEnterChapters(): Boolean { val ok = scrubber.enterChapterMode(position); syncScrub(); touch(); return ok }
+    fun scrubExitChapters() { scrubber.exitChapterMode(); syncScrub(); touch() }
+    fun scrubCancel() { scrubber.cancel(); syncScrub() }
+
+    /** Seeks to the scrub target (OK on the timeline, or after a pause in pressing). */
+    fun commitScrub() {
+        val t = scrubber.commit()
+        syncScrub()
+        if (t == null) return
+        stall.onSeek(SystemClock.elapsedRealtime())
+        engine.player.seekTo(t)
+        position = t
+        touch()
     }
 
     fun onError(e: PlaybackException) {
         val cls = engine.classify(e)
         Diagnostics.log("player", "error ${e.errorCodeName} class=$cls")
         firstFrameJob?.cancel()
+        // Once the film is playing, a broken audio track shouldn't stop it: change track, keep the second.
+        if (cls == com.vyrk.core.playback.ErrorClass.AUDIO_TRACK && firstFrame && switchAudioMidFilm()) return
         handle(policy.onFailure(cls, canRefresh = true))
+    }
+
+    /**
+     * Mid-film audio failure: switch to the next best audio track at the same second (same
+     * language on a simpler codec first). Returns false when there is nothing left to try.
+     */
+    private fun switchAudioMidFilm(): Boolean {
+        val tracks = engine.audioTracks()
+        val current = selectedAudio ?: tracks.firstOrNull { it.isDefault }?.id
+        current?.let { failedAudio += it }
+        val st = settings
+        val next = TrackSelector.fallbackAudio(tracks, current, failedAudio, AudioPrefs(st.audioLanguages, st.originalLanguage, null, st.avoidCommentary)) ?: return false
+        val pos = engine.player.currentPosition
+        selectedAudio = next.id
+        engine.select(C.TRACK_TYPE_AUDIO, next.id)
+        Diagnostics.log("player", "audio track failed; switched to ${next.language ?: "?"} ${next.codec ?: ""}")
+        android.util.Log.i("VyrkEvent", "audio_switched")
+        engine.player.seekTo(pos)
+        engine.player.prepare()
+        engine.player.playWhenReady = true
+        showNotice(s(com.vyrk.tv.R.string.audio_switched, listOfNotNull(next.language?.let { Languages.name(it) }, next.label).distinct().joinToString(" · ").ifEmpty { "—" }))
+        return true
     }
 
     private fun handle(action: RecoveryAction) {
@@ -411,13 +531,32 @@ class PlayerModel(
             duration = p.duration.takeIf { it != C.TIME_UNSET } ?: 0
             buffered = p.bufferedPosition
             playing = p.isPlaying
-            if (controlsVisible && panel == Panel.NONE && SystemClock.elapsedRealtime() - lastInteraction > 5_000 && playing) controlsVisible = false
+            if (controlsVisible && panel == Panel.NONE && !scrubber.active && SystemClock.elapsedRealtime() - lastInteraction > 5_000 && playing) controlsVisible = false
+            val clock = SystemClock.elapsedRealtime()
+            if (scrubber.shouldAutoCommit(clock)) commitScrub()
+            if (notice != null && clock - noticeAt > 3_500) notice = null
+            if (markers.isNotEmpty() && duration > 0 && n % 20 == 0) rebuildMarkers()
+            // Skip intro / recap from IntroDB timings.
+            if (firstFrame && !isLive && settings.skipIntro != SkipIntroMode.OFF) {
+                val seg = skipOffer.at(position)
+                when {
+                    seg == null -> skipSegment = null
+                    settings.skipIntro == SkipIntroMode.AUTOMATIC -> {
+                        skipSegment = seg; skipNow()
+                        showNotice(s(if (seg.kind == SegmentKind.RECAP) com.vyrk.tv.R.string.skipped_recap else com.vyrk.tv.R.string.skipped_intro))
+                    }
+                    seg != skipSegment -> { skipSegment = seg; skipShownAt = clock; android.util.Log.i("VyrkEvent", "skip_offered ${seg.kind}") }
+                    clock - skipShownAt > 10_000 -> { skipOffer.dismiss(seg); skipSegment = null } // shown 10 s and left alone
+                }
+            }
             if (++n % 2 == 0 && playing) saveProgress()
             if (sleep == SleepMode.MINUTES_60 && sleepDeadline > 0 && SystemClock.elapsedRealtime() > sleepDeadline) { p.pause(); finishRequested = true }
             // Up Next in the last 30 seconds (or past the credits threshold).
             val nv = nextVideo
             if (nv != null && duration > 0 && !isLive && settings.autoplayNext && sleep != SleepMode.END_OF_EPISODE) {
-                val near = duration - position < 30_000 || position > duration * LibraryRules.CREDITS_THRESHOLD_COEF
+                // Credits start from IntroDB when known, otherwise the last 30 s or past 90%.
+                val credits = skipOffer.creditsStartMs
+                val near = if (credits != null) position >= credits else duration - position < 30_000 || position > duration * LibraryRules.CREDITS_THRESHOLD_COEF
                 if (near && !upNext && playing) { upNext = true; upNextCountdown = 10 }
                 if (upNext && n % 2 == 0) { upNextCountdown--; if (upNextCountdown <= 0) playNext(auto = true) }
             }

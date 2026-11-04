@@ -85,6 +85,39 @@ object TrackSelector {
         }
     }
 
+    /** Higher means more demanding to decode or pass through. */
+    private fun codecWeight(codec: String?): Int {
+        // Media3 MIME types: audio/true-hd, audio/vnd.dts(.hd), audio/eac3, audio/ac3, audio/mp4a-latm.
+        val c = codec?.lowercase()?.replace("-", "") ?: return 2
+        return when {
+            "truehd" in c || "mlp" in c -> 6
+            "dts" in c -> 5
+            "eac3" in c || "ec3" in c -> 4
+            "ac3" in c -> 3
+            "opus" in c || "vorbis" in c || "flac" in c -> 2
+            else -> 1 // AAC, MP3 and PCM decode everywhere
+        }
+    }
+
+    /**
+     * Track to switch to when [failedId] breaks mid-film. Prefers the same language on a simpler
+     * codec (TrueHD → E-AC-3 → AC-3 → AAC), then the usual preference order; never a track that
+     * already failed. Returns null when nothing is left.
+     */
+    fun fallbackAudio(tracks: List<AudioTrack>, failedId: String?, failed: Set<String>, prefs: AudioPrefs): AudioTrack? {
+        val broken = tracks.firstOrNull { it.id == failedId }
+        val left = tracks.filter { it.id !in failed && it.id != failedId }
+        if (left.isEmpty()) return null
+        val pool = if (prefs.avoidCommentary) left.filterNot { isCommentary(it) }.ifEmpty { left } else left
+        val brokenLang = broken?.language?.let { Languages.normalise(it) }
+        if (brokenLang != null) {
+            val same = pool.filter { it.language != null && Languages.normalise(it.language) == brokenLang }
+            same.filter { codecWeight(it.codec) < codecWeight(broken.codec) }.maxByOrNull { codecWeight(it.codec) }?.let { return it }
+            same.minByOrNull { codecWeight(it.codec) }?.let { return it }
+        }
+        return selectAudio(pool, prefs.copy(remembered = null))
+    }
+
     /** Sort subtitle choices for the panel: preferred languages first, then by name. */
     fun sortForDisplay(tracks: List<TextTrack>, preferred: List<String>): List<TextTrack> {
         val p = preferred.map { Languages.normalise(it) }

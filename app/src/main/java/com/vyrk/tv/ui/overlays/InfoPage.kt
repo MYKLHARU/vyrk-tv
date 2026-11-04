@@ -106,6 +106,13 @@ fun InfoPage(o: Overlay.Info) {
     val meta = o.meta
     var full by remember { mutableStateOf(graph.metaCache.peek(meta.type, meta.id)) }
     LaunchedEffect(meta.id) { if (full == null) full = graph.metaCache.get(session.effectiveAddons(), meta.type, meta.id) }
+    // Cast and crew with photos from TMDB, when the build has a TMDB key and the title has an IMDb ID.
+    var tmdbCredits by remember { mutableStateOf<com.vyrk.core.tmdb.Credits?>(null) }
+    LaunchedEffect(meta.id) {
+        if (!graph.tmdb.enabled || !meta.id.startsWith("tt")) return@LaunchedEffect
+        val found = graph.tmdb.findByImdb(meta.id.substringBefore(':'), preferTv = meta.type == "series") ?: return@LaunchedEffect
+        tmdbCredits = graph.tmdb.credits(found.first, found.second)
+    }
     val item: LibraryItem? = library[meta.id]
     val isSeries = meta.type == "series" && (full?.videos?.isNotEmpty() ?: true)
     var sources by remember { mutableStateOf<SourcesState>(SourcesState.Idle) }
@@ -204,7 +211,12 @@ fun InfoPage(o: Overlay.Info) {
                         full?.writerNames?.takeIf { it.isNotEmpty() }?.let { Credit(str(R.string.writers), it.take(4).joinToString(", ")) }
                         full?.country?.takeIf { it.isNotBlank() }?.let { Credit(str(R.string.country), it) }
                         val cast = full?.castNames.orEmpty()
-                        if (cast.isNotEmpty()) {
+                        val tc = tmdbCredits
+                        if (tc != null && (tc.cast.isNotEmpty() || tc.keyCrew.isNotEmpty())) {
+                            Spacer(Modifier.height(6.dp))
+                            Text(str(R.string.cast_and_crew), style = Vyrk.type.labelL, color = c.textMuted)
+                            CastCrewRow(tc.cast, tc.keyCrew)
+                        } else if (cast.isNotEmpty()) {
                             Spacer(Modifier.height(6.dp))
                             Text(str(R.string.starring_label), style = Vyrk.type.labelL, color = c.textMuted)
                             Spacer(Modifier.height(6.dp))

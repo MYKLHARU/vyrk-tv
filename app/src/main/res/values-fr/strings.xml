@@ -23,6 +23,7 @@
     <string name="audio_formats">Formats audio</string>
     <string name="audio_languages">Langues audio</string>
     <string name="audio_subtitles">Audio et sous-titres</string>
+    <string name="audio_switched">Cette piste audio ne fonctionne plus. Passage à %1$s.</string>
     <string name="automatic_checks">Vérification automatique</string>
     <string name="autoplay_next">Lire l\'épisode suivant automatiquement</string>
     <string name="avoid_commentary">Éviter les pistes de commentaires</string>
@@ -32,9 +33,17 @@
     <string name="bg_box">Encadré</string>
     <string name="bg_shadow">Ombre</string>
     <string name="blur_unwatched">Flouter les épisodes non vus</string>
+    <string name="born_on">Né(e) le %1$s</string>
     <string name="cancel">Annuler</string>
+    <string name="cant_open_title">VYRK ne peut pas ouvrir ce titre directement, il l\'a donc recherché.</string>
     <string name="cant_play_title">Impossible de lire ce titre</string>
+    <string name="cast_and_crew">Distribution et équipe</string>
     <string name="change_pin">Modifier le code PIN</string>
+    <string name="chapter_credits">Générique de fin</string>
+    <string name="chapter_intro">Générique</string>
+    <string name="chapter_markers_hint">Signale les chapitres, génériques et fins sur la barre de lecture.</string>
+    <string name="chapter_n">Chapitre %1$d</string>
+    <string name="chapter_recap">Résumé</string>
     <string name="check_for_updates">Rechercher des mises à jour</string>
     <string name="clear">Effacer</string>
     <string name="clear_dialogue">Dialogues clairs</string>
@@ -59,6 +68,7 @@
     <string name="delay_addon_only">Le décalage s\'applique aux sous-titres des modules.</string>
     <string name="delete_profile">Supprimer le profil</string>
     <string name="diagnostics_copied">Diagnostic copié</string>
+    <string name="died_on">Décédé(e) le %1$s</string>
     <string name="director">Réalisation</string>
     <string name="director_line">Réalisation : %1$s</string>
     <string name="display">Écran</string>
@@ -103,6 +113,7 @@
     <string name="key_backspace">Effacer</string>
     <string name="key_clear">Vider</string>
     <string name="key_space">Espace</string>
+    <string name="known_for">Connu pour : %1$s</string>
     <string name="languages_order_hint">Les langues choisies sont préférées dans l\'ordre où vous les cochez.</string>
     <string name="less">Moins</string>
     <string name="library_empty">Votre bibliothèque est vide. Ajoutez des titres depuis leur page de détails.</string>
@@ -150,6 +161,7 @@
     <string name="passthrough">Passthrough audio</string>
     <string name="passthrough_hint">Envoie l\'audio Dolby et DTS à votre ampli sans le modifier.</string>
     <string name="pause">Pause</string>
+    <string name="person_unavailable">Impossible de charger les informations de cette personne.</string>
     <string name="pin_locked">Trop d\'essais. Réessayez dans %1$d s.</string>
     <string name="pin_rules">Utilisez 4 à 8 chiffres.</string>
     <string name="pin_wrong">Code PIN incorrect</string>
@@ -163,6 +175,7 @@
     <string name="preset_best">Meilleure image</string>
     <string name="preset_fast">Démarrage rapide</string>
     <string name="preset_hint">Comment Lecture choisit une source quand vous ne choisissez pas.</string>
+    <string name="press_ok">OK</string>
     <string name="press_sources">Sélectionnez Sources pour chercher des flux.</string>
     <string name="preview">Aperçu</string>
     <string name="preview_automatic">Automatique</string>
@@ -201,6 +214,8 @@
     <string name="see_all">Tout voir</string>
     <string name="session_expired">Votre session Stremio a expiré. Vos données sont conservées. Reconnectez-vous pour synchroniser.</string>
     <string name="set_pin">Définir un code PIN</string>
+    <string name="setting_chapter_markers">Repères de chapitres</string>
+    <string name="setting_skip_intro">Passer le générique</string>
     <string name="settings">Paramètres</string>
     <string name="settings_about">À propos et mises à jour</string>
     <string name="settings_addons">Modules</string>
@@ -219,6 +234,13 @@
     <string name="size_large">Grande</string>
     <string name="size_medium">Moyenne</string>
     <string name="size_small">Petite</string>
+    <string name="skip_automatic">Passer automatiquement</string>
+    <string name="skip_intro">Passer le générique</string>
+    <string name="skip_intro_hint">Utilise les horaires communautaires d\'IntroDB pour les génériques et résumés.</string>
+    <string name="skip_recap">Passer le résumé</string>
+    <string name="skip_show_button">Afficher un bouton</string>
+    <string name="skipped_intro">Générique passé</string>
+    <string name="skipped_recap">Résumé passé</string>
     <string name="sleep">Minuterie</string>
     <string name="sleep_60">Dans 60 minutes</string>
     <string name="sleep_after_episode">Après cet épisode</string>
@@ -267,6 +289,7 @@
     <string name="tagline">Forgé pour le streaming</string>
     <string name="third_party_notices">Mentions des tiers</string>
     <string name="this_tv">Ce téléviseur</string>
+    <string name="timeline_hint">◀ ▶ Parcourir · ▲ Chapitres · OK Aller</string>
     <string name="top10_add">Ajouter les rangées Top 10</string>
     <string name="top10_card_body">Ajoute le module tiers gratuit Streaming Catalogs, qui liste les titres populaires de chaque service.</string>
     <string name="top10_card_title">Le Top 10 de vos services de streaming</string>

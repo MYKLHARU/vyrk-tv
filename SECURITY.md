@@ -10,7 +10,7 @@ Include what you found, how to reproduce it and which version you used. You'll g
 
 - Your Stremio authKey and every add-on transport URL are stored encrypted with a non-exportable Android Keystore AES-GCM key.
 - Add-on URLs are shown and logged only as `scheme://host/…`. Copied diagnostics are redacted the same way.
-- VYRK talks only to your add-ons, the Stremio account service, YouTube (trailers) and GitHub (updates). It has no ads, analytics or tracking.
+- VYRK talks only to your add-ons, the Stremio account service, IntroDB (intro timings, sent only the IMDb ID, season and episode), TMDB (cast pages, only when the build includes a key), YouTube (trailers) and GitHub (updates). It has no ads, analytics or tracking.
 - Updates are installed only if the package name matches, the version is newer and the signing certificate matches the installed app.
 
 ## Signing keys

@@ -59,7 +59,7 @@ def ensure_media():
                 "ffmpeg", "-y", "-loglevel", "error",
                 "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=25",
                 "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000",
-                "-t", "180", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "veryfast",
+                "-t", "600", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "veryfast",
                 "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", str(sample),
             ], check=True)
         except (OSError, subprocess.CalledProcessError) as e:

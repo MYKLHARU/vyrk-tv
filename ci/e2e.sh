@@ -11,7 +11,7 @@ ADB=${ADB:-adb}
 PKG=com.vyrk.tv
 OUT=${OUT:-ci/out/e2e}
 APK=${APK:-}
-ADDON_URL='http://10.0.2.2:7000/manifest.json'
+ADDON_URL="http://10.0.2.2:${ADDON_PORT:-7000}/manifest.json"
 ADDON_LOG=${ADDON_LOG:-}
 mkdir -p "$OUT"
 TRACE="$OUT/focus-trace.txt"
@@ -46,7 +46,7 @@ wait_focus '^hero:watch$' 45
 shot home-live-cinemeta
 
 # ---------------------------------------------------------------- install the test add-on from a link
-adbs am start -a android.intent.action.VIEW -d "'vyrk://install?url=http%3A%2F%2F10.0.2.2%3A7000%2Fmanifest.json'" "$PKG" >/dev/null
+adbs am start -a android.intent.action.VIEW -d "'vyrk://install?url=http%3A%2F%2F10.0.2.2%3A${ADDON_PORT:-7000}%2Fmanifest.json'" "$PKG" >/dev/null
 sleep 5
 probe "install dialog"
 expect '^install:confirm$' "install confirmation from link"
@@ -175,6 +175,33 @@ for g in streams picture languages subtitles previews addons about; do
   shot "settings-$g"
 done
 key KEYCODE_BACK 1.5 "back to tabs"
+
+# ---------------------------------------------------------------- skip intro, timeline and chapters
+# Game of Thrones S1E1: IntroDB has its intro at 437-531 s (needs a sample of 10 minutes or more).
+adbs am start -a android.intent.action.VIEW -d "'vyrk://open?type=series&id=tt0944947'" "$PKG" >/dev/null
+sleep 7
+probe "series info"
+expect '^info:play$' "vyrk://open opens the series info page"
+"$ADB" shell input keyevent KEYCODE_DPAD_CENTER
+wait_focus '^player:' 40
+sleep 12
+for _ in $(seq 1 15); do "$ADB" shell input keyevent KEYCODE_MEDIA_FAST_FORWARD; sleep 0.4; done
+sleep 7
+shot skip-intro-pill
+EVENTS=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+# IntroDB is an external service: report, but don't fail the build on its availability.
+if printf '%s\n' "$EVENTS" | grep -q 'skip_offered INTRO'; then log "ok: Skip intro offered from IntroDB timings"
+else log "warn: Skip intro not seen ($(printf '%s\n' "$EVENTS" | grep -o 'introdb_segments [0-9]*' | tail -n 1 || echo 'no IntroDB answer'))"; fi
+key KEYCODE_DPAD_DOWN 1.5 "show controls"
+key KEYCODE_DPAD_UP 1.2 "to timeline"
+expect '^player:timeline$' "timeline takes focus above the controls"
+key KEYCODE_DPAD_RIGHT 0.4 "scrub"; key KEYCODE_DPAD_RIGHT 0.4
+shot timeline-scrub
+key KEYCODE_DPAD_UP 1.0 "chapter mode"
+shot timeline-chapters
+key KEYCODE_DPAD_CENTER 2 "seek"
+expect '^player:timeline$' "focus stays on the timeline after seeking"
+back_from_player
 
 # ---------------------------------------------------------------- results
 "$ADB" logcat -d > "$OUT/logcat.txt" || true

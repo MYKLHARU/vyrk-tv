@@ -23,6 +23,7 @@
     <string name="audio_formats">Audioformate</string>
     <string name="audio_languages">Audiosprachen</string>
     <string name="audio_subtitles">Audio &amp; Untertitel</string>
+    <string name="audio_switched">Diese Tonspur funktioniert nicht mehr. Gewechselt zu %1$s.</string>
     <string name="automatic_checks">Automatisch prüfen</string>
     <string name="autoplay_next">Nächste Folge automatisch abspielen</string>
     <string name="avoid_commentary">Kommentarspuren vermeiden</string>
@@ -32,9 +33,17 @@
     <string name="bg_box">Kasten</string>
     <string name="bg_shadow">Schatten</string>
     <string name="blur_unwatched">Ungesehene Folgen unscharf zeigen</string>
+    <string name="born_on">Geboren %1$s</string>
     <string name="cancel">Abbrechen</string>
+    <string name="cant_open_title">VYRK kann diesen Titel nicht direkt öffnen und hat danach gesucht.</string>
     <string name="cant_play_title">Dieser Titel kann nicht abgespielt werden</string>
+    <string name="cast_and_crew">Besetzung und Team</string>
     <string name="change_pin">PIN ändern</string>
+    <string name="chapter_credits">Abspann</string>
+    <string name="chapter_intro">Intro</string>
+    <string name="chapter_markers_hint">Markiert Kapitel, Intros und Abspann auf der Zeitleiste.</string>
+    <string name="chapter_n">Kapitel %1$d</string>
+    <string name="chapter_recap">Rückblick</string>
     <string name="check_for_updates">Nach Updates suchen</string>
     <string name="clear">Löschen</string>
     <string name="clear_dialogue">Klare Dialoge</string>
@@ -59,6 +68,7 @@
     <string name="delay_addon_only">Die Verzögerung gilt für Add-on-Untertitel.</string>
     <string name="delete_profile">Profil löschen</string>
     <string name="diagnostics_copied">Diagnose kopiert</string>
+    <string name="died_on">Gestorben %1$s</string>
     <string name="director">Regie</string>
     <string name="director_line">Regie: %1$s</string>
     <string name="display">Display</string>
@@ -103,6 +113,7 @@
     <string name="key_backspace">Löschen</string>
     <string name="key_clear">Leeren</string>
     <string name="key_space">Leerzeichen</string>
+    <string name="known_for">Bekannt für %1$s</string>
     <string name="languages_order_hint">Ausgewählte Sprachen werden in der Reihenfolge bevorzugt, in der du sie wählst.</string>
     <string name="less">Weniger</string>
     <string name="library_empty">Deine Mediathek ist leer. Füge Titel über ihre Detailseite hinzu.</string>
@@ -150,6 +161,7 @@
     <string name="passthrough">Audio-Passthrough</string>
     <string name="passthrough_hint">Gibt Dolby- und DTS-Ton unverändert an deinen Receiver weiter.</string>
     <string name="pause">Pause</string>
+    <string name="person_unavailable">Die Angaben zu dieser Person konnten nicht geladen werden.</string>
     <string name="pin_locked">Zu viele Versuche. Versuche es in %1$d s erneut.</string>
     <string name="pin_rules">Verwende 4 bis 8 Ziffern.</string>
     <string name="pin_wrong">Falsche PIN</string>
@@ -163,6 +175,7 @@
     <string name="preset_best">Bestes Bild</string>
     <string name="preset_fast">Schneller Start</string>
     <string name="preset_hint">Wie Abspielen eine Quelle wählt, wenn du keine auswählst.</string>
+    <string name="press_ok">OK</string>
     <string name="press_sources">Wähle Quellen, um Streams zu suchen.</string>
     <string name="preview">Vorschau</string>
     <string name="preview_automatic">Automatisch</string>
@@ -201,6 +214,8 @@
     <string name="see_all">Alle ansehen</string>
     <string name="session_expired">Deine Stremio-Sitzung ist abgelaufen. Deine Daten bleiben erhalten. Verbinde dich neu, um zu synchronisieren.</string>
     <string name="set_pin">PIN festlegen</string>
+    <string name="setting_chapter_markers">Kapitelmarken</string>
+    <string name="setting_skip_intro">Intro überspringen</string>
     <string name="settings">Einstellungen</string>
     <string name="settings_about">Info &amp; Updates</string>
     <string name="settings_addons">Add-ons</string>
@@ -219,6 +234,13 @@
     <string name="size_large">Groß</string>
     <string name="size_medium">Mittel</string>
     <string name="size_small">Klein</string>
+    <string name="skip_automatic">Automatisch überspringen</string>
+    <string name="skip_intro">Intro überspringen</string>
+    <string name="skip_intro_hint">Nutzt Zeitangaben der IntroDB-Community für Intros und Rückblicke.</string>
+    <string name="skip_recap">Rückblick überspringen</string>
+    <string name="skip_show_button">Knopf anzeigen</string>
+    <string name="skipped_intro">Intro übersprungen</string>
+    <string name="skipped_recap">Rückblick übersprungen</string>
     <string name="sleep">Sleep-Timer</string>
     <string name="sleep_60">In 60 Minuten</string>
     <string name="sleep_after_episode">Nach dieser Folge</string>
@@ -267,6 +289,7 @@
     <string name="tagline">Geschmiedet fürs Streaming</string>
     <string name="third_party_notices">Hinweise zu Drittanbietern</string>
     <string name="this_tv">Dieser Fernseher</string>
+    <string name="timeline_hint">◀ ▶ Spulen · ▲ Kapitel · OK Los</string>
     <string name="top10_add">Top-10-Reihen hinzufügen</string>
     <string name="top10_card_body">Fügt das kostenlose Drittanbieter-Add-on Streaming Catalogs hinzu, das zeigt, was auf jedem Dienst beliebt ist.</string>
     <string name="top10_card_title">Top 10 deiner Streamingdienste</string>

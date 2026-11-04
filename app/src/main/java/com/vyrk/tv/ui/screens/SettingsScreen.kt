@@ -157,6 +157,8 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                 Toggle(str(R.string.load_sources_on_open), s.loadSourcesOnOpen, "set:load_sources") { v -> upd { it.copy(loadSourcesOnOpen = v) } }
                 Toggle(str(R.string.autoplay_next), s.autoplayNext, "set:autoplay") { v -> upd { it.copy(autoplayNext = v) } }
                 Toggle(str(R.string.ask_still_watching), s.askStillWatching, "set:still_watching") { v -> upd { it.copy(askStillWatching = v) } }
+                Choice(str(R.string.setting_skip_intro), listOf(com.vyrk.tv.data.SkipIntroMode.BUTTON to str(R.string.skip_show_button), com.vyrk.tv.data.SkipIntroMode.AUTOMATIC to str(R.string.skip_automatic), com.vyrk.tv.data.SkipIntroMode.OFF to str(R.string.off)), s.skipIntro, "set:skip_intro", str(R.string.skip_intro_hint)) { v -> upd { it.copy(skipIntro = v) } }
+                Toggle(str(R.string.setting_chapter_markers), s.chapterMarkers, "set:chapter_markers", str(R.string.chapter_markers_hint)) { v -> upd { it.copy(chapterMarkers = v) } }
             }
             Group.PICTURE -> {
                 Choice(str(R.string.interface_size), listOf("SMALL" to str(R.string.size_small), "MEDIUM" to str(R.string.size_medium), "LARGE" to str(R.string.size_large)), d.interfaceSize, "set:ui_size") { v -> graph.updateDevice { it.copy(interfaceSize = v) } }

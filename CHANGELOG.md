@@ -21,3 +21,9 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - Settings for profile and appearance, streams, picture and sound, languages, subtitles, previews, add-ons and updates.
 - English, Spanish, Brazilian Portuguese, French, German, Hindi and Italian, with an in-app language override.
 - Watch Next on the launcher and in-app updates from GitHub Releases.
+- Skip intro and Skip recap using IntroDB community timings, with Show button, Automatic and Off in Settings › Streams.
+- Up next appears when the credits start, if IntroDB knows when that is.
+- The player timeline shows chapters and marks intros and recaps; Left and Right scrub faster the longer you press, Up jumps between chapters, OK goes there.
+- Chapters from Matroska files show on the timeline.
+- If an audio track stops working mid-film, VYRK switches to the next best track at the same second and tells you.
+- Cast and crew with photos on the info page, and a page for each person with their films and shows (needs a TMDB key in the build).

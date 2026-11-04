@@ -58,6 +58,7 @@ jobs:
 
       - name: Unit tests and release APKs
         env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           VYRK_KEYSTORE_PASSWORD: ${{ secrets.VYRK_KEYSTORE_PASSWORD }}
           VYRK_KEY_ALIAS: ${{ secrets.VYRK_KEY_ALIAS }}
           VYRK_KEY_PASSWORD: ${{ secrets.VYRK_KEY_PASSWORD }}
@@ -128,7 +129,7 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
           mkdir -p ci/media
           ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 \
-            -t 180 -c:v libx264 -pix_fmt yuv420p -preset veryfast -c:a aac -b:a 96k -movflags +faststart ci/media/sample-720p.mp4
+            -t 600 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 32 -c:a aac -b:a 64k -movflags +faststart ci/media/sample-720p.mp4
           ffmpeg -loglevel error -y -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
             -c copy -movflags +faststart ci/media/bbb-clip.mp4 || echo "BBB clip unavailable; search playback uses the generated sample"
       - name: Start the test add-on

@@ -43,7 +43,7 @@ probe "install confirm"
 key KEYCODE_DPAD_CENTER 4 "install streaming catalogs"
 
 # The test add-on (streams for playback)
-adbs am start -a android.intent.action.VIEW -d "'vyrk://install?url=http%3A%2F%2F10.0.2.2%3A7000%2Fmanifest.json'" "$PKG" >/dev/null
+adbs am start -a android.intent.action.VIEW -d "'vyrk://install?url=http%3A%2F%2F10.0.2.2%3A${ADDON_PORT:-7000}%2Fmanifest.json'" "$PKG" >/dev/null
 sleep 5
 key KEYCODE_DPAD_CENTER 4 "install test add-on"
 

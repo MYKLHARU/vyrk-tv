@@ -34,5 +34,14 @@ Plus Jakarta Sans
 Watched-state and library rules are ported from stremio-core
   (https://github.com/Stremio/stremio-core), MIT License, Copyright Smart Code OOD.
 
+IntroDB (https://introdb.app)
+  Intro, recap and credits timings contributed by the IntroDB community.
+
+TMDB (https://www.themoviedb.org)
+  This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+Chapter markers and smart scrubbing follow ideas from Alder
+  (https://github.com/aradhyas8/Alder), GPL-3.0. VYRK's implementation is its own.
+
 VYRK is not affiliated with Stremio. VYRK hosts, indexes and provides no media.
 Titles, artwork and ratings come from the add-ons you install.

@@ -35,9 +35,9 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Browse** — a featured hero, Continue Watching, Top 10 rows per streaming service and your catalogue rows. A title header with an optional muted trailer follows focus. Rows load lazily and page as you scroll.
 
-**Details and sources** — a translucent info page with credits and every source ranked and explained. Play always starts the best one; choosing is optional. Series get a season guide.
+**Details and sources** — a translucent info page with credits and every source ranked and explained. Play always starts the best one; choosing is optional. Series get a season guide. With a TMDB key, cast and crew get photos and their own pages.
 
-**Playback** — Media3 with the FFmpeg audio decoder, HLS and DASH. Broken links are refreshed or skipped automatically; a source you picked asks before switching. Audio and subtitle preferences, subtitle sync, Up Next, sleep timers.
+**Playback** — Media3 with the FFmpeg audio decoder, HLS and DASH. Broken links are refreshed or skipped automatically; a source you picked asks before switching. Skip intro and recap from IntroDB timings, a timeline with chapter markers and smart scrubbing, and if an audio track breaks mid-film VYRK switches to the next best one at the same second. Audio and subtitle preferences, subtitle sync, Up Next, sleep timers.
 
 **Accounts, profiles and library** — Stremio sign-in by QR code, or no account at all. Up to five profiles with PINs. Watched state and Continue Watching follow Stremio's own rules, so progress reads correctly in other Stremio apps.
 
@@ -45,7 +45,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **TV integration** — Watch Next on the launcher, MediaSession, frame-rate matching, passthrough, in-app updates from GitHub Releases.
 
-**Privacy** — no ads, analytics, tracking or VYRK account. Your Stremio key and add-on URLs are encrypted with an Android Keystore key and redacted everywhere they're shown or logged.
+**Privacy** — no ads, analytics, tracking or VYRK account. Your Stremio key and add-on URLs are encrypted with an Android Keystore key and redacted everywhere they're shown or logged. VYRK talks to your add-ons, the Stremio account service, IntroDB (intro timings, by IMDb ID only), TMDB (cast pages, only when the build has a key), YouTube for trailers and GitHub for updates.
 
 The full list, with what is verified and how, is in [docs/FEATURES.md](docs/FEATURES.md).
 
@@ -154,6 +154,7 @@ Set in `gradle.properties` or override with `-P`:
 | `vyrk.updateRepo` | `MYKLHARU/vyrk-tv` (empty disables updates) |
 | `vyrk.top10AddonUrl` | Streaming Catalogs manifest (empty never suggests one) |
 | `vyrk.storeBuild` | `false` (`true` removes the updater and its permission) |
+| `vyrk.tmdbApiKey` | empty (cast and crew pages are off). Set `-Pvyrk.tmdbApiKey=…`, the `TMDB_API_KEY` environment variable, or the `TMDB_API_KEY` Actions secret. A key compiled into an APK can be extracted, so use a key meant for this app. |
 
 ### Signing
 

@@ -1,0 +1,172 @@
+package com.vyrk.core.tmdb
+
+import com.vyrk.core.addon.AddonUrls
+import com.vyrk.core.addon.ProtocolJson
+import com.vyrk.core.net.HttpTransport
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.longOrNull
+
+/** Someone in a title's cast or crew. */
+data class Credit(
+    val personId: Long,
+    val name: String,
+    val role: String?,
+    val department: String?,
+    val profilePath: String?,
+    val order: Int = Int.MAX_VALUE,
+)
+
+data class Credits(val cast: List<Credit>, val crew: List<Credit>) {
+    /** Directors, writers, creators and composers first; deduplicated by person. */
+    val keyCrew: List<Credit>
+        get() {
+            val rank = listOf("Director", "Creator", "Screenplay", "Writer", "Novel", "Story", "Original Music Composer", "Producer", "Director of Photography")
+            return crew.filter { it.role in rank }
+                .sortedWith(compareBy<Credit> { rank.indexOf(it.role) }.thenBy { it.name })
+                .distinctBy { it.personId }
+        }
+}
+
+data class Person(
+    val id: Long,
+    val name: String,
+    val biography: String?,
+    val birthday: String?,
+    val deathday: String?,
+    val placeOfBirth: String?,
+    val knownFor: String?,
+    val profilePath: String?,
+)
+
+/** A film or show someone worked on. [type] is "movie" or "series" (Stremio's names). */
+data class PersonCredit(
+    val tmdbId: Long,
+    val type: String,
+    val title: String,
+    val role: String?,
+    val department: String,
+    val posterPath: String?,
+    val year: String?,
+    val popularity: Double,
+    val voteCount: Int,
+)
+
+/**
+ * TMDB v3 API (https://developer.themoviedb.org/reference). Requests carry either a v3 API key
+ * (`api_key` query) or a v4 read access token (`Authorization: Bearer`). The key comes from the
+ * build (`vyrk.tmdbApiKey` / `TMDB_API_KEY`); it is never committed.
+ */
+class TmdbClient(private val http: HttpTransport, private val key: String) {
+    private val bearer = key.startsWith("eyJ")
+
+    val enabled: Boolean get() = key.isNotBlank()
+
+    private fun url(path: String, query: String = ""): String {
+        val q = buildList {
+            if (query.isNotEmpty()) add(query)
+            if (!bearer) add("api_key=${AddonUrls.encodeComponent(key)}")
+        }.joinToString("&")
+        return "$BASE$path" + if (q.isNotEmpty()) "?$q" else ""
+    }
+
+    private suspend fun get(path: String, query: String = ""): JsonObject? {
+        if (!enabled) return null
+        val headers = if (bearer) mapOf("Authorization" to "Bearer $key", "Accept" to "application/json") else mapOf("Accept" to "application/json")
+        val res = runCatching { http.get(url(path, query), headers, 12_000) }.getOrNull() ?: return null
+        if (!res.isSuccess) return null
+        return runCatching { ProtocolJson.parseToJsonElement(res.body) as JsonObject }.getOrNull()
+    }
+
+    /** TMDB id and media type ("movie" or "tv") for an IMDb id. */
+    suspend fun findByImdb(imdbId: String, preferTv: Boolean): Pair<Long, String>? {
+        val o = get("/find/$imdbId", "external_source=imdb_id") ?: return null
+        return parseFind(o, preferTv)
+    }
+
+    suspend fun credits(tmdbId: Long, mediaType: String): Credits? {
+        val path = if (mediaType == "tv") "/tv/$tmdbId/aggregate_credits" else "/movie/$tmdbId/credits"
+        return get(path)?.let { parseCredits(it) }
+    }
+
+    suspend fun person(id: Long): Person? = get("/person/$id")?.let { parsePerson(it) }
+
+    suspend fun personCredits(id: Long): List<PersonCredit> = get("/person/$id/combined_credits")?.let { parsePersonCredits(it) }.orEmpty()
+
+    /** IMDb id of a film or show, so VYRK can open it through the user's add-ons. */
+    suspend fun imdbId(tmdbId: Long, type: String): String? {
+        val path = if (type == "series") "/tv/$tmdbId/external_ids" else "/movie/$tmdbId/external_ids"
+        return get(path)?.let { (it["imdb_id"] as? JsonPrimitive)?.contentOrNull?.takeIf { s -> s.startsWith("tt") } }
+    }
+
+    companion object {
+        const val BASE = "https://api.themoviedb.org/3"
+        const val ATTRIBUTION = "This product uses the TMDB API but is not endorsed or certified by TMDB."
+
+        fun image(path: String?, size: String = "w185"): String? = path?.takeIf { it.isNotBlank() }?.let { "https://image.tmdb.org/t/p/$size$it" }
+
+        private fun JsonObject.s(k: String): String? = (this[k] as? JsonPrimitive)?.takeIf { it !is JsonNull }?.contentOrNull?.takeIf { it.isNotBlank() }
+        private fun JsonObject.l(k: String): Long? = (this[k] as? JsonPrimitive)?.longOrNull
+        private fun JsonObject.arr(k: String): List<JsonObject> = (this[k] as? JsonArray)?.mapNotNull { it as? JsonObject }.orEmpty()
+
+        fun parseFind(o: JsonObject, preferTv: Boolean): Pair<Long, String>? {
+            val movie = o.arr("movie_results").firstOrNull()?.l("id")?.let { it to "movie" }
+            val tv = o.arr("tv_results").firstOrNull()?.l("id")?.let { it to "tv" }
+            return if (preferTv) tv ?: movie else movie ?: tv
+        }
+
+        /** Handles both /movie/{id}/credits and /tv/{id}/aggregate_credits (roles/jobs arrays). */
+        fun parseCredits(o: JsonObject): Credits {
+            val cast = o.arr("cast").mapNotNull { c ->
+                val id = c.l("id") ?: return@mapNotNull null
+                val role = c.s("character") ?: c.arr("roles").firstOrNull()?.s("character")
+                Credit(id, c.s("name") ?: return@mapNotNull null, role, "Acting", c.s("profile_path"), (c["order"] as? JsonPrimitive)?.intOrNull ?: Int.MAX_VALUE)
+            }.sortedBy { it.order }
+            val crew = o.arr("crew").flatMap { c ->
+                val id = c.l("id") ?: return@flatMap emptyList()
+                val name = c.s("name") ?: return@flatMap emptyList()
+                val jobs = c.s("job")?.let { listOf(it) } ?: c.arr("jobs").mapNotNull { it.s("job") }
+                jobs.map { Credit(id, name, it, c.s("department"), c.s("profile_path")) }
+            }
+            return Credits(cast, crew)
+        }
+
+        fun parsePerson(o: JsonObject): Person? = Person(
+            id = o.l("id") ?: return null,
+            name = o.s("name") ?: return null,
+            biography = o.s("biography"),
+            birthday = o.s("birthday"),
+            deathday = o.s("deathday"),
+            placeOfBirth = o.s("place_of_birth"),
+            knownFor = o.s("known_for_department"),
+            profilePath = o.s("profile_path"),
+        )
+
+        /** Films and shows, most notable first, one entry per title (acting roles win over crew jobs). */
+        fun parsePersonCredits(o: JsonObject): List<PersonCredit> {
+            fun item(c: JsonObject, dept: String, role: String?): PersonCredit? {
+                val type = when (c.s("media_type")) { "movie" -> "movie"; "tv" -> "series"; else -> return null }
+                val title = c.s("title") ?: c.s("name") ?: return null
+                val date = c.s("release_date") ?: c.s("first_air_date")
+                return PersonCredit(
+                    tmdbId = c.l("id") ?: return null, type = type, title = title, role = role, department = dept,
+                    posterPath = c.s("poster_path"), year = date?.take(4),
+                    popularity = (c["popularity"] as? JsonPrimitive)?.doubleOrNull ?: 0.0,
+                    voteCount = (c["vote_count"] as? JsonPrimitive)?.intOrNull ?: 0,
+                )
+            }
+            val acting = o.arr("cast").mapNotNull { item(it, "Acting", it.s("character")) }
+                // Talk shows and award ceremonies list people as "Self"; they crowd out real work.
+                .filterNot { it.type == "series" && it.role?.contains("Self", ignoreCase = true) == true }
+            val crew = o.arr("crew").mapNotNull { item(it, it.s("department") ?: "Crew", it.s("job")) }
+            return (acting + crew)
+                .distinctBy { it.type + it.tmdbId }
+                .sortedWith(compareByDescending<PersonCredit> { it.voteCount }.thenByDescending { it.popularity }.thenBy { it.title })
+        }
+    }
+}

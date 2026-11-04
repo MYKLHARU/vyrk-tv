@@ -23,6 +23,7 @@
     <string name="audio_formats">ऑडियो फ़ॉर्मैट</string>
     <string name="audio_languages">ऑडियो भाषाएँ</string>
     <string name="audio_subtitles">ऑडियो और सबटाइटल</string>
+    <string name="audio_switched">वह ऑडियो ट्रैक काम नहीं कर रहा। %1$s पर बदला गया।</string>
     <string name="automatic_checks">अपने-आप जाँच</string>
     <string name="autoplay_next">अगला एपिसोड अपने-आप चलाएँ</string>
     <string name="avoid_commentary">कमेंट्री ट्रैक से बचें</string>
@@ -32,9 +33,17 @@
     <string name="bg_box">बॉक्स</string>
     <string name="bg_shadow">छाया</string>
     <string name="blur_unwatched">न देखे गए एपिसोड धुँधले करें</string>
+    <string name="born_on">जन्म %1$s</string>
     <string name="cancel">रद्द करें</string>
+    <string name="cant_open_title">VYRK इस टाइटल को सीधे नहीं खोल सकता, इसलिए इसे खोजा।</string>
     <string name="cant_play_title">यह टाइटल नहीं चल सकता</string>
+    <string name="cast_and_crew">कलाकार और टीम</string>
     <string name="change_pin">PIN बदलें</string>
+    <string name="chapter_credits">क्रेडिट</string>
+    <string name="chapter_intro">इंट्रो</string>
+    <string name="chapter_markers_hint">टाइमलाइन पर अध्याय, इंट्रो और क्रेडिट दिखाता है।</string>
+    <string name="chapter_n">अध्याय %1$d</string>
+    <string name="chapter_recap">रीकैप</string>
     <string name="check_for_updates">अपडेट देखें</string>
     <string name="clear">साफ़ करें</string>
     <string name="clear_dialogue">साफ़ संवाद</string>
@@ -59,6 +68,7 @@
     <string name="delay_addon_only">देरी ऐड-ऑन सबटाइटल पर लागू होती है।</string>
     <string name="delete_profile">प्रोफ़ाइल मिटाएँ</string>
     <string name="diagnostics_copied">डायग्नोस्टिक्स कॉपी हुए</string>
+    <string name="died_on">निधन %1$s</string>
     <string name="director">निर्देशक</string>
     <string name="director_line">निर्देशक: %1$s</string>
     <string name="display">डिस्प्ले</string>
@@ -103,6 +113,7 @@
     <string name="key_backspace">मिटाएँ</string>
     <string name="key_clear">साफ़</string>
     <string name="key_space">स्पेस</string>
+    <string name="known_for">%1$s के लिए जाने जाते हैं</string>
     <string name="languages_order_hint">चुनी गई भाषाएँ उसी क्रम में प्राथमिकता पाती हैं जिसमें आप उन्हें चुनते हैं।</string>
     <string name="less">कम</string>
     <string name="library_empty">आपकी लाइब्रेरी खाली है। टाइटल के विवरण पेज से जोड़ें।</string>
@@ -150,6 +161,7 @@
     <string name="passthrough">ऑडियो पासथ्रू</string>
     <string name="passthrough_hint">Dolby और DTS ऑडियो को बिना बदले आपके रिसीवर तक भेजता है।</string>
     <string name="pause">रोकें</string>
+    <string name="person_unavailable">इस व्यक्ति का विवरण लोड नहीं हो सका।</string>
     <string name="pin_locked">बहुत ज़्यादा कोशिशें। %1$d सेकंड बाद फिर कोशिश करें।</string>
     <string name="pin_rules">4 से 8 अंक इस्तेमाल करें।</string>
     <string name="pin_wrong">गलत PIN</string>
@@ -163,6 +175,7 @@
     <string name="preset_best">सबसे अच्छी तस्वीर</string>
     <string name="preset_fast">तेज़ शुरुआत</string>
     <string name="preset_hint">जब आप स्रोत नहीं चुनते, तो चलाएँ बटन कैसे चुनता है।</string>
+    <string name="press_ok">OK</string>
     <string name="press_sources">स्ट्रीम खोजने के लिए स्रोत चुनें।</string>
     <string name="preview">प्रीव्यू</string>
     <string name="preview_automatic">अपने-आप</string>
@@ -201,6 +214,8 @@
     <string name="see_all">सभी देखें</string>
     <string name="session_expired">आपका Stremio सत्र समाप्त हो गया। आपका डेटा सुरक्षित है। सिंक के लिए फिर से जोड़ें।</string>
     <string name="set_pin">PIN सेट करें</string>
+    <string name="setting_chapter_markers">अध्याय चिह्न</string>
+    <string name="setting_skip_intro">इंट्रो छोड़ें</string>
     <string name="settings">सेटिंग</string>
     <string name="settings_about">जानकारी और अपडेट</string>
     <string name="settings_addons">ऐड-ऑन</string>
@@ -219,6 +234,13 @@
     <string name="size_large">बड़ा</string>
     <string name="size_medium">मध्यम</string>
     <string name="size_small">छोटा</string>
+    <string name="skip_automatic">अपने-आप छोड़ें</string>
+    <string name="skip_intro">इंट्रो छोड़ें</string>
+    <string name="skip_intro_hint">इंट्रो और रीकैप के लिए IntroDB समुदाय के समय इस्तेमाल करता है।</string>
+    <string name="skip_recap">रीकैप छोड़ें</string>
+    <string name="skip_show_button">बटन दिखाएँ</string>
+    <string name="skipped_intro">इंट्रो छोड़ा गया</string>
+    <string name="skipped_recap">रीकैप छोड़ा गया</string>
     <string name="sleep">स्लीप टाइमर</string>
     <string name="sleep_60">60 मिनट में</string>
     <string name="sleep_after_episode">इस एपिसोड के बाद</string>
@@ -267,6 +289,7 @@
     <string name="tagline">स्ट्रीमिंग के लिए गढ़ा गया</string>
     <string name="third_party_notices">तृतीय-पक्ष सूचनाएँ</string>
     <string name="this_tv">यह टीवी</string>
+    <string name="timeline_hint">◀ ▶ खिसकाएँ · ▲ अध्याय · OK जाएँ</string>
     <string name="top10_add">Top 10 पंक्तियाँ जोड़ें</string>
     <string name="top10_card_body">मुफ़्त तृतीय-पक्ष Streaming Catalogs ऐड-ऑन जोड़ता है, जो हर सेवा पर लोकप्रिय टाइटल दिखाता है।</string>
     <string name="top10_card_title">आपकी स्ट्रीमिंग सेवाओं के Top 10</string>

@@ -91,7 +91,12 @@ pushed), so nothing below is verified by CI.
 | Subtitle modes, forced-only, memory per title, delay ±10 s, size/colour/background, safe markup stripping | `core/subtitles`, `PlayerModel` | Partial | core; delay and style apply to add-on subtitles only, not embedded tracks |
 | Up Next with autoplay, binge continuity, Still Watching after three, sleep timers | `PlayerModel` | Built | — |
 | Frame-rate matching restoring the original mode | `PlayerActivity` | Built | — |
-| Skip intro / chapters | — | Not done | intentionally off (no trustworthy source) |
+| Skip intro / recap from IntroDB community timings (Show button / Automatic / Off); Up Next at the credits start when known | `core/playback/Segments.kt`, `PlayerModel` | Done | core, E2E (GoT S1E1 via live IntroDB), live probe |
+| Timeline chapter markers: IntroDB segments (intro/recap tinted) merged with Matroska chapters | `core/playback/Chapters.kt`, `PlayerActivity.Timeline` | Done | core, E2E |
+| Matroska chapters read with HTTP range requests (EBML SeekHead → Chapters) | `core/playback/MkvChapters.kt` | Built | core (synthetic MKV); no MKV with chapters played on a device yet |
+| Smart scrubbing: focusable timeline, accelerating Left/Right with chapter snap, Up for chapter mode, OK to seek | `Scrubber`, `PlayerActivity.Timeline` | Done | core, E2E |
+| Mid-film audio failure switches track at the same second (same language, simpler codec first) | `TrackSelector.fallbackAudio`, `PlayerModel` | Built | core; no broken audio track was available to trigger it on a device |
+| Cast and crew pages from TMDB: photos on the info page, person page with biography and filmography that opens titles through your add-ons | `core/tmdb`, `overlays/Person.kt` | Built | core (fixtures); not run against TMDB (needs a TMDB key) |
 | MediaSession, audio focus, wake mode, live recovery without VOD progress | `PlayerActivity`, `LibraryRules` | Built | core (live rule) |
 
 ## Library
@@ -141,4 +146,6 @@ pushed), so nothing below is verified by CI.
 - **Watch Next on the Google TV home screen**: not checked on a Google TV launcher.
 - **Translations and 720p/4K layouts on screen**: strings were generated and validated, but only English at 1080p was looked at.
 - **Live TV catalogues**: none of the installed add-ons provides one.
+- **TMDB cast and crew pages**: need a TMDB API key in the build (`TMDB_API_KEY` secret or `-Pvyrk.tmdbApiKey`); no key was available, so only the parsing is tested.
+- **Matroska chapters on a device and mid-film audio fallback**: tested in core only; no test file with chapters or a deliberately broken audio track was played.
 - **API 34 emulator**: CI targets API 34 (tv_1080p); local runs used API 36.

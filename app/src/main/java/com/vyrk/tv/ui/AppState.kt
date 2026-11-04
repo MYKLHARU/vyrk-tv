@@ -32,6 +32,7 @@ sealed interface Overlay {
     data class AddonQr(val descriptor: Descriptor) : Overlay
     data class Message(val title: String, val body: String) : Overlay
     data class SeeAll(val title: String, val ref: com.vyrk.core.catalog.CatalogRef) : Overlay
+    data class Person(val id: Long, val name: String) : Overlay
 }
 
 @Stable

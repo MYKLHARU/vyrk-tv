@@ -23,6 +23,7 @@
     <string name="audio_formats">Formatos de audio</string>
     <string name="audio_languages">Idiomas de audio</string>
     <string name="audio_subtitles">Audio y subtítulos</string>
+    <string name="audio_switched">Esa pista de audio dejó de funcionar. Se cambió a %1$s.</string>
     <string name="automatic_checks">Comprobación automática</string>
     <string name="autoplay_next">Reproducir el siguiente episodio automáticamente</string>
     <string name="avoid_commentary">Evitar pistas de comentarios</string>
@@ -32,9 +33,17 @@
     <string name="bg_box">Caja</string>
     <string name="bg_shadow">Sombra</string>
     <string name="blur_unwatched">Difuminar episodios no vistos</string>
+    <string name="born_on">Nació: %1$s</string>
     <string name="cancel">Cancelar</string>
+    <string name="cant_open_title">VYRK no puede abrir este título directamente, así que lo ha buscado.</string>
     <string name="cant_play_title">No se puede reproducir este título</string>
+    <string name="cast_and_crew">Reparto y equipo</string>
     <string name="change_pin">Cambiar PIN</string>
+    <string name="chapter_credits">Créditos</string>
+    <string name="chapter_intro">Intro</string>
+    <string name="chapter_markers_hint">Marca capítulos, intros y créditos en la línea de tiempo.</string>
+    <string name="chapter_n">Capítulo %1$d</string>
+    <string name="chapter_recap">Resumen</string>
     <string name="check_for_updates">Buscar actualizaciones</string>
     <string name="clear">Borrar</string>
     <string name="clear_dialogue">Diálogo claro</string>
@@ -59,6 +68,7 @@
     <string name="delay_addon_only">El retraso se aplica a los subtítulos de complementos.</string>
     <string name="delete_profile">Eliminar perfil</string>
     <string name="diagnostics_copied">Diagnóstico copiado</string>
+    <string name="died_on">Murió: %1$s</string>
     <string name="director">Dirección</string>
     <string name="director_line">Dirección: %1$s</string>
     <string name="display">Pantalla</string>
@@ -103,6 +113,7 @@
     <string name="key_backspace">Borrar</string>
     <string name="key_clear">Vaciar</string>
     <string name="key_space">Espacio</string>
+    <string name="known_for">Conocido por %1$s</string>
     <string name="languages_order_hint">Los idiomas elegidos se prefieren en el orden en que los marcas.</string>
     <string name="less">Menos</string>
     <string name="library_empty">Tu biblioteca está vacía. Añade títulos desde su página de detalles.</string>
@@ -150,6 +161,7 @@
     <string name="passthrough">Passthrough de audio</string>
     <string name="passthrough_hint">Envía el audio Dolby y DTS al receptor sin modificarlo.</string>
     <string name="pause">Pausa</string>
+    <string name="person_unavailable">No se pudieron cargar los datos de esta persona.</string>
     <string name="pin_locked">Demasiados intentos. Vuelve a probar en %1$d s.</string>
     <string name="pin_rules">Usa de 4 a 8 dígitos.</string>
     <string name="pin_wrong">PIN incorrecto</string>
@@ -163,6 +175,7 @@
     <string name="preset_best">Mejor imagen</string>
     <string name="preset_fast">Inicio rápido</string>
     <string name="preset_hint">Cómo elige Reproducir una fuente cuando no eliges tú.</string>
+    <string name="press_ok">OK</string>
     <string name="press_sources">Selecciona Fuentes para buscar streams.</string>
     <string name="preview">Vista previa</string>
     <string name="preview_automatic">Automática</string>
@@ -201,6 +214,8 @@
     <string name="see_all">Ver todo</string>
     <string name="session_expired">Tu sesión de Stremio caducó. Tus datos se conservan. Vuelve a conectar para sincronizar.</string>
     <string name="set_pin">Poner PIN</string>
+    <string name="setting_chapter_markers">Marcas de capítulos</string>
+    <string name="setting_skip_intro">Saltar intro</string>
     <string name="settings">Ajustes</string>
     <string name="settings_about">Información y actualizaciones</string>
     <string name="settings_addons">Complementos</string>
@@ -219,6 +234,13 @@
     <string name="size_large">Grande</string>
     <string name="size_medium">Mediano</string>
     <string name="size_small">Pequeño</string>
+    <string name="skip_automatic">Saltar automáticamente</string>
+    <string name="skip_intro">Saltar intro</string>
+    <string name="skip_intro_hint">Usa tiempos de la comunidad de IntroDB para intros y resúmenes.</string>
+    <string name="skip_recap">Saltar resumen</string>
+    <string name="skip_show_button">Mostrar botón</string>
+    <string name="skipped_intro">Intro saltada</string>
+    <string name="skipped_recap">Resumen saltado</string>
     <string name="sleep">Temporizador</string>
     <string name="sleep_60">En 60 minutos</string>
     <string name="sleep_after_episode">Tras este episodio</string>
@@ -267,6 +289,7 @@
     <string name="tagline">Forjado para el streaming</string>
     <string name="third_party_notices">Avisos de terceros</string>
     <string name="this_tv">Este televisor</string>
+    <string name="timeline_hint">◀ ▶ Avanzar · ▲ Capítulos · OK Ir</string>
     <string name="top10_add">Añadir filas Top 10</string>
     <string name="top10_card_body">Añade el complemento gratuito de terceros Streaming Catalogs, que muestra lo más popular de cada servicio.</string>
     <string name="top10_card_title">Top 10 de tus servicios de streaming</string>
