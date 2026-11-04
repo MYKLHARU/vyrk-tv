@@ -398,7 +398,7 @@ fun PlayerModel.sessionSettingsLanguages(): List<String> = VyrkApp.graphOrNull()
 
 @Composable
 private fun OptionRow(text: String, selected: Boolean, trace: String, onClick: () -> Unit) {
-    VyrkChip(text, selected, onClick, Modifier.fillMaxWidth().height(androidx.compose.ui.unit.Dp.Unspecified).traceFocus(trace))
+    VyrkChip(text, selected, onClick, Modifier.fillMaxWidth().traceFocus(trace), maxLines = 2)
 }
 
 @Composable
@@ -437,7 +437,12 @@ fun SourceLine(r: Ranked, current: Boolean, modifier: Modifier = Modifier, onCli
     val i = r.info
     val parts = listOf(i.resolutionLabel, i.releaseType.label, i.codec.label, i.hdr.joinToString("/") { it.label }, i.audio.joinToString(" ") { it.label }, i.channels.orEmpty(),
         i.sizeBytes?.let { "%.1f GB".format(it / 1e9) }.orEmpty()).filter { it.isNotBlank() }
-    VyrkChip("${r.candidate.addonName}\n${parts.joinToString(" · ")}", current, onClick, modifier.fillMaxWidth().height(androidx.compose.ui.unit.Dp.Unspecified).traceFocus("source:${r.candidate.addonId}:${r.candidate.index}"))
+    val langs = i.languages.joinToString(", ") { Languages.label(it) }
+    val text = buildString {
+        append(r.candidate.addonName); append('\n'); append(parts.joinToString(" · ").ifEmpty { "—" })
+        if (langs.isNotEmpty()) { append('\n'); append(langs) }
+    }
+    VyrkChip(text, current, onClick, modifier.fillMaxWidth().traceFocus("source:${r.candidate.addonId}:${r.candidate.index}"), maxLines = 3)
 }
 
 @Composable

@@ -301,7 +301,7 @@ private fun SourcesPane(state: SourcesState, firstReq: FocusRequester, onRefresh
                                 VyrkIconButton(R.drawable.ic_info, str(R.string.source_details), { expanded = if (expanded == k) null else k }, size = 30.dp, modifier = Modifier.traceFocus("sources:details"))
                             }
                             if (r.candidate.key == topKey) Tag(str(R.string.recommended), color = c.onAccent, background = c.accent, modifier = Modifier.padding(top = 4.dp))
-                            r.info.languages.takeIf { it.isNotEmpty() }?.let { Text(it.joinToString(", ") { l -> Languages.label(l) }, style = Vyrk.type.labelS, color = c.textMuted) }
+
                             if (expanded == k) {
                                 Text(r.candidate.stream.text, style = Vyrk.type.bodyS, color = c.textSecondary)
                                 Text(r.reasons.joinToString("  ") { "${it.code} ${if (it.points > 0) "+" else ""}${it.points}" } + "  = ${r.score}", style = Vyrk.type.labelS, color = c.textMuted)

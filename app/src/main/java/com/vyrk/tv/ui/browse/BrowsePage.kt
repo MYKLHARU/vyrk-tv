@@ -1,6 +1,7 @@
 package com.vyrk.tv.ui.browse
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -163,8 +164,8 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
 
         // Backdrop: hero artwork, or the focused poster's artwork under the header.
         val backdropUrl = if (focusedPoster != null) (headerFull?.background ?: focusedPoster?.background) else heroFull?.background ?: heroMeta?.background
-        val showBackdrop = (focusedPoster != null) || (heroEnabled && listState.firstVisibleItemIndex == 0)
-        if (showBackdrop) Backdrop(backdropUrl, Modifier.fillMaxWidth().height(if (focusedPoster != null) headerH + 40.dp else heroH + 40.dp))
+        val showBackdrop = focusedPoster == null && heroEnabled && listState.firstVisibleItemIndex == 0
+        if (showBackdrop) Backdrop(backdropUrl, Modifier.fillMaxWidth().height(heroH + 40.dp))
 
         CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
             LazyColumn(
@@ -252,7 +253,9 @@ fun BrowsePage(session: ProfileSession, model: BrowseModel, tabKey: String, onPl
         // Title header over the list while a poster has focus.
         val fp = focusedPoster
         if (fp != null && !heroFocused) {
-            Box(Modifier.fillMaxWidth().height(headerH)) {
+            // Opaque: rows above the focused one scroll beneath it.
+            Box(Modifier.fillMaxWidth().height(headerH).background(com.vyrk.tv.ui.theme.Vyrk.colors.background)) {
+                Backdrop(headerFull?.background ?: fp.background, Modifier.fillMaxSize())
                 TitleHeader(fp, headerFull, headerH, trailerPlaying = false)
                 if (settings.previews == PreviewMode.AUTOMATIC && app.overlays.isEmpty()) {
                     HeaderTrailer(meta = fp, full = headerFull, sound = settings.previewSound, modifier = Modifier.padding(end = Dimens.screenMargin, top = 12.dp))

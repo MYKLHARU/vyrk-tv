@@ -92,8 +92,7 @@ fun HeaderTrailer(meta: MetaPreview, full: MetaItem?, sound: Boolean, modifier: 
     LaunchedEffect(meta.id, yt) { armed = false; if (yt != null) { delay(850); armed = true } }
     if (yt == null || !armed || state == TrailerState.REFUSED) return
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
-        Box(modifier.size(352.dp, 198.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).background(androidx.compose.ui.graphics.Color.Black)
-            .alpha(if (state == TrailerState.PLAYING) 1f else 0f)) {
+        Box(modifier.alpha(if (state == TrailerState.PLAYING) 1f else 0f).size(352.dp, 198.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).background(androidx.compose.ui.graphics.Color.Black)) {
             YouTubeTrailer(yt, muted = !sound, modifier = Modifier.fillMaxSize()) { state = it }
         }
     }

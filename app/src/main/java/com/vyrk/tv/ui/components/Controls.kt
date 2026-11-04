@@ -122,12 +122,13 @@ fun VyrkChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    maxLines: Int = 1,
 ) {
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.height(32.dp),
+        modifier = modifier.defaultMinSize(minHeight = 32.dp),
         shape = ClickableSurfaceDefaults.shape(Dimens.chipShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) c.accent.copy(alpha = 0.22f) else c.raised,
@@ -138,12 +139,15 @@ fun VyrkChip(
         border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
         glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
     ) {
-        Row(Modifier.padding(horizontal = 12.dp).align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = if (maxLines > 1) 8.dp else 0.dp).align(if (maxLines > 1) Alignment.CenterStart else Alignment.Center),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             if (selected) {
                 Icon(R.drawable.ic_check, null, Modifier.size(12.dp), tint = androidx.tv.material3.LocalContentColor.current)
                 Box(Modifier.width(6.dp))
             }
-            Text(text, style = Vyrk.type.labelM, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text, style = if (maxLines > 1) Vyrk.type.bodyS else Vyrk.type.labelM, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
         }
     }
 }
