@@ -13,6 +13,8 @@
 
 **Browse, choose, press Play. Everything with the remote.**
 
+**Website and downloads: [myklharu.github.io/vyrk-tv](https://myklharu.github.io/vyrk-tv/)**
+
 VYRK is a free, open-source Android TV client for Stremio add-ons. Sign in to your Stremio account or use it without one, and press Play: VYRK picks the best source your TV and connection can handle.
 
 > VYRK hosts, indexes and provides no media. Everything you see comes from the add-ons you install. VYRK isn't affiliated with Stremio.
