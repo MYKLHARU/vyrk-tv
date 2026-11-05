@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.9
 
 - Featured hero: Left and Right on Watch now move to the previous or next title straight away, and the arrow on that side lights up. You no longer move onto the arrows to use them.
 - While a movie loads, the logo fills in without the bright bar moving across it, and there is no Cancel button (Back still leaves). Other sources still shows when there's a choice.
