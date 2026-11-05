@@ -3,6 +3,9 @@ package com.vyrk.tv.ui.overlays
 import android.os.Build
 import android.view.WindowManager
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,6 +92,7 @@ fun Overlays() {
                     is Overlay.Message -> MessageBox(o)
                     is Overlay.SeeAll -> SeeAll(o)
                     is Overlay.Person -> PersonPage(o)
+                    Overlay.ProfileMenu -> ProfileMenu()
                 }
             }
         }
@@ -129,6 +133,62 @@ fun OverlayWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) {
                     }
                 }) { content() }
             }
+        }
+    }
+}
+
+/** The top bar's profile menu: who's watching, then Switch profile and Settings. */
+@Composable
+private fun ProfileMenu() {
+    val app = LocalApp.current
+    val session = com.vyrk.tv.ui.LocalSession.current ?: return
+    val c = Vyrk.colors
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    fun go(section: com.vyrk.tv.ui.Section) { app.overlays.remove(Overlay.ProfileMenu); app.section = section }
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.28f)), contentAlignment = Alignment.TopEnd) {
+        Column(
+            Modifier.padding(top = com.vyrk.tv.ui.theme.Dimens.navHeight - 6.dp, end = com.vyrk.tv.ui.theme.Dimens.screenMargin).width(250.dp)
+                .menuSurface()
+                .padding(10.dp),
+        ) {
+            Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                ProfileAvatar(session.profile, 34.dp)
+                Spacer(Modifier.width(10.dp))
+                Text(session.profile.name, style = Vyrk.type.titleM, color = c.text, maxLines = 1)
+            }
+            com.vyrk.tv.ui.components.RowDivider(Modifier.padding(vertical = 6.dp))
+            MenuEntry(R.drawable.ic_swap, str(R.string.switch_profile), "profile_menu:profiles", Modifier.focusRequester(first)) { go(com.vyrk.tv.ui.Section.PROFILES) }
+            MenuEntry(R.drawable.ic_cog, str(R.string.settings), "profile_menu:settings") { go(com.vyrk.tv.ui.Section.SETTINGS) }
+        }
+    }
+}
+
+/** The menu card: more opaque than other glass so it reads over any page. */
+@Composable
+private fun Modifier.menuSurface(): Modifier {
+    val c = Vyrk.colors
+    val shape = RoundedCornerShape(18.dp)
+    return this.shadow(24.dp, shape, clip = false).background(c.panel.copy(alpha = 0.96f), shape).border(1.dp, c.glassEdge, shape)
+}
+
+@Composable
+private fun MenuEntry(icon: Int, label: String, trace: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val c = Vyrk.colors
+    androidx.tv.material3.Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().height(42.dp).traceFocus(trace),
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
+            containerColor = Color.Transparent, contentColor = c.textSecondary,
+            focusedContainerColor = c.accent, focusedContentColor = c.onAccent,
+        ),
+        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.02f),
+        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
+    ) {
+        Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            com.vyrk.tv.ui.components.Icon(icon, null, Modifier.size(18.dp), tint = androidx.tv.material3.LocalContentColor.current)
+            Text(label, style = Vyrk.type.titleS, maxLines = 1)
         }
     }
 }

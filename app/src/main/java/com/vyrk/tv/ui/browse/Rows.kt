@@ -2,6 +2,8 @@ package com.vyrk.tv.ui.browse
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
@@ -136,8 +138,11 @@ fun Poster(
             },
         shape = ClickableSurfaceDefaults.shape(Dimens.posterShape),
         colors = ClickableSurfaceDefaults.colors(containerColor = c.raised, focusedContainerColor = c.raised),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
-        border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.06f)),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.06f))),
+            focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent.copy(alpha = 0.8f))),
+        ),
         glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
     ) {
         // Never a blank card: the add-on's poster, then Cinemeta's by IMDb id, then the title on
@@ -280,10 +285,10 @@ fun BrowseRow(
     }
 
     Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(start = Dimens.screenMargin, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(row.title, style = Vyrk.type.titleL, color = if (hasFocus) c.text else c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        val height = posterWidth * 1.5f
+        val landscape = row.kind == RowKind.CONTINUE
+        com.vyrk.tv.ui.components.SectionHeading(row.title, active = hasFocus, chevron = landscape, modifier = Modifier.padding(start = Dimens.screenMargin, bottom = 8.dp))
+        // Continue Watching is landscape (16:9 backdrops); other rows are posters.
+        val height = if (landscape) Dimens.landscapeCardWidth * 9f / 16f else posterWidth * 1.5f
         when {
             row.items.isEmpty() && row.error != null -> Row(Modifier.padding(start = Dimens.screenMargin).height(height), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(str(R.string.row_error), style = Vyrk.type.bodyM, color = c.textMuted)
@@ -324,7 +329,16 @@ fun BrowseRow(
                             else -> Modifier
                         }
                         val top10 = row.kind == RowKind.TOP10
-                        Row(verticalAlignment = Alignment.Bottom) {
+                        if (landscape) ContinueCard(
+                            meta = meta,
+                            item = library[meta.id],
+                            width = Dimens.landscapeCardWidth,
+                            modifier = req.onFocusChanged { if (it.isFocused) callbacks.onFocused(meta, i) },
+                            onClick = { callbacks.onClick(meta, i) },
+                            onLongClick = { callbacks.onLongClick(meta, i) },
+                            onPlayPause = { callbacks.onPlayPause(meta, i) },
+                            traceLabel = "poster:${row.key}#$i",
+                        ) else Row(verticalAlignment = Alignment.Bottom) {
                             if (top10) RankNumber(i + 1, height)
                             Poster(
                                 meta = meta,
@@ -344,6 +358,106 @@ fun BrowseRow(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/** "S5 E4 · 28m left", "28m left" or "S1 E3"; null when the library knows neither. */
+@Composable
+private fun continueLabel(item: LibraryItem?): String? {
+    val st = item?.state ?: return null
+    val episode = st.videoId?.split(':')?.takeIf { it.size >= 3 }?.let { p ->
+        val season = p[p.size - 2].toIntOrNull(); val ep = p.last().toIntOrNull()
+        if (season != null && ep != null) "S$season E$ep" else null
+    }
+    val leftMin = if (st.duration > 0 && st.duration > st.timeOffset) ((st.duration - st.timeOffset) / 60_000L).toInt() else null
+    val left = leftMin?.takeIf { it > 0 }?.let { m -> str(R.string.time_left, if (m < 60) "${m}m" else "${m / 60}h ${m % 60}m") }
+    return listOfNotNull(episode, left).joinToString(" · ").ifEmpty { null }
+}
+
+/**
+ * Continue Watching card, landscape: the title's backdrop with its logo, a play button, a slim
+ * accent progress bar and what's left (episode and time). Watched titles carry a tick. Same keys
+ * and focus behaviour as a poster (Menu opens the item menu, Play/Pause plays).
+ */
+@Composable
+fun ContinueCard(
+    meta: MetaPreview,
+    item: LibraryItem?,
+    width: Dp,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onPlayPause: () -> Unit,
+    traceLabel: String,
+) {
+    val c = Vyrk.colors
+    val height = width * 9f / 16f
+    val progress = if (item?.isInContinueWatching == true) item.progress else 0f
+    val label = continueLabel(item)
+    val desc = listOfNotNull(meta.name.takeIf { it.isNotBlank() }, label).joinToString(", ")
+    var focused by remember { mutableStateOf(false) }
+    Surface(
+        onClick = onClick,
+        onLongClick = onLongClick,
+        modifier = modifier
+            .size(width, height)
+            .onFocusChanged { focused = it.isFocused }
+            .semantics { contentDescription = desc }
+            .traceFocus(traceLabel)
+            .onPreviewKeyEvent { e ->
+                if (e.type != KeyEventType.KeyUp) return@onPreviewKeyEvent false
+                when (e.key) {
+                    Key.Menu -> { onLongClick(); true }
+                    Key.MediaPlayPause, Key.MediaPlay -> { onPlayPause(); true }
+                    else -> false
+                }
+            },
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(Dimens.radiusM)),
+        colors = ClickableSurfaceDefaults.colors(containerColor = c.raised, focusedContainerColor = c.raised),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.07f)),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.07f))),
+            focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent.copy(alpha = 0.85f))),
+        ),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            // The title's backdrop, then Cinemeta's, then its poster; never blank.
+            val candidates = remember(meta.id, meta.background, meta.poster) {
+                listOfNotNull(com.vyrk.core.art.Artwork.forBackdrop(meta.background, "w780"), com.vyrk.core.art.Artwork.metahubBackground(meta.id), meta.poster).distinct()
+            }
+            var attempt by remember(candidates) { mutableIntStateOf(0) }
+            val url = candidates.getOrNull(attempt)
+            if (url != null) AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
+            else Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(c.raised, c.panel))))
+            // Dark from the left under the logo, and from the bottom under the controls.
+            Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.62f to Color.Transparent)))
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.42f to Color.Transparent, 1f to c.shade.copy(alpha = if (focused) 0.75f else 0.88f))))
+            Box(Modifier.align(Alignment.TopStart).padding(start = 10.dp, top = 9.dp).width(width * 0.56f).height(height * 0.42f), contentAlignment = Alignment.BottomStart) {
+                val logos = remember(meta.id, meta.logo) { listOfNotNull(com.vyrk.core.art.Artwork.forLogo(meta.logo), com.vyrk.core.art.Artwork.metahubLogo(meta.id)).distinct() }
+                HeroLogo(meta.id, meta.name, logos, width * 0.56f, height * 0.42f, Vyrk.type.titleS, Modifier.fillMaxHeight())
+            }
+            if (item?.watched == true) {
+                Box(Modifier.align(Alignment.TopEnd).padding(7.dp).size(17.dp).background(c.accent, CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(R.drawable.ic_check, null, Modifier.size(10.dp), tint = c.onAccent)
+                }
+            }
+            Row(
+                Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 8.dp, end = 9.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                Box(
+                    Modifier.size(20.dp).background(if (focused) c.accent else Color.Black.copy(alpha = 0.35f), CircleShape)
+                        .border(1.dp, if (focused) c.accent else Color.White.copy(alpha = 0.75f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(R.drawable.ic_play, null, Modifier.padding(start = 1.dp).size(9.dp), tint = if (focused) c.onAccent else Color.White) }
+                Box(Modifier.weight(1f).height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.25f))) {
+                    if (progress > 0f) Box(Modifier.fillMaxWidth(progress.coerceIn(0.03f, 1f)).fillMaxHeight().clip(RoundedCornerShape(2.dp)).background(c.accent))
+                }
+                if (label != null) Text(label, style = Vyrk.type.labelS, color = c.text, maxLines = 1, softWrap = false)
             }
         }
     }

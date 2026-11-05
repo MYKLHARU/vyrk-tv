@@ -40,7 +40,7 @@ import androidx.compose.ui.draw.shadow
 @Composable
 fun focusGlow(): Glow = Glow(elevationColor = Vyrk.colors.accent.copy(alpha = 0.6f), elevation = Dimens.glowRadius)
 
-enum class ButtonStyle { PRIMARY, SECONDARY, GHOST }
+enum class ButtonStyle { PRIMARY, SECONDARY, GHOST, OUTLINE }
 
 @Composable
 fun VyrkButton(
@@ -55,20 +55,21 @@ fun VyrkButton(
     height: Dp = Dimens.buttonHeight,
     /** A soft accent halo even without focus: for the one call to action on a screen. */
     glow: Boolean = false,
+    shape: androidx.compose.ui.graphics.Shape = Dimens.buttonShape,
 ) {
     val c = Vyrk.colors
     val (bg, fg) = when (style) {
         ButtonStyle.PRIMARY -> c.accent to c.onAccent
         ButtonStyle.SECONDARY -> c.raised to c.text
-        ButtonStyle.GHOST -> Color.Transparent to c.text
+        ButtonStyle.GHOST, ButtonStyle.OUTLINE -> Color.Transparent to c.text
     }
-    val halo = if (glow) Modifier.shadow(18.dp, Dimens.buttonShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier
+    val halo = if (glow) Modifier.shadow(18.dp, shape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
         enabled = enabled,
         modifier = modifier.then(halo).height(height).defaultMinSize(minWidth = 40.dp),
-        shape = ClickableSurfaceDefaults.shape(Dimens.buttonShape),
+        shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = bg, contentColor = fg,
             focusedContainerColor = if (style == ButtonStyle.PRIMARY) c.accent else c.text,
@@ -76,8 +77,11 @@ fun VyrkButton(
             pressedContainerColor = c.accent, pressedContentColor = c.onAccent,
             disabledContainerColor = bg.copy(alpha = 0.4f), disabledContentColor = fg.copy(alpha = 0.5f),
         ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.04f),
-        border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.04f, pressedScale = 0.97f),
+        border = ClickableSurfaceDefaults.border(
+            border = if (style == ButtonStyle.OUTLINE) Border(androidx.compose.foundation.BorderStroke(1.dp, c.text.copy(alpha = 0.38f)), shape = shape) else Border.None,
+            focusedBorder = Border.None,
+        ),
         glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
     ) {
         Row(
@@ -135,14 +139,17 @@ fun VyrkChip(
         onClick = onClick,
         onLongClick = onLongClick,
         modifier = modifier.defaultMinSize(minHeight = 32.dp),
-        shape = ClickableSurfaceDefaults.shape(Dimens.chipShape),
+        shape = ClickableSurfaceDefaults.shape(if (maxLines > 1) Dimens.chipShape else Dimens.pillShape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = if (selected) c.accent.copy(alpha = 0.22f) else c.raised,
+            containerColor = if (selected) c.accent.copy(alpha = 0.16f) else c.raised.copy(alpha = 0.6f),
             contentColor = if (selected) c.accent else c.textSecondary,
             focusedContainerColor = c.text, focusedContentColor = c.background,
         ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.04f),
-        border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.04f, pressedScale = 0.97f),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(androidx.compose.foundation.BorderStroke(1.dp, if (selected) c.accent.copy(alpha = 0.65f) else c.glassEdge)),
+            focusedBorder = Border.None,
+        ),
         glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
     ) {
         Row(

@@ -289,7 +289,7 @@ private fun TitleBackdrop(urls: List<String>) {
     var shown by remember { mutableStateOf<String?>(null) }
     val url = shown?.takeIf { it !in failed } ?: urls.firstOrNull { it !in failed }
     Box(Modifier.fillMaxSize()) {
-        Crossfade(url, label = "info-backdrop") { u ->
+        Crossfade(url, animationSpec = com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.SLOW), label = "info-backdrop") { u ->
             if (u != null) AsyncImage(u, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                 onSuccess = { if (shown == null) shown = u }, onError = { failed = failed + u })
         }

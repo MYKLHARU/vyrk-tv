@@ -45,7 +45,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Add-ons** — in **Settings › Add-ons**: install from a URL, a `stremio://` link or `vyrk://install?url=…`, reorder, configure by QR on your phone, and save the list back to your account.
 
-**Settings** — translucent panels over the artwork you were last looking at, blurred.
+**Settings** — in the menu under your avatar: a glass sidebar with eight groups and compact rows, each with a short description, over the artwork you were last looking at, blurred.
 
 **TV integration** — Watch Next on the launcher, MediaSession, frame-rate matching, passthrough, in-app updates from GitHub Releases.
 

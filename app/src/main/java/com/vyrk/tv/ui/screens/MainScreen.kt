@@ -2,6 +2,11 @@ package com.vyrk.tv.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import com.vyrk.tv.ui.theme.motionSpec
+import com.vyrk.tv.ui.theme.Motion
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -88,7 +93,6 @@ fun MainScreen(session: ProfileSession) {
     val tabReqs = remember { Tab.entries.associateWith { FocusRequester() } }
     val searchReq = remember { FocusRequester() }
     val profileReq = remember { FocusRequester() }
-    val settingsReq = remember { FocusRequester() }
     var navHasFocus by remember { mutableStateOf(false) }
 
     // Default tab once per session.
@@ -100,7 +104,7 @@ fun MainScreen(session: ProfileSession) {
         if (app.focusTabsTick > 0) runCatching {
             when (app.section) {
                 Section.SEARCH -> searchReq.requestFocus()
-                Section.SETTINGS -> settingsReq.requestFocus()
+                Section.SETTINGS -> profileReq.requestFocus()
                 Section.PROFILES -> profileReq.requestFocus()
                 Section.TABS -> tabReqs.getValue(app.tab).requestFocus()
             }
@@ -157,7 +161,9 @@ fun MainScreen(session: ProfileSession) {
 
     Box(Modifier.fillMaxSize()) {
         // Settings sits on glass over the last featured artwork, blurred, reaching up behind the bar.
+        // Library, Search and Profiles have no artwork: they sit in the ambient teal/violet light.
         if (app.section == Section.SETTINGS) SettingsBackdrop(app.backdrop)
+        else if (app.section != Section.TABS || shownTab == Tab.LIBRARY) com.vyrk.tv.ui.components.AmbientBackground()
         // Pages start under the bar; artwork may reach up behind it.
         Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight)) {
             if (!loaded) return@Box
@@ -178,15 +184,15 @@ fun MainScreen(session: ProfileSession) {
             }
         }
         // The bar has no solid edge: it fades from the page colour down into the artwork (catalogue
-        // pages, and Settings over its blurred backdrop). Library, Search and Profiles keep a plain bar.
-        val bg = Vyrk.colors.background
+        // pages, and Settings over its blurred backdrop). Library, Search and Profiles get a lighter
+        // fade over the ambient light, so the bar never reads as a solid band.
         val artwork = (app.section == Section.TABS && shownTab != Tab.LIBRARY) || app.section == Section.SETTINGS
         // Light enough not to tint the artwork (it was 94 % navy at the top), dark enough for the tabs.
         val shade = Vyrk.colors.shade
         if (artwork) Box(Modifier.fillMaxWidth().height(Dimens.navHeight + 56.dp).background(Brush.verticalGradient(
             0f to shade.copy(alpha = 0.78f), 0.45f to shade.copy(alpha = 0.42f), 0.75f to shade.copy(alpha = 0.12f), 1f to Color.Transparent,
         )))
-        else Box(Modifier.fillMaxWidth().height(Dimens.navHeight).background(bg))
+        else Box(Modifier.fillMaxWidth().height(Dimens.navHeight).background(Brush.verticalGradient(0f to shade.copy(alpha = 0.55f), 1f to Color.Transparent)))
         Row(
             Modifier.fillMaxWidth().height(Dimens.navHeight)
                 .padding(horizontal = Dimens.screenMargin)
@@ -194,7 +200,7 @@ fun MainScreen(session: ProfileSession) {
                 .focusProperties {
                     onEnter = {
                         val target = when (app.section) {
-                            Section.SEARCH -> searchReq; Section.SETTINGS -> settingsReq; Section.PROFILES -> profileReq
+                            Section.SEARCH -> searchReq; Section.SETTINGS -> profileReq; Section.PROFILES -> profileReq
                             Section.TABS -> tabReqs.getValue(app.tab)
                         }
                         runCatching { target.requestFocus() }
@@ -204,11 +210,12 @@ fun MainScreen(session: ProfileSession) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Wordmark(20.dp)
-            Spacer(Modifier.width(36.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.width(28.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 tabs.forEach { t ->
                     NavTab(
                         label = tabLabel(t),
+                        icon = tabIcon(t),
                         active = app.section == Section.TABS && app.tab == t,
                         requester = tabReqs.getValue(t),
                         onSelect = { app.section = Section.TABS; app.tab = t },
@@ -216,12 +223,13 @@ fun MainScreen(session: ProfileSession) {
                     )
                 }
             }
-            Spacer(Modifier.weight(1f))
-            NavIcon(R.drawable.ic_search, str(R.string.search), app.section == Section.SEARCH, searchReq, "nav:search") { app.section = Section.SEARCH }
-            Spacer(Modifier.width(6.dp))
-            NavAvatar(session, app.section == Section.PROFILES, profileReq) { app.section = Section.PROFILES }
-            Spacer(Modifier.width(6.dp))
-            NavIcon(R.drawable.ic_settings, str(R.string.settings), app.section == Section.SETTINGS, settingsReq, "nav:settings") { app.section = Section.SETTINGS }
+            // Search takes what the tabs leave, up to a compact field; it shrinks before anything overlaps.
+            Box(Modifier.weight(1f).padding(start = 16.dp), contentAlignment = Alignment.CenterEnd) {
+                SearchPill(app.section == Section.SEARCH, searchReq, Modifier.widthIn(max = 188.dp).fillMaxWidth()) { app.section = Section.SEARCH }
+            }
+            Spacer(Modifier.width(10.dp))
+            // The avatar opens the profile menu: switch profile, Settings.
+            NavAvatar(session, active = app.section == Section.PROFILES || app.section == Section.SETTINGS, profileReq) { app.push(com.vyrk.tv.ui.Overlay.ProfileMenu) }
         }
 
     }
@@ -237,12 +245,29 @@ fun tabLabel(t: Tab): String = when (t) {
     Tab.LIBRARY -> str(R.string.tab_library)
 }
 
-/** Soft fading light on focus (white 20% → accent 16% → transparent) and an underline; never a pill. */
+fun tabIcon(t: Tab): Int = when (t) {
+    Tab.HOME -> R.drawable.ic_home
+    Tab.MOVIES -> R.drawable.ic_movie
+    Tab.SERIES -> R.drawable.ic_tv
+    Tab.ANIME -> R.drawable.ic_anime
+    Tab.LIVE -> R.drawable.ic_live
+    Tab.LIBRARY -> R.drawable.ic_library
+}
+
+/**
+ * A top-bar tab: icon and label. The open tab is a cyan-edged pill with a soft glow; the focused
+ * tab fills with the accent. Changes animate unless Reduce motion is on.
+ */
 @Composable
-private fun NavTab(label: String, active: Boolean, requester: FocusRequester, onSelect: () -> Unit, trace: String) {
+private fun NavTab(label: String, icon: Int, active: Boolean, requester: FocusRequester, onSelect: () -> Unit, trace: String) {
     var focused by remember { mutableStateOf(false) }
     val c = Vyrk.colors
-    Box(
+    val fill by androidx.compose.animation.animateColorAsState(
+        when { focused -> c.accent; active -> c.accent.copy(alpha = 0.16f); else -> Color.Transparent }, motionSpec(Motion.FAST), label = "tab-fill")
+    val edge by androidx.compose.animation.animateColorAsState(
+        when { focused -> c.accent; active -> c.accent.copy(alpha = 0.6f); else -> Color.Transparent }, motionSpec(Motion.FAST), label = "tab-edge")
+    val ink = when { focused -> c.onAccent; active -> c.text; else -> c.textSecondary }
+    Row(
         Modifier
             .focusRequester(requester)
             .onFocusChanged { focused = it.isFocused; if (it.isFocused) onSelect() }
@@ -250,59 +275,68 @@ private fun NavTab(label: String, active: Boolean, requester: FocusRequester, on
             .semantics { role = Role.Tab; contentDescription = label }
             .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onSelect(); true } else false }
             .focusable()
-            .drawBehind {
-                if (focused) drawCircle(
-                    Brush.radialGradient(
-                        0f to Color.White.copy(alpha = 0.20f), 0.55f to c.accent.copy(alpha = 0.16f), 1f to Color.Transparent,
-                        center = center, radius = size.width * 0.75f,
-                    ),
-                    radius = size.width * 0.75f,
-                )
-            }
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center,
+            .then(if (active || focused) Modifier.shadow(if (focused) 16.dp else 10.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
+            .background(fill, Dimens.pillShape)
+            .border(1.dp, edge, Dimens.pillShape)
+            .padding(horizontal = 13.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label, style = Vyrk.type.titleM, color = if (focused || active) c.text else c.textSecondary, maxLines = 1)
-            Spacer(Modifier.height(4.dp))
-            Box(Modifier.width(if (focused || active) 18.dp else 0.dp).height(2.dp).background(if (focused) c.accent else c.text.copy(alpha = 0.7f), RoundedCornerShape(1.dp)))
-        }
+        Icon(icon, null, Modifier.size(15.dp), tint = ink)
+        Text(label, style = Vyrk.type.titleS, color = ink, maxLines = 1)
     }
 }
 
+/** Compact search field in the top bar; OK opens Search. */
 @Composable
-private fun NavIcon(icon: Int, desc: String, active: Boolean, requester: FocusRequester, trace: String, onSelect: () -> Unit) {
+private fun SearchPill(active: Boolean, requester: FocusRequester, modifier: Modifier, onSelect: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val c = Vyrk.colors
-    Box(
-        Modifier.size(38.dp).focusRequester(requester)
+    val desc = str(R.string.search)
+    Row(
+        modifier.height(36.dp)
+            .focusRequester(requester)
             .onFocusChanged { focused = it.isFocused }
-            .traceFocus(trace)
+            .traceFocus("nav:search")
             .semantics { contentDescription = desc; role = Role.Button }
             .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onSelect(); true } else false }
             .focusable()
-            .drawBehind {
-                if (focused) drawCircle(Brush.radialGradient(0f to Color.White.copy(alpha = 0.2f), 0.6f to c.accent.copy(alpha = 0.16f), 1f to Color.Transparent))
-                if (active) drawLine(c.accent, Offset(size.width * 0.3f, size.height - 1f), Offset(size.width * 0.7f, size.height - 1f), 3f)
-            },
-        contentAlignment = Alignment.Center,
-    ) { Icon(icon, null, Modifier.size(18.dp), tint = if (focused || active) c.text else c.textSecondary) }
+            .then(if (focused) Modifier.shadow(14.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
+            .background(if (focused) c.text else c.raised.copy(alpha = 0.55f), Dimens.pillShape)
+            .border(1.dp, if (active && !focused) c.accent.copy(alpha = 0.7f) else c.glassEdge, Dimens.pillShape)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(R.drawable.ic_search, null, Modifier.size(15.dp), tint = if (focused) c.background else c.textSecondary)
+        Text(str(R.string.search), style = Vyrk.type.labelL, color = if (focused) c.background else c.textMuted, maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+    }
 }
 
+/** Avatar with a chevron; OK opens the profile menu. Ringed while Settings or Profiles is open. */
 @Composable
 private fun NavAvatar(session: ProfileSession, active: Boolean, requester: FocusRequester, onSelect: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val c = Vyrk.colors
-    Box(
-        Modifier.size(38.dp).focusRequester(requester)
+    Row(
+        Modifier.height(38.dp)
+            .focusRequester(requester)
             .onFocusChanged { focused = it.isFocused }
             .traceFocus("nav:profile")
             .semantics { contentDescription = session.profile.name; role = Role.Button }
             .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onSelect(); true } else false }
             .focusable()
-            .drawBehind { if (focused || active) drawCircle(c.accent.copy(alpha = if (focused) 0.6f else 0.3f), radius = size.minDimension / 2f) },
-        contentAlignment = Alignment.Center,
-    ) { ProfileAvatar(session.profile, 28.dp) }
+            .then(if (focused) Modifier.shadow(14.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
+            .background(if (focused) c.text else Color.Transparent, Dimens.pillShape)
+            .border(1.dp, when { focused -> c.text; active -> c.accent.copy(alpha = 0.7f); else -> Color.Transparent }, Dimens.pillShape)
+            .padding(start = 4.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        ProfileAvatar(session.profile, 30.dp)
+        Icon(R.drawable.ic_chevron_down, null, Modifier.size(14.dp), tint = if (focused) c.background else c.textSecondary)
+    }
 }
 
 private fun Tab.isCatalogue() = this == Tab.HOME || this == Tab.MOVIES || this == Tab.SERIES || this == Tab.ANIME || this == Tab.LIVE

@@ -2,6 +2,15 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- New look: deep navy with soft teal and violet light, frosted glass panels, thin edges and a brighter frost accent.
+- Top bar: tabs have icons, and the open tab is an accent pill. Search is a compact field. Settings moved into the menu under your avatar, with Switch profile.
+- Featured hero: Add to library and More info buttons next to Watch now, and arrows beside the position dots. Left and Right on Watch now no longer change the title; use the arrows.
+- Continue Watching cards are landscape: the title's backdrop and logo, a play button, a progress bar, the episode and the time left, and a tick on watched titles.
+- Settings: a glass sidebar with an icon for each group, a header for the open group, and compact rows with a short description each. Short choices are segmented controls, switches are On/Off pills, hidden tabs are tick boxes and the accent colour is a row of swatches.
+- Reduce motion also stops the card zoom and the artwork cross-fades.
+
 ## v0.1.5
 
 - Top 10 numbers redrawn: each sits in a box as tall as the poster, cut off where the poster begins, and fades to clear towards it; the numbers get fainter down the ranks.

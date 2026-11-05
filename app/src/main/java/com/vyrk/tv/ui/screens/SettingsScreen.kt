@@ -1,5 +1,10 @@
 package com.vyrk.tv.ui.screens
 
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -70,6 +75,15 @@ import com.vyrk.tv.ui.Screen
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.VyrkButton
 import com.vyrk.tv.ui.components.VyrkChip
+import androidx.compose.foundation.layout.size
+import com.vyrk.tv.ui.components.glassPanel
+import com.vyrk.tv.ui.components.ColorSwatch
+import com.vyrk.tv.ui.components.CheckChip
+import com.vyrk.tv.ui.components.SegmentedControl
+import com.vyrk.tv.ui.components.OnOffControl
+import com.vyrk.tv.ui.components.ColumnDivider
+import com.vyrk.tv.ui.components.RowDivider
+import com.vyrk.tv.ui.components.SettingRow
 import com.vyrk.tv.ui.components.WrapRow
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.AccentChoice
@@ -78,10 +92,15 @@ import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
 
-private enum class Group(val title: Int) {
-    PROFILE(R.string.settings_profile), STREAMS(R.string.settings_streams), PICTURE(R.string.settings_picture),
-    LANGUAGES(R.string.settings_languages), SUBTITLES(R.string.settings_subtitles), PREVIEWS(R.string.settings_previews),
-    ADDONS(R.string.settings_addons), ABOUT(R.string.settings_about),
+private enum class Group(val title: Int, val icon: Int, val subtitle: Int) {
+    PROFILE(R.string.settings_profile, R.drawable.ic_profile, R.string.settings_profile_sub),
+    STREAMS(R.string.settings_streams, R.drawable.ic_live, R.string.settings_streams_sub),
+    PICTURE(R.string.settings_picture, R.drawable.ic_display, R.string.settings_picture_sub),
+    LANGUAGES(R.string.settings_languages, R.drawable.ic_globe, R.string.settings_languages_sub),
+    SUBTITLES(R.string.settings_subtitles, R.drawable.ic_subtitles, R.string.settings_subtitles_sub),
+    PREVIEWS(R.string.settings_previews, R.drawable.ic_preview, R.string.settings_previews_sub),
+    ADDONS(R.string.settings_addons, R.drawable.ic_puzzle, R.string.settings_addons_sub),
+    ABOUT(R.string.settings_about, R.drawable.ic_info, R.string.settings_about_sub),
 }
 
 @Composable
@@ -95,22 +114,30 @@ fun SettingsScreen(session: ProfileSession) {
     var typing by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(group) { typing = null }
     val c = Vyrk.colors
-    // Not clipped: a focused chip's zoom and glow may reach past the panel edge.
-    val glass = Modifier.background(c.glass, PANEL_SHAPE).border(1.dp, c.glassEdge, PANEL_SHAPE)
     Row(Modifier.fillMaxSize().padding(horizontal = Dimens.screenMargin, vertical = 12.dp)) {
-        Column(Modifier.width(230.dp).then(glass).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.width(222.dp).glassPanel(PANEL_SHAPE).padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(Modifier.padding(start = 8.dp, top = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                com.vyrk.tv.ui.components.Icon(R.drawable.ic_cog, null, Modifier.size(18.dp), tint = c.text)
+                Spacer(Modifier.width(10.dp))
+                Text(str(R.string.settings), style = Vyrk.type.headlineS, color = c.text)
+            }
             Group.entries.forEach { g ->
-                VyrkChip(str(g.title), group == g, { group = g },
-                    Modifier.fillMaxWidth()
+                SidebarEntry(g, selected = group == g, onClick = { group = g },
+                    modifier = Modifier
                         .focusRequester(groupReqs.getValue(g))
                         .onFocusChanged { if (it.isFocused) group = g }
-                        // Right enters the page at its top, not at whichever setting is level with this entry.
+                        // Right enters the page at its top row, not at whichever setting is level with this
+                        // entry, nor at the left-most option (controls sit on the right, so Profile's first
+                        // row, Default tab, is further right than Hidden tabs below it).
+                        .onPreviewKeyEvent { e ->
+                            if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionRight) { runCatching { contentReq.requestFocus(FocusDirection.Down) }; true } else false
+                        }
                         .focusProperties { right = contentReq }
                         .traceFocus("settings:${g.name.lowercase()}"))
             }
         }
         Spacer(Modifier.width(20.dp))
-        Box(Modifier.weight(1f).fillMaxHeight().then(glass).padding(22.dp)
+        Box(Modifier.weight(1f).fillMaxHeight().glassPanel(PANEL_SHAPE).padding(start = 22.dp, end = 22.dp, top = 16.dp)
             // Focus search would pick the sidebar entry level with the focused setting, and the
             // page follows sidebar focus, so Left from a lower setting used to open another group.
             .focusProperties {
@@ -125,7 +152,9 @@ fun SettingsScreen(session: ProfileSession) {
             }
             .focusGroup()
         ) {
-            LazyColumn(Modifier.focusRequester(contentReq).focusGroup(), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 60.dp)) {
+            androidx.compose.runtime.CompositionLocalProvider(LocalGroupReq provides groupReqs.getValue(group)) {
+            LazyColumn(Modifier.focusRequester(contentReq).focusGroup(), verticalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(bottom = 60.dp)) {
+                item(key = "header-$group") { GroupHeader(group) }
                 if (group == Group.ADDONS) {
                     item(key = "addon-actions") { AddonActions(session, typing) { typing = it } }
                     itemsIndexed(addons, key = { _, d -> "addon:" + d.manifest.id }) { i, d -> AddonCard(session, d, i, addons.lastIndex) }
@@ -134,53 +163,124 @@ fun SettingsScreen(session: ProfileSession) {
                     item(key = group) { GroupContent(session, group) }
                 }
             }
+            }
         }
     }
+}
+
+/** The open group's sidebar entry, for rows to return to on Left. */
+private val LocalGroupReq = androidx.compose.runtime.staticCompositionLocalOf<FocusRequester?> { null }
+
+/**
+ * A settings row is its own focus group: Left moves between its options, and Left from its first
+ * option returns to the group's sidebar entry. Controls sit on the right, so plain focus search
+ * would find an option further left in a row above (Left from a switch landed on Interface size).
+ */
+@Composable
+private fun Modifier.leftToSidebar(): Modifier {
+    val req = LocalGroupReq.current ?: return this
+    return this
+        .focusProperties { onExit = { if (requestedFocusDirection == FocusDirection.Left) runCatching { req.requestFocus() } } }
+        .focusGroup()
 }
 
 private val PANEL_SHAPE = RoundedCornerShape(22.dp)
 
 /**
- * Behind Settings: the artwork last featured on a catalogue page, decoded tiny and stretched so it
- * is soft on every TV, blurred further on Android 12+, under a dark fade that keeps text readable.
- * Before any artwork has loaded, a faint accent glow stands in for it.
+ * Behind Settings: the ambient teal/violet light, with the artwork last featured on a catalogue page
+ * faint over it, decoded tiny and stretched so it is soft on every TV, blurred further on Android 12+,
+ * under a light fade that keeps text readable.
  */
 @Composable
 fun SettingsBackdrop(url: String?) {
     val c = Vyrk.colors
-    Box(Modifier.fillMaxSize().background(c.background)) {
+    Box(Modifier.fillMaxSize()) {
+        com.vyrk.tv.ui.components.AmbientBackground()
         if (url != null) {
             val ctx = LocalContext.current
             val req = remember(url) { ImageRequest.Builder(ctx).data(url).size(Size(64, 36)).build() }
-            AsyncImage(req, null, contentScale = ContentScale.Crop,
+            AsyncImage(req, null, contentScale = ContentScale.Crop, alpha = 0.32f,
                 modifier = Modifier.fillMaxSize().then(if (Build.VERSION.SDK_INT >= 31) Modifier.blur(36.dp) else Modifier))
-        } else {
-            Box(Modifier.fillMaxSize().background(Brush.radialGradient(0f to c.accent.copy(alpha = 0.16f), 1f to Color.Transparent)))
         }
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.45f to c.shade.copy(alpha = 0.58f), 1f to c.shade.copy(alpha = 0.42f))))
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.55f), 0.5f to c.shade.copy(alpha = 0.30f), 1f to c.shade.copy(alpha = 0.15f))))
     }
 }
 
 @Composable
-private fun Setting(label: String, hint: String? = null, content: @Composable () -> Unit) {
-    Column(Modifier.padding(bottom = 14.dp)) {
-        Text(label, style = Vyrk.type.titleM, color = Vyrk.colors.text)
-        if (hint != null) Text(hint, style = Vyrk.type.bodyS, color = Vyrk.colors.textMuted)
-        Spacer(Modifier.height(8.dp))
-        WrapRow(spacing = 6.dp) { content() }
-    }
+private fun Setting(label: String, hint: String? = null, icon: Int? = null, content: @Composable () -> Unit) {
+    SettingRow(label, hint, Modifier.leftToSidebar(), icon = icon, stacked = true) { content() }
+    RowDivider()
 }
 
 @Composable
-private fun Toggle(label: String, value: Boolean, trace: String, hint: String? = null, onChange: (Boolean) -> Unit) =
-    Setting(label, hint) {
-        VyrkChip(str(R.string.on), value, { onChange(true) }, Modifier.traceFocus("$trace:on"))
-        VyrkChip(str(R.string.off), !value, { onChange(false) }, Modifier.traceFocus("$trace:off"))
-    }
+private fun Toggle(label: String, value: Boolean, trace: String, hint: String? = null, icon: Int? = null, divider: Boolean = true, ownGroup: Boolean = true, onChange: (Boolean) -> Unit) {
+    SettingRow(label, hint, if (ownGroup) Modifier.leftToSidebar() else Modifier, icon = icon) { OnOffControl(value, trace, str(R.string.on), str(R.string.off), onChange) }
+    if (divider) RowDivider()
+}
 
+/** Short option lists are a segmented control beside the name; long ones wrap as chips underneath. */
 @Composable
-private fun <T> Choice(label: String, options: List<Pair<T, String>>, value: T, trace: String, hint: String? = null, onChange: (T) -> Unit) =
-    Setting(label, hint) { options.forEachIndexed { i, (v, l) -> VyrkChip(l, v == value, { onChange(v) }, Modifier.traceFocus("$trace:$i")) } }
+private fun <T> Choice(label: String, options: List<Pair<T, String>>, value: T, trace: String, hint: String? = null, icon: Int? = null, optionIcons: List<Int?> = emptyList(), onChange: (T) -> Unit) {
+    val compact = options.size <= 4 && options.sumOf { it.second.length } <= 30
+    if (compact) {
+        SettingRow(label, hint, Modifier.leftToSidebar(), icon = icon) {
+            SegmentedControl(options.map { it.second }, options.indexOfFirst { it.first == value }, options.indices.map { "$trace:$it" }, { onChange(options[it].first) }, icons = optionIcons)
+        }
+    } else {
+        SettingRow(label, hint, Modifier.leftToSidebar(), icon = icon, stacked = true) {
+            options.forEachIndexed { i, (v, l) -> VyrkChip(l, v == value, { onChange(v) }, Modifier.traceFocus("$trace:$i")) }
+        }
+    }
+    RowDivider()
+}
+
+/** A sidebar entry: icon and name; the open group is tinted with the accent, the focused one is white. */
+@Composable
+private fun SidebarEntry(g: Group, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val c = Vyrk.colors
+    androidx.tv.material3.Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().height(36.dp),
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
+            containerColor = Color.Transparent, contentColor = if (selected) c.text else c.textSecondary,
+            focusedContainerColor = c.text, focusedContentColor = c.background,
+        ),
+        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.03f),
+        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
+    ) {
+        Row(
+            Modifier.fillMaxSize()
+                .then(if (selected) Modifier.background(Brush.horizontalGradient(listOf(c.accent.copy(alpha = 0.34f), c.accent.copy(alpha = 0.10f))), RoundedCornerShape(12.dp))
+                    .border(1.dp, c.accent.copy(alpha = 0.45f), RoundedCornerShape(12.dp)) else Modifier)
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            com.vyrk.tv.ui.components.Icon(g.icon, null, Modifier.size(16.dp), tint = androidx.tv.material3.LocalContentColor.current)
+            Text(str(g.title), style = Vyrk.type.labelL, maxLines = 1)
+        }
+    }
+}
+
+/** Page header: the group's icon in an accent badge, its name and what it covers. */
+@Composable
+private fun GroupHeader(g: Group) {
+    val c = Vyrk.colors
+    Column {
+        Row(Modifier.padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(32.dp).background(c.accent.copy(alpha = 0.16f), RoundedCornerShape(10.dp)).border(1.dp, c.accent.copy(alpha = 0.4f), RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
+                com.vyrk.tv.ui.components.Icon(g.icon, null, Modifier.size(17.dp), tint = c.accent)
+            }
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(str(g.title), style = Vyrk.type.headlineS, color = c.text)
+                Text(str(g.subtitle), style = Vyrk.type.labelM, color = c.textMuted, maxLines = 1)
+            }
+        }
+        RowDivider()
+    }
+}
 
 private val LANG_CHOICES = listOf("eng", "spa", "por", "fre", "ger", "ita", "hin", "jpn", "kor")
 
@@ -197,18 +297,30 @@ private fun GroupContent(session: ProfileSession, group: Group) {
     Column {
         when (group) {
             Group.PROFILE -> {
-                Choice(str(R.string.default_tab), listOf(Tab.HOME, Tab.MOVIES, Tab.SERIES, Tab.LIBRARY).map { it.key to tabLabel(it) }, s.defaultTab, "set:default_tab") { v -> upd { it.copy(defaultTab = v) } }
-                Setting(str(R.string.hidden_tabs)) {
+                val defaultTabs = listOf(Tab.HOME, Tab.MOVIES, Tab.SERIES, Tab.LIBRARY)
+                Choice(str(R.string.default_tab), defaultTabs.map { it.key to tabLabel(it) }, s.defaultTab, "set:default_tab", str(R.string.default_tab_desc), R.drawable.ic_home, defaultTabs.map { tabIcon(it) }) { v -> upd { it.copy(defaultTab = v) } }
+                SettingRow(str(R.string.hidden_tabs), str(R.string.hidden_tabs_desc), Modifier.leftToSidebar(), icon = R.drawable.ic_eye_off, stacked = true) {
                     listOf(Tab.MOVIES, Tab.SERIES, Tab.ANIME, Tab.LIVE, Tab.LIBRARY).forEach { t ->
-                        VyrkChip(tabLabel(t), t.key in s.hiddenTabs, { upd { it.copy(hiddenTabs = if (t.key in it.hiddenTabs) it.hiddenTabs - t.key else it.hiddenTabs + t.key) } }, Modifier.traceFocus("set:hide_tab:${t.key}"))
+                        CheckChip(tabLabel(t), t.key in s.hiddenTabs, { upd { it.copy(hiddenTabs = if (t.key in it.hiddenTabs) it.hiddenTabs - t.key else it.hiddenTabs + t.key) } }, "set:hide_tab:${t.key}")
                     }
                 }
-                Toggle(str(R.string.featured_hero), s.heroEnabled, "set:hero") { v -> upd { it.copy(heroEnabled = v) } }
-                Toggle(str(R.string.hero_rotation), s.heroRotation, "set:hero_rotation") { v -> upd { it.copy(heroRotation = v) } }
-                Choice(str(R.string.poster_size), listOf(104 to str(R.string.size_small), 118 to str(R.string.size_medium), 136 to str(R.string.size_large)), s.posterSize, "set:poster") { v -> upd { it.copy(posterSize = v) } }
-                Choice(str(R.string.accent_colour), AccentChoice.entries.map { it.name to accentName(it) }, s.accent, "set:accent") { v -> upd { it.copy(accent = v) } }
-                Toggle(str(R.string.reduce_motion), s.reduceMotion, "set:reduce_motion") { v -> upd { it.copy(reduceMotion = v) } }
-                Toggle(str(R.string.blur_unwatched), s.blurUnwatched, "set:blur") { v -> upd { it.copy(blurUnwatched = v) } }
+                RowDivider()
+                // Two short switches side by side, as in the reference layout.
+                Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min).leftToSidebar()) {
+                    Box(Modifier.weight(1f)) { Toggle(str(R.string.featured_hero), s.heroEnabled, "set:hero", str(R.string.featured_hero_desc), R.drawable.ic_image, divider = false, ownGroup = false) { v -> upd { it.copy(heroEnabled = v) } } }
+                    ColumnDivider(Modifier.padding(horizontal = 14.dp, vertical = 10.dp))
+                    Box(Modifier.weight(1f)) { Toggle(str(R.string.hero_rotation), s.heroRotation, "set:hero_rotation", str(R.string.hero_rotation_desc), R.drawable.ic_refresh, divider = false, ownGroup = false) { v -> upd { it.copy(heroRotation = v) } } }
+                }
+                RowDivider()
+                Choice(str(R.string.poster_size), listOf(104 to str(R.string.size_small), 118 to str(R.string.size_medium), 136 to str(R.string.size_large)), s.posterSize, "set:poster", str(R.string.poster_size_desc), R.drawable.ic_crop) { v -> upd { it.copy(posterSize = v) } }
+                SettingRow(str(R.string.accent_colour), str(R.string.accent_desc), Modifier.leftToSidebar(), icon = R.drawable.ic_drop) {
+                    AccentChoice.entries.forEachIndexed { i, a ->
+                        ColorSwatch(a.color, a.onColor, accentName(a), s.accent == a.name, { upd { it.copy(accent = a.name) } }, "set:accent:$i")
+                    }
+                }
+                RowDivider()
+                Toggle(str(R.string.reduce_motion), s.reduceMotion, "set:reduce_motion", str(R.string.reduce_motion_desc), R.drawable.ic_motion) { v -> upd { it.copy(reduceMotion = v) } }
+                Toggle(str(R.string.blur_unwatched), s.blurUnwatched, "set:blur", str(R.string.blur_unwatched_desc), R.drawable.ic_eye_off) { v -> upd { it.copy(blurUnwatched = v) } }
                 Setting(str(R.string.hidden_rows), if (s.hiddenRows.isEmpty()) str(R.string.none) else null) {
                     if (s.hiddenRows.isNotEmpty()) VyrkButton(str(R.string.restore_rows, s.hiddenRows.size), onClick = { upd { it.copy(hiddenRows = emptySet()) } }, modifier = Modifier.traceFocus("set:restore_rows"))
                 }

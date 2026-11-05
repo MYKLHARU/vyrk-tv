@@ -87,7 +87,7 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
         s.scope.launch { handleLink(app, s, pending, external) }
     }
 
-    VyrkTheme(accent) {
+    VyrkTheme(accent, reduceMotion = settings?.reduceMotion == true) {
         FittedCanvas(size) {
             androidx.compose.runtime.CompositionLocalProvider(
                 LocalApp provides app, LocalGraph provides graph, LocalSession provides session, LocalActivity provides activity,

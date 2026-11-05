@@ -23,9 +23,9 @@ import com.vyrk.tv.R
  */
 @Immutable
 data class VyrkColors(
-    val background: Color = Color(0xFF0B141D),
-    val panel: Color = Color(0xFF13202B),
-    val raised: Color = Color(0xFF1B2B38),
+    val background: Color = Color(0xFF070E17),
+    val panel: Color = Color(0xFF0F1A25),
+    val raised: Color = Color(0xFF172533),
     val border: Color = Color.White.copy(alpha = 0.20f),
     val divider: Color = Color.White.copy(alpha = 0.12f),
     val text: Color = Color(0xFFF4F6FA),
@@ -38,16 +38,19 @@ data class VyrkColors(
     val danger: Color = Color(0xFFFF7A7A),
     val scrim: Color = Color(0xFF07080B).copy(alpha = 0.80f),
     /** Black-navy fade over artwork (left and top of the hero); darker and less blue than [background]. */
-    val shade: Color = Color(0xFF060B10),
+    val shade: Color = Color(0xFF04080D),
     /** Translucent panel over blurred artwork (Settings); the artwork's colour shows through. */
-    val glass: Color = Color(0xFF1B2B38).copy(alpha = 0.52f),
+    val glass: Color = Color(0xFF0E1B27).copy(alpha = 0.66f),
     /** Hairline on [glass] panels so their edge reads over bright artwork. */
-    val glassEdge: Color = Color.White.copy(alpha = 0.10f),
+    val glassEdge: Color = Color.White.copy(alpha = 0.09f),
+    /** Ambient light behind panels: a cool teal from one side, a soft violet from the other. */
+    val ambientTeal: Color = Color(0xFF14B8C8),
+    val ambientViolet: Color = Color(0xFF6D4CFF),
 )
 
 /** Accent choices offered in Settings. Frost is VYRK's own; the rest follow the spec. */
 enum class AccentChoice(val color: Color, val onColor: Color) {
-    FROST(Color(0xFFA9E1F3), Color(0xFF0B141D)),
+    FROST(Color(0xFF5AD8EE), Color(0xFF041219)),
     BLUE(Color(0xFF6EA8FF), Color(0xFF0B1220)),
     TEAL(Color(0xFF7FD1C7), Color(0xFF0B1A18)),
     VIOLET(Color(0xFFB79CFF), Color(0xFF150F24)),
@@ -103,7 +106,40 @@ object Dimens {
     val chipShape = RoundedCornerShape(10.dp)
     val posterShape = RoundedCornerShape(10.dp)
     val glowRadius = 14.dp
+
+    // Design tokens for the redesigned surfaces (nav, hero, cards, Settings).
+    val radiusS = 10.dp
+    val radiusM = 14.dp
+    val radiusL = 20.dp
+    val radiusXL = 24.dp
+    val pillShape = RoundedCornerShape(50)
+    val space1 = 4.dp
+    val space2 = 8.dp
+    val space3 = 12.dp
+    val space4 = 16.dp
+    val space5 = 24.dp
+    /** Continue Watching cards are landscape: this wide, 16:9. */
+    val landscapeCardWidth = 172.dp
 }
+
+/** Animation durations (ms). Animations use [motionSpec] and card zoom uses [focusZoom], which honour Reduce motion. */
+object Motion {
+    const val FAST = 140
+    const val STANDARD = 240
+    const val SLOW = 420
+}
+
+/** True when the profile asked for Reduce motion: animations snap instead of moving. */
+val LocalReduceMotion = staticCompositionLocalOf { false }
+
+@Composable
+fun <T> motionSpec(durationMs: Int = Motion.STANDARD): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+    if (LocalReduceMotion.current) androidx.compose.animation.core.snap()
+    else androidx.compose.animation.core.tween(durationMs, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+
+/** Focus zoom for cards; none with Reduce motion (the accent edge still marks focus). */
+@Composable
+fun focusZoom(scale: Float): Float = if (LocalReduceMotion.current) 1f else scale
 
 val LocalVyrkColors = staticCompositionLocalOf { VyrkColors() }
 val LocalVyrkType = staticCompositionLocalOf { VyrkType() }
@@ -114,7 +150,7 @@ object Vyrk {
 }
 
 @Composable
-fun VyrkTheme(accent: AccentChoice = AccentChoice.FROST, content: @Composable () -> Unit) {
+fun VyrkTheme(accent: AccentChoice = AccentChoice.FROST, reduceMotion: Boolean = false, content: @Composable () -> Unit) {
     val colors = VyrkColors(accent = accent.color, onAccent = accent.onColor)
     val scheme = darkColorScheme(
         primary = colors.accent,
@@ -128,7 +164,7 @@ fun VyrkTheme(accent: AccentChoice = AccentChoice.FROST, content: @Composable ()
         border = colors.border,
         error = colors.danger,
     )
-    CompositionLocalProvider(LocalVyrkColors provides colors, LocalVyrkType provides VyrkType()) {
+    CompositionLocalProvider(LocalVyrkColors provides colors, LocalVyrkType provides VyrkType(), LocalReduceMotion provides reduceMotion) {
         MaterialTheme(colorScheme = scheme, content = content)
     }
 }

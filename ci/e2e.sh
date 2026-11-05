@@ -183,10 +183,21 @@ shot search-matrix
 key KEYCODE_BACK 1.5 "leave search"
 
 # ---------------------------------------------------------------- every settings group
-until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
+# Settings is in the avatar's profile menu (no gear in the bar).
+until_focus KEYCODE_DPAD_RIGHT '^nav:profile$' 6
+key KEYCODE_DPAD_CENTER 1.6 "open the profile menu"
+expect '^profile_menu:profiles$' "profile menu opens on Switch profile"
+shot profile-menu
+key KEYCODE_DPAD_DOWN 1 "to Settings"
+expect '^profile_menu:settings$' "profile menu lists Settings"
 key KEYCODE_DPAD_CENTER 2 "open settings"
 expect '^settings:profile$' "settings opens on the first group"
 shot settings-profile
+# Controls sit on the right: Right must still enter at the top row (Default tab), not at Hidden tabs.
+key KEYCODE_DPAD_RIGHT 1.2 "into Profile & appearance"
+expect '^set:default_tab:0$' "Right enters Profile & appearance at its first row"
+key KEYCODE_DPAD_LEFT 1.2 "back to the groups"
+expect '^settings:profile$' "Left from the first row returns to its group"
 for g in streams picture languages subtitles previews addons about; do
   key KEYCODE_DPAD_DOWN 1.2 "group $g"
   expect "^settings:$g\$" "settings group $g"

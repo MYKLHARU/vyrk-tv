@@ -1,5 +1,8 @@
 package com.vyrk.tv.ui.browse
 
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.focusProperties
+import com.vyrk.tv.ui.components.glassPanel
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +30,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.vyrk.tv.ui.theme.motionSpec
+import com.vyrk.tv.ui.theme.Motion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -76,7 +83,7 @@ fun Backdrop(urls: List<String>, modifier: Modifier = Modifier) {
     var attempt by remember(urls) { mutableIntStateOf(0) }
     val url = urls.getOrNull(attempt)
     Box(modifier) {
-        Crossfade(url, label = "backdrop") { u ->
+        Crossfade(url, animationSpec = com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.SLOW), label = "backdrop") { u ->
             if (u != null) Box(Modifier.fillMaxSize()) {
                 AsyncImage(
                     u, null, contentScale = ContentScale.Crop, alignment = Alignment.Center,
@@ -179,17 +186,22 @@ fun MetaFacts(meta: MetaPreview, full: MetaItem?, reserve: Boolean = false) {
     }
 }
 
-/** Starring and Director lines. With [reserve], both lines keep their height while empty. */
+/** Starring and Director lines, with small icons in the hero. With [reserve], both keep their height while empty. */
 @Composable
-fun CreditLines(full: MetaItem?, meta: MetaPreview, reserve: Boolean = false) {
+fun CreditLines(full: MetaItem?, meta: MetaPreview, reserve: Boolean = false, icons: Boolean = false) {
     val cast = (full?.castNames ?: meta.cast).take(5)
     val director = (full?.directorNames ?: meta.director).take(2)
     val style = Vyrk.type.bodyS
     val color = Vyrk.colors.textSecondary
-    if (cast.isNotEmpty()) Text(str(R.string.starring, cast.joinToString(", ")), style = style, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    else if (reserve) Text(" ", style = style)
-    if (director.isNotEmpty()) Text(str(R.string.director_line, director.joinToString(", ")), style = style, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    else if (reserve) Text(" ", style = style)
+    @Composable fun line(icon: Int, text: String?) {
+        if (text == null && !reserve) return
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icons) com.vyrk.tv.ui.components.Icon(icon, null, Modifier.padding(end = 7.dp).size(13.dp), tint = Vyrk.colors.textMuted.copy(alpha = if (text == null) 0f else 1f))
+            Text(text ?: " ", style = style, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+    line(R.drawable.ic_people, cast.takeIf { it.isNotEmpty() }?.let { str(R.string.starring, it.joinToString(", ")) })
+    line(R.drawable.ic_clapper, director.takeIf { it.isNotEmpty() }?.let { str(R.string.director_line, it.joinToString(", ")) })
 }
 
 /**
@@ -208,16 +220,24 @@ fun Hero(
     art: TitleArt,
     height: Dp,
     hasProgress: Boolean,
+    inLibrary: Boolean,
     watchReq: FocusRequester,
     onWatch: () -> Unit,
     onInfo: () -> Unit,
+    onToggleLibrary: () -> Unit,
     onPrev: () -> Unit,
     onNext: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
 ) {
     val meta = items.getOrNull(index) ?: return
     val c = Vyrk.colors
-    Box(Modifier.fillMaxWidth().height(height).onFocusChanged { onFocusChanged(it.hasFocus) }) {
+    Box(
+        Modifier.fillMaxWidth().height(height).onFocusChanged { onFocusChanged(it.hasFocus) }
+            // Coming in from the tabs or the rows always lands on Watch now, not on whichever
+            // button (library, info, arrows) happens to sit nearest.
+            .focusProperties { onEnter = { runCatching { watchReq.requestFocus() } } }
+            .focusGroup()
+    ) {
         // Bottom-anchored. Every line below the logo keeps a fixed height, so the logo's share (all
         // that's left) never changes and nothing moves when the title's details arrive.
         Column(
@@ -225,39 +245,70 @@ fun Hero(
             verticalArrangement = Arrangement.Bottom,
         ) {
             HeroLogo(meta.id, full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f))
-            Box(Modifier.height(14.dp))
+            Box(Modifier.height(12.dp))
             MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(10.dp))
-            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyM, color = c.textSecondary, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = HERO_TEXT_W))
-            Box(Modifier.height(6.dp))
-            Column(Modifier.widthIn(max = HERO_TEXT_W)) { CreditLines(full, meta, reserve = true) }
-            Box(Modifier.height(18.dp))
+            Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyM, color = c.text.copy(alpha = 0.88f), minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = HERO_TEXT_W))
+            Box(Modifier.height(8.dp))
+            Column(Modifier.widthIn(max = HERO_TEXT_W), verticalArrangement = Arrangement.spacedBy(2.dp)) { CreditLines(full, meta, reserve = true, icons = true) }
+            Box(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 VyrkButton(
                     if (hasProgress) str(R.string.resume) else str(R.string.watch_now),
                     onClick = onWatch, onLongClick = onInfo, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
-                    height = 44.dp, horizontalPadding = 22.dp, glow = true,
+                    height = 42.dp, horizontalPadding = 22.dp, glow = true, shape = Dimens.pillShape,
                     modifier = Modifier.focusRequester(watchReq).traceFocus("hero:watch")
-                        .onPreviewKeyEvent { e ->
-                            when {
-                                e.type == KeyEventType.KeyUp && e.key == Key.Menu -> { onInfo(); true }
-                                // Left and Right on the only button move between featured titles.
-                                e.type == KeyEventType.KeyDown && e.key == Key.DirectionLeft && items.size > 1 -> { onPrev(); true }
-                                e.type == KeyEventType.KeyDown && e.key == Key.DirectionRight && items.size > 1 -> { onNext(); true }
-                                else -> false
-                            }
-                        },
+                        .onPreviewKeyEvent { e -> if (e.type == KeyEventType.KeyUp && e.key == Key.Menu) { onInfo(); true } else false },
                 )
-                if (items.size > 1) {
-                    // Position dots only.
-                    Row(Modifier.padding(start = 14.dp), horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
-                        items.indices.forEach { i ->
-                            val on = i == index
-                            Box(Modifier.size(if (on) 22.dp else 8.dp, 8.dp).background(if (on) c.accent else c.text.copy(alpha = 0.35f), RoundedCornerShape(4.dp)))
-                        }
-                    }
+                VyrkButton(
+                    str(if (inLibrary) R.string.in_library else R.string.add_to_library),
+                    onClick = onToggleLibrary, icon = if (inLibrary) R.drawable.ic_check else R.drawable.ic_plus, style = ButtonStyle.OUTLINE,
+                    height = 42.dp, horizontalPadding = 18.dp, shape = Dimens.pillShape,
+                    modifier = Modifier.traceFocus("hero:library"),
+                )
+                HeroRoundButton(R.drawable.ic_info, str(R.string.more_info), "hero:info", onInfo)
+            }
+        }
+        // Carousel: previous, position, next; bottom right, level with the buttons.
+        if (items.size > 1) Row(
+            Modifier.align(Alignment.BottomEnd).padding(end = Dimens.screenMargin, bottom = 28.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            HeroRoundButton(R.drawable.ic_left, str(R.string.previous), "hero:prev", onPrev, size = 30.dp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                items.indices.forEach { i ->
+                    val on = i == index
+                    val w by androidx.compose.animation.core.animateDpAsState(if (on) 20.dp else 7.dp, motionSpec(Motion.STANDARD), label = "dot")
+                    Box(Modifier.size(w, 7.dp).background(if (on) c.accent else c.text.copy(alpha = 0.32f), RoundedCornerShape(4.dp)))
                 }
             }
+            HeroRoundButton(R.drawable.ic_right, str(R.string.next), "hero:next", onNext, size = 30.dp)
+        }
+    }
+}
+
+/** Round outlined icon button on the hero (info, carousel arrows). */
+@Composable
+private fun HeroRoundButton(icon: Int, description: String, trace: String, onClick: () -> Unit, size: Dp = 42.dp) {
+    val c = Vyrk.colors
+    androidx.tv.material3.Surface(
+        onClick = onClick,
+        modifier = Modifier.size(size).traceFocus(trace).semantics { contentDescription = description },
+        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(CircleShape),
+        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
+            containerColor = c.shade.copy(alpha = 0.35f), contentColor = c.text,
+            focusedContainerColor = c.text, focusedContentColor = c.background,
+        ),
+        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.08f, pressedScale = 0.95f),
+        border = androidx.tv.material3.ClickableSurfaceDefaults.border(
+            border = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.dp, c.text.copy(alpha = 0.38f))),
+            focusedBorder = androidx.tv.material3.Border.None,
+        ),
+        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
+    ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            com.vyrk.tv.ui.components.Icon(icon, null, Modifier.size(size * 0.45f), tint = androidx.tv.material3.LocalContentColor.current)
         }
     }
 }
@@ -291,7 +342,7 @@ fun Top10Card(onAdd: () -> Unit, onNotNow: () -> Unit, addReq: FocusRequester, o
     val c = Vyrk.colors
     Row(
         Modifier.padding(horizontal = Dimens.screenMargin).fillMaxWidth()
-            .background(Brush.horizontalGradient(listOf(c.raised, c.panel)), Dimens.panelShape)
+            .glassPanel()
             .padding(horizontal = 26.dp, vertical = 18.dp)
             .onFocusChanged { onFocus(it.hasFocus) },
         verticalAlignment = Alignment.CenterVertically,
@@ -304,8 +355,8 @@ fun Top10Card(onAdd: () -> Unit, onNotNow: () -> Unit, addReq: FocusRequester, o
             Text(str(R.string.top10_card_body), style = Vyrk.type.bodyM, color = c.textSecondary)
             Box(Modifier.height(12.dp))
             WrapRow {
-                VyrkButton(str(R.string.top10_add), onClick = onAdd, style = ButtonStyle.PRIMARY, modifier = Modifier.focusRequester(addReq).traceFocus("top10card:add"))
-                VyrkButton(str(R.string.not_now), onClick = onNotNow, modifier = Modifier.traceFocus("top10card:not_now"))
+                VyrkButton(str(R.string.top10_add), onClick = onAdd, style = ButtonStyle.PRIMARY, shape = Dimens.pillShape, modifier = Modifier.focusRequester(addReq).traceFocus("top10card:add"))
+                VyrkButton(str(R.string.not_now), onClick = onNotNow, style = ButtonStyle.OUTLINE, shape = Dimens.pillShape, modifier = Modifier.traceFocus("top10card:not_now"))
             }
         }
     }

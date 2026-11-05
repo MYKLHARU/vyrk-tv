@@ -104,7 +104,9 @@ until_focus KEYCODE_DPAD_UP '^(tab|nav):' 10
 until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8
 sleep 3
 until_focus KEYCODE_DPAD_RIGHT '^tab:library$' 8 && { sleep 3; cap library; }
-until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
+until_focus KEYCODE_DPAD_RIGHT '^nav:profile$' 6
+key KEYCODE_DPAD_CENTER 1.6 "profile menu"
+key KEYCODE_DPAD_DOWN 1 "to Settings"
 key KEYCODE_DPAD_CENTER 2
 key KEYCODE_DPAD_DOWN 1.5 "streams"
 cap settings
@@ -112,7 +114,8 @@ until_focus KEYCODE_DPAD_DOWN '^settings:addons$' 8 && { sleep 2; cap addons; }
 key KEYCODE_BACK 1.5
 until_focus KEYCODE_DPAD_UP '^(tab|nav):' 4 || true
 until_focus KEYCODE_DPAD_RIGHT '^nav:profile$' 8
-key KEYCODE_DPAD_CENTER 2
+key KEYCODE_DPAD_CENTER 1.6 "profile menu"
+key KEYCODE_DPAD_CENTER 2 "switch profile"
 cap profiles
 
 log "captures: $(ls "$OUT"/*.png | wc -l)"

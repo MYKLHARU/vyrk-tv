@@ -280,9 +280,11 @@ fun BrowsePage(
                     Hero(
                         items = heroItems, index = heroIndex.coerceAtMost(heroItems.lastIndex), full = heroFull, art = heroArt, height = heroH,
                         hasProgress = heroMeta?.let { library[it.id]?.isInContinueWatching } == true,
+                        inLibrary = heroMeta?.let { library[it.id]?.inLibrary } == true,
                         watchReq = watchReq,
                         onWatch = { heroMeta?.let { onPlay(it, null) } },
                         onInfo = { heroMeta?.let { app.push(Overlay.Info(it, null)) } },
+                        onToggleLibrary = { heroMeta?.let { m -> if (library[m.id]?.inLibrary == true) session.removeFromLibrary(m.id) else session.addToLibrary(m) } },
                         onPrev = { model.heroIndex = (heroIndex - 1 + heroItems.size) % heroItems.size },
                         onNext = { model.heroIndex = (heroIndex + 1) % heroItems.size },
                         onFocusChanged = { f ->
