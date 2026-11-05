@@ -10,7 +10,6 @@
     <string name="accent_pink">गुलाबी</string>
     <string name="accent_teal">टील</string>
     <string name="accent_violet">बैंगनी</string>
-    <string name="add_profile">प्रोफ़ाइल जोड़ें</string>
     <string name="add_to_library">लाइब्रेरी में जोड़ें</string>
     <string name="addon_refreshed">ऐड-ऑन रीफ़्रेश हुआ</string>
     <string name="addon_url">ऐड-ऑन URL</string>
@@ -40,7 +39,6 @@
     <string name="cant_open_title">VYRK इस टाइटल को सीधे नहीं खोल सकता, इसलिए इसे खोजा।</string>
     <string name="cant_play_title">यह टाइटल नहीं चल सकता</string>
     <string name="cast_and_crew">कलाकार और टीम</string>
-    <string name="change_pin">PIN बदलें</string>
     <string name="chapter_credits">क्रेडिट</string>
     <string name="chapter_intro">इंट्रो</string>
     <string name="chapter_markers_hint">टाइमलाइन पर अध्याय, इंट्रो और क्रेडिट दिखाता है।</string>
@@ -51,14 +49,12 @@
     <string name="clear_dialogue">साफ़ संवाद</string>
     <string name="clear_dialogue_hint">बातचीत समझना आसान बनाता है। केवल PCM ऑडियो, पासथ्रू के साथ कभी नहीं।</string>
     <string name="close">बंद करें</string>
-    <string name="colour">रंग</string>
     <string name="colour_frost">फ़्रॉस्ट</string>
     <string name="colour_white">सफ़ेद</string>
     <string name="colour_yellow">पीला</string>
     <string name="configure">कॉन्फ़िगर करें</string>
     <string name="configure_addon">%1$s कॉन्फ़िगर करें</string>
     <string name="configure_addon_body">इस ऐड-ऑन की सेटिंग खोलने के लिए फ़ोन से कोड स्कैन करें। नई सेटिंग इस्तेमाल करने के लिए बाद में इसे फिर से इंस्टॉल करें।</string>
-    <string name="connect_stremio">Stremio खाता जोड़ें</string>
     <string name="connecting">कनेक्ट हो रहा है</string>
     <string name="connecting_to">कनेक्ट हो रहा है · %1$s · %2$s</string>
     <string name="continue_playing">जारी रखें</string>
@@ -69,7 +65,6 @@
     <string name="default_tab">डिफ़ॉल्ट टैब</string>
     <string name="default_tab_desc">VYRK जिस टैब पर खुलता है</string>
     <string name="delay_addon_only">देरी ऐड-ऑन सबटाइटल पर लागू होती है।</string>
-    <string name="delete_profile">प्रोफ़ाइल मिटाएँ</string>
     <string name="diagnostics_copied">डायग्नोस्टिक्स कॉपी हुए</string>
     <string name="died_on">निधन %1$s</string>
     <string name="director">निर्देशक</string>
@@ -78,10 +73,8 @@
     <string name="dolby_vision_decoder">Dolby Vision डिकोडर</string>
     <string name="done">हो गया</string>
     <string name="download_install">डाउनलोड करके इंस्टॉल करें</string>
-    <string name="edit_profile">प्रोफ़ाइल बदलें</string>
     <string name="encode">एनकोड</string>
     <string name="ends_at">%1$s पर समाप्त</string>
-    <string name="enter_pin_for">%1$s का PIN डालें</string>
     <string name="excl_codec">यह टीवी वीडियो फ़ॉर्मैट डिकोड नहीं कर सकता</string>
     <string name="excl_decoder">टीवी के डिकोडर से ज़्यादा रिज़ॉल्यूशन</string>
     <string name="excl_dolby_vision">सिर्फ़ Dolby Vision, जिसे यह टीवी डिकोड नहीं करता</string>
@@ -112,7 +105,6 @@
     <string name="hide_row">यह पंक्ति छिपाएँ</string>
     <string name="hint_play_pause">चलाएँ / रोकें</string>
     <string name="hint_seek">बार पर आगे-पीछे करें</string>
-    <string name="hold_ok_to_edit">बदलने के लिए किसी प्रोफ़ाइल पर OK दबाए रखें</string>
     <string name="in_library">लाइब्रेरी में</string>
     <string name="install">इंस्टॉल करें</string>
     <string name="install_addon_title">ऐड-ऑन इंस्टॉल करें</string>
@@ -179,9 +171,6 @@
     <string name="pause">रोकें</string>
     <string name="paused">रुका हुआ</string>
     <string name="person_unavailable">इस व्यक्ति का विवरण लोड नहीं हो सका।</string>
-    <string name="pin_locked">बहुत ज़्यादा कोशिशें। %1$d सेकंड बाद फिर कोशिश करें।</string>
-    <string name="pin_rules">4 से 8 अंक इस्तेमाल करें।</string>
-    <string name="pin_wrong">गलत PIN</string>
     <string name="play">चलाएँ</string>
     <string name="play_now">अभी चलाएँ</string>
     <string name="poster_size">पोस्टर का आकार</string>
@@ -201,7 +190,6 @@
     <string name="preview_sound">प्रीव्यू की आवाज़</string>
     <string name="previews">प्रीव्यू</string>
     <string name="previous">पिछला</string>
-    <string name="profile_name_hint">प्रोफ़ाइल का नाम</string>
     <string name="rating_attribution">IMDb की रेटिंग, आपके ऐड-ऑन के ज़रिए।</string>
     <string name="ready_when_you_are">आप तैयार, तो हम तैयार</string>
     <string name="recent_searches">हाल की खोजें</string>
@@ -213,7 +201,6 @@
     <string name="remove">हटाएँ</string>
     <string name="remove_from_cw">देखना जारी रखें से हटाएँ</string>
     <string name="remove_from_library">लाइब्रेरी से हटाएँ</string>
-    <string name="remove_pin">PIN हटाएँ</string>
     <string name="removed_from_cw">%1$s को देखना जारी रखें से हटाया गया</string>
     <string name="reset">रीसेट करें</string>
     <string name="restore_rows">%1$d पंक्तियाँ वापस लाएँ</string>
@@ -221,8 +208,6 @@
     <string name="retry">फिर कोशिश करें</string>
     <string name="row_empty">यहाँ अभी कुछ नहीं है।</string>
     <string name="row_error">यह पंक्ति लोड नहीं हुई।</string>
-    <string name="save">सहेजें</string>
-    <string name="save_pin">PIN सहेजें</string>
     <string name="save_to_account">खाते में सहेजें</string>
     <string name="saved_on_device">केवल इसी डिवाइस पर सहेजा गया</string>
     <string name="saved_to_account">ऐड-ऑन आपके खाते में सहेजे गए</string>
@@ -232,7 +217,6 @@
     <string name="season_n">सीज़न %1$d</string>
     <string name="see_all">सभी देखें</string>
     <string name="session_expired">आपका Stremio सत्र समाप्त हो गया। आपका डेटा सुरक्षित है। सिंक के लिए फिर से जोड़ें।</string>
-    <string name="set_pin">PIN सेट करें</string>
     <string name="setting_chapter_markers">अध्याय चिह्न</string>
     <string name="setting_skip_intro">इंट्रो छोड़ें</string>
     <string name="settings">सेटिंग</string>
@@ -252,8 +236,6 @@
     <string name="settings_streams_sub">कौन-से स्रोत चलें और उसके बाद क्या हो</string>
     <string name="settings_subtitles">सबटाइटल</string>
     <string name="settings_subtitles_sub">सबटाइटल कब दिखें और कैसे दिखें</string>
-    <string name="share_hint">इस टीवी की दूसरी प्रोफ़ाइलें आपके स्ट्रीम ऐड-ऑन इस्तेमाल कर सकती हैं। वे URL कभी नहीं देखतीं।</string>
-    <string name="share_stream_addons">स्ट्रीम ऐड-ऑन दूसरी प्रोफ़ाइलों से शेयर करें</string>
     <string name="show_again">फिर से दिखाएँ</string>
     <string name="shows">शो</string>
     <string name="sign_in_stremio">Stremio से साइन इन करें</string>
@@ -290,7 +272,6 @@
     <string name="still_watching">क्या आप अब भी देख रहे हैं?</string>
     <string name="streams_count">स्ट्रीम %1$d</string>
     <string name="stremio_account">Stremio खाता</string>
-    <string name="stremio_connected">Stremio जुड़ा है</string>
     <string name="sub_always">हमेशा</string>
     <string name="sub_foreign">केवल विदेशी भाषा</string>
     <string name="subtitle_background">पृष्ठभूमि</string>
@@ -300,7 +281,6 @@
     <string name="subtitle_mode">मोड</string>
     <string name="subtitle_size">आकार</string>
     <string name="subtitles">सबटाइटल</string>
-    <string name="switch_profile">प्रोफ़ाइल बदलें</string>
     <string name="sync_now">अभी सिंक करें</string>
     <string name="sync_style">सिंक और स्टाइल</string>
     <string name="synced_with_account">आपके Stremio खाते से सिंक है</string>
@@ -340,12 +320,9 @@
     <string name="update_failed">अपडेट जाँच विफल: %1$s</string>
     <string name="update_source">स्रोत: %1$s</string>
     <string name="updates">अपडेट</string>
-    <string name="use_shared_addons">शेयर किए गए ऐड-ऑन इस्तेमाल करें</string>
     <string name="use_without_account">बिना खाते के इस्तेमाल करें</string>
     <string name="voice_search">आवाज़ से खोज</string>
     <string name="watch_now">अभी देखें</string>
     <string name="watched">देखा गया</string>
-    <string name="welcome_pitch">ब्राउज़ करें, चुनें, चलाएँ दबाएँ। सब कुछ रिमोट से।</string>
-    <string name="whos_watching">कौन देख रहा है?</string>
     <string name="writers">लेखक</string>
 </resources>

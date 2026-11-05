@@ -229,17 +229,18 @@ fun Hero(
     art: TitleArt,
     height: Dp,
     hasProgress: Boolean,
-    inLibrary: Boolean,
     watchReq: FocusRequester,
     onWatch: () -> Unit,
     onInfo: () -> Unit,
-    onToggleLibrary: () -> Unit,
     onPrev: () -> Unit,
     onNext: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
 ) {
     val meta = items.getOrNull(index) ?: return
     val c = Vyrk.colors
+    val carousel = items.size > 1
+    val prevReq = remember { FocusRequester() }
+    val nextReq = remember { FocusRequester() }
     Box(
         Modifier.fillMaxWidth().height(height).onFocusChanged { onFocusChanged(it.hasFocus) }
             // Coming in from the tabs or the rows always lands on Watch now, not on whichever
@@ -267,43 +268,43 @@ fun Hero(
                     onClick = onWatch, onLongClick = onInfo, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
                     height = 42.dp, horizontalPadding = 22.dp, glow = true, shape = Dimens.pillShape,
                     modifier = Modifier.focusRequester(watchReq).traceFocus("hero:watch")
+                        // Left and Right go to the arrows at the sides of the hero.
+                        .then(if (carousel) Modifier.focusProperties { left = prevReq; right = nextReq } else Modifier)
                         .onPreviewKeyEvent { e -> if (e.type == KeyEventType.KeyUp && e.key == Key.Menu) { onInfo(); true } else false },
                 )
-                VyrkButton(
-                    str(if (inLibrary) R.string.in_library else R.string.add_to_library),
-                    onClick = onToggleLibrary, icon = if (inLibrary) R.drawable.ic_check else R.drawable.ic_plus, style = ButtonStyle.OUTLINE,
-                    height = 42.dp, horizontalPadding = 18.dp, shape = Dimens.pillShape,
-                    modifier = Modifier.traceFocus("hero:library"),
-                )
-                HeroRoundButton(R.drawable.ic_info, str(R.string.more_info), "hero:info", onInfo)
             }
         }
-        // Carousel: previous, position, next; bottom right, level with the buttons.
-        if (items.size > 1) Row(
-            Modifier.align(Alignment.BottomEnd).padding(end = Dimens.screenMargin, bottom = 28.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            HeroRoundButton(R.drawable.ic_left, str(R.string.previous), "hero:prev", onPrev, size = 30.dp)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        // Carousel: an arrow at each side of the hero, and the position dots level with Watch now.
+        if (carousel) {
+            HeroRoundButton(
+                R.drawable.ic_left, str(R.string.previous), "hero:prev", onPrev, size = 36.dp,
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp).focusRequester(prevReq).focusProperties { right = watchReq },
+            )
+            HeroRoundButton(
+                R.drawable.ic_right, str(R.string.next), "hero:next", onNext, size = 36.dp,
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).focusRequester(nextReq).focusProperties { left = watchReq },
+            )
+            Row(
+                Modifier.align(Alignment.BottomEnd).padding(end = Dimens.screenMargin, bottom = 39.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
+            ) {
                 items.indices.forEach { i ->
                     val on = i == index
                     val w by androidx.compose.animation.core.animateDpAsState(if (on) 20.dp else 7.dp, motionSpec(Motion.STANDARD), label = "dot")
                     Box(Modifier.size(w, 7.dp).background(if (on) c.accent else c.text.copy(alpha = 0.32f), RoundedCornerShape(4.dp)))
                 }
             }
-            HeroRoundButton(R.drawable.ic_right, str(R.string.next), "hero:next", onNext, size = 30.dp)
         }
     }
 }
 
-/** Round outlined icon button on the hero (info, carousel arrows). */
+/** Round outlined icon button on the hero (the carousel arrows). */
 @Composable
-private fun HeroRoundButton(icon: Int, description: String, trace: String, onClick: () -> Unit, size: Dp = 42.dp) {
+private fun HeroRoundButton(icon: Int, description: String, trace: String, onClick: () -> Unit, size: Dp = 42.dp, modifier: Modifier = Modifier) {
     val c = Vyrk.colors
     androidx.tv.material3.Surface(
         onClick = onClick,
-        modifier = Modifier.size(size).traceFocus(trace).semantics { contentDescription = description },
+        modifier = modifier.size(size).traceFocus(trace).semantics { contentDescription = description },
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(CircleShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = c.shade.copy(alpha = if (size < 40.dp) 0.22f else 0.35f), contentColor = c.text,

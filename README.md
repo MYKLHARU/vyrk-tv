@@ -23,11 +23,10 @@ VYRK is a free, open-source Android TV client for Stremio add-ons. Sign in to yo
 
 | | | |
 |---|---|---|
-| ![Home](docs/images/screenshots/home.jpg)<br>**Home** — featured hero with Watch now, Add to library and More info | ![Top 10](docs/images/screenshots/top10-rows.jpg)<br>**Top 10 rows** — ranked per service, with the title header and a muted trailer | ![Title page](docs/images/screenshots/info-page.jpg)<br>**Title page** — full screen, with cast photos; sources and episodes below |
+| ![Home](docs/images/screenshots/home.jpg)<br>**Home** — featured hero with Watch now, and arrows either side | ![Top 10](docs/images/screenshots/top10-rows.jpg)<br>**Top 10 rows** — ranked per service, with the title header and a muted trailer | ![Title page](docs/images/screenshots/info-page.jpg)<br>**Title page** — full screen, with cast photos; sources and episodes below |
 | ![Series](docs/images/screenshots/series-info.jpg)<br>**Series** — season guide with stills, air dates and watched state, beside the cast | ![Player](docs/images/screenshots/player.jpg)<br>**Player** — elapsed, remaining and "Ends at" | ![Audio & subtitles](docs/images/screenshots/audio-subtitles.jpg)<br>**Audio & subtitles** — languages as names, flags as a supplement |
 | ![Search](docs/images/screenshots/search.jpg)<br>**Search** — on-screen keyboard, results per type | ![Library](docs/images/screenshots/library.jpg)<br>**Library** — filters, sorts and progress | ![Top 10 suggestion](docs/images/screenshots/top10-suggestion.jpg)<br>**Top 10 suggestion** — one press adds the rows |
-| ![Add-ons](docs/images/screenshots/addons.jpg)<br>**Settings › Add-ons** — reorder, configure by QR, redacted URLs | ![Settings](docs/images/screenshots/settings.jpg)<br>**Settings** — glass sidebar and compact rows; source choice and stream limits | ![Profiles](docs/images/screenshots/profiles.jpg)<br>**Profiles** — up to five, each with its own add-ons and PIN |
-| ![First run](docs/images/screenshots/first-run.jpg)<br>**First run** — sign in by QR or start without an account | | |
+| ![Add-ons](docs/images/screenshots/addons.jpg)<br>**Settings › Add-ons** — reorder, configure by QR, redacted URLs | ![Settings](docs/images/screenshots/settings.jpg)<br>**Settings** — glass sidebar and compact rows; source choice and stream limits | ![First run](docs/images/screenshots/first-run.jpg)<br>**First run** — sign in by QR or start without an account |
 
 Screenshots are captures of the real app on an Android TV emulator with live catalogues, made by [`ci/showcase.sh`](ci/showcase.sh). Big Buck Bunny © Blender Foundation, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Posters, logos and artwork belong to their owners and come from the installed add-ons.
 
@@ -41,7 +40,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Playback** — Media3 with the FFmpeg audio decoder, HLS and DASH. Broken links are refreshed or skipped automatically; a source you picked asks before switching. Skip intro and recap from IntroDB timings, a timeline with chapter markers and smart scrubbing, and if an audio track breaks mid-film VYRK switches to the next best one at the same second. Audio and subtitle preferences, subtitle sync, Up Next, sleep timers.
 
-**Accounts, profiles and library** — Stremio sign-in by QR code, or no account at all. Up to five profiles with PINs. Watched state and Continue Watching follow Stremio's own rules, so progress reads correctly in other Stremio apps.
+**Account and library** — first run opens on the Stremio sign-in QR code, or use VYRK without an account. Watched state and Continue Watching follow Stremio's own rules, so progress reads correctly in other Stremio apps.
 
 **Add-ons** — in **Settings › Add-ons**: install from a URL, a `stremio://` link or `vyrk://install?url=…`, reorder, configure by QR on your phone, and save the list back to your account.
 

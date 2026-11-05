@@ -10,7 +10,6 @@
     <string name="accent_pink">Pink</string>
     <string name="accent_teal">Teal</string>
     <string name="accent_violet">Violet</string>
-    <string name="add_profile">Add profile</string>
     <string name="add_to_library">Add to library</string>
     <string name="addon_refreshed">Add-on refreshed</string>
     <string name="addon_url">Add-on URL</string>
@@ -40,7 +39,6 @@
     <string name="cant_open_title">VYRK can\'t open this title directly, so it searched for it.</string>
     <string name="cant_play_title">Can\'t play this title</string>
     <string name="cast_and_crew">Cast &amp; crew</string>
-    <string name="change_pin">Change PIN</string>
     <string name="chapter_credits">Credits</string>
     <string name="chapter_intro">Intro</string>
     <string name="chapter_markers_hint">Marks chapters, intros and credits on the timeline.</string>
@@ -51,14 +49,12 @@
     <string name="clear_dialogue">Clear Dialogue</string>
     <string name="clear_dialogue_hint">Makes speech easier to follow. PCM audio only, never with passthrough.</string>
     <string name="close">Close</string>
-    <string name="colour">Colour</string>
     <string name="colour_frost">Frost</string>
     <string name="colour_white">White</string>
     <string name="colour_yellow">Yellow</string>
     <string name="configure">Configure</string>
     <string name="configure_addon">Configure %1$s</string>
     <string name="configure_addon_body">Scan the code with your phone to open this add-on\'s settings page. Install it again afterwards to use the new settings.</string>
-    <string name="connect_stremio">Connect Stremio account</string>
     <string name="connecting">Connecting</string>
     <string name="connecting_to">Connecting · %1$s · %2$s</string>
     <string name="continue_playing">Continue</string>
@@ -69,7 +65,6 @@
     <string name="default_tab">Default tab</string>
     <string name="default_tab_desc">The tab VYRK opens on</string>
     <string name="delay_addon_only">The delay applies to add-on subtitles.</string>
-    <string name="delete_profile">Delete profile</string>
     <string name="diagnostics_copied">Diagnostics copied</string>
     <string name="died_on">Died %1$s</string>
     <string name="director">Director</string>
@@ -78,10 +73,8 @@
     <string name="dolby_vision_decoder">Dolby Vision decoder</string>
     <string name="done">Done</string>
     <string name="download_install">Download and install</string>
-    <string name="edit_profile">Edit profile</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Ends at %1$s</string>
-    <string name="enter_pin_for">Enter the PIN for %1$s</string>
     <string name="excl_codec">this TV can\'t decode the video format</string>
     <string name="excl_decoder">higher resolution than this TV\'s decoder</string>
     <string name="excl_dolby_vision">Dolby Vision only, which this TV can\'t decode</string>
@@ -112,7 +105,6 @@
     <string name="hide_row">Hide this row</string>
     <string name="hint_play_pause">Play / pause</string>
     <string name="hint_seek">Seek on the bar</string>
-    <string name="hold_ok_to_edit">Hold OK on a profile to edit it</string>
     <string name="in_library">In library</string>
     <string name="install">Install</string>
     <string name="install_addon_title">Install add-on</string>
@@ -179,9 +171,6 @@
     <string name="pause">Pause</string>
     <string name="paused">Paused</string>
     <string name="person_unavailable">Details for this person couldn\'t load.</string>
-    <string name="pin_locked">Too many tries. Try again in %1$d s.</string>
-    <string name="pin_rules">Use 4 to 8 digits.</string>
-    <string name="pin_wrong">Wrong PIN</string>
     <string name="play">Play</string>
     <string name="play_now">Play now</string>
     <string name="poster_size">Poster size</string>
@@ -201,7 +190,6 @@
     <string name="preview_sound">Preview sound</string>
     <string name="previews">Previews</string>
     <string name="previous">Previous</string>
-    <string name="profile_name_hint">Profile name</string>
     <string name="rating_attribution">Rating from IMDb, via your add-ons.</string>
     <string name="ready_when_you_are">Ready when you are</string>
     <string name="recent_searches">Recent searches</string>
@@ -213,7 +201,6 @@
     <string name="remove">Remove</string>
     <string name="remove_from_cw">Remove from Continue Watching</string>
     <string name="remove_from_library">Remove from library</string>
-    <string name="remove_pin">Remove PIN</string>
     <string name="removed_from_cw">Removed %1$s from Continue Watching</string>
     <string name="reset">Reset</string>
     <string name="restore_rows">Restore %1$d rows</string>
@@ -221,8 +208,6 @@
     <string name="retry">Retry</string>
     <string name="row_empty">Nothing here yet.</string>
     <string name="row_error">This row didn\'t load.</string>
-    <string name="save">Save</string>
-    <string name="save_pin">Save PIN</string>
     <string name="save_to_account">Save to account</string>
     <string name="saved_on_device">Saved on this device only</string>
     <string name="saved_to_account">Add-ons saved to your account</string>
@@ -232,7 +217,6 @@
     <string name="season_n">Season %1$d</string>
     <string name="see_all">See all</string>
     <string name="session_expired">Your Stremio session expired. Your data is kept. Reconnect to sync again.</string>
-    <string name="set_pin">Set PIN</string>
     <string name="setting_chapter_markers">Chapter markers</string>
     <string name="setting_skip_intro">Skip intro</string>
     <string name="settings">Settings</string>
@@ -252,8 +236,6 @@
     <string name="settings_streams_sub">Which sources play, and what happens after</string>
     <string name="settings_subtitles">Subtitles</string>
     <string name="settings_subtitles_sub">When subtitles show and how they look</string>
-    <string name="share_hint">Other profiles on this TV can use your stream add-ons. They never see the add-on URLs.</string>
-    <string name="share_stream_addons">Share stream add-ons with other profiles</string>
     <string name="show_again">Show again</string>
     <string name="shows">Shows</string>
     <string name="sign_in_stremio">Sign in with Stremio</string>
@@ -290,7 +272,6 @@
     <string name="still_watching">Are you still watching?</string>
     <string name="streams_count">Streams %1$d</string>
     <string name="stremio_account">Stremio account</string>
-    <string name="stremio_connected">Stremio connected</string>
     <string name="sub_always">Always</string>
     <string name="sub_foreign">Foreign only</string>
     <string name="subtitle_background">Background</string>
@@ -300,7 +281,6 @@
     <string name="subtitle_mode">Mode</string>
     <string name="subtitle_size">Size</string>
     <string name="subtitles">Subtitles</string>
-    <string name="switch_profile">Switch profile</string>
     <string name="sync_now">Sync now</string>
     <string name="sync_style">Sync &amp; Style</string>
     <string name="synced_with_account">Synced with your Stremio account</string>
@@ -340,12 +320,9 @@
     <string name="update_failed">Update check failed: %1$s</string>
     <string name="update_source">Source: %1$s</string>
     <string name="updates">Updates</string>
-    <string name="use_shared_addons">Use shared add-ons</string>
     <string name="use_without_account">Use without an account</string>
     <string name="voice_search">Voice search</string>
     <string name="watch_now">Watch now</string>
     <string name="watched">Watched</string>
-    <string name="welcome_pitch">Browse, choose, press Play. Everything with the remote.</string>
-    <string name="whos_watching">Who\'s watching?</string>
     <string name="writers">Writers</string>
 </resources>

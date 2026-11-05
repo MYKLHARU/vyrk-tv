@@ -14,11 +14,10 @@ sealed interface Screen {
     data object Loading : Screen
     data object Welcome : Screen
     data class Pairing(val profileId: String?) : Screen
-    data object Profiles : Screen
     data object Main : Screen
 }
 
-enum class Section { TABS, SEARCH, SETTINGS, PROFILES }
+enum class Section { TABS, SEARCH, SETTINGS }
 
 /** Where an overlay was opened from, so focus can return to that exact poster. */
 data class Origin(val tab: String, val rowKey: String, val index: Int, val itemId: String)
@@ -27,14 +26,11 @@ sealed interface Overlay {
     data class Info(val meta: MetaPreview, val origin: Origin?, val focusResume: Boolean = false, val showSources: Boolean = false) : Overlay
     data class ItemMenu(val meta: MetaPreview, val origin: Origin?) : Overlay
     data class InstallConfirm(val descriptor: Descriptor?, val input: String, val external: Boolean, val error: String? = null) : Overlay
-    data class Pin(val profile: Profile, val onOk: () -> Unit) : Overlay
-    data class EditProfile(val profile: Profile?) : Overlay
     data class AddonQr(val descriptor: Descriptor) : Overlay
     data class Message(val title: String, val body: String) : Overlay
     data class SeeAll(val title: String, val ref: com.vyrk.core.catalog.CatalogRef) : Overlay
     data class Person(val id: Long, val name: String) : Overlay
     /** The avatar's menu in the top bar: switch profile, Settings. */
-    data object ProfileMenu : Overlay
 }
 
 @Stable

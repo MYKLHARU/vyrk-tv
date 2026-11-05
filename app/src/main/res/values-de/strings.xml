@@ -10,7 +10,6 @@
     <string name="accent_pink">Pink</string>
     <string name="accent_teal">Türkis</string>
     <string name="accent_violet">Violett</string>
-    <string name="add_profile">Profil hinzufügen</string>
     <string name="add_to_library">Zur Mediathek hinzufügen</string>
     <string name="addon_refreshed">Add-on aktualisiert</string>
     <string name="addon_url">Add-on-URL</string>
@@ -40,7 +39,6 @@
     <string name="cant_open_title">VYRK kann diesen Titel nicht direkt öffnen und hat danach gesucht.</string>
     <string name="cant_play_title">Dieser Titel kann nicht abgespielt werden</string>
     <string name="cast_and_crew">Besetzung und Team</string>
-    <string name="change_pin">PIN ändern</string>
     <string name="chapter_credits">Abspann</string>
     <string name="chapter_intro">Intro</string>
     <string name="chapter_markers_hint">Markiert Kapitel, Intros und Abspann auf der Zeitleiste.</string>
@@ -51,14 +49,12 @@
     <string name="clear_dialogue">Klare Dialoge</string>
     <string name="clear_dialogue_hint">Macht Sprache leichter verständlich. Nur PCM-Audio, nie mit Passthrough.</string>
     <string name="close">Schließen</string>
-    <string name="colour">Farbe</string>
     <string name="colour_frost">Frost</string>
     <string name="colour_white">Weiß</string>
     <string name="colour_yellow">Gelb</string>
     <string name="configure">Konfigurieren</string>
     <string name="configure_addon">%1$s konfigurieren</string>
     <string name="configure_addon_body">Scanne den Code mit dem Handy, um die Einstellungen dieses Add-ons zu öffnen. Installiere es danach erneut, um die neuen Einstellungen zu nutzen.</string>
-    <string name="connect_stremio">Stremio-Konto verbinden</string>
     <string name="connecting">Verbinden</string>
     <string name="connecting_to">Verbinden · %1$s · %2$s</string>
     <string name="continue_playing">Weiter</string>
@@ -69,7 +65,6 @@
     <string name="default_tab">Start-Tab</string>
     <string name="default_tab_desc">Der Tab, mit dem VYRK startet</string>
     <string name="delay_addon_only">Die Verzögerung gilt für Add-on-Untertitel.</string>
-    <string name="delete_profile">Profil löschen</string>
     <string name="diagnostics_copied">Diagnose kopiert</string>
     <string name="died_on">Gestorben %1$s</string>
     <string name="director">Regie</string>
@@ -78,10 +73,8 @@
     <string name="dolby_vision_decoder">Dolby-Vision-Decoder</string>
     <string name="done">Fertig</string>
     <string name="download_install">Herunterladen und installieren</string>
-    <string name="edit_profile">Profil bearbeiten</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Endet um %1$s</string>
-    <string name="enter_pin_for">PIN für %1$s eingeben</string>
     <string name="excl_codec">dieser Fernseher kann das Videoformat nicht dekodieren</string>
     <string name="excl_decoder">höhere Auflösung als der Decoder des Fernsehers</string>
     <string name="excl_dolby_vision">nur Dolby Vision, das dieser Fernseher nicht dekodiert</string>
@@ -112,7 +105,6 @@
     <string name="hide_row">Diese Reihe ausblenden</string>
     <string name="hint_play_pause">Abspielen / Pause</string>
     <string name="hint_seek">Auf der Leiste spulen</string>
-    <string name="hold_ok_to_edit">OK auf einem Profil halten, um es zu bearbeiten</string>
     <string name="in_library">In der Mediathek</string>
     <string name="install">Installieren</string>
     <string name="install_addon_title">Add-on installieren</string>
@@ -179,9 +171,6 @@
     <string name="pause">Pause</string>
     <string name="paused">Pausiert</string>
     <string name="person_unavailable">Die Angaben zu dieser Person konnten nicht geladen werden.</string>
-    <string name="pin_locked">Zu viele Versuche. Versuche es in %1$d s erneut.</string>
-    <string name="pin_rules">Verwende 4 bis 8 Ziffern.</string>
-    <string name="pin_wrong">Falsche PIN</string>
     <string name="play">Abspielen</string>
     <string name="play_now">Jetzt abspielen</string>
     <string name="poster_size">Postergröße</string>
@@ -201,7 +190,6 @@
     <string name="preview_sound">Ton der Vorschau</string>
     <string name="previews">Vorschauen</string>
     <string name="previous">Zurück</string>
-    <string name="profile_name_hint">Profilname</string>
     <string name="rating_attribution">Bewertung von IMDb, über deine Add-ons.</string>
     <string name="ready_when_you_are">Bereit, wenn du es bist</string>
     <string name="recent_searches">Letzte Suchen</string>
@@ -213,7 +201,6 @@
     <string name="remove">Entfernen</string>
     <string name="remove_from_cw">Aus Weiterschauen entfernen</string>
     <string name="remove_from_library">Aus der Mediathek entfernen</string>
-    <string name="remove_pin">PIN entfernen</string>
     <string name="removed_from_cw">%1$s aus Weiterschauen entfernt</string>
     <string name="reset">Zurücksetzen</string>
     <string name="restore_rows">%1$d Reihen wiederherstellen</string>
@@ -221,8 +208,6 @@
     <string name="retry">Erneut versuchen</string>
     <string name="row_empty">Hier ist noch nichts.</string>
     <string name="row_error">Diese Reihe wurde nicht geladen.</string>
-    <string name="save">Speichern</string>
-    <string name="save_pin">PIN speichern</string>
     <string name="save_to_account">Im Konto speichern</string>
     <string name="saved_on_device">Nur auf diesem Gerät gespeichert</string>
     <string name="saved_to_account">Add-ons im Konto gespeichert</string>
@@ -232,7 +217,6 @@
     <string name="season_n">Staffel %1$d</string>
     <string name="see_all">Alle ansehen</string>
     <string name="session_expired">Deine Stremio-Sitzung ist abgelaufen. Deine Daten bleiben erhalten. Verbinde dich neu, um zu synchronisieren.</string>
-    <string name="set_pin">PIN festlegen</string>
     <string name="setting_chapter_markers">Kapitelmarken</string>
     <string name="setting_skip_intro">Intro überspringen</string>
     <string name="settings">Einstellungen</string>
@@ -252,8 +236,6 @@
     <string name="settings_streams_sub">Welche Quellen laufen und was danach passiert</string>
     <string name="settings_subtitles">Untertitel</string>
     <string name="settings_subtitles_sub">Wann Untertitel erscheinen und wie sie aussehen</string>
-    <string name="share_hint">Andere Profile auf diesem Fernseher können deine Stream-Add-ons nutzen. Die URLs sehen sie nie.</string>
-    <string name="share_stream_addons">Stream-Add-ons mit anderen Profilen teilen</string>
     <string name="show_again">Wieder anzeigen</string>
     <string name="shows">Serien</string>
     <string name="sign_in_stremio">Mit Stremio anmelden</string>
@@ -290,7 +272,6 @@
     <string name="still_watching">Schaust du noch?</string>
     <string name="streams_count">Streams %1$d</string>
     <string name="stremio_account">Stremio-Konto</string>
-    <string name="stremio_connected">Stremio verbunden</string>
     <string name="sub_always">Immer</string>
     <string name="sub_foreign">Nur Fremdsprachen</string>
     <string name="subtitle_background">Hintergrund</string>
@@ -300,7 +281,6 @@
     <string name="subtitle_mode">Modus</string>
     <string name="subtitle_size">Größe</string>
     <string name="subtitles">Untertitel</string>
-    <string name="switch_profile">Profil wechseln</string>
     <string name="sync_now">Jetzt synchronisieren</string>
     <string name="sync_style">Synchronität &amp; Stil</string>
     <string name="synced_with_account">Mit deinem Stremio-Konto synchronisiert</string>
@@ -340,12 +320,9 @@
     <string name="update_failed">Update-Prüfung fehlgeschlagen: %1$s</string>
     <string name="update_source">Quelle: %1$s</string>
     <string name="updates">Updates</string>
-    <string name="use_shared_addons">Geteilte Add-ons verwenden</string>
     <string name="use_without_account">Ohne Konto nutzen</string>
     <string name="voice_search">Sprachsuche</string>
     <string name="watch_now">Jetzt ansehen</string>
     <string name="watched">Gesehen</string>
-    <string name="welcome_pitch">Stöbern, auswählen, Abspielen drücken. Alles mit der Fernbedienung.</string>
-    <string name="whos_watching">Wer schaut?</string>
     <string name="writers">Drehbuch</string>
 </resources>

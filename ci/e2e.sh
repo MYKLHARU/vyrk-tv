@@ -37,10 +37,9 @@ sleep 8
 
 # ---------------------------------------------------------------- first run
 probe "welcome"
-expect '^welcome:sign_in$' "first run shows sign-in focused"
+# First run opens straight on the Stremio QR code, with "Use without an account" focused.
+expect '^welcome:guest$' "first run shows the QR code with Use without an account"
 shot welcome
-key KEYCODE_DPAD_RIGHT 1.2 "to guest"
-expect '^welcome:guest$' "guest button"
 key KEYCODE_DPAD_CENTER 2 "use without an account"
 wait_focus '^hero:watch$' 45
 shot home-live-cinemeta
@@ -183,13 +182,8 @@ shot search-matrix
 key KEYCODE_BACK 1.5 "leave search"
 
 # ---------------------------------------------------------------- every settings group
-# Settings is in the avatar's profile menu (no gear in the bar).
-until_focus KEYCODE_DPAD_RIGHT '^nav:profile$' 6
-key KEYCODE_DPAD_CENTER 1.6 "open the profile menu"
-expect '^profile_menu:profiles$' "profile menu opens on Switch profile"
-shot profile-menu
-key KEYCODE_DPAD_DOWN 1 "to Settings"
-expect '^profile_menu:settings$' "profile menu lists Settings"
+# Settings is the gear at the right of the bar (no profiles).
+until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
 key KEYCODE_DPAD_CENTER 2 "open settings"
 expect '^settings:profile$' "settings opens on the first group"
 shot settings-profile

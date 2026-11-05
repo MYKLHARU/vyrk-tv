@@ -1,5 +1,7 @@
 package com.vyrk.tv.ui.browse
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -189,60 +191,69 @@ fun Poster(
     }
 }
 
-/** Width of a rank number's box as a share of the poster's height (85 : 148). */
-private const val RANK_BOX = 0.574f
-/** Outline thickness as a share of the poster's height. */
-private const val RANK_STROKE = 0.016f
-/** Where the outline starts fading towards the poster, as a share of the box's width. */
-private const val RANK_FADE_FROM = 0.55f
+/**
+ * Top 10 numbers 1–10 from the user's artwork (numbers-1-to-10 SVGs, 85 × 148 viewBox): each is
+ * an outline, white on the left and fading to clear towards the poster, fainter down the ranks.
+ * Digits 1–9 are font outlines in glyph units, placed by translate + scale (y flipped); 10 is
+ * drawn in viewBox units, its 0 overlapping the 1 and cut off at the right edge.
+ */
+private class RankGlyph(val d: String, val tx: Float, val ty: Float, val scale: Float, val opacity: Float)
 
-/** Overall strength by rank: #1 strongest, stepping down to 30 % from #5. */
-private fun rankAlpha(rank: Int): Float = when (rank) { 1 -> 0.50f; 2 -> 0.45f; 3 -> 0.40f; 4 -> 0.35f; else -> 0.30f }
+private val RANK_GLYPHS = mapOf(
+    1 to RankGlyph("M836 1456V0H499V1076L167 979V1235L805 1456Z", 13.2541f, 147.0000f, 0.1002747f, 0.50f),
+    2 to RankGlyph("M1106 260V0H90V220L558 712Q731 911 731 1025Q731 1217 571 1217Q492 1217 445.0 1151.5Q398 1086 398 988H60Q60 1189 203.5 1333.0Q347 1477 579 1477Q820 1477 944.5 1365.5Q1069 1254 1069 1055Q1069 903 976.5 771.0Q884 639 720 477L532 260Z", 2.0691f, 147.0000f, 0.0988490f, 0.45f),
+    3 to RankGlyph("M397 618V869H556Q745 869 745 1054Q745 1119 703.5 1168.0Q662 1217 573 1217Q512 1217 460.0 1181.0Q408 1145 408 1081H70Q70 1266 218.0 1371.5Q366 1477 562 1477Q794 1477 938.0 1371.0Q1082 1265 1082 1061Q1082 962 1021.0 879.0Q960 796 858 748Q973 706 1039.5 620.5Q1106 535 1106 409Q1106 204 950.0 92.0Q794 -20 562 -20Q440 -20 322.0 24.0Q204 68 126.0 162.0Q48 256 48 405H386Q386 335 441.5 287.5Q497 240 573 240Q666 240 717.0 291.0Q768 342 768 416Q768 526 713.0 572.0Q658 618 561 618Z", 1.3186f, 145.0494f, 0.0975284f, 0.40f),
+    4 to RankGlyph("M59 515 643 1454V1456H980V569H1127V309H980V0H643V309H79ZM381 569H643V1019L621 983Z", -1.9162f, 147.0000f, 0.1002747f, 0.35f),
+    5 to RankGlyph("M377 649 109 712 197 1456H1048V1194H472L439 905Q463 919 520.5 938.5Q578 958 648 958Q864 958 981.0 830.5Q1098 703 1098 469Q1098 344 1043.5 232.0Q989 120 877.0 50.0Q765 -20 592 -20Q463 -20 345.0 32.5Q227 85 153.0 182.5Q79 280 80 414H419Q423 334 469.5 287.0Q516 240 590 240Q691 240 725.5 315.0Q760 390 760 492Q760 599 711.5 662.0Q663 725 553 725Q479 725 437.5 699.5Q396 674 377 649Z", 0.0880f, 145.0217f, 0.0989160f, 0.30f),
+    6 to RankGlyph("M1129 482Q1129 268 986.5 124.0Q844 -20 620 -20Q392 -20 239.5 132.0Q87 284 84 555V689Q84 938 190.0 1114.0Q296 1290 470.5 1383.5Q645 1477 849 1477H903V1212H885Q713 1212 586.5 1127.5Q460 1043 429 871Q542 982 717 982Q916 982 1022.5 838.0Q1129 694 1129 482ZM421 516Q421 240 611 240Q690 240 740.5 309.0Q791 378 791 482Q791 594 737.5 659.0Q684 724 599 724Q533 724 488.0 693.5Q443 663 421 619Z", -4.1924f, 145.0494f, 0.0975284f, 0.30f),
+    7 to RankGlyph("M1102 1456V1276L558 0H202L747 1196H52V1456Z", 3.7857f, 147.0000f, 0.1002747f, 0.30f),
+    8 to RankGlyph("M1101 401Q1101 192 957.5 86.0Q814 -20 595 -20Q377 -20 231.0 86.0Q85 192 85 401Q85 522 147.0 611.5Q209 701 314 751Q222 800 169.0 881.0Q116 962 116 1067Q116 1267 250.5 1372.0Q385 1477 593 1477Q803 1477 937.0 1372.0Q1071 1267 1071 1067Q1071 962 1018.5 880.5Q966 799 875 750Q979 700 1040.0 611.0Q1101 522 1101 401ZM734 1049Q734 1217 593 1217Q454 1217 454 1049Q454 971 489.5 923.0Q525 875 595.0 875.0Q665 875 699.5 923.0Q734 971 734 1049ZM762 428Q762 517 716.0 566.0Q670 615 593 615Q518 615 470.5 566.0Q423 517 423 428Q423 340 470.5 290.0Q518 240 595 240Q671 240 716.5 290.0Q762 340 762 428Z", -3.2899f, 145.0494f, 0.0975284f, 0.30f),
+    9 to RankGlyph("M1096 765Q1096 506 994.0 331.5Q892 157 718.0 68.5Q544 -20 329 -20H303V250H323Q503 250 617.0 322.5Q731 395 753 563Q644 465 509 465Q310 465 195.0 600.0Q80 735 80 957Q80 1175 225.0 1326.0Q370 1477 587 1477Q796 1477 946.0 1322.5Q1096 1168 1096 881ZM418 957Q418 851 463.5 779.5Q509 708 601 708Q710 708 758 802V943Q758 1083 711.0 1150.0Q664 1217 584.0 1217.0Q504 1217 461.0 1134.5Q418 1052 418 957Z", -2.8023f, 145.0494f, 0.0975284f, 0.30f),
+)
+
+/** 10 in viewBox units: the 1 stops where the 0 passes in front of it. */
+private const val RANK_TEN = "M10 27 L56 16 L56 36.45 M56 117.55 L56 139 L25 139 L25 51 L10 56 L10 27"
+private const val RANK_VIEW_W = 85f
+private const val RANK_VIEW_H = 148f
+
+private val rankPaths = HashMap<Int, androidx.compose.ui.graphics.Path>()
+private fun rankPath(rank: Int): androidx.compose.ui.graphics.Path = rankPaths.getOrPut(rank) {
+    androidx.compose.ui.graphics.vector.PathParser().parsePathString(RANK_GLYPHS[rank]?.d ?: RANK_TEN).toPath()
+}
 
 /**
- * Top 10 rank, drawn from VYRK's own font: the digits' outline as tall as the poster beside them
- * (the glyph ink, not its line box, is scaled to the poster's height), in a box 0.574 of that
- * height wide. A narrow digit sits against the poster; a wide one runs into it and is cut off at
- * the box's edge. The outline is white on the left and fades to clear towards the poster, and the
- * whole number gets fainter down the ranks.
+ * Top 10 rank: the user's number artwork as tall as the poster beside it, in a box 85 : 148 of
+ * that height; a wide digit runs to the box's edge and is cut off there.
  */
 @Composable
 fun RankNumber(rank: Int, height: Dp) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val text = rank.toString()
-    val heightPx = with(density) { height.toPx() }
-    val strokePx = heightPx * RANK_STROKE
-    val boxPx = heightPx * RANK_BOX
-    val glyphs = remember(text, heightPx) {
-        // Android's text path gives the glyph outlines (Compose's getPathForRange gives the boxes
-        // around characters, for selection).
-        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.plus_jakarta_sans) ?: android.graphics.Typeface.DEFAULT_BOLD
-            if (android.os.Build.VERSION.SDK_INT >= 26) fontVariationSettings = "'wght' 800"
-            textSize = 200f
-        }
-        val outline = android.graphics.Path()
-        paint.getTextPath(text, 0, text.length, 0f, 0f, outline)
-        val ink = android.graphics.RectF().also { outline.computeBounds(it, true) }
-        val scale = (heightPx - strokePx) / ink.height()
-        outline.transform(android.graphics.Matrix().apply { setTranslate(-ink.left, -ink.top); postScale(scale, scale) })
-        outline.asComposePath() to (ink.width() * scale + strokePx)
-    }
-    val (path, glyphWidthPx) = glyphs
-    // Narrow digits touch the poster; wide ones start near the left and run under its edge.
-    val left = if (glyphWidthPx <= boxPx * 0.94f) boxPx - glyphWidthPx else boxPx * 0.06f
-    val white = Color.White.copy(alpha = rankAlpha(rank))
-    androidx.compose.foundation.Canvas(Modifier.size(with(density) { boxPx.toDp() }, height)) {
+    val glyph = RANK_GLYPHS[rank]
+    val path = remember(rank) { rankPath(rank) }
+    // The fade to clear on the right, as in the artwork (10 has its own stops).
+    val fade = if (glyph != null) arrayOf(0f to Color.White, 0.53f to Color.White, 0.69f to Color.White.copy(alpha = 0.69f), 0.86f to Color.White.copy(alpha = 0.2f), 1f to Color.Transparent)
+        else arrayOf(0f to Color.White, 0.50f to Color.White, 0.68f to Color.White.copy(alpha = 0.78f), 0.86f to Color.White.copy(alpha = 0.2f), 1f to Color.Transparent)
+    androidx.compose.foundation.Canvas(
+        Modifier.size(height * (RANK_VIEW_W / RANK_VIEW_H), height)
+            .graphicsLayer { alpha = glyph?.opacity ?: 0.31f; compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen },
+    ) {
+        val k = size.height / RANK_VIEW_H
         clipRect {
-            // Inset by half the stroke so the outline's outer edge stays inside the poster's height.
-            translate(left + strokePx / 2, strokePx / 2) {
-                drawPath(
-                    path,
-                    brush = Brush.horizontalGradient(0f to white, 1f to white.copy(alpha = 0f), startX = boxPx * RANK_FADE_FROM - left, endX = boxPx - left),
-                    style = Stroke(width = strokePx, join = androidx.compose.ui.graphics.StrokeJoin.Round),
-                )
+            scale(k, k, pivot = androidx.compose.ui.geometry.Offset.Zero) {
+                if (glyph != null) {
+                    translate(glyph.tx, glyph.ty) {
+                        scale(glyph.scale, -glyph.scale, pivot = androidx.compose.ui.geometry.Offset.Zero) {
+                            drawPath(path, Color(0xFFF9FAFC), style = Stroke(width = 23f, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+                        }
+                    }
+                } else {
+                    val ten = Stroke(width = 1.65f, join = androidx.compose.ui.graphics.StrokeJoin.Miter)
+                    val ink = Color(0xFFE9ECEF)
+                    drawPath(path, ink, style = ten)
+                    drawOval(ink, topLeft = androidx.compose.ui.geometry.Offset(90f - 45f, 77f - 62f), size = androidx.compose.ui.geometry.Size(90f, 124f), style = ten)
+                    drawOval(ink, topLeft = androidx.compose.ui.geometry.Offset(95f - 19f, 77f - 46f), size = androidx.compose.ui.geometry.Size(38f, 92f), style = ten)
+                }
             }
+            drawRect(Brush.horizontalGradient(*fade, startX = 0f, endX = size.width), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
         }
     }
 }

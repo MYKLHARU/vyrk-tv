@@ -162,7 +162,6 @@ fun SettingsScreen(session: ProfileSession) {
                 if (group == Group.ADDONS) {
                     item(key = "addon-actions") { AddonActions(session, typing) { typing = it } }
                     itemsIndexed(addons, key = { _, d -> "addon:" + d.manifest.id }) { i, d -> AddonCard(session, d, i, addons.lastIndex) }
-                    item(key = "addon-sharing") { Column(Modifier.padding(top = 8.dp)) { GroupContent(session, Group.ADDONS) } }
                 } else {
                     item(key = group) { GroupContent(session, group) }
                 }
@@ -420,12 +419,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                 Choice(str(R.string.previews), listOf(PreviewMode.OFF to str(R.string.off), PreviewMode.MANUAL to str(R.string.preview_manual), PreviewMode.AUTOMATIC to str(R.string.preview_automatic)), s.previews, "set:previews") { v -> upd { it.copy(previews = v) } }
                 Toggle(str(R.string.preview_sound), s.previewSound, "set:preview_sound") { v -> upd { it.copy(previewSound = v) } }
             }
-            Group.ADDONS -> {
-                Toggle(str(R.string.share_stream_addons), s.shareStreamAddons, "set:share", str(R.string.share_hint)) { v ->
-                    upd { it.copy(shareStreamAddons = v) }; graph.refreshShared(session.profile.id, session.addons.value, v)
-                }
-                Toggle(str(R.string.use_shared_addons), s.useSharedAddons, "set:use_shared") { v -> upd { it.copy(useSharedAddons = v) } }
-            }
+            Group.ADDONS -> {}
             Group.ABOUT -> AboutGroup(session)
         }
     }
@@ -505,50 +499,5 @@ private fun AboutGroup(session: ProfileSession) {
             (graph.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("VYRK diagnostics", text))
             app.showToast(copied)
         }, modifier = Modifier.traceFocus("about:diagnostics"))
-    }
-}
-
-@Composable
-fun ProfilesScreen(session: ProfileSession) {
-    val app = LocalApp.current
-    val graph = LocalGraph.current
-    val profiles by graph.profiles.collectAsState()
-    val scope = rememberCoroutineScope()
-    val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
-    val c = Vyrk.colors
-    Column(Modifier.fillMaxSize().padding(horizontal = Dimens.screenMargin, vertical = 20.dp)) {
-        Text(str(R.string.whos_watching), style = Vyrk.type.displayS, color = c.text)
-        Spacer(Modifier.height(20.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
-            itemsIndexed(profiles, key = { _, p -> p.id }) { i, p ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    androidx.tv.material3.Surface(
-                        onClick = {
-                            if (p.id == session.profile.id) return@Surface
-                            val go = { scope.launch { graph.openProfile(p); app.section = com.vyrk.tv.ui.Section.TABS } }
-                            if (p.pinHash != null) app.push(Overlay.Pin(p) { go() }) else go()
-                        },
-                        onLongClick = { app.push(Overlay.EditProfile(p)) },
-                        modifier = Modifier.then(if (i == 0) Modifier.focusRequester(first) else Modifier).traceFocus("profiles:$i"),
-                        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(androidx.compose.foundation.shape.CircleShape),
-                        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent, focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent),
-                        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
-                        border = androidx.tv.material3.ClickableSurfaceDefaults.border(border = androidx.tv.material3.Border.None, focusedBorder = androidx.tv.material3.Border.None),
-                        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
-                    ) { ProfileAvatar(p, 88.dp) }
-                    Spacer(Modifier.height(8.dp))
-                    Text(p.name + if (p.id == session.profile.id) " ✓" else "", style = Vyrk.type.titleM, color = c.text)
-                    p.accountEmail?.let { Text(str(R.string.stremio_connected), style = Vyrk.type.labelS, color = c.textMuted) }
-                }
-            }
-        }
-        Spacer(Modifier.height(20.dp))
-        WrapRow {
-            if (profiles.size < 5) VyrkButton(str(R.string.add_profile), icon = R.drawable.ic_plus, onClick = { app.push(Overlay.EditProfile(null)) }, modifier = Modifier.traceFocus("profiles:add"))
-            VyrkButton(str(R.string.switch_profile), onClick = { graph.closeSession(); app.screen = Screen.Profiles }, modifier = Modifier.traceFocus("profiles:switch"))
-        }
-        Spacer(Modifier.height(10.dp))
-        Text(str(R.string.hold_ok_to_edit), style = Vyrk.type.labelM, color = c.textMuted)
     }
 }

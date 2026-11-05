@@ -10,7 +10,6 @@
     <string name="accent_pink">Rosa</string>
     <string name="accent_teal">Turchese</string>
     <string name="accent_violet">Viola</string>
-    <string name="add_profile">Aggiungi profilo</string>
     <string name="add_to_library">Aggiungi alla libreria</string>
     <string name="addon_refreshed">Componente aggiornato</string>
     <string name="addon_url">URL del componente</string>
@@ -40,7 +39,6 @@
     <string name="cant_open_title">VYRK non può aprire direttamente questo titolo, quindi l\'ha cercato.</string>
     <string name="cant_play_title">Impossibile riprodurre questo titolo</string>
     <string name="cast_and_crew">Cast e troupe</string>
-    <string name="change_pin">Cambia PIN</string>
     <string name="chapter_credits">Titoli di coda</string>
     <string name="chapter_intro">Sigla</string>
     <string name="chapter_markers_hint">Segna capitoli, sigle e titoli di coda sulla barra di avanzamento.</string>
@@ -51,14 +49,12 @@
     <string name="clear_dialogue">Dialoghi chiari</string>
     <string name="clear_dialogue_hint">Rende il parlato più facile da seguire. Solo audio PCM, mai con passthrough.</string>
     <string name="close">Chiudi</string>
-    <string name="colour">Colore</string>
     <string name="colour_frost">Ghiaccio</string>
     <string name="colour_white">Bianco</string>
     <string name="colour_yellow">Giallo</string>
     <string name="configure">Configura</string>
     <string name="configure_addon">Configura %1$s</string>
     <string name="configure_addon_body">Inquadra il codice con il telefono per aprire le impostazioni di questo componente. Poi reinstallalo per usare le nuove impostazioni.</string>
-    <string name="connect_stremio">Collega account Stremio</string>
     <string name="connecting">Connessione</string>
     <string name="connecting_to">Connessione · %1$s · %2$s</string>
     <string name="continue_playing">Continua</string>
@@ -69,7 +65,6 @@
     <string name="default_tab">Scheda iniziale</string>
     <string name="default_tab_desc">La scheda con cui si apre VYRK</string>
     <string name="delay_addon_only">Il ritardo vale per i sottotitoli dei componenti.</string>
-    <string name="delete_profile">Elimina profilo</string>
     <string name="diagnostics_copied">Diagnostica copiata</string>
     <string name="died_on">Morto il %1$s</string>
     <string name="director">Regia</string>
@@ -78,10 +73,8 @@
     <string name="dolby_vision_decoder">Decoder Dolby Vision</string>
     <string name="done">Fatto</string>
     <string name="download_install">Scarica e installa</string>
-    <string name="edit_profile">Modifica profilo</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Finisce alle %1$s</string>
-    <string name="enter_pin_for">Inserisci il PIN di %1$s</string>
     <string name="excl_codec">questo televisore non decodifica il formato video</string>
     <string name="excl_decoder">risoluzione superiore al decoder del televisore</string>
     <string name="excl_dolby_vision">solo Dolby Vision, che questo televisore non decodifica</string>
@@ -112,7 +105,6 @@
     <string name="hide_row">Nascondi questa riga</string>
     <string name="hint_play_pause">Riproduci / pausa</string>
     <string name="hint_seek">Scorri sulla barra</string>
-    <string name="hold_ok_to_edit">Tieni premuto OK su un profilo per modificarlo</string>
     <string name="in_library">Nella libreria</string>
     <string name="install">Installa</string>
     <string name="install_addon_title">Installa componente</string>
@@ -179,9 +171,6 @@
     <string name="pause">Pausa</string>
     <string name="paused">In pausa</string>
     <string name="person_unavailable">Impossibile caricare i dati di questa persona.</string>
-    <string name="pin_locked">Troppi tentativi. Riprova tra %1$d s.</string>
-    <string name="pin_rules">Usa da 4 a 8 cifre.</string>
-    <string name="pin_wrong">PIN errato</string>
     <string name="play">Riproduci</string>
     <string name="play_now">Riproduci ora</string>
     <string name="poster_size">Dimensione locandine</string>
@@ -201,7 +190,6 @@
     <string name="preview_sound">Audio dell\'anteprima</string>
     <string name="previews">Anteprime</string>
     <string name="previous">Precedente</string>
-    <string name="profile_name_hint">Nome del profilo</string>
     <string name="rating_attribution">Voto di IMDb, tramite i tuoi componenti.</string>
     <string name="ready_when_you_are">Pronto quando vuoi</string>
     <string name="recent_searches">Ricerche recenti</string>
@@ -213,7 +201,6 @@
     <string name="remove">Rimuovi</string>
     <string name="remove_from_cw">Rimuovi da Continua a guardare</string>
     <string name="remove_from_library">Rimuovi dalla libreria</string>
-    <string name="remove_pin">Rimuovi PIN</string>
     <string name="removed_from_cw">%1$s rimosso da Continua a guardare</string>
     <string name="reset">Ripristina</string>
     <string name="restore_rows">Ripristina %1$d righe</string>
@@ -221,8 +208,6 @@
     <string name="retry">Riprova</string>
     <string name="row_empty">Ancora niente qui.</string>
     <string name="row_error">Questa riga non è stata caricata.</string>
-    <string name="save">Salva</string>
-    <string name="save_pin">Salva PIN</string>
     <string name="save_to_account">Salva nell\'account</string>
     <string name="saved_on_device">Salvato solo su questo dispositivo</string>
     <string name="saved_to_account">Componenti salvati nel tuo account</string>
@@ -232,7 +217,6 @@
     <string name="season_n">Stagione %1$d</string>
     <string name="see_all">Vedi tutti</string>
     <string name="session_expired">La tua sessione Stremio è scaduta. I tuoi dati sono conservati. Ricollegati per sincronizzare.</string>
-    <string name="set_pin">Imposta PIN</string>
     <string name="setting_chapter_markers">Indicatori dei capitoli</string>
     <string name="setting_skip_intro">Salta sigla</string>
     <string name="settings">Impostazioni</string>
@@ -252,8 +236,6 @@
     <string name="settings_streams_sub">Quali fonti riprodurre e cosa succede dopo</string>
     <string name="settings_subtitles">Sottotitoli</string>
     <string name="settings_subtitles_sub">Quando compaiono i sottotitoli e il loro aspetto</string>
-    <string name="share_hint">Gli altri profili su questo televisore possono usare i tuoi componenti di stream. Non ne vedono mai gli URL.</string>
-    <string name="share_stream_addons">Condividi i componenti di stream con gli altri profili</string>
     <string name="show_again">Mostra di nuovo</string>
     <string name="shows">Serie</string>
     <string name="sign_in_stremio">Accedi con Stremio</string>
@@ -290,7 +272,6 @@
     <string name="still_watching">Stai ancora guardando?</string>
     <string name="streams_count">Stream %1$d</string>
     <string name="stremio_account">Account Stremio</string>
-    <string name="stremio_connected">Stremio collegato</string>
     <string name="sub_always">Sempre</string>
     <string name="sub_foreign">Solo lingue straniere</string>
     <string name="subtitle_background">Sfondo</string>
@@ -300,7 +281,6 @@
     <string name="subtitle_mode">Modalità</string>
     <string name="subtitle_size">Dimensione</string>
     <string name="subtitles">Sottotitoli</string>
-    <string name="switch_profile">Cambia profilo</string>
     <string name="sync_now">Sincronizza ora</string>
     <string name="sync_style">Sincronia e stile</string>
     <string name="synced_with_account">Sincronizzato con il tuo account Stremio</string>
@@ -340,12 +320,9 @@
     <string name="update_failed">Controllo aggiornamenti non riuscito: %1$s</string>
     <string name="update_source">Origine: %1$s</string>
     <string name="updates">Aggiornamenti</string>
-    <string name="use_shared_addons">Usa componenti condivisi</string>
     <string name="use_without_account">Usa senza account</string>
     <string name="voice_search">Ricerca vocale</string>
     <string name="watch_now">Guarda ora</string>
     <string name="watched">Visto</string>
-    <string name="welcome_pitch">Sfoglia, scegli, premi Riproduci. Tutto con il telecomando.</string>
-    <string name="whos_watching">Chi sta guardando?</string>
     <string name="writers">Sceneggiatura</string>
 </resources>

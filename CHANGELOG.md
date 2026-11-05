@@ -2,6 +2,14 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- First run opens straight on the Stremio sign-in QR code; "Use without an account" is a small button beside it.
+- Profiles are gone: VYRK opens straight to Home with one profile, with no profile picker or PIN. Settings is a gear at the top right instead of the avatar menu. The add-on sharing switches (only used between profiles) are gone too.
+- Featured hero: Watch now is the only button (hold OK or press Menu for the details), with arrows at the left and right edges. The hero is the same height on every page.
+- Home features its own titles, taken from all its rows, instead of repeating the Movies (and Series) hero.
+- Top 10 rows use the new outlined number artwork.
+
 ## v0.1.7
 
 - Home: the featured artwork now reaches down behind the first row, with a soft teal haze and violet light. The title logo is smaller and the same size in the hero and in the header above the rows. The carousel arrows are quieter.

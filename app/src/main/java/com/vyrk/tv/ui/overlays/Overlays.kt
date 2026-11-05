@@ -68,7 +68,6 @@ import com.vyrk.tv.ui.components.VyrkButton
 import com.vyrk.tv.ui.components.VyrkChip
 import com.vyrk.tv.ui.components.WrapRow
 import com.vyrk.tv.ui.screens.AlphaKeyboard
-import com.vyrk.tv.ui.screens.ProfileAvatar
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.ReprovideAppDensity
 import com.vyrk.tv.ui.theme.Vyrk
@@ -86,13 +85,10 @@ fun Overlays() {
                     is Overlay.Info -> InfoPage(o)
                     is Overlay.ItemMenu -> ItemMenu(o)
                     is Overlay.InstallConfirm -> InstallConfirm(o)
-                    is Overlay.Pin -> PinPad(o)
-                    is Overlay.EditProfile -> EditProfile(o)
                     is Overlay.AddonQr -> AddonQr(o)
                     is Overlay.Message -> MessageBox(o)
                     is Overlay.SeeAll -> SeeAll(o)
                     is Overlay.Person -> PersonPage(o)
-                    Overlay.ProfileMenu -> ProfileMenu()
                 }
             }
         }
@@ -133,62 +129,6 @@ fun OverlayWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) {
                     }
                 }) { content() }
             }
-        }
-    }
-}
-
-/** The top bar's profile menu: who's watching, then Switch profile and Settings. */
-@Composable
-private fun ProfileMenu() {
-    val app = LocalApp.current
-    val session = com.vyrk.tv.ui.LocalSession.current ?: return
-    val c = Vyrk.colors
-    val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
-    fun go(section: com.vyrk.tv.ui.Section) { app.overlays.remove(Overlay.ProfileMenu); app.section = section }
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.28f)), contentAlignment = Alignment.TopEnd) {
-        Column(
-            Modifier.padding(top = com.vyrk.tv.ui.theme.Dimens.navHeight - 6.dp, end = com.vyrk.tv.ui.theme.Dimens.screenMargin).width(250.dp)
-                .menuSurface()
-                .padding(10.dp),
-        ) {
-            Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                ProfileAvatar(session.profile, 34.dp)
-                Spacer(Modifier.width(10.dp))
-                Text(session.profile.name, style = Vyrk.type.titleM, color = c.text, maxLines = 1)
-            }
-            com.vyrk.tv.ui.components.RowDivider(Modifier.padding(vertical = 6.dp))
-            MenuEntry(R.drawable.ic_swap, str(R.string.switch_profile), "profile_menu:profiles", Modifier.focusRequester(first)) { go(com.vyrk.tv.ui.Section.PROFILES) }
-            MenuEntry(R.drawable.ic_cog, str(R.string.settings), "profile_menu:settings") { go(com.vyrk.tv.ui.Section.SETTINGS) }
-        }
-    }
-}
-
-/** The menu card: more opaque than other glass so it reads over any page. */
-@Composable
-private fun Modifier.menuSurface(): Modifier {
-    val c = Vyrk.colors
-    val shape = RoundedCornerShape(18.dp)
-    return this.shadow(24.dp, shape, clip = false).background(c.panel.copy(alpha = 0.96f), shape).border(1.dp, c.glassEdge, shape)
-}
-
-@Composable
-private fun MenuEntry(icon: Int, label: String, trace: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val c = Vyrk.colors
-    androidx.tv.material3.Surface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(42.dp).traceFocus(trace),
-        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
-        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
-            containerColor = Color.Transparent, contentColor = c.textSecondary,
-            focusedContainerColor = c.accent, focusedContentColor = c.onAccent,
-        ),
-        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.02f),
-        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
-    ) {
-        Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            com.vyrk.tv.ui.components.Icon(icon, null, Modifier.size(18.dp), tint = androidx.tv.material3.LocalContentColor.current)
-            Text(label, style = Vyrk.type.titleS, maxLines = 1)
         }
     }
 }
@@ -302,106 +242,6 @@ private fun InstallConfirm(o: Overlay.InstallConfirm) {
 }
 
 // ---------------- PIN ----------------
-
-@Composable
-private fun PinPad(o: Overlay.Pin) {
-    val app = LocalApp.current
-    val graph = LocalGraph.current
-    var pin by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
-    val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
-    val wrong = str(R.string.pin_wrong)
-    val lockedFmt = R.string.pin_locked
-    val ctx = LocalActivity.current
-    CenterCard(420.dp) {
-        Text(str(R.string.enter_pin_for, o.profile.name), style = Vyrk.type.headlineM, color = Vyrk.colors.text)
-        Spacer(Modifier.height(10.dp))
-        Text("●".repeat(pin.length).ifEmpty { "—" }, style = Vyrk.type.displayS, color = Vyrk.colors.accent)
-        error?.let { Text(it, style = Vyrk.type.bodyM, color = Vyrk.colors.danger) }
-        Spacer(Modifier.height(12.dp))
-        val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK")
-        keys.chunked(3).forEachIndexed { ri, row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
-                row.forEachIndexed { ci, k ->
-                    VyrkButton(k, horizontalPadding = 0.dp, modifier = Modifier.width(96.dp).then(if (ri == 0 && ci == 0) Modifier.focusRequester(first) else Modifier).traceFocus("pin:$k"), onClick = {
-                        when (k) {
-                            "⌫" -> pin = pin.dropLast(1)
-                            "OK" -> when (val r = graph.checkPin(o.profile.id, pin)) {
-                                is com.vyrk.tv.data.AppGraph.PinResult.Ok -> { app.overlays.remove(o); o.onOk() }
-                                is com.vyrk.tv.data.AppGraph.PinResult.Wrong -> { error = wrong; pin = "" }
-                                is com.vyrk.tv.data.AppGraph.PinResult.Locked -> { error = ctx.getString(lockedFmt, (r.ms / 1000).toInt()); pin = "" }
-                            }
-                            else -> if (pin.length < 8) pin += k
-                        }
-                    })
-                }
-            }
-        }
-    }
-}
-
-// ---------------- Profile editor ----------------
-
-@Composable
-private fun EditProfile(o: Overlay.EditProfile) {
-    val app = LocalApp.current
-    val graph = LocalGraph.current
-    val scope = rememberCoroutineScope()
-    val existing = o.profile
-    var name by remember { mutableStateOf(existing?.name ?: "") }
-    var color by remember { mutableStateOf(existing?.colorIndex ?: (graph.profiles.value.size % ProfileColors.size)) }
-    var pinEntry by remember { mutableStateOf<String?>(null) }
-    val c = Vyrk.colors
-    Box(Modifier.fillMaxSize().background(c.scrim), contentAlignment = Alignment.Center) {
-        Row(Modifier.width(860.dp).background(c.panel, RoundedCornerShape(22.dp)).padding(26.dp), horizontalArrangement = Arrangement.spacedBy(26.dp)) {
-            Column(Modifier.weight(1f)) {
-                Text(str(if (existing == null) R.string.add_profile else R.string.edit_profile), style = Vyrk.type.headlineL, color = c.text)
-                Spacer(Modifier.height(12.dp))
-                Text(if (pinEntry != null) "PIN: " + "●".repeat(pinEntry!!.length) else name.ifEmpty { str(R.string.profile_name_hint) }, style = Vyrk.type.headlineM, color = if (name.isEmpty() && pinEntry == null) c.textMuted else c.text)
-                Spacer(Modifier.height(10.dp))
-                AlphaKeyboard(
-                    digitsOnly = pinEntry != null,
-                    onChar = { ch -> if (pinEntry != null) { if (pinEntry!!.length < 8 && ch.isDigit()) pinEntry = pinEntry + ch } else if (name.length < 20) name += ch },
-                    onBackspace = { if (pinEntry != null) pinEntry = pinEntry!!.dropLast(1) else name = name.dropLast(1) },
-                    onClear = { if (pinEntry != null) pinEntry = "" else name = "" },
-                    requestInitialFocus = true,
-                )
-            }
-            Column(Modifier.width(280.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(str(R.string.colour), style = Vyrk.type.labelL, color = c.textSecondary)
-                WrapRow(spacing = 6.dp) {
-                    ProfileColors.indices.forEach { i -> VyrkChip("${i + 1}", color == i, { color = i }, Modifier.traceFocus("profile_edit:color$i")) }
-                }
-                Box(Modifier.size(44.dp).background(androidx.compose.ui.graphics.Color(ProfileColors[color]), androidx.compose.foundation.shape.CircleShape))
-                val full = Modifier.fillMaxWidth()
-                if (pinEntry == null) {
-                    VyrkButton(str(R.string.save), style = ButtonStyle.PRIMARY, modifier = full.traceFocus("profile_edit:save"), onClick = {
-                        if (existing == null) graph.createProfile(name, color) else graph.updateProfile(existing.id) { it.copy(name = name.trim().ifEmpty { it.name }, colorIndex = color) }
-                        app.overlays.remove(o)
-                    })
-                    if (existing != null) {
-                        VyrkButton(str(if (existing.pinHash == null) R.string.set_pin else R.string.change_pin), modifier = full.traceFocus("profile_edit:pin"), onClick = { pinEntry = "" })
-                        if (existing.pinHash != null) VyrkButton(str(R.string.remove_pin), modifier = full, onClick = { graph.setPin(existing.id, null); app.overlays.remove(o) })
-                        VyrkButton(str(R.string.connect_stremio), modifier = full.traceFocus("profile_edit:connect"), onClick = {
-                            app.overlays.clear()
-                            scope.launch { graph.openProfile(existing); app.screen = Screen.Pairing(existing.id) }
-                        })
-                        if (graph.profiles.value.size > 1) VyrkButton(str(R.string.delete_profile), modifier = full, onClick = { graph.deleteProfile(existing.id); app.overlays.remove(o) })
-                    }
-                } else {
-                    VyrkButton(str(R.string.save_pin), style = ButtonStyle.PRIMARY, enabled = com.vyrk.core.profile.PinHasher.isValidPin(pinEntry!!), modifier = full, onClick = {
-                        existing?.let { graph.setPin(it.id, pinEntry) }; pinEntry = null; app.overlays.remove(o)
-                    })
-                    Text(str(R.string.pin_rules), style = Vyrk.type.bodyS, color = c.textMuted)
-                }
-                VyrkButton(str(R.string.cancel), modifier = full, onClick = { if (pinEntry != null) pinEntry = null else app.overlays.remove(o) })
-            }
-        }
-    }
-}
-
-// ---------------- Add-on configure QR, messages, See all ----------------
 
 @Composable
 private fun AddonQr(o: Overlay.AddonQr) {

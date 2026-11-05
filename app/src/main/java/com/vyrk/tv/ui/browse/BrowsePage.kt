@@ -57,6 +57,8 @@ import kotlinx.coroutines.launch
 const val CW_ROW = "cw"
 /** Rows fetched as soon as a tab is built; the hero takes its titles from these. */
 const val HERO_SOURCE_ROWS = 6
+/** Titles in a hero lineup. */
+const val HERO_COUNT = 6
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -125,9 +127,31 @@ fun BrowsePage(
         addAll(model.rows)
     }
 
-    // Hero: featured titles from the first catalogue that has artwork.
+    // Hero: featured titles. Movies, Series and the other pages feature the first catalogue with
+    // artwork. Home has its own mix, so it never repeats the Movies or Series carousel: titles taken
+    // in turn from each of its rows, leaving out the ones those two pages feature. Home waits for
+    // the rows fetched up front, so the lineup it locks is the full mix.
     val heroCandidates by remember(model.rows) {
-        derivedStateOf { model.rows.firstOrNull { r -> r.items.any { it.background != null } }?.items?.filter { it.background != null }?.take(6).orEmpty() }
+        derivedStateOf {
+            fun art(r: RowState) = r.items.filter { it.background != null }
+            fun firstWithArt(rows: List<RowState>) = rows.firstOrNull { art(it).isNotEmpty() }?.let { art(it).take(HERO_COUNT) }.orEmpty()
+            when {
+                !isHome -> firstWithArt(model.rows)
+                !model.rows.take(HERO_SOURCE_ROWS).all { it.loadedOnce } -> emptyList()
+                else -> {
+                    val elsewhere = (firstWithArt(model.rows.filter { it.ref?.catalog?.type == "movie" }) +
+                        firstWithArt(model.rows.filter { it.ref?.catalog?.type == "series" })).mapTo(HashSet()) { it.id }
+                    val pools = model.rows.map { r -> art(r).filter { it.id !in elsewhere } }.filter { it.isNotEmpty() }
+                    val picked = LinkedHashMap<String, MetaPreview>()
+                    var i = 0
+                    while (picked.size < HERO_COUNT && pools.any { i < it.size }) {
+                        pools.forEach { pool -> pool.getOrNull(i)?.let { m -> if (picked.size < HERO_COUNT) picked.putIfAbsent(m.id, m) } }
+                        i++
+                    }
+                    picked.values.toList().ifEmpty { firstWithArt(model.rows) }
+                }
+            }
+        }
     }
     LaunchedEffect(heroCandidates.map { it.id }) { model.lockHero(heroCandidates) }
     val heroItems = model.heroItems.ifEmpty { heroCandidates }
@@ -258,7 +282,8 @@ fun BrowsePage(
         }
         .focusGroup()) {
         val screenH = maxHeight + Dimens.navHeight
-        val heroH = (screenH * (if (isHome) 0.66f else 0.72f)) - Dimens.navHeight
+        // The same height on every page.
+        val heroH = screenH * 0.66f - Dimens.navHeight
         val headerH = screenH * 0.56f - Dimens.navHeight
         val density = LocalDensity.current
         val rowTitleH = 30.dp
@@ -281,11 +306,9 @@ fun BrowsePage(
                     Hero(
                         items = heroItems, index = heroIndex.coerceAtMost(heroItems.lastIndex), full = heroFull, art = heroArt, height = heroH,
                         hasProgress = heroMeta?.let { library[it.id]?.isInContinueWatching } == true,
-                        inLibrary = heroMeta?.let { library[it.id]?.inLibrary } == true,
                         watchReq = watchReq,
                         onWatch = { heroMeta?.let { onPlay(it, null) } },
                         onInfo = { heroMeta?.let { app.push(Overlay.Info(it, null)) } },
-                        onToggleLibrary = { heroMeta?.let { m -> if (library[m.id]?.inLibrary == true) session.removeFromLibrary(m.id) else session.addToLibrary(m) } },
                         onPrev = { model.heroIndex = (heroIndex - 1 + heroItems.size) % heroItems.size },
                         onNext = { model.heroIndex = (heroIndex + 1) % heroItems.size },
                         onFocusChanged = { f ->

@@ -27,7 +27,6 @@ import com.vyrk.tv.data.ProfileSession
 import com.vyrk.tv.ui.overlays.Overlays
 import com.vyrk.tv.ui.screens.MainScreen
 import com.vyrk.tv.ui.screens.PairingScreen
-import com.vyrk.tv.ui.screens.ProfilePicker
 import com.vyrk.tv.ui.screens.WelcomeScreen
 import com.vyrk.tv.ui.theme.AccentChoice
 import com.vyrk.tv.ui.theme.FittedCanvas
@@ -58,12 +57,9 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
         val profiles = graph.profiles.value
         app.screen = when {
             !device.firstRunDone || profiles.isEmpty() -> Screen.Welcome
-            else -> {
-                val last = profiles.firstOrNull { it.id == device.lastProfileId }
-                if (profiles.size == 1 && last != null && last.pinHash == null) {
-                    graph.openProfile(last); Screen.Main
-                } else Screen.Profiles
-            }
+            // One profile: the last one used (or the first, after an update from a version with
+            // several), opened straight away.
+            else -> { graph.openProfile(profiles.firstOrNull { it.id == device.lastProfileId } ?: profiles.first()); Screen.Main }
         }
     }
 
@@ -97,8 +93,7 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
                         Screen.Loading -> {}
                         Screen.Welcome -> WelcomeScreen()
                         is Screen.Pairing -> PairingScreen(sc.profileId)
-                        Screen.Profiles -> ProfilePicker()
-                        Screen.Main -> if (session != null) MainScreen(session!!) else ProfilePicker()
+                        Screen.Main -> session?.let { MainScreen(it) }
                     }
                     Overlays()
                     ToastHost(app)

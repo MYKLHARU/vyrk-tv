@@ -21,7 +21,7 @@ MUTED = (180, 186, 196)
 
 NAMES = [
     "home", "top10-rows", "info-page", "series-info", "player", "audio-subtitles", "search",
-    "library", "top10-suggestion", "addons", "settings", "profiles", "first-run",
+    "library", "top10-suggestion", "addons", "settings", "first-run",
 ]
 
 

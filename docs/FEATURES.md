@@ -23,20 +23,18 @@ not run yet.
 | Branding properties `vyrk.*` overridable with `-P` | `gradle.properties` | Built | — |
 | Store build without REQUEST_INSTALL_PACKAGES and updater UI | `src/store/AndroidManifest.xml`, `Updater.kt` | Built | — |
 
-## Accounts, profiles, add-ons
+## Account, add-ons
 
 | Requirement | Where | Status | Evidence |
 |---|---|---|---|
 | Stremio pairing: `link.stremio.com/api/v2/create` and `read` (101 = pending), QR + link + code | `core/account`, `PairingScreen` | Done | probe (create, read 101), core; real account signed in on an NVIDIA SHIELD |
 | Account API getUser, addonCollectionGet/Set, datastoreMeta/Get/Put, logout | `core/account/StremioAccount.kt` | Built | probe (error envelope, code 1), core (request bodies); real account on the SHIELD downloaded its add-ons and library (Continue Watching); saving add-ons, pushing library changes and logout not checked live |
 | Expired session (code 1) keeps data, offers Reconnect | `ProfileSession`, Settings › About | Built | core |
-| Use without an account: Cinemeta + OpenSubtitles | `ProfileSession.installDefaults` | Done | E2E |
-| Up to five profiles, colour avatar, default tab, PIN (PBKDF2) with escalating lockout | `AppGraph`, `core/profile/Pin.kt` | Built | core (PIN, lockout), showcase (profiles) |
-| "Who's watching?", hold OK to edit | `ProfilePicker`, `ProfilesScreen` | Built | showcase |
-| Share stream add-ons, receivers never see URLs | `AppGraph.refreshShared`, Settings › Add-ons | Built | — |
+| First run opens straight on the Stremio sign-in QR code, with a small "Use without an account" (Cinemeta + OpenSubtitles); Back leaves the app | `Onboarding.WelcomeScreen`, `PairingScreen(firstRun)`, `ProfileSession.installDefaults` | Done | E2E (guest from the QR screen) |
+| One profile: opened at startup with no picker or PIN (profiles, the profile editor and PIN pad were removed; data from an older version with several profiles keeps the last one used) | `AppRoot`, `AppGraph` | Built | E2E (startup, restart restore) |
 | Add-on protocol: manifest, catalog/meta/stream/subtitles, IDs percent-encoded as stremio-core does | `core/addon` | Done | core, E2E |
 | Install from typed URL, `stremio://`, `vyrk://install?url=` with confirmation for external links | `AppRoot`, `InstallConfirm` | Done | E2E (deep link), core (normalisation) |
-| Settings › Add-ons (no Add-ons tab): install from URL, version, description, tags, redacted URL, reorder, configure QR, refresh, remove, save to account, sharing between profiles | `SettingsScreen`, `AddonActions`, `AddonCard` | Done | emulator check, API 36: no Add-ons tab, opens on Install from URL, URL keyboard opens and Cancel returns focus, add-on cards reachable |
+| Settings › Add-ons (no Add-ons tab): install from URL, version, description, tags, redacted URL, reorder, configure QR, refresh, remove, save to account | `SettingsScreen`, `AddonActions`, `AddonCard` | Done | emulator check, API 36: no Add-ons tab, opens on Install from URL, URL keyboard opens and Cancel returns focus, add-on cards reachable |
 | Streaming-server add-ons skipped with an explanation | `CatalogRules.needsStreamingServer` | Built | — |
 | AddonClient concurrency limit 8, per-provider timeouts | `core/addon/AddonClient.kt` | Done | core |
 
@@ -45,16 +43,16 @@ not run yet.
 | Requirement | Where | Status | Evidence |
 |---|---|---|---|
 | Fixed 68dp bar: logo, tabs with icons, compact search field, avatar; Live only with TV catalogues. No notifications bell: VYRK has nothing to notify about | `MainScreen` | Done | E2E |
-| Avatar opens a profile menu: Switch profile, Settings (the bar's settings gear is gone) | `Overlays.ProfileMenu` | Done | E2E (profile menu → Settings), API 36 emulator |
+| Settings gear at the right of the bar (no avatar or profile menu) | `MainScreen.NavGear` | Built | E2E (gear → Settings) |
 | Tabs: the open tab is an accent pill with a soft glow, the focused tab is filled with the accent; one permanent FocusRequester per tab | `MainScreen.NavTab` | Done | E2E, API 36 emulator captures |
 | Up into the bar lands on the active tab; Back on a tab → Home; Back on Home → tab strip | `MainScreen` | Done | E2E |
-| Hero: backdrop, large logo, facts, IMDb, genres, synopsis, Starring and Director with icons; Watch now/Resume (accent pill), Add to library / In library (outline), More info (round); previous/next arrows around the position dots (Left/Right on Watch now no longer change title); coming in from the tabs or rows always lands on Watch now | `browse/Hero.kt` | Done | API 36 emulator captures, E2E (Movies and Series open on Watch now) |
+| Hero: backdrop, large logo, facts, IMDb, genres, synopsis, Starring and Director with icons; Watch now/Resume (accent pill) as its only button (hold OK or Menu opens the details); previous/next arrows at the left and right edges, position dots level with Watch now; Left/Right on Watch now reach the arrows; coming in from the tabs or rows always lands on Watch now; the same height on every page | `browse/Hero.kt` | Built | E2E (Movies and Series open on Watch now) |
 | Cinematic hero: backdrop on the right 80 %, reaching down behind the first row; black-navy fade from the left (clear from 64 %) and a gentle one at the bottom; teal haze and violet light low on the left; lighter top-bar fade; Watch now with an accent glow | `Hero.Backdrop`, `MainScreen`, `VyrkButton(glow)` | Done | emulator and NVIDIA SHIELD screenshots (real account) |
 | Title logos trimmed of empty margins (`TrimTransparent`) and fitted to one box shared by the hero and the title header (360×150), so a logo keeps its size as focus moves; bold title when no logo loads | `Hero.HeroLogo`, `components/TrimTransparent` | Done | API 36 emulator captures |
 | Artwork fallbacks: add-on art (TMDB/metahub URLs asked at hero size), then TMDB English-first logo/textless backdrop when the add-on gives none, then Cinemeta (metahub) by IMDb id; next candidate on load error | `core/art/Artwork`, `rememberTitleArt`, `TmdbClient.artwork` | Built | core (URL rules, TMDB picking and lookup against documented response shapes); metahub path seen on the SHIELD; live TMDB not exercised (local builds have no TMDB key) |
 | Continue Watching filled from the full meta when the library entry has no name or poster (Game of Thrones showed a blank card); posters fall back to Cinemeta's by IMDb id, then a titled card, never blank; header uses the full meta's logo and backdrop | `BrowsePage`, `Rows.Poster` | Done | SHIELD screenshot (Game of Thrones card, logo and backdrop) |
 | Continue Watching cards are wide (184×84 dp, about 2.2 : 1): backdrop (add-on, then Cinemeta, then poster), title logo, play button, 3 dp accent progress bar, episode and time left, tick when watched; zoom on focus | `Rows.ContinueCard` | Done | API 36 emulator captures ("S1 E1 · 1m left"), E2E (focus restored after restart) |
-| Top bar fades into the artwork on browse pages and Settings (no solid edge); Library, Search and Profiles sit in ambient teal/violet light under a lighter fade | `MainScreen`, `components/Design.AmbientBackground` | Done | API 36 emulator captures |
+| Top bar fades into the artwork on browse pages and Settings (no solid edge); Library and Search sit in ambient teal/violet light under a lighter fade | `MainScreen`, `components/Design.AmbientBackground` | Done | API 36 emulator captures |
 | Hero titles and position stay locked across the info page, playback and tab switches | `BrowseModel.lockHero` | Done | emulator check (Home → Movies → Home keeps the title) |
 | Hero rotates every 9 s, pauses when focused, under overlays/previews, scrolled away, in background, Reduce motion | `BrowsePage` | Built | — |
 | Hold Select / Menu on Watch now opens info | `Hero` | Built | — |
@@ -79,7 +77,7 @@ not run yet.
 | Restore exact poster after info page, playback and restart; neighbour or hero fallback | `BrowsePage` | Done | E2E |
 | Anime only from reliable signals | `core/catalog` | Done | core |
 | Top 10 rows per service, ranked numbers, first 10, before other rows | `CatalogRules`, `Rows.kt` | Done | showcase, core |
-| Top 10 numbers as tall as the posters: glyph outlines (Plus Jakarta Sans 800) scaled so the ink matches the poster height, in a box 0.574 of that height wide; narrow digits touch the poster, wide ones are cut off at the box edge; outline fades from white to clear towards the poster; 50/45/40/35 % strength for #1–4, 30 % after | `Rows.RankNumber` | Done | emulator capture, API 36 (Top 10 on Netflix · Movies) |
+| Top 10 numbers from the supplied artwork (numbers 1–10, 85 : 148): outlined digits as tall as the posters, white on the left and fading to clear towards the poster, fainter down the ranks (50 % for 1 to 30 % from 5; 31 % for 10, whose 0 overlaps the 1) | `Rows.RankNumber` | Built | — |
 | Top 10 suggestion card, install via confirmation, Not now hides it | `Top10Card` | Done | E2E, showcase |
 | Previews Off / Manual / Automatic; preview card never takes focus | `PreviewCard` | Partial | E2E; card shows hints, not focusable actions; no Open in YouTube button |
 

@@ -92,7 +92,7 @@ fun MainScreen(session: ProfileSession) {
     // One permanent requester per tab and per right-side button.
     val tabReqs = remember { Tab.entries.associateWith { FocusRequester() } }
     val searchReq = remember { FocusRequester() }
-    val profileReq = remember { FocusRequester() }
+    val settingsReq = remember { FocusRequester() }
     var navHasFocus by remember { mutableStateOf(false) }
 
     // Default tab once per session.
@@ -104,8 +104,7 @@ fun MainScreen(session: ProfileSession) {
         if (app.focusTabsTick > 0) runCatching {
             when (app.section) {
                 Section.SEARCH -> searchReq.requestFocus()
-                Section.SETTINGS -> profileReq.requestFocus()
-                Section.PROFILES -> profileReq.requestFocus()
+                Section.SETTINGS -> settingsReq.requestFocus()
                 Section.TABS -> tabReqs.getValue(app.tab).requestFocus()
             }
         }
@@ -170,7 +169,6 @@ fun MainScreen(session: ProfileSession) {
             when (app.section) {
                 Section.SEARCH -> SearchScreen(session)
                 Section.SETTINGS -> SettingsScreen(session)
-                Section.PROFILES -> ProfilesScreen(session)
                 Section.TABS -> if (shownTab == Tab.LIBRARY) LibraryScreen(session, onPlay)
             }
             val onTabs = app.section == Section.TABS
@@ -200,7 +198,7 @@ fun MainScreen(session: ProfileSession) {
                 .focusProperties {
                     onEnter = {
                         val target = when (app.section) {
-                            Section.SEARCH -> searchReq; Section.SETTINGS -> profileReq; Section.PROFILES -> profileReq
+                            Section.SEARCH -> searchReq; Section.SETTINGS -> settingsReq
                             Section.TABS -> tabReqs.getValue(app.tab)
                         }
                         runCatching { target.requestFocus() }
@@ -229,7 +227,7 @@ fun MainScreen(session: ProfileSession) {
             }
             Spacer(Modifier.width(10.dp))
             // The avatar opens the profile menu: switch profile, Settings.
-            NavAvatar(session, active = app.section == Section.PROFILES || app.section == Section.SETTINGS, profileReq) { app.push(com.vyrk.tv.ui.Overlay.ProfileMenu) }
+            NavGear(active = app.section == Section.SETTINGS, settingsReq) { app.section = Section.SETTINGS }
         }
 
     }
@@ -314,28 +312,26 @@ private fun SearchPill(active: Boolean, requester: FocusRequester, modifier: Mod
     }
 }
 
-/** Avatar with a chevron; OK opens the profile menu. Ringed while Settings or Profiles is open. */
+/** Settings, as a round gear button; ringed while Settings is open. */
 @Composable
-private fun NavAvatar(session: ProfileSession, active: Boolean, requester: FocusRequester, onSelect: () -> Unit) {
+private fun NavGear(active: Boolean, requester: FocusRequester, onSelect: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val c = Vyrk.colors
-    Row(
-        Modifier.height(38.dp)
+    val desc = str(R.string.settings)
+    Box(
+        Modifier.size(38.dp)
             .focusRequester(requester)
             .onFocusChanged { focused = it.isFocused }
-            .traceFocus("nav:profile")
-            .semantics { contentDescription = session.profile.name; role = Role.Button }
+            .traceFocus("nav:settings")
+            .semantics { contentDescription = desc; role = Role.Button }
             .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onSelect(); true } else false }
             .focusable()
-            .then(if (focused) Modifier.shadow(14.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
-            .background(if (focused) c.text else Color.Transparent, Dimens.pillShape)
-            .border(1.dp, when { focused -> c.text; active -> c.accent.copy(alpha = 0.7f); else -> Color.Transparent }, Dimens.pillShape)
-            .padding(start = 4.dp, end = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .then(if (focused) Modifier.shadow(14.dp, CircleShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
+            .background(if (focused) c.text else c.raised.copy(alpha = 0.55f), CircleShape)
+            .border(1.dp, when { focused -> c.text; active -> c.accent.copy(alpha = 0.7f); else -> c.glassEdge }, CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
-        ProfileAvatar(session.profile, 30.dp)
-        Icon(R.drawable.ic_chevron_down, null, Modifier.size(14.dp), tint = if (focused) c.background else c.textSecondary)
+        Icon(R.drawable.ic_cog, null, Modifier.size(18.dp), tint = when { focused -> c.background; active -> c.accent; else -> c.textSecondary })
     }
 }
 
