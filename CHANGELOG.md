@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.3
 
 - Fixed: moving along a row could leave a title showing the logo of the title you had just left (seen in v0.1.2).
 
