@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.7
 
 - Home: the featured artwork now reaches down behind the first row, with a soft teal haze and violet light. The title logo is smaller and the same size in the hero and in the header above the rows. The carousel arrows are quieter.
 - Continue Watching cards are wider, closer to a cinema frame.
