@@ -683,6 +683,9 @@ fun exclusionText(r: Ranked): String = when (r.exclusion) {
     com.vyrk.core.stream.Exclusion.UNCACHED -> stringResource(R.string.excl_uncached)
     com.vyrk.core.stream.Exclusion.CODEC_UNSUPPORTED -> stringResource(R.string.excl_codec)
     com.vyrk.core.stream.Exclusion.OVER_DECODER_LIMIT -> stringResource(R.string.excl_decoder)
+    com.vyrk.core.stream.Exclusion.TEN_BIT_UNSUPPORTED -> stringResource(R.string.excl_ten_bit)
+    com.vyrk.core.stream.Exclusion.DOLBY_VISION_UNSUPPORTED -> stringResource(R.string.excl_dolby_vision)
+    com.vyrk.core.stream.Exclusion.FAILED_ON_THIS_TV -> stringResource(R.string.excl_failed_here)
     null -> ""
 }
 

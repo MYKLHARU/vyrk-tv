@@ -5,6 +5,10 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 ## Unreleased
 
 - Top 10 numbers redrawn: each sits in a box as tall as the poster, cut off where the poster begins, and fades to clear towards it; the numbers get fainter down the ranks.
+- Play no longer picks files the TV can't decode: 10-bit, HDR and Dolby Vision HEVC files are skipped on TVs without a 10-bit HEVC decoder, and Dolby Vision-only files on TVs without a Dolby Vision decoder, even with Source choice set to Add-on order.
+- When a file fails to decode, VYRK tries a different kind of file next and skips that kind for the rest of the session. A source that shows nothing within 12 seconds is skipped instead of being retried twice.
+- Settings › Picture & sound shows whether the TV decodes 10-bit HEVC and Dolby Vision.
+- Settings: Down on a group's last setting stays there instead of opening the group below.
 
 ## v0.1.4
 

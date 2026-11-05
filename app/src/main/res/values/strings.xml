@@ -72,6 +72,7 @@
     <string name="director">Director</string>
     <string name="director_line">Director: %1$s</string>
     <string name="display">Display</string>
+    <string name="dolby_vision_decoder">Dolby Vision decoder</string>
     <string name="done">Done</string>
     <string name="download_install">Download and install</string>
     <string name="edit_profile">Edit profile</string>
@@ -80,9 +81,12 @@
     <string name="enter_pin_for">Enter the PIN for %1$s</string>
     <string name="excl_codec">this TV can\'t decode the video format</string>
     <string name="excl_decoder">higher resolution than this TV\'s decoder</string>
+    <string name="excl_dolby_vision">Dolby Vision only, which this TV can\'t decode</string>
     <string name="excl_external">opens outside the app</string>
+    <string name="excl_failed_here">this kind of file failed to play on this TV</string>
     <string name="excl_max_res">over your maximum resolution</string>
     <string name="excl_max_size">over your maximum file size</string>
+    <string name="excl_ten_bit">10-bit or HDR video this TV\'s decoder can\'t play</string>
     <string name="excl_torrent">needs a streaming server</string>
     <string name="excl_uncached">not ready on the service</string>
     <string name="excl_unknown">unknown source type</string>

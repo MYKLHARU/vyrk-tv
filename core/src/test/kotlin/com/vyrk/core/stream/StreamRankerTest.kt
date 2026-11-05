@@ -19,6 +19,46 @@ class StreamRankerTest {
     private val tv1080 = DeviceCaps(maxHeight = mapOf(VideoCodec.H264 to 1080, VideoCodec.HEVC to 1080), hevc = true,
         displayHdr10 = false, displayDolbyVision = false, display4k = false)
 
+    /** The owner's emulator: 1080p, no HDR, an HEVC decoder without Main 10, no Dolby Vision decoder. */
+    private val emulator = DeviceCaps(maxHeight = mapOf(VideoCodec.H264 to 4096, VideoCodec.HEVC to 4096), hevc = true, hevc10 = false,
+        dolbyVisionDecoder = false, displayHdr10 = false, displayDolbyVision = false, display4k = false)
+    private val remuxDv = "[TB⚡]\nDune.Part.Two.2024.2160p.BluRay.Hybrid.Remux.DV.HDR.HEVC.Atmos-SGF.mkv\n💾 85.37 GB"
+    private val webDl1080 = "[TB⚡]\nDune.Part.Two.2024.1080p.WEB-DL.H264.DDP5.1-GRP.mkv\n💾 6.1 GB"
+
+    @Test
+    fun tenBitAndDolbyVisionFilesAreSkippedWhenTheTvCantDecodeThem() {
+        assertTrue(StreamParser.parse(Stream(url = "https://x", title = remuxDv)).tenBit)
+        assertTrue(StreamParser.parse(Stream(url = "https://x", title = "Show.S01E01.1080p.x265.10bit-GRP")).tenBit)
+        assertFalse(StreamParser.parse(Stream(url = "https://x", title = webDl1080)).tenBit)
+        // Add-on order played the add-on's first stream, an 85 GB 4K Dolby Vision remux the emulator can't decode.
+        for (preset in Preset.entries) {
+            val best = StreamRanker.best(listOf(c("Debridio", remuxDv, index = 0), c("Debridio", webDl1080, index = 1)), emulator, RankPrefs(preset = preset))
+            assertEquals(1, best?.candidate?.index, "preset $preset")
+        }
+        val ranked = StreamRanker.rank(listOf(c("Debridio", remuxDv)), emulator, RankPrefs())
+        assertEquals(Exclusion.TEN_BIT_UNSUPPORTED, ranked.single().exclusion)
+        // Unknown support is never treated as unsupported; a TV with Main 10 plays it.
+        assertTrue(StreamRanker.rank(listOf(c("Debridio", remuxDv)), DeviceCaps(), RankPrefs()).single().playable)
+        assertTrue(StreamRanker.rank(listOf(c("Debridio", remuxDv)), tv4kHdr.copy(hevc10 = true), RankPrefs()).single().playable)
+    }
+
+    @Test
+    fun dolbyVisionOnlyNeedsADolbyVisionDecoder() {
+        val dvOnly = c("Web", "Movie.2024.2160p.WEB-DL.DV.H265-GRP.mkv")
+        assertEquals(Exclusion.DOLBY_VISION_UNSUPPORTED, StreamRanker.rank(listOf(dvOnly), tv4kHdr.copy(hevc10 = true, dolbyVisionDecoder = false), RankPrefs()).single().exclusion)
+        assertTrue(StreamRanker.rank(listOf(dvOnly), tv4kHdr.copy(hevc10 = true, dolbyVisionDecoder = true), RankPrefs()).single().playable)
+    }
+
+    @Test
+    fun aKindOfFileThatFailedToDecodeIsSkippedNextTime() {
+        val remux = c("Debridio", remuxDv)
+        val group = StreamRanker.formatGroup(StreamParser.parse(remux.stream))
+        assertEquals("HEVC/10bit/4k", group)
+        val caps = tv4kHdr.copy(hevc10 = true, failedFormats = setOf(group))
+        assertEquals(Exclusion.FAILED_ON_THIS_TV, StreamRanker.rank(listOf(remux), caps, RankPrefs(preset = Preset.ADDON_ORDER)).single().exclusion)
+        assertTrue(StreamRanker.rank(listOf(c("Debridio", webDl1080)), caps, RankPrefs()).single().playable)
+    }
+
     @Test
     fun parsesCommonReleaseNames() {
         val i = StreamParser.parse(Stream(url = "https://x", name = "[RD+] Torrentio\n4K", title =

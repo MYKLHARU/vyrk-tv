@@ -72,6 +72,7 @@
     <string name="director">Direção</string>
     <string name="director_line">Direção: %1$s</string>
     <string name="display">Tela</string>
+    <string name="dolby_vision_decoder">Decodificador Dolby Vision</string>
     <string name="done">Concluído</string>
     <string name="download_install">Baixar e instalar</string>
     <string name="edit_profile">Editar perfil</string>
@@ -80,9 +81,12 @@
     <string name="enter_pin_for">Digite o PIN de %1$s</string>
     <string name="excl_codec">esta TV não decodifica o formato de vídeo</string>
     <string name="excl_decoder">resolução acima do decodificador desta TV</string>
+    <string name="excl_dolby_vision">só Dolby Vision, que esta TV não decodifica</string>
     <string name="excl_external">abre fora do app</string>
+    <string name="excl_failed_here">este tipo de arquivo falhou nesta TV</string>
     <string name="excl_max_res">acima da sua resolução máxima</string>
     <string name="excl_max_size">acima do seu tamanho máximo de arquivo</string>
+    <string name="excl_ten_bit">vídeo de 10 bits ou HDR que o decodificador desta TV não reproduz</string>
     <string name="excl_torrent">precisa de um servidor de streaming</string>
     <string name="excl_uncached">não está pronto no serviço</string>
     <string name="excl_unknown">tipo de fonte desconhecido</string>

@@ -72,6 +72,7 @@
     <string name="director">निर्देशक</string>
     <string name="director_line">निर्देशक: %1$s</string>
     <string name="display">डिस्प्ले</string>
+    <string name="dolby_vision_decoder">Dolby Vision डिकोडर</string>
     <string name="done">हो गया</string>
     <string name="download_install">डाउनलोड करके इंस्टॉल करें</string>
     <string name="edit_profile">प्रोफ़ाइल बदलें</string>
@@ -80,9 +81,12 @@
     <string name="enter_pin_for">%1$s का PIN डालें</string>
     <string name="excl_codec">यह टीवी वीडियो फ़ॉर्मैट डिकोड नहीं कर सकता</string>
     <string name="excl_decoder">टीवी के डिकोडर से ज़्यादा रिज़ॉल्यूशन</string>
+    <string name="excl_dolby_vision">सिर्फ़ Dolby Vision, जिसे यह टीवी डिकोड नहीं करता</string>
     <string name="excl_external">ऐप के बाहर खुलता है</string>
+    <string name="excl_failed_here">इस तरह की फ़ाइल इस टीवी पर नहीं चली</string>
     <string name="excl_max_res">आपके अधिकतम रिज़ॉल्यूशन से ज़्यादा</string>
     <string name="excl_max_size">आपके अधिकतम फ़ाइल आकार से ज़्यादा</string>
+    <string name="excl_ten_bit">10-बिट या HDR वीडियो, जिसे टीवी का डिकोडर नहीं चला सकता</string>
     <string name="excl_torrent">स्ट्रीमिंग सर्वर चाहिए</string>
     <string name="excl_uncached">सेवा पर तैयार नहीं</string>
     <string name="excl_unknown">अज्ञात स्रोत प्रकार</string>

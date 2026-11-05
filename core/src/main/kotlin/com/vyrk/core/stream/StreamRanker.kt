@@ -11,7 +11,13 @@ enum class HdrPref { ANY, DOLBY_VISION, HDR10, SDR }
 data class DeviceCaps(
     val maxHeight: Map<VideoCodec, Int?> = emptyMap(),
     val hevc: Boolean? = null,
+    /** An HEVC decoder declares the Main 10 profile (needed for 10-bit, HDR and Dolby Vision HEVC). */
+    val hevc10: Boolean? = null,
     val av1: Boolean? = null,
+    /** A Dolby Vision decoder exists (needed for Dolby Vision-only files, which have no HDR10 base). */
+    val dolbyVisionDecoder: Boolean? = null,
+    /** [StreamRanker.formatGroup]s whose decoding failed on this TV in this session. */
+    val failedFormats: Set<String> = emptySet(),
     val displayHdr10: Boolean? = null,
     val displayDolbyVision: Boolean? = null,
     val display4k: Boolean? = null,
@@ -60,6 +66,9 @@ enum class Exclusion(val code: String) {
     UNCACHED("not_cached"),
     CODEC_UNSUPPORTED("codec_unsupported"),
     OVER_DECODER_LIMIT("over_decoder_limit"),
+    TEN_BIT_UNSUPPORTED("ten_bit_unsupported"),
+    DOLBY_VISION_UNSUPPORTED("dolby_vision_unsupported"),
+    FAILED_ON_THIS_TV("failed_on_this_tv"),
 }
 
 data class Reason(val code: String, val points: Int)
@@ -110,8 +119,24 @@ object StreamRanker {
         val codecKey = if (info.codec == VideoCodec.UNKNOWN) VideoCodec.H264 else info.codec
         val limit = caps.maxHeight[codecKey]
         if (res != null && limit != null && res > limit + 8) return Exclusion.OVER_DECODER_LIMIT
+        // These apply in every preset, Add-on order included: the TV can't decode such a file at all.
+        // HDR and Dolby Vision files without a codec tag are almost always HEVC.
+        val hevcLike = info.codec == VideoCodec.HEVC || (info.codec == VideoCodec.UNKNOWN && info.tenBit)
+        if (hevcLike && info.tenBit && caps.hevc10 == false) return Exclusion.TEN_BIT_UNSUPPORTED
+        if (info.dvOnly && caps.dolbyVisionDecoder == false) return Exclusion.DOLBY_VISION_UNSUPPORTED
+        if (formatGroup(info) in caps.failedFormats) return Exclusion.FAILED_ON_THIS_TV
         return null
     }
+
+    /**
+     * What decoding a stream needs, coarsely: codec, 8 or 10 bit, 4K or not. When the decoder fails
+     * on one stream, others in the same group are unlikely to play either.
+     */
+    fun formatGroup(info: StreamInfo): String = listOf(
+        (if (info.codec == VideoCodec.UNKNOWN && info.tenBit) VideoCodec.HEVC else info.codec).name,
+        if (info.tenBit) "10bit" else "8bit",
+        if ((info.resolution ?: 0) >= 2160) "4k" else "hd",
+    ).joinToString("/")
 
     fun score(c: Candidate, caps: DeviceCaps, prefs: RankPrefs): Ranked {
         val info = StreamParser.parse(c.stream)

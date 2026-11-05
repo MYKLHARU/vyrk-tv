@@ -72,6 +72,7 @@
     <string name="director">Regie</string>
     <string name="director_line">Regie: %1$s</string>
     <string name="display">Display</string>
+    <string name="dolby_vision_decoder">Dolby-Vision-Decoder</string>
     <string name="done">Fertig</string>
     <string name="download_install">Herunterladen und installieren</string>
     <string name="edit_profile">Profil bearbeiten</string>
@@ -80,9 +81,12 @@
     <string name="enter_pin_for">PIN für %1$s eingeben</string>
     <string name="excl_codec">dieser Fernseher kann das Videoformat nicht dekodieren</string>
     <string name="excl_decoder">höhere Auflösung als der Decoder des Fernsehers</string>
+    <string name="excl_dolby_vision">nur Dolby Vision, das dieser Fernseher nicht dekodiert</string>
     <string name="excl_external">öffnet sich außerhalb der App</string>
+    <string name="excl_failed_here">diese Art Datei ist auf diesem Fernseher gescheitert</string>
     <string name="excl_max_res">über deiner maximalen Auflösung</string>
     <string name="excl_max_size">über deiner maximalen Dateigröße</string>
+    <string name="excl_ten_bit">10-Bit- oder HDR-Video, das der Decoder des Fernsehers nicht abspielt</string>
     <string name="excl_torrent">braucht einen Streaming-Server</string>
     <string name="excl_uncached">beim Dienst nicht bereit</string>
     <string name="excl_unknown">unbekannter Quelltyp</string>

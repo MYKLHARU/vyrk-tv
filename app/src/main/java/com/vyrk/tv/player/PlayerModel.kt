@@ -308,7 +308,25 @@ class PlayerModel(
         firstFrameJob?.cancel()
         // Once the film is playing, a broken audio track shouldn't stop it: change track, keep the second.
         if (cls == com.vyrk.core.playback.ErrorClass.AUDIO_TRACK && firstFrame && switchAudioMidFilm()) return
+        if (cls == com.vyrk.core.playback.ErrorClass.DECODER) current?.let { decoderFailedOn(it) }
         handle(policy.onFailure(cls, canRefresh = true))
+    }
+
+    /**
+     * The decoder can't play this kind of file (on the emulator: every 4K Dolby Vision HEVC file).
+     * Remember it for the session so the ranker skips such files, and try the other kinds of file
+     * among the remaining sources first: three more of the same kind would fail the same way.
+     */
+    private fun decoderFailedOn(r: Ranked) {
+        val group = StreamRanker.formatGroup(r.info)
+        graph.device.recordDecoderFailure(group)
+        if (index + 1 > candidates.lastIndex) return
+        val (same, other) = candidates.subList(index + 1, candidates.size).partition { StreamRanker.formatGroup(it.info) == group }
+        if (same.isEmpty() || other.isEmpty()) return
+        val reordered = other + same
+        for (i in candidates.lastIndex downTo index + 1) candidates.removeAt(i)
+        candidates.addAll(reordered)
+        Diagnostics.log("player", "decoder failed on $group; trying ${other.size} other source(s) of another kind first")
     }
 
     /**

@@ -20,6 +20,8 @@ class DeviceCapabilities(private val context: Context) {
     data class Report(
         val decoders: Map<VideoCodec, Int?>,
         val hevc: Boolean?,
+        /** An HEVC decoder declares Main 10 (10-bit, HDR, Dolby Vision HEVC). Null when there's no list. */
+        val hevc10: Boolean?,
         val av1: Boolean?,
         val dolbyVisionDecoder: Boolean,
         val displayWidth: Int,
@@ -34,11 +36,23 @@ class DeviceCapabilities(private val context: Context) {
 
     val report: Report by lazy { detect() }
 
+    /**
+     * Kinds of file ([com.vyrk.core.stream.StreamRanker.formatGroup]) the decoder failed on in this
+     * session. Some decoders declare support they don't have (the emulator's HEVC decoder failed on
+     * every 4K Dolby Vision file), so a failure is remembered and such files are skipped after it.
+     */
+    private val failedFormats = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    fun recordDecoderFailure(formatGroup: String) { failedFormats += formatGroup }
+
     fun caps(measuredBps: Double?): DeviceCaps = report.let { r ->
         DeviceCaps(
             maxHeight = r.decoders,
             hevc = r.hevc,
+            hevc10 = r.hevc10,
             av1 = r.av1,
+            dolbyVisionDecoder = r.dolbyVisionDecoder,
+            failedFormats = failedFormats.toSet(),
             displayHdr10 = r.hdr10,
             displayDolbyVision = r.dolbyVision,
             display4k = if (r.displayHeight > 0) r.displayHeight >= 2000 || r.displayWidth >= 3800 else null,
@@ -56,6 +70,19 @@ class DeviceCapabilities(private val context: Context) {
                     caps.videoCapabilities?.supportedHeights?.upper
                 }.getOrNull()
             }.maxOrNull()
+    }.getOrNull()
+
+    /** True when an HEVC decoder declares a Main 10 profile; null when there are no HEVC decoders listed. */
+    private fun hevcMain10(): Boolean? = runCatching {
+        val mime = MediaFormat.MIMETYPE_VIDEO_HEVC
+        val decoders = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos.filter { !it.isEncoder && it.supportedTypes.any { t -> t.equals(mime, true) } }
+        if (decoders.isEmpty()) return@runCatching null
+        val main10 = setOf(
+            MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10,
+            MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10HDR10,
+            MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10HDR10Plus,
+        )
+        decoders.any { info -> runCatching { info.getCapabilitiesForType(mime).profileLevels.any { it.profile in main10 } }.getOrDefault(false) }
     }.getOrNull()
 
     private fun hasDecoder(mime: String): Boolean = runCatching {
@@ -107,6 +134,7 @@ class DeviceCapabilities(private val context: Context) {
             decoders = mapOf(VideoCodec.H264 to h264, VideoCodec.HEVC to hevcH, VideoCodec.AV1 to av1H),
             // A missing decoder list is unknown, not unsupported.
             hevc = hevcH?.let { true } ?: if (h264 != null) false else null,
+            hevc10 = if (hevcH != null) hevcMain10() else if (h264 != null) false else null,
             av1 = av1H?.let { true } ?: if (h264 != null) false else null,
             dolbyVisionDecoder = dvDecoder,
             displayWidth = w,

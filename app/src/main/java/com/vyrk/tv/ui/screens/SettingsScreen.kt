@@ -114,7 +114,14 @@ fun SettingsScreen(session: ProfileSession) {
             // Focus search would pick the sidebar entry level with the focused setting, and the
             // page follows sidebar focus, so Left from a lower setting used to open another group.
             .focusProperties {
-                onExit = { if (requestedFocusDirection == FocusDirection.Left) runCatching { groupReqs.getValue(group).requestFocus() } }
+                onExit = {
+                    when (requestedFocusDirection) {
+                        FocusDirection.Left -> runCatching { groupReqs.getValue(group).requestFocus() }
+                        // Down past the last setting would land on a sidebar entry below and open that group.
+                        FocusDirection.Down -> cancelFocusChange()
+                        else -> {}
+                    }
+                }
             }
             .focusGroup()
         ) {
@@ -236,6 +243,8 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                 listOf(
                     "H.264" to (r.decoders[com.vyrk.core.stream.VideoCodec.H264]?.let { "${it}p" } ?: unknown),
                     "HEVC" to (r.decoders[com.vyrk.core.stream.VideoCodec.HEVC]?.let { "${it}p" } ?: unknown),
+                    "HEVC 10-bit" to yn(r.hevc10),
+                    str(R.string.dolby_vision_decoder) to yn(r.dolbyVisionDecoder),
                     "AV1" to (r.decoders[com.vyrk.core.stream.VideoCodec.AV1]?.let { "${it}p" } ?: unknown),
                     str(R.string.display) to if (r.displayWidth > 0) "${r.displayWidth}×${r.displayHeight}" else unknown,
                     "HDR10" to yn(r.hdr10), "HDR10+" to yn(r.hdr10Plus), "Dolby Vision" to yn(r.dolbyVision), "HLG" to yn(r.hlg),

@@ -78,7 +78,9 @@ class RecoveryPolicy(
             return RecoveryAction.RefreshLink
         }
         if (cls == ErrorClass.HTTP_EXPIRED && userPicked && !canRefresh) return RecoveryAction.LinkExpired
-        val retryable = cls == ErrorClass.NETWORK || cls == ErrorClass.TIMEOUT || cls == ErrorClass.HTTP_SERVER || cls == ErrorClass.UNKNOWN
+        // No first frame in time is not retried: a source that showed nothing for 12 s rarely does on
+        // a second try, and two retries kept the screen on "Connecting" for over half a minute.
+        val retryable = cls == ErrorClass.NETWORK || cls == ErrorClass.HTTP_SERVER || cls == ErrorClass.UNKNOWN
         if (retryable && retries < retriesPerCandidate) {
             retries++
             return RecoveryAction.Retry

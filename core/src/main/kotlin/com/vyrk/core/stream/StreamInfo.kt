@@ -33,6 +33,8 @@ data class StreamInfo(
     val bingeGroup: String?,
     val releaseGroup: String?,
     val filename: String?,
+    /** 10-bit video: tagged so ("10bit", "Hi10P", "Main10") or HDR/Dolby Vision, which is always 10-bit. */
+    val tenBit: Boolean = false,
 ) {
     val resolutionLabel: String
         get() = when {
@@ -69,6 +71,7 @@ object StreamParser {
     private val hdr10p = rx("""\bhdr10(\+|plus)""")
     private val hdr10 = rx("""\bhdr(10)?\b""")
     private val hlg = rx("""\bhlg\b""")
+    private val tenBitRx = rx("""\b(10[-\s.]?bit|hi10p?|main\s?10)\b""")
 
     private val atmos = rx("""\batmos\b""")
     private val truehd = rx("""\btrue-?hd\b""")
@@ -181,6 +184,7 @@ object StreamParser {
             bingeGroup = s.behaviorHints.bingeGroup,
             releaseGroup = group,
             filename = filename?.trim(),
+            tenBit = hdr.isNotEmpty() || tenBitRx.containsMatchIn(text),
         )
     }
 

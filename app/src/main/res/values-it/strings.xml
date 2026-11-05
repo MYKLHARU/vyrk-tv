@@ -72,6 +72,7 @@
     <string name="director">Regia</string>
     <string name="director_line">Regia: %1$s</string>
     <string name="display">Schermo</string>
+    <string name="dolby_vision_decoder">Decoder Dolby Vision</string>
     <string name="done">Fatto</string>
     <string name="download_install">Scarica e installa</string>
     <string name="edit_profile">Modifica profilo</string>
@@ -80,9 +81,12 @@
     <string name="enter_pin_for">Inserisci il PIN di %1$s</string>
     <string name="excl_codec">questo televisore non decodifica il formato video</string>
     <string name="excl_decoder">risoluzione superiore al decoder del televisore</string>
+    <string name="excl_dolby_vision">solo Dolby Vision, che questo televisore non decodifica</string>
     <string name="excl_external">si apre fuori dall\'app</string>
+    <string name="excl_failed_here">questo tipo di file non è partito su questo televisore</string>
     <string name="excl_max_res">oltre la tua risoluzione massima</string>
     <string name="excl_max_size">oltre la tua dimensione massima del file</string>
+    <string name="excl_ten_bit">video a 10 bit o HDR che il decoder del televisore non riproduce</string>
     <string name="excl_torrent">richiede un server di streaming</string>
     <string name="excl_uncached">non pronto sul servizio</string>
     <string name="excl_unknown">tipo di fonte sconosciuto</string>

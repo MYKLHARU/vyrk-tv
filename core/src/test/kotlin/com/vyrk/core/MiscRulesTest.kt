@@ -59,6 +59,15 @@ class RecoveryTest {
     }
 
     @Test
+    fun noFirstFrameMovesStraightToTheNextSource() {
+        val p = RecoveryPolicy(candidateCount = 3, userPicked = false)
+        assertEquals(RecoveryAction.NextCandidate, p.onFirstFrameTimeout())
+        assertEquals(1, p.candidateIndex)
+        assertEquals(RecoveryAction.NextCandidate, p.onFailure(ErrorClass.DECODER, false))
+        assertEquals(RecoveryAction.GiveUp, p.onFirstFrameTimeout())
+    }
+
+    @Test
     fun handPickedSourceAsksInsteadOfSwitching() {
         val p = RecoveryPolicy(candidateCount = 3, userPicked = true)
         assertEquals(RecoveryAction.AskUser, p.onFailure(ErrorClass.DECODER, false))
