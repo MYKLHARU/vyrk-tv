@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.6
 
 - New look: deep navy with soft teal and violet light, frosted glass panels, thin edges and a brighter frost accent.
 - Top bar: tabs have icons, and the open tab is an accent pill. Search is a compact field. Settings moved into the menu under your avatar, with Switch profile.
