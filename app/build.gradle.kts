@@ -18,7 +18,9 @@ val top10Url = prop("vyrk.top10AddonUrl")
 val storeBuild = prop("vyrk.storeBuild", "false").toBoolean()
 // TMDB key for cast and crew pages: from -Pvyrk.tmdbApiKey or the TMDB_API_KEY environment variable.
 // Never committed; without it the cast pages are simply off.
-val tmdbKey = prop("vyrk.tmdbApiKey", System.getenv("TMDB_API_KEY") ?: "")
+// A byte-order mark or spaces around the value (easy to get when setting the secret from Windows
+// PowerShell) made TMDB reject every request; TmdbClient also cleans the key up.
+val tmdbKey = prop("vyrk.tmdbApiKey", System.getenv("TMDB_API_KEY") ?: "").replace("﻿", "").trim()
 
 // Release signing comes from the environment. Without it, builds are signed with the committed
 // debug key in ci/debug-signing/, which is NOT secret and only for testing.

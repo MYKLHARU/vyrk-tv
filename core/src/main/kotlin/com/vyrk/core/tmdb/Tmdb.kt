@@ -76,10 +76,11 @@ data class TmdbArtwork(val logo: String?, val backdrop: String?, val poster: Str
  */
 class TmdbClient(
     private val http: HttpTransport,
-    private val key: String,
+    rawKey: String,
     /** Told about every failed request: the API path and a reason, never the key or the query. */
     private val onFailed: ((path: String, reason: String) -> Unit)? = null,
 ) {
+    private val key = normalizeKey(rawKey)
     private val bearer = key.startsWith("eyJ")
 
     val enabled: Boolean get() = key.isNotBlank()
@@ -160,6 +161,21 @@ class TmdbClient(
 
     companion object {
         const val BASE = "https://api.themoviedb.org/3"
+
+        private val readToken = Regex("""eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+""")
+        private val v3Key = Regex("""(?<![0-9A-Fa-f])[0-9A-Fa-f]{32}(?![0-9A-Fa-f])""")
+
+        /**
+         * The key as TMDB expects it. A configured value can carry extra characters: a byte-order
+         * mark (Windows PowerShell 5.1 adds one when it pipes text into `gh secret set`), spaces,
+         * quotes or a label. TMDB answered 401 to every request with the BOM in front of the key.
+         * A v4 read token or a 32-character v3 key inside the value is used as is; anything else
+         * is trimmed.
+         */
+        fun normalizeKey(raw: String): String {
+            val s = raw.replace("﻿", "")
+            return readToken.find(s)?.value ?: v3Key.find(s)?.value ?: s.trim()
+        }
         const val ATTRIBUTION = "This product uses the TMDB API but is not endorsed or certified by TMDB."
 
         fun image(path: String?, size: String = "w185"): String? = path?.takeIf { it.isNotBlank() }?.let { "https://image.tmdb.org/t/p/$size$it" }

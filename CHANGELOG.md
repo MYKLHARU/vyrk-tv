@@ -8,6 +8,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - While you move along a row, the header no longer jumps as a title's details load, and a title's logo no longer changes to a different one moments after it appears.
 - Runtimes read the same everywhere, such as "1h 35m".
 - The no-sources message points to Settings › Add-ons.
+- Cast photos, person pages and TMDB artwork load again: TMDB refused the key because of an invisible character in front of it.
 
 ## v0.1.1
 

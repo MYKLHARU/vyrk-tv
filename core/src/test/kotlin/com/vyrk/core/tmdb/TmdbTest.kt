@@ -72,6 +72,22 @@ class TmdbTest {
     }
 
     @Test
+    fun keysAreCleanedUp() = runTest {
+        val v3 = "0123456789abcdef0123456789abcdef"
+        assertEquals(v3, TmdbClient.normalizeKey("﻿$v3"))
+        assertEquals(v3, TmdbClient.normalizeKey("  $v3 \n"))
+        assertEquals(v3, TmdbClient.normalizeKey("TMDB_API_KEY=\"$v3\""))
+        assertEquals("eyJhbGc.eyJzdWI.sig_-1", TmdbClient.normalizeKey("Bearer eyJhbGc.eyJzdWI.sig_-1\r\n"))
+        assertEquals("v3key", TmdbClient.normalizeKey(" v3key "))
+        assertEquals("", TmdbClient.normalizeKey("﻿ "))
+        // The request carries the clean key.
+        val f = Fake()
+        TmdbClient(f, "﻿$v3").findByImdb("tt1", false)
+        assertTrue(f.urls[0].endsWith("api_key=$v3"))
+        assertFalse(TmdbClient(f, "﻿ ").enabled)
+    }
+
+    @Test
     fun failuresAreReportedWithoutTheKey() = runTest {
         val reports = mutableListOf<String>()
         val denied = object : HttpTransport {
