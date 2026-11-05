@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.5
 
 - Top 10 numbers redrawn: each sits in a box as tall as the poster, cut off where the poster begins, and fades to clear towards it; the numbers get fainter down the ranks.
 - Play no longer picks files the TV can't decode: 10-bit, HDR and Dolby Vision HEVC files are skipped on TVs without a 10-bit HEVC decoder, and Dolby Vision-only files on TVs without a Dolby Vision decoder, even with Source choice set to Add-on order.
