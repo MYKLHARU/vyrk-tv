@@ -85,7 +85,7 @@ not run yet.
 
 | Requirement | Where | Status | Evidence |
 |---|---|---|---|
-| Full-screen title page: the title's own backdrop across the screen (dark left and bottom), logo, certificate · year · genre · runtime · IMDb, three-line synopsis, people chips with photos and "+N more" (as many as fit), Play/Resume, Trailer, library and more buttons, clock; fixed slots so nothing moves while details load | `overlays/InfoPage.kt` | Done | emulator check and captures, API 36 (local build without a TMDB key: people chips show initials; TMDB photos not seen) |
+| Full-screen title page: the title's own backdrop across the screen (dark left and bottom), logo, certificate · year · genre · runtime · IMDb, three-line synopsis, people chips with photos and "+N more" (as many as fit), Play/Resume, Trailer, library and more buttons, clock; fixed slots so nothing moves while details load | `overlays/InfoPage.kt` | Done | emulator check and captures, API 36; CI showcase at 568a753 with TMDB photos and "+N more" (Dune: Part Two, Game of Thrones) |
 | Page two (Down or the more button): episodes for a series, sources for a film (when sources are shown on the info page), beside the full synopsis, Mark watched, credits and cast; Back on page two returns to page one | `InfoPage` | Done | emulator check, API 36; E2E steps added (series page two) |
 | No close button; Back returns to the poster | `Overlays` | Done | E2E |
 | Below 760dp wide: info and sources as tabs | `InfoPage` | Not done | — |
@@ -118,7 +118,7 @@ not run yet.
 | Matroska chapters read with HTTP range requests (EBML SeekHead → Chapters) | `core/playback/MkvChapters.kt` | Built | core (synthetic MKV); no MKV with chapters played on a device yet |
 | Smart scrubbing: focusable timeline, accelerating Left/Right with chapter snap, Up for chapter mode, OK to seek | `Scrubber`, `PlayerActivity.Timeline` | Done | core, E2E |
 | Mid-film audio failure switches track at the same second (same language, simpler codec first) | `TrackSelector.fallbackAudio`, `PlayerModel` | Built | core; no broken audio track was available to trigger it on a device |
-| Cast and crew pages from TMDB: photos on the info page, person page with biography and filmography that opens titles through your add-ons | `core/tmdb`, `overlays/Person.kt` | Partial | core (fixtures); worked in an earlier emulator check against live TMDB, but CI builds (c1f4a7b) showed no TMDB cast on 2026-11-05 although the key is in the build and TMDB accepts it; failed TMDB requests are now logged (`tmdb <path> failed: <reason>`) to find out why |
+| Cast and crew pages from TMDB: photos on the info page, person page with biography and filmography that opens titles through your add-ons | `core/tmdb`, `overlays/Person.kt` | Done | core (fixtures, key clean-up); CI journey and showcase at 568a753: Game of Thrones and Dune: Part Two show TMDB photos, "Cast & crew" on page two, no TMDB failures logged. Before that every request got HTTP 401: the configured key had a byte-order mark in front (now stripped); failures are logged as `tmdb <path> failed: <reason>` |
 | MediaSession, audio focus, wake mode, live recovery without VOD progress | `PlayerActivity`, `LibraryRules` | Built | core (live rule) |
 
 ## Library
