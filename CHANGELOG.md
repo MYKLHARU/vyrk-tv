@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Top 10 numbers redrawn: each sits in a box as tall as the poster, cut off where the poster begins, and fades to clear towards it; the numbers get fainter down the ranks.
+
 ## v0.1.4
 
 - Top 10 rows: the rank numbers are as tall as the posters, drawn as a thin outline that fades towards the bottom, with each poster over the number's edge.
