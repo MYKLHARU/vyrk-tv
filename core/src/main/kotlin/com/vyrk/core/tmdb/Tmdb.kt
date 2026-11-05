@@ -74,10 +74,19 @@ data class TmdbArtwork(val logo: String?, val backdrop: String?, val poster: Str
  * (`api_key` query) or a v4 read access token (`Authorization: Bearer`). The key comes from the
  * build (`vyrk.tmdbApiKey` / `TMDB_API_KEY`); it is never committed.
  */
-class TmdbClient(private val http: HttpTransport, private val key: String) {
+class TmdbClient(
+    private val http: HttpTransport,
+    private val key: String,
+    /** Told about every failed request: the API path and a reason, never the key or the query. */
+    private val onFailed: ((path: String, reason: String) -> Unit)? = null,
+) {
     private val bearer = key.startsWith("eyJ")
 
     val enabled: Boolean get() = key.isNotBlank()
+
+    /** Exception text without anything that could carry the key (URLs, query strings). */
+    private fun reason(e: Throwable): String =
+        e.javaClass.simpleName + (e.message?.replace(Regex("""https?://\S+|api_key=\S+"""), "<url>")?.take(120)?.let { ": $it" } ?: "")
 
     private fun url(path: String, query: String = ""): String {
         val q = buildList {
@@ -90,9 +99,19 @@ class TmdbClient(private val http: HttpTransport, private val key: String) {
     private suspend fun get(path: String, query: String = ""): JsonObject? {
         if (!enabled) return null
         val headers = if (bearer) mapOf("Authorization" to "Bearer $key", "Accept" to "application/json") else mapOf("Accept" to "application/json")
-        val res = runCatching { http.get(url(path, query), headers, 12_000) }.getOrNull() ?: return null
-        if (!res.isSuccess) return null
-        return runCatching { ProtocolJson.parseToJsonElement(res.body) as JsonObject }.getOrNull()
+        val res = try {
+            http.get(url(path, query), headers, 12_000)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            onFailed?.invoke(path, reason(e)); return null
+        }
+        if (!res.isSuccess) { onFailed?.invoke(path, "HTTP ${res.code}"); return null }
+        return try {
+            ProtocolJson.parseToJsonElement(res.body) as JsonObject
+        } catch (e: Exception) {
+            onFailed?.invoke(path, "unreadable answer: ${reason(e)}"); null
+        }
     }
 
     /** TMDB id and media type ("movie" or "tv") for an IMDb id. */

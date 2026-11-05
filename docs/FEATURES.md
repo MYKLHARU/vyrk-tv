@@ -118,7 +118,7 @@ not run yet.
 | Matroska chapters read with HTTP range requests (EBML SeekHead → Chapters) | `core/playback/MkvChapters.kt` | Built | core (synthetic MKV); no MKV with chapters played on a device yet |
 | Smart scrubbing: focusable timeline, accelerating Left/Right with chapter snap, Up for chapter mode, OK to seek | `Scrubber`, `PlayerActivity.Timeline` | Done | core, E2E |
 | Mid-film audio failure switches track at the same second (same language, simpler codec first) | `TrackSelector.fallbackAudio`, `PlayerModel` | Built | core; no broken audio track was available to trigger it on a device |
-| Cast and crew pages from TMDB: photos on the info page, person page with biography and filmography that opens titles through your add-ons | `core/tmdb`, `overlays/Person.kt` | Done | core (fixtures), emulator check against live TMDB (Game of Thrones → Alex Graves → credit) |
+| Cast and crew pages from TMDB: photos on the info page, person page with biography and filmography that opens titles through your add-ons | `core/tmdb`, `overlays/Person.kt` | Partial | core (fixtures); worked in an earlier emulator check against live TMDB, but CI builds (c1f4a7b) showed no TMDB cast on 2026-11-05 although the key is in the build and TMDB accepts it; failed TMDB requests are now logged (`tmdb <path> failed: <reason>`) to find out why |
 | MediaSession, audio focus, wake mode, live recovery without VOD progress | `PlayerActivity`, `LibraryRules` | Built | core (live rule) |
 
 ## Library

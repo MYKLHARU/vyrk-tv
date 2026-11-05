@@ -71,6 +71,27 @@ class TmdbTest {
         assertEquals("https://image.tmdb.org/t/p/w185/p.jpg", TmdbClient.image("/p.jpg"))
     }
 
+    @Test
+    fun failuresAreReportedWithoutTheKey() = runTest {
+        val reports = mutableListOf<String>()
+        val denied = object : HttpTransport {
+            override suspend fun get(url: String, headers: Map<String, String>, timeoutMs: Long) = HttpResult(401, """{"status_message":"Invalid API key"}""")
+            override suspend fun postJson(url: String, body: String, timeoutMs: Long) = HttpResult(404, "")
+        }
+        assertNull(TmdbClient(denied, "secretkey123") { path, reason -> reports += "$path $reason" }.findByImdb("tt1", false))
+        assertEquals(listOf("/find/tt1 HTTP 401"), reports)
+
+        val broken = object : HttpTransport {
+            override suspend fun get(url: String, headers: Map<String, String>, timeoutMs: Long): HttpResult = throw java.io.IOException("failed to connect to $url")
+            override suspend fun postJson(url: String, body: String, timeoutMs: Long) = HttpResult(404, "")
+        }
+        reports.clear()
+        assertNull(TmdbClient(broken, "secretkey123") { path, reason -> reports += "$path $reason" }.credits(7, "movie"))
+        assertEquals(1, reports.size)
+        assertTrue(reports[0].startsWith("/movie/7/credits IOException"))
+        assertFalse(reports[0].contains("secretkey123"))
+    }
+
     private val imagesJson = """{"id":1399,
         "backdrops":[{"aspect_ratio":1.778,"height":2160,"iso_639_1":"en","file_path":"/en-bd.jpg","vote_average":5.9,"vote_count":20,"width":3840},
                      {"aspect_ratio":1.778,"height":1080,"iso_639_1":null,"file_path":"/textless-low.jpg","vote_average":5.1,"vote_count":3,"width":1920},

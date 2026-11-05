@@ -35,7 +35,8 @@ class AppGraph(val context: Context) {
     val vault = SecretVault()
     val device = DeviceCapabilities(context)
     val metaCache = com.vyrk.tv.ui.browse.MetaCache(addonClient)
-    val tmdb = com.vyrk.core.tmdb.TmdbClient(transport, BuildConfig.TMDB_API_KEY)
+    // Failures are logged with the API path and reason only; the key never appears.
+    val tmdb = com.vyrk.core.tmdb.TmdbClient(transport, BuildConfig.TMDB_API_KEY) { path, reason -> com.vyrk.tv.ui.Perf.log("tmdb $path failed: $reason") }
     /** Hand-off from the UI to PlayerActivity (same process). */
     @Volatile var pendingPlayback: com.vyrk.tv.player.PlaybackRequest? = null
 
