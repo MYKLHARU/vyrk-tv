@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.4
 
 - Top 10 rows: the rank numbers are as tall as the posters, drawn as a thin outline that fades towards the bottom, with each poster over the number's edge.
 
