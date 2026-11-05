@@ -75,7 +75,14 @@ until_focus KEYCODE_DPAD_DOWN '^menu:library$' 6 && key KEYCODE_DPAD_CENTER 1.5 
 # A series info page (season guide)
 until_focus KEYCODE_DPAD_DOWN '^poster:.*series.*#0$' 10 || true
 key KEYCODE_DPAD_CENTER 7 "series info"
-cap series-info
+# The season guide is on the title page's second page (more button); Back returns to page one.
+if until_focus KEYCODE_DPAD_RIGHT '^info:more$' 4; then
+  key KEYCODE_DPAD_CENTER 2 "season guide"
+  cap series-info
+  key KEYCODE_BACK 1.6 "page one"
+else
+  cap series-info
+fi
 key KEYCODE_BACK 2
 
 # Search "big buck bunny" and play it
