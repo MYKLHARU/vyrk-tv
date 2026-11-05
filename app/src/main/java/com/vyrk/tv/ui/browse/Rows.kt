@@ -40,13 +40,16 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -180,20 +183,56 @@ fun Poster(
     }
 }
 
-/** Large outlined rank number for Top 10 rows. */
+/** How far a Top 10 poster tucks over the right edge of its rank number. */
+private val RANK_OVERLAP = 10.dp
+private val RANK_STROKE = 2.dp
+
+/**
+ * Top 10 rank: the digits as tall as the poster beside them (the glyph outline itself is scaled,
+ * so the ink, not the line box, matches the poster), drawn as a thin outline that fades from top
+ * to bottom, with no fill so the page shows through. The poster sits over its right edge.
+ */
 @Composable
 fun RankNumber(rank: Int, height: Dp) {
-    val measurer = rememberTextMeasurer()
-    val accent = Vyrk.colors.accent
-    val style = TextStyle(fontFamily = Jakarta, fontWeight = FontWeight.ExtraBold, fontSize = (height.value * 0.92f).sp)
-    androidx.compose.foundation.Canvas(Modifier.size(height * (if (rank >= 10) 0.95f else 0.55f), height)) {
-        val layout = measurer.measure(rank.toString(), style)
-        val x = size.width - layout.size.width
-        val y = size.height - layout.size.height * 0.92f
-        drawText(layout, color = Color(0xFF0B141D), topLeft = androidx.compose.ui.geometry.Offset(x, y))
-        drawText(layout, brush = Brush.verticalGradient(listOf(accent, accent.copy(alpha = 0.5f))), topLeft = androidx.compose.ui.geometry.Offset(x, y),
-            drawStyle = Stroke(width = 2.5.dp.toPx()))
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val text = rank.toString()
+    val strokePx = with(density) { RANK_STROKE.toPx() }
+    val heightPx = with(density) { height.toPx() }
+    val glyphs = remember(text, heightPx) {
+        // Android's text path gives the glyph outlines (Compose's getPathForRange gives the boxes
+        // around characters, for selection).
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.plus_jakarta_sans) ?: android.graphics.Typeface.DEFAULT_BOLD
+            if (android.os.Build.VERSION.SDK_INT >= 26) fontVariationSettings = "'wght' 800"
+            textSize = 200f
+        }
+        val outline = android.graphics.Path()
+        paint.getTextPath(text, 0, text.length, 0f, 0f, outline)
+        val ink = android.graphics.RectF().also { outline.computeBounds(it, true) }
+        val scale = (heightPx - strokePx) / ink.height()
+        outline.transform(android.graphics.Matrix().apply { setTranslate(-ink.left, -ink.top); postScale(scale, scale) })
+        outline.asComposePath() to (ink.width() * scale + strokePx)
     }
+    val (path, widthPx) = glyphs
+    val ink = Vyrk.colors.text
+    androidx.compose.foundation.Canvas(Modifier.size(with(density) { widthPx.toDp() }, height)) {
+        // Inset by half the stroke so the outline's outer edge stays inside the poster's height.
+        translate(strokePx / 2, strokePx / 2) {
+            drawPath(
+                path,
+                brush = Brush.verticalGradient(0f to ink.copy(alpha = 0.55f), 0.55f to ink.copy(alpha = 0.22f), 1f to ink.copy(alpha = 0.04f), startY = 0f, endY = size.height),
+                style = Stroke(width = strokePx, join = androidx.compose.ui.graphics.StrokeJoin.Round),
+            )
+        }
+    }
+}
+
+/** Pulls a Top 10 poster left over its rank number, keeping the row's spacing. */
+private fun Modifier.overRank(): Modifier = layout { measurable, constraints ->
+    val p = measurable.measure(constraints)
+    val o = RANK_OVERLAP.roundToPx()
+    layout(p.width - o, p.height) { p.place(-o, 0) }
 }
 
 /**
@@ -277,13 +316,14 @@ fun BrowseRow(
                             i == 0 -> Modifier.focusRequester(firstReq)
                             else -> Modifier
                         }
+                        val top10 = row.kind == RowKind.TOP10
                         Row(verticalAlignment = Alignment.Bottom) {
-                            if (row.kind == RowKind.TOP10) RankNumber(i + 1, height * 0.62f)
+                            if (top10) RankNumber(i + 1, height)
                             Poster(
                                 meta = meta,
                                 width = posterWidth,
                                 state = posterState(library[meta.id], newEpisodes[meta.id].orEmpty()),
-                                modifier = req.onFocusChanged { if (it.isFocused) callbacks.onFocused(meta, i) },
+                                modifier = (if (top10) Modifier.overRank() else Modifier).then(req).onFocusChanged { if (it.isFocused) callbacks.onFocused(meta, i) },
                                 onClick = { callbacks.onClick(meta, i) },
                                 onLongClick = { callbacks.onLongClick(meta, i) },
                                 onPlayPause = { callbacks.onPlayPause(meta, i) },

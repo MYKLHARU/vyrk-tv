@@ -78,6 +78,7 @@ not run yet.
 | Restore exact poster after info page, playback and restart; neighbour or hero fallback | `BrowsePage` | Done | E2E |
 | Anime only from reliable signals | `core/catalog` | Done | core |
 | Top 10 rows per service, ranked numbers, first 10, before other rows | `CatalogRules`, `Rows.kt` | Done | showcase, core |
+| Top 10 numbers as tall as the posters: glyph outlines (Plus Jakarta Sans 800) scaled so the ink matches the poster height, thin stroke fading from top to bottom, no fill, poster tucked 10 dp over the number | `Rows.RankNumber`, `overRank` | Done | emulator capture, API 36 (Top 10 on Netflix · Movies) |
 | Top 10 suggestion card, install via confirmation, Not now hides it | `Top10Card` | Done | E2E, showcase |
 | Previews Off / Manual / Automatic; preview card never takes focus | `PreviewCard` | Partial | E2E; card shows hints, not focusable actions; no Open in YouTube button |
 

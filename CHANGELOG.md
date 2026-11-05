@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Top 10 rows: the rank numbers are as tall as the posters, drawn as a thin outline that fades towards the bottom, with each poster over the number's edge.
+
 ## v0.1.3
 
 - Fixed: moving along a row could leave a title showing the logo of the title you had just left (seen in v0.1.2).
