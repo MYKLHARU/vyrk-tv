@@ -105,6 +105,7 @@
     <string name="hero_rotation_desc">Automatisch zum nächsten hervorgehobenen Titel wechseln</string>
     <string name="hidden_n">Ausgeblendet (%1$d)</string>
     <string name="hidden_rows">Ausgeblendete Reihen</string>
+    <string name="hidden_rows_desc">Reihen, die du auf Start ausgeblendet hast</string>
     <string name="hidden_synopsis">Inhalt verborgen, bis du die Folge siehst</string>
     <string name="hidden_tabs">Ausgeblendete Tabs</string>
     <string name="hidden_tabs_desc">Tabs, die nicht in der Navigationsleiste erscheinen</string>
@@ -158,6 +159,7 @@
     <string name="no_stream_addons">Kein installiertes Add-on liefert Streams für diesen Titel. Installiere eins unter Einstellungen › Add-ons.</string>
     <string name="no_trailer">Kein Trailer für diesen Titel.</string>
     <string name="none">Keine</string>
+    <string name="none_hidden">Keine ausgeblendet</string>
     <string name="not_affiliated">VYRK hostet keine Medien und ist nicht mit Stremio verbunden.</string>
     <string name="not_now">Nicht jetzt</string>
     <string name="not_playable_here">Auf diesem Fernseher nicht abspielbar</string>
@@ -252,7 +254,7 @@
     <string name="settings_subtitles_sub">Wann Untertitel erscheinen und wie sie aussehen</string>
     <string name="share_hint">Andere Profile auf diesem Fernseher können deine Stream-Add-ons nutzen. Die URLs sehen sie nie.</string>
     <string name="share_stream_addons">Stream-Add-ons mit anderen Profilen teilen</string>
-    <string name="show_top10_card">Top-10-Vorschlag wieder anzeigen</string>
+    <string name="show_again">Wieder anzeigen</string>
     <string name="shows">Serien</string>
     <string name="sign_in_stremio">Mit Stremio anmelden</string>
     <string name="sign_out">Abmelden</string>
@@ -323,6 +325,8 @@
     <string name="top10_add">Top-10-Reihen hinzufügen</string>
     <string name="top10_card_body">Fügt das kostenlose Drittanbieter-Add-on Streaming Catalogs hinzu, das zeigt, was auf jedem Dienst beliebt ist.</string>
     <string name="top10_card_title">Top 10 deiner Streamingdienste</string>
+    <string name="top10_suggestion">Top-10-Vorschlag</string>
+    <string name="top10_suggestion_desc">Die Karte auf Start, die Top-10-Reihen anbietet</string>
     <string name="trailer">Trailer</string>
     <string name="trailer_refused">Dieser Trailer kann hier nicht abgespielt werden. Öffne ihn über die Infoseite in YouTube.</string>
     <string name="try_again">Erneut versuchen</string>

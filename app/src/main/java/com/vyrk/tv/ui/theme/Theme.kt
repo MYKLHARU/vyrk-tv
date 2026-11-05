@@ -40,7 +40,7 @@ data class VyrkColors(
     /** Black-navy fade over artwork (left and top of the hero); darker and less blue than [background]. */
     val shade: Color = Color(0xFF04080D),
     /** Translucent panel over blurred artwork (Settings); the artwork's colour shows through. */
-    val glass: Color = Color(0xFF0E1B27).copy(alpha = 0.66f),
+    val glass: Color = Color(0xFF0B1F2C).copy(alpha = 0.64f),
     /** Hairline on [glass] panels so their edge reads over bright artwork. */
     val glassEdge: Color = Color.White.copy(alpha = 0.09f),
     /** Ambient light behind panels: a cool teal from one side, a soft violet from the other. */
@@ -102,7 +102,8 @@ object Dimens {
     val buttonHeight = 40.dp
     val navHeight = 68.dp
     val panelShape = RoundedCornerShape(22.dp)
-    val buttonShape = RoundedCornerShape(12.dp)
+    /** Buttons are pills everywhere, as in the reference layout (hero, dialogs, settings, add-ons). */
+    val buttonShape = RoundedCornerShape(50)
     val chipShape = RoundedCornerShape(10.dp)
     val posterShape = RoundedCornerShape(10.dp)
     val glowRadius = 14.dp
@@ -119,7 +120,9 @@ object Dimens {
     val space4 = 16.dp
     val space5 = 24.dp
     /** Continue Watching cards are landscape: this wide, 16:9. */
-    val landscapeCardWidth = 172.dp
+    /** Continue Watching cards: wide and cinematic (about 2.2 : 1), like the reference layout. */
+    val landscapeCardWidth = 184.dp
+    val landscapeCardHeight = 84.dp
 }
 
 /** Animation durations (ms). Animations use [motionSpec] and card zoom uses [focusZoom], which honour Reduce motion. */

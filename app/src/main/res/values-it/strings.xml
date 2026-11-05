@@ -105,6 +105,7 @@
     <string name="hero_rotation_desc">Passa automaticamente al titolo in evidenza successivo</string>
     <string name="hidden_n">Nascosti (%1$d)</string>
     <string name="hidden_rows">Righe nascoste</string>
+    <string name="hidden_rows_desc">File che hai nascosto dalla Home</string>
     <string name="hidden_synopsis">Trama nascosta finché non lo guardi</string>
     <string name="hidden_tabs">Schede nascoste</string>
     <string name="hidden_tabs_desc">Schede escluse dalla barra di navigazione</string>
@@ -158,6 +159,7 @@
     <string name="no_stream_addons">Nessun componente installato offre stream per questo titolo. Installane uno in Impostazioni › Componenti.</string>
     <string name="no_trailer">Nessun trailer per questo titolo.</string>
     <string name="none">Nessuno</string>
+    <string name="none_hidden">Nessuna nascosta</string>
     <string name="not_affiliated">VYRK non ospita contenuti e non è affiliato a Stremio.</string>
     <string name="not_now">Non ora</string>
     <string name="not_playable_here">Non riproducibile su questo televisore</string>
@@ -252,7 +254,7 @@
     <string name="settings_subtitles_sub">Quando compaiono i sottotitoli e il loro aspetto</string>
     <string name="share_hint">Gli altri profili su questo televisore possono usare i tuoi componenti di stream. Non ne vedono mai gli URL.</string>
     <string name="share_stream_addons">Condividi i componenti di stream con gli altri profili</string>
-    <string name="show_top10_card">Mostra di nuovo il suggerimento Top 10</string>
+    <string name="show_again">Mostra di nuovo</string>
     <string name="shows">Serie</string>
     <string name="sign_in_stremio">Accedi con Stremio</string>
     <string name="sign_out">Esci dall\'account</string>
@@ -323,6 +325,8 @@
     <string name="top10_add">Aggiungi righe Top 10</string>
     <string name="top10_card_body">Aggiunge il componente gratuito di terze parti Streaming Catalogs, che mostra i titoli più popolari di ogni servizio.</string>
     <string name="top10_card_title">Top 10 dei tuoi servizi di streaming</string>
+    <string name="top10_suggestion">Suggerimento Top 10</string>
+    <string name="top10_suggestion_desc">La scheda nella Home che propone le file Top 10</string>
     <string name="trailer">Trailer</string>
     <string name="trailer_refused">Questo trailer non si può riprodurre qui. Aprilo su YouTube dalla pagina informazioni.</string>
     <string name="try_again">Riprova</string>

@@ -105,6 +105,7 @@
     <string name="hero_rotation_desc">Pasar al siguiente destacado automáticamente</string>
     <string name="hidden_n">Ocultos (%1$d)</string>
     <string name="hidden_rows">Filas ocultas</string>
+    <string name="hidden_rows_desc">Filas que ocultaste de Inicio</string>
     <string name="hidden_synopsis">Sinopsis oculta hasta que lo veas</string>
     <string name="hidden_tabs">Pestañas ocultas</string>
     <string name="hidden_tabs_desc">Pestañas que no aparecen en la barra de navegación</string>
@@ -158,6 +159,7 @@
     <string name="no_stream_addons">Ningún complemento instalado ofrece streams para este título. Instala uno en Ajustes › Complementos.</string>
     <string name="no_trailer">Este título no tiene tráiler.</string>
     <string name="none">Ninguno</string>
+    <string name="none_hidden">Ninguna oculta</string>
     <string name="not_affiliated">VYRK no aloja contenido y no está afiliado a Stremio.</string>
     <string name="not_now">Ahora no</string>
     <string name="not_playable_here">No se puede reproducir en este televisor</string>
@@ -252,7 +254,7 @@
     <string name="settings_subtitles_sub">Cuándo aparecen los subtítulos y cómo se ven</string>
     <string name="share_hint">Otros perfiles de este televisor pueden usar tus complementos de streams. Nunca ven sus URL.</string>
     <string name="share_stream_addons">Compartir complementos de streams con otros perfiles</string>
-    <string name="show_top10_card">Volver a mostrar la sugerencia Top 10</string>
+    <string name="show_again">Mostrar de nuevo</string>
     <string name="shows">Series</string>
     <string name="sign_in_stremio">Iniciar sesión con Stremio</string>
     <string name="sign_out">Cerrar sesión</string>
@@ -323,6 +325,8 @@
     <string name="top10_add">Añadir filas Top 10</string>
     <string name="top10_card_body">Añade el complemento gratuito de terceros Streaming Catalogs, que muestra lo más popular de cada servicio.</string>
     <string name="top10_card_title">Top 10 de tus servicios de streaming</string>
+    <string name="top10_suggestion">Sugerencia del Top 10</string>
+    <string name="top10_suggestion_desc">La tarjeta de Inicio que ofrece las filas del Top 10</string>
     <string name="trailer">Tráiler</string>
     <string name="trailer_refused">Este tráiler no se puede reproducir aquí. Ábrelo en YouTube desde la página de información.</string>
     <string name="try_again">Reintentar</string>

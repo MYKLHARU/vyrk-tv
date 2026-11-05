@@ -106,7 +106,7 @@ fun LibraryScreen(session: ProfileSession, onPlay: (MetaPreview, Origin?) -> Uni
         )
         Spacer(Modifier.height(12.dp))
         if (items.isEmpty()) {
-            Text(str(if (showHidden) R.string.no_hidden else R.string.library_empty), style = Vyrk.type.bodyL, color = c.textMuted)
+            com.vyrk.tv.ui.components.EmptyState(R.drawable.ic_library, str(if (showHidden) R.string.no_hidden else R.string.library_empty))
         } else LazyVerticalGrid(GridCells.Adaptive(132.dp), contentPadding = PaddingValues(top = 8.dp, bottom = 120.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             itemsIndexed(items, key = { _, it -> it.id }) { i, it ->
                 val m = it.toPreview()

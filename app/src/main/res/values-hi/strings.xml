@@ -105,6 +105,7 @@
     <string name="hero_rotation_desc">अगले फ़ीचर्ड टाइटल पर अपने आप जाएँ</string>
     <string name="hidden_n">छिपे हुए (%1$d)</string>
     <string name="hidden_rows">छिपी पंक्तियाँ</string>
+    <string name="hidden_rows_desc">होम से छिपाई गई पंक्तियाँ</string>
     <string name="hidden_synopsis">देखने तक सारांश छिपा है</string>
     <string name="hidden_tabs">छिपे टैब</string>
     <string name="hidden_tabs_desc">नेविगेशन बार से हटाए गए टैब</string>
@@ -158,6 +159,7 @@
     <string name="no_stream_addons">कोई इंस्टॉल ऐड-ऑन इस टाइटल की स्ट्रीम नहीं देता। सेटिंग › ऐड-ऑन में जाकर एक इंस्टॉल करें।</string>
     <string name="no_trailer">इस टाइटल का कोई ट्रेलर नहीं।</string>
     <string name="none">कोई नहीं</string>
+    <string name="none_hidden">कोई छिपी नहीं</string>
     <string name="not_affiliated">VYRK कोई मीडिया होस्ट नहीं करता और Stremio से संबद्ध नहीं है।</string>
     <string name="not_now">अभी नहीं</string>
     <string name="not_playable_here">इस टीवी पर नहीं चल सकता</string>
@@ -252,7 +254,7 @@
     <string name="settings_subtitles_sub">सबटाइटल कब दिखें और कैसे दिखें</string>
     <string name="share_hint">इस टीवी की दूसरी प्रोफ़ाइलें आपके स्ट्रीम ऐड-ऑन इस्तेमाल कर सकती हैं। वे URL कभी नहीं देखतीं।</string>
     <string name="share_stream_addons">स्ट्रीम ऐड-ऑन दूसरी प्रोफ़ाइलों से शेयर करें</string>
-    <string name="show_top10_card">Top 10 सुझाव फिर दिखाएँ</string>
+    <string name="show_again">फिर से दिखाएँ</string>
     <string name="shows">शो</string>
     <string name="sign_in_stremio">Stremio से साइन इन करें</string>
     <string name="sign_out">साइन आउट करें</string>
@@ -323,6 +325,8 @@
     <string name="top10_add">Top 10 पंक्तियाँ जोड़ें</string>
     <string name="top10_card_body">मुफ़्त तृतीय-पक्ष Streaming Catalogs ऐड-ऑन जोड़ता है, जो हर सेवा पर लोकप्रिय टाइटल दिखाता है।</string>
     <string name="top10_card_title">आपकी स्ट्रीमिंग सेवाओं के Top 10</string>
+    <string name="top10_suggestion">टॉप 10 सुझाव</string>
+    <string name="top10_suggestion_desc">होम पर वह कार्ड जो टॉप 10 पंक्तियाँ जोड़ने का सुझाव देता है</string>
     <string name="trailer">ट्रेलर</string>
     <string name="trailer_refused">यह ट्रेलर यहाँ नहीं चल सकता। जानकारी पेज से इसे YouTube में खोलें।</string>
     <string name="try_again">फिर कोशिश करें</string>

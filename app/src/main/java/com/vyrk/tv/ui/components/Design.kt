@@ -28,6 +28,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -61,13 +63,33 @@ fun AmbientBackground(modifier: Modifier = Modifier) {
     )
 }
 
-/** Frosted glass: translucent navy, a faint top highlight, a hairline edge and a soft shadow. */
-fun Modifier.glassPanel(shape: Shape = Dimens.panelShape, elevation: Dp = 14.dp): Modifier = composed {
+/**
+ * Frosted glass: translucent teal-navy, a faint top highlight, a hairline edge and a soft shadow.
+ * With [aurora], soft light rises from one corner (teal and violet from the top right, or violet
+ * from the bottom left), clipped to the panel by drawing, not by clipping a layer, so focused
+ * controls may still zoom past the edge.
+ */
+enum class Aurora { TOP_END, BOTTOM_START }
+
+fun Modifier.glassPanel(shape: Shape = Dimens.panelShape, elevation: Dp = 14.dp, aurora: Aurora? = null): Modifier = composed {
     val c = Vyrk.colors
     this
         .shadow(elevation, shape, clip = false, ambientColor = Color.Black.copy(alpha = 0.5f), spotColor = Color.Black.copy(alpha = 0.5f))
         .background(c.glass, shape)
         .background(Brush.verticalGradient(0f to Color.White.copy(alpha = 0.045f), 0.4f to Color.Transparent), shape)
+        .then(if (aurora != null) Modifier.drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            clipPath(androidx.compose.ui.graphics.Path().apply { addOutline(outline) }) {
+                when (aurora) {
+                    Aurora.TOP_END -> {
+                        drawRect(Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.30f), Color.Transparent), center = Offset(size.width * 0.84f, -size.height * 0.06f), radius = size.width * 0.46f))
+                        drawRect(Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.24f), Color.Transparent), center = Offset(size.width * 1.02f, size.height * 0.12f), radius = size.width * 0.32f))
+                    }
+                    Aurora.BOTTOM_START ->
+                        drawRect(Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.30f), Color.Transparent), center = Offset(0f, size.height * 1.04f), radius = size.width * 0.95f))
+                }
+            }
+        } else Modifier)
         .border(1.dp, c.glassEdge, shape)
 }
 
@@ -82,8 +104,10 @@ fun SectionHeading(title: String, active: Boolean, modifier: Modifier = Modifier
 }
 
 /**
- * Joined pill of options; the chosen one is filled with the accent and ticked. Each segment is
- * focusable on its own and keeps the trace name the journeys look for.
+ * A set of options; the chosen one is filled with the accent and ticked. Two options (On / Off)
+ * are one joined pill; three or more are separate outlined pills ([ChoicePill]), as in the
+ * reference layout. Each option is focusable on its own and keeps the trace name the journeys
+ * look for.
  */
 @Composable
 fun SegmentedControl(
@@ -93,34 +117,50 @@ fun SegmentedControl(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     @DrawableRes icons: List<Int?> = emptyList(),
+    separated: Boolean = labels.size > 2,
 ) {
     val c = Vyrk.colors
     Row(
-        modifier.background(c.raised.copy(alpha = 0.55f), Dimens.pillShape).border(1.dp, c.glassEdge, Dimens.pillShape).padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        if (separated) modifier
+        else modifier.background(c.raised.copy(alpha = 0.55f), Dimens.pillShape).border(1.dp, c.glassEdge, Dimens.pillShape).padding(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (separated) 8.dp else 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         labels.forEachIndexed { i, label ->
-            val on = i == selected
-            Surface(
-                onClick = { onSelect(i) },
-                modifier = Modifier.height(30.dp).traceFocus(traces.getOrElse(i) { "segment:$i" }),
-                shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
-                colors = ClickableSurfaceDefaults.colors(
-                    containerColor = if (on) c.accent else Color.Transparent, contentColor = if (on) c.onAccent else c.textSecondary,
-                    focusedContainerColor = if (on) c.accent else c.text, focusedContentColor = if (on) c.onAccent else c.background,
-                    pressedContainerColor = c.accent, pressedContentColor = c.onAccent,
-                ),
-                scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
-                border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border(BorderStroke(2.dp, c.text))),
-                glow = ClickableSurfaceDefaults.glow(glow = if (on) Glow(c.accent.copy(alpha = 0.45f), 6.dp) else Glow.None, focusedGlow = focusGlow()),
-            ) {
-                Row(Modifier.padding(horizontal = 13.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (on) Icon(R.drawable.ic_check, null, Modifier.size(12.dp), tint = LocalContentColor.current)
-                    icons.getOrNull(i)?.let { Icon(it, null, Modifier.size(14.dp), tint = LocalContentColor.current) }
-                    Text(label, style = Vyrk.type.labelL, maxLines = 1, softWrap = false)
-                }
-            }
+            OptionPill(label, i == selected, { onSelect(i) }, traces.getOrElse(i) { "segment:$i" }, icons.getOrNull(i), separated)
+        }
+    }
+}
+
+/** One option of a single choice, as a separate outlined pill; filled with the accent and ticked when chosen. */
+@Composable
+fun ChoicePill(label: String, selected: Boolean, onClick: () -> Unit, trace: String, @DrawableRes icon: Int? = null) =
+    OptionPill(label, selected, onClick, trace, icon, separated = true)
+
+@Composable
+private fun OptionPill(label: String, on: Boolean, onClick: () -> Unit, trace: String, @DrawableRes icon: Int?, separated: Boolean) {
+    val c = Vyrk.colors
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.height(if (separated) 32.dp else 30.dp).traceFocus(trace),
+        shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = when { on -> c.accent; separated -> c.raised.copy(alpha = 0.55f); else -> Color.Transparent },
+            contentColor = if (on) c.onAccent else c.textSecondary,
+            focusedContainerColor = if (on) c.accent else c.text, focusedContentColor = if (on) c.onAccent else c.background,
+            pressedContainerColor = c.accent, pressedContentColor = c.onAccent,
+        ),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
+        border = ClickableSurfaceDefaults.border(
+            border = if (separated && !on) Border(BorderStroke(1.dp, c.glassEdge)) else Border.None,
+            focusedBorder = Border(BorderStroke(2.dp, c.text)),
+        ),
+        glow = ClickableSurfaceDefaults.glow(glow = if (on) Glow(c.accent.copy(alpha = 0.45f), 6.dp) else Glow.None, focusedGlow = focusGlow()),
+    ) {
+        Row(Modifier.padding(horizontal = 13.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (on) Icon(R.drawable.ic_check, null, Modifier.size(12.dp), tint = LocalContentColor.current)
+            icon?.let { Icon(it, null, Modifier.size(14.dp), tint = LocalContentColor.current) }
+            Text(label, style = Vyrk.type.labelL, maxLines = 1, softWrap = false)
         }
     }
 }
@@ -187,9 +227,13 @@ fun ColorSwatch(color: Color, onColor: Color, label: String, selected: Boolean, 
     }
 }
 
+/** Share of a full-width setting row taken by its name and description; controls start after it. */
+private const val LABEL_COLUMN = 0.38f
+
 /**
- * One setting: icon, name and a short description on the left, its controls on the right. With
- * [stacked], controls that need the full width (long option lists) sit underneath instead.
+ * One setting: icon, name and a short description, then its controls. In a full-width row
+ * ([split]) every row's controls start at the same column and wrap within it, so a page reads
+ * as two aligned columns. In half of a two-column row, controls sit at the right of their half.
  */
 @Composable
 fun SettingRow(
@@ -197,31 +241,41 @@ fun SettingRow(
     description: String?,
     modifier: Modifier = Modifier,
     @DrawableRes icon: Int? = null,
-    stacked: Boolean = false,
+    split: Boolean = true,
     controls: @Composable RowScope.() -> Unit,
 ) {
     val c = Vyrk.colors
-    val label: @Composable RowScope.(Modifier) -> Unit = { m ->
-        if (icon != null) Icon(icon, null, Modifier.padding(end = 12.dp).size(18.dp), tint = c.textSecondary)
-        Column(m) {
-            Text(title, style = Vyrk.type.titleS, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (!description.isNullOrBlank()) Text(description, style = Vyrk.type.labelS, color = c.textMuted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    Row(modifier.fillMaxWidth().padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            (if (split) Modifier.fillMaxWidth(LABEL_COLUMN) else Modifier.weight(1f)).padding(end = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (icon != null) Icon(icon, null, Modifier.padding(end = 12.dp).size(18.dp), tint = c.textSecondary)
+            Column {
+                Text(title, style = Vyrk.type.titleS, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (!description.isNullOrBlank()) Text(description, style = Vyrk.type.labelS, color = c.textMuted, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 1.dp))
+            }
         }
+        if (split) androidx.compose.foundation.layout.FlowRow(
+            Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) { controls() }
+        else Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, content = controls)
     }
-    if (stacked) {
-        Column(modifier.fillMaxWidth().padding(vertical = 10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) { label(Modifier) }
-            androidx.compose.foundation.layout.FlowRow(
-                Modifier.padding(start = if (icon != null) 30.dp else 0.dp, top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) { controls() }
-        }
-    } else {
-        Row(modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            label(Modifier.weight(1f).padding(end = 12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically, content = controls)
-        }
+}
+
+/** Empty page: the section's icon in a soft accent badge, with a short message underneath. */
+@Composable
+fun EmptyState(@DrawableRes icon: Int, message: String, modifier: Modifier = Modifier) {
+    val c = Vyrk.colors
+    Column(modifier.fillMaxWidth().padding(top = 56.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            Modifier.size(64.dp).background(c.accent.copy(alpha = 0.10f), CircleShape).border(1.dp, c.accent.copy(alpha = 0.30f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, null, Modifier.size(28.dp), tint = c.accent) }
+        Text(message, style = Vyrk.type.bodyL, color = c.textSecondary, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 16.dp).width(420.dp))
     }
 }
 

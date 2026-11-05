@@ -105,6 +105,7 @@
     <string name="hero_rotation_desc">Move to the next featured title automatically</string>
     <string name="hidden_n">Hidden (%1$d)</string>
     <string name="hidden_rows">Hidden rows</string>
+    <string name="hidden_rows_desc">Rows you\'ve hidden from Home</string>
     <string name="hidden_synopsis">Synopsis hidden until you watch it</string>
     <string name="hidden_tabs">Hidden tabs</string>
     <string name="hidden_tabs_desc">Tabs to leave out of the navigation bar</string>
@@ -158,6 +159,7 @@
     <string name="no_stream_addons">No installed add-on provides streams for this title. Install one in Settings › Add-ons.</string>
     <string name="no_trailer">No trailer for this title.</string>
     <string name="none">None</string>
+    <string name="none_hidden">None hidden</string>
     <string name="not_affiliated">VYRK hosts no media and isn\'t affiliated with Stremio.</string>
     <string name="not_now">Not now</string>
     <string name="not_playable_here">Can\'t play on this TV</string>
@@ -252,7 +254,7 @@
     <string name="settings_subtitles_sub">When subtitles show and how they look</string>
     <string name="share_hint">Other profiles on this TV can use your stream add-ons. They never see the add-on URLs.</string>
     <string name="share_stream_addons">Share stream add-ons with other profiles</string>
-    <string name="show_top10_card">Show the Top 10 suggestion again</string>
+    <string name="show_again">Show again</string>
     <string name="shows">Shows</string>
     <string name="sign_in_stremio">Sign in with Stremio</string>
     <string name="sign_out">Sign out</string>
@@ -323,6 +325,8 @@
     <string name="top10_add">Add Top 10 rows</string>
     <string name="top10_card_body">Adds the free third-party Streaming Catalogs add-on, which lists what\'s popular on each service.</string>
     <string name="top10_card_title">Top 10 on your streaming services</string>
+    <string name="top10_suggestion">Top 10 suggestion</string>
+    <string name="top10_suggestion_desc">The card on Home that offers Top 10 rows</string>
     <string name="trailer">Trailer</string>
     <string name="trailer_refused">This trailer can\'t play here. Open it in YouTube from the info page.</string>
     <string name="try_again">Try again</string>

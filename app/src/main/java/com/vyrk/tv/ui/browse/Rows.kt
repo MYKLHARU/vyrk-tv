@@ -288,7 +288,7 @@ fun BrowseRow(
         val landscape = row.kind == RowKind.CONTINUE
         com.vyrk.tv.ui.components.SectionHeading(row.title, active = hasFocus, chevron = landscape, modifier = Modifier.padding(start = Dimens.screenMargin, bottom = 8.dp))
         // Continue Watching is landscape (16:9 backdrops); other rows are posters.
-        val height = if (landscape) Dimens.landscapeCardWidth * 9f / 16f else posterWidth * 1.5f
+        val height = if (landscape) Dimens.landscapeCardHeight else posterWidth * 1.5f
         when {
             row.items.isEmpty() && row.error != null -> Row(Modifier.padding(start = Dimens.screenMargin).height(height), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(str(R.string.row_error), style = Vyrk.type.bodyM, color = c.textMuted)
@@ -393,7 +393,7 @@ fun ContinueCard(
     traceLabel: String,
 ) {
     val c = Vyrk.colors
-    val height = width * 9f / 16f
+    val height = Dimens.landscapeCardHeight
     val progress = if (item?.isInContinueWatching == true) item.progress else 0f
     val label = continueLabel(item)
     val desc = listOfNotNull(meta.name.takeIf { it.isNotBlank() }, label).joinToString(", ")
@@ -414,7 +414,7 @@ fun ContinueCard(
                     else -> false
                 }
             },
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(Dimens.radiusM)),
+        shape = ClickableSurfaceDefaults.shape(Dimens.posterShape),
         colors = ClickableSurfaceDefaults.colors(containerColor = c.raised, focusedContainerColor = c.raised),
         scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.07f)),
         border = ClickableSurfaceDefaults.border(
@@ -435,9 +435,9 @@ fun ContinueCard(
             // Dark from the left under the logo, and from the bottom under the controls.
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.62f to Color.Transparent)))
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.42f to Color.Transparent, 1f to c.shade.copy(alpha = if (focused) 0.75f else 0.88f))))
-            Box(Modifier.align(Alignment.TopStart).padding(start = 10.dp, top = 9.dp).width(width * 0.56f).height(height * 0.42f), contentAlignment = Alignment.BottomStart) {
+            Box(Modifier.align(Alignment.TopStart).padding(start = 10.dp, top = 9.dp).width(width * 0.52f).height(height * 0.46f), contentAlignment = Alignment.BottomStart) {
                 val logos = remember(meta.id, meta.logo) { listOfNotNull(com.vyrk.core.art.Artwork.forLogo(meta.logo), com.vyrk.core.art.Artwork.metahubLogo(meta.id)).distinct() }
-                HeroLogo(meta.id, meta.name, logos, width * 0.56f, height * 0.42f, Vyrk.type.titleS, Modifier.fillMaxHeight())
+                HeroLogo(meta.id, meta.name, logos, width * 0.52f, height * 0.46f, Vyrk.type.titleS, Modifier.fillMaxHeight())
             }
             if (item?.watched == true) {
                 Box(Modifier.align(Alignment.TopEnd).padding(7.dp).size(17.dp).background(c.accent, CircleShape), contentAlignment = Alignment.Center) {

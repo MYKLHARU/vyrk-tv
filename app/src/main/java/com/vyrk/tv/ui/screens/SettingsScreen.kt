@@ -75,6 +75,7 @@ import com.vyrk.tv.ui.Screen
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.VyrkButton
 import com.vyrk.tv.ui.components.VyrkChip
+import com.vyrk.tv.ui.components.ChoicePill
 import androidx.compose.foundation.layout.size
 import com.vyrk.tv.ui.components.glassPanel
 import com.vyrk.tv.ui.components.ColorSwatch
@@ -115,7 +116,7 @@ fun SettingsScreen(session: ProfileSession) {
     LaunchedEffect(group) { typing = null }
     val c = Vyrk.colors
     Row(Modifier.fillMaxSize().padding(horizontal = Dimens.screenMargin, vertical = 12.dp)) {
-        Column(Modifier.width(222.dp).glassPanel(PANEL_SHAPE).padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.width(208.dp).glassPanel(PANEL_SHAPE, aurora = com.vyrk.tv.ui.components.Aurora.BOTTOM_START).padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.padding(start = 8.dp, top = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 com.vyrk.tv.ui.components.Icon(R.drawable.ic_cog, null, Modifier.size(18.dp), tint = c.text)
                 Spacer(Modifier.width(10.dp))
@@ -136,8 +137,8 @@ fun SettingsScreen(session: ProfileSession) {
                         .traceFocus("settings:${g.name.lowercase()}"))
             }
         }
-        Spacer(Modifier.width(20.dp))
-        Box(Modifier.weight(1f).fillMaxHeight().glassPanel(PANEL_SHAPE).padding(start = 22.dp, end = 22.dp, top = 16.dp)
+        Spacer(Modifier.width(16.dp))
+        Box(Modifier.weight(1f).fillMaxHeight().glassPanel(PANEL_SHAPE, aurora = com.vyrk.tv.ui.components.Aurora.TOP_END).padding(start = 22.dp, end = 22.dp, top = 16.dp)
             // Focus search would pick the sidebar entry level with the focused setting, and the
             // page follows sidebar focus, so Left from a lower setting used to open another group.
             .focusProperties {
@@ -153,8 +154,11 @@ fun SettingsScreen(session: ProfileSession) {
             .focusGroup()
         ) {
             androidx.compose.runtime.CompositionLocalProvider(LocalGroupReq provides groupReqs.getValue(group)) {
-            LazyColumn(Modifier.focusRequester(contentReq).focusGroup(), verticalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(bottom = 60.dp)) {
-                item(key = "header-$group") { GroupHeader(group) }
+            // The group's header stays put; only the rows scroll beneath its divider (in the list it
+            // was cut off at the panel edge once a lower row scrolled the page).
+            Column {
+            GroupHeader(group)
+            LazyColumn(Modifier.weight(1f).focusRequester(contentReq).focusGroup(), verticalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(top = 2.dp, bottom = 60.dp)) {
                 if (group == Group.ADDONS) {
                     item(key = "addon-actions") { AddonActions(session, typing) { typing = it } }
                     itemsIndexed(addons, key = { _, d -> "addon:" + d.manifest.id }) { i, d -> AddonCard(session, d, i, addons.lastIndex) }
@@ -162,6 +166,7 @@ fun SettingsScreen(session: ProfileSession) {
                 } else {
                     item(key = group) { GroupContent(session, group) }
                 }
+            }
             }
             }
         }
@@ -208,30 +213,55 @@ fun SettingsBackdrop(url: String?) {
 
 @Composable
 private fun Setting(label: String, hint: String? = null, icon: Int? = null, content: @Composable () -> Unit) {
-    SettingRow(label, hint, Modifier.leftToSidebar(), icon = icon, stacked = true) { content() }
+    SettingRow(label, hint, Modifier.leftToSidebar(), icon = icon) { content() }
     RowDivider()
 }
 
+/**
+ * On / Off. [inPair] is for one half of a [SettingPair]: controls at the right of the half, and the
+ * pair supplies the focus group and the dividers.
+ */
 @Composable
-private fun Toggle(label: String, value: Boolean, trace: String, hint: String? = null, icon: Int? = null, divider: Boolean = true, ownGroup: Boolean = true, onChange: (Boolean) -> Unit) {
-    SettingRow(label, hint, if (ownGroup) Modifier.leftToSidebar() else Modifier, icon = icon) { OnOffControl(value, trace, str(R.string.on), str(R.string.off), onChange) }
-    if (divider) RowDivider()
+private fun Toggle(label: String, value: Boolean, trace: String, hint: String? = null, icon: Int? = null, inPair: Boolean = false, split: Boolean = true, onChange: (Boolean) -> Unit) {
+    SettingRow(label, hint, if (inPair) Modifier else Modifier.leftToSidebar(), icon = icon, split = split) { OnOffControl(value, trace, str(R.string.on), str(R.string.off), onChange) }
+    if (!inPair) RowDivider()
 }
 
-/** Short option lists are a segmented control beside the name; long ones wrap as chips underneath. */
+/**
+ * One of several values. Two values are a joined pill; more are separate pills that wrap within
+ * the controls column, so short and long lists look the same.
+ */
 @Composable
-private fun <T> Choice(label: String, options: List<Pair<T, String>>, value: T, trace: String, hint: String? = null, icon: Int? = null, optionIcons: List<Int?> = emptyList(), onChange: (T) -> Unit) {
-    val compact = options.size <= 4 && options.sumOf { it.second.length } <= 30
-    if (compact) {
-        SettingRow(label, hint, Modifier.leftToSidebar(), icon = icon) {
-            SegmentedControl(options.map { it.second }, options.indexOfFirst { it.first == value }, options.indices.map { "$trace:$it" }, { onChange(options[it].first) }, icons = optionIcons)
-        }
-    } else {
-        SettingRow(label, hint, Modifier.leftToSidebar(), icon = icon, stacked = true) {
-            options.forEachIndexed { i, (v, l) -> VyrkChip(l, v == value, { onChange(v) }, Modifier.traceFocus("$trace:$i")) }
+private fun <T> Choice(label: String, options: List<Pair<T, String>>, value: T, trace: String, hint: String? = null, icon: Int? = null, optionIcons: List<Int?> = emptyList(), inPair: Boolean = false, split: Boolean = true, onChange: (T) -> Unit) {
+    SettingRow(label, hint, if (inPair) Modifier else Modifier.leftToSidebar(), icon = icon, split = split) {
+        if (options.size == 2) SegmentedControl(options.map { it.second }, options.indexOfFirst { it.first == value }, options.indices.map { "$trace:$it" }, { onChange(options[it].first) }, icons = optionIcons)
+        else options.forEachIndexed { i, (v, l) -> ChoicePill(l, v == value, { onChange(v) }, "$trace:$i", optionIcons.getOrNull(i)) }
+    }
+    if (!inPair) RowDivider()
+}
+
+/**
+ * Two short settings side by side, as in the reference layout, when each half has room; at the
+ * Large interface size they stack as two full rows instead of squeezing. Each half gets `split`:
+ * false beside each other (controls at the right of the half), true when stacked.
+ */
+@Composable
+private fun SettingPair(left: @Composable (split: Boolean) -> Unit, right: @Composable (split: Boolean) -> Unit) {
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
+        if (maxWidth >= 660.dp) Column {
+            Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min).leftToSidebar()) {
+                Box(Modifier.weight(1f)) { left(false) }
+                ColumnDivider(Modifier.padding(horizontal = 14.dp, vertical = 10.dp))
+                Box(Modifier.weight(1f)) { right(false) }
+            }
+            RowDivider()
+        } else Column {
+            Box(Modifier.leftToSidebar()) { left(true) }
+            RowDivider()
+            Box(Modifier.leftToSidebar()) { right(true) }
+            RowDivider()
         }
     }
-    RowDivider()
 }
 
 /** A sidebar entry: icon and name; the open group is tinted with the accent, the focused one is white. */
@@ -299,32 +329,35 @@ private fun GroupContent(session: ProfileSession, group: Group) {
             Group.PROFILE -> {
                 val defaultTabs = listOf(Tab.HOME, Tab.MOVIES, Tab.SERIES, Tab.LIBRARY)
                 Choice(str(R.string.default_tab), defaultTabs.map { it.key to tabLabel(it) }, s.defaultTab, "set:default_tab", str(R.string.default_tab_desc), R.drawable.ic_home, defaultTabs.map { tabIcon(it) }) { v -> upd { it.copy(defaultTab = v) } }
-                SettingRow(str(R.string.hidden_tabs), str(R.string.hidden_tabs_desc), Modifier.leftToSidebar(), icon = R.drawable.ic_eye_off, stacked = true) {
+                SettingRow(str(R.string.hidden_tabs), str(R.string.hidden_tabs_desc), Modifier.leftToSidebar(), icon = R.drawable.ic_eye_off) {
                     listOf(Tab.MOVIES, Tab.SERIES, Tab.ANIME, Tab.LIVE, Tab.LIBRARY).forEach { t ->
                         CheckChip(tabLabel(t), t.key in s.hiddenTabs, { upd { it.copy(hiddenTabs = if (t.key in it.hiddenTabs) it.hiddenTabs - t.key else it.hiddenTabs + t.key) } }, "set:hide_tab:${t.key}")
                     }
                 }
                 RowDivider()
-                // Two short switches side by side, as in the reference layout.
-                Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min).leftToSidebar()) {
-                    Box(Modifier.weight(1f)) { Toggle(str(R.string.featured_hero), s.heroEnabled, "set:hero", str(R.string.featured_hero_desc), R.drawable.ic_image, divider = false, ownGroup = false) { v -> upd { it.copy(heroEnabled = v) } } }
-                    ColumnDivider(Modifier.padding(horizontal = 14.dp, vertical = 10.dp))
-                    Box(Modifier.weight(1f)) { Toggle(str(R.string.hero_rotation), s.heroRotation, "set:hero_rotation", str(R.string.hero_rotation_desc), R.drawable.ic_refresh, divider = false, ownGroup = false) { v -> upd { it.copy(heroRotation = v) } } }
-                }
-                RowDivider()
-                Choice(str(R.string.poster_size), listOf(104 to str(R.string.size_small), 118 to str(R.string.size_medium), 136 to str(R.string.size_large)), s.posterSize, "set:poster", str(R.string.poster_size_desc), R.drawable.ic_crop) { v -> upd { it.copy(posterSize = v) } }
-                SettingRow(str(R.string.accent_colour), str(R.string.accent_desc), Modifier.leftToSidebar(), icon = R.drawable.ic_drop) {
-                    AccentChoice.entries.forEachIndexed { i, a ->
-                        ColorSwatch(a.color, a.onColor, accentName(a), s.accent == a.name, { upd { it.copy(accent = a.name) } }, "set:accent:$i")
-                    }
-                }
-                RowDivider()
+                SettingPair(
+                    { split -> Toggle(str(R.string.featured_hero), s.heroEnabled, "set:hero", str(R.string.featured_hero_desc), R.drawable.ic_image, inPair = true, split = split) { v -> upd { it.copy(heroEnabled = v) } } },
+                    { split -> Toggle(str(R.string.hero_rotation), s.heroRotation, "set:hero_rotation", str(R.string.hero_rotation_desc), R.drawable.ic_refresh, inPair = true, split = split) { v -> upd { it.copy(heroRotation = v) } } },
+                )
+                SettingPair(
+                    { split -> Choice(str(R.string.poster_size), listOf(104 to str(R.string.size_small), 118 to str(R.string.size_medium), 136 to str(R.string.size_large)), s.posterSize, "set:poster", str(R.string.poster_size_desc), R.drawable.ic_crop, inPair = true, split = split) { v -> upd { it.copy(posterSize = v) } } },
+                    { split ->
+                        SettingRow(str(R.string.accent_colour), str(R.string.accent_desc), icon = R.drawable.ic_drop, split = split) {
+                            AccentChoice.entries.forEachIndexed { i, a ->
+                                ColorSwatch(a.color, a.onColor, accentName(a), s.accent == a.name, { upd { it.copy(accent = a.name) } }, "set:accent:$i")
+                            }
+                        }
+                    },
+                )
                 Toggle(str(R.string.reduce_motion), s.reduceMotion, "set:reduce_motion", str(R.string.reduce_motion_desc), R.drawable.ic_motion) { v -> upd { it.copy(reduceMotion = v) } }
-                Toggle(str(R.string.blur_unwatched), s.blurUnwatched, "set:blur", str(R.string.blur_unwatched_desc), R.drawable.ic_eye_off) { v -> upd { it.copy(blurUnwatched = v) } }
-                Setting(str(R.string.hidden_rows), if (s.hiddenRows.isEmpty()) str(R.string.none) else null) {
-                    if (s.hiddenRows.isNotEmpty()) VyrkButton(str(R.string.restore_rows, s.hiddenRows.size), onClick = { upd { it.copy(hiddenRows = emptySet()) } }, modifier = Modifier.traceFocus("set:restore_rows"))
+                Toggle(str(R.string.blur_unwatched), s.blurUnwatched, "set:blur", str(R.string.blur_unwatched_desc), R.drawable.ic_blur) { v -> upd { it.copy(blurUnwatched = v) } }
+                Setting(str(R.string.hidden_rows), str(R.string.hidden_rows_desc), R.drawable.ic_rows) {
+                    if (s.hiddenRows.isNotEmpty()) VyrkButton(str(R.string.restore_rows, s.hiddenRows.size), onClick = { upd { it.copy(hiddenRows = emptySet()) } }, style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, modifier = Modifier.traceFocus("set:restore_rows"))
+                    else Text(str(R.string.none_hidden), style = Vyrk.type.labelL, color = Vyrk.colors.textMuted)
                 }
-                if (s.top10CardDismissed) VyrkButton(str(R.string.show_top10_card), onClick = { upd { it.copy(top10CardDismissed = false) } })
+                if (s.top10CardDismissed) Setting(str(R.string.top10_suggestion), str(R.string.top10_suggestion_desc), R.drawable.ic_trending) {
+                    VyrkButton(str(R.string.show_again), onClick = { upd { it.copy(top10CardDismissed = false) } }, style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, modifier = Modifier.traceFocus("set:show_top10"))
+                }
             }
             Group.STREAMS -> {
                 Choice(str(R.string.source_preset), listOf(Preset.BALANCED to str(R.string.preset_balanced), Preset.BEST_PICTURE to str(R.string.preset_best), Preset.FAST_START to str(R.string.preset_fast), Preset.ADDON_ORDER to str(R.string.preset_addon_order)), s.preset, "set:preset", str(R.string.preset_hint)) { v -> upd { it.copy(preset = v) } }
@@ -369,7 +402,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                     graph.updateDevice { it.copy(appLanguage = v) }; activity.setAppLanguage(v)
                 }
                 Setting(str(R.string.audio_languages), str(R.string.languages_order_hint)) {
-                    LANG_CHOICES.forEach { l -> VyrkChip(Languages.label(l), l in s.audioLanguages, { upd { it.copy(audioLanguages = if (l in it.audioLanguages) it.audioLanguages - l else it.audioLanguages + l) } }, Modifier.traceFocus("set:audio_lang:$l")) }
+                    LANG_CHOICES.forEach { l -> CheckChip(Languages.label(l), l in s.audioLanguages, { upd { it.copy(audioLanguages = if (l in it.audioLanguages) it.audioLanguages - l else it.audioLanguages + l) } }, "set:audio_lang:$l") }
                 }
                 Toggle(str(R.string.original_language), s.originalLanguage, "set:original_lang") { v -> upd { it.copy(originalLanguage = v) } }
                 Toggle(str(R.string.avoid_commentary), s.avoidCommentary, "set:avoid_commentary") { v -> upd { it.copy(avoidCommentary = v) } }
@@ -377,7 +410,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
             Group.SUBTITLES -> {
                 Choice(str(R.string.subtitle_mode), listOf(SubtitleMode.ALWAYS to str(R.string.sub_always), SubtitleMode.FOREIGN_ONLY to str(R.string.sub_foreign), SubtitleMode.OFF to str(R.string.off)), s.subtitleMode, "set:sub_mode") { v -> upd { it.copy(subtitleMode = v) } }
                 Setting(str(R.string.subtitle_languages)) {
-                    LANG_CHOICES.forEach { l -> VyrkChip(Languages.label(l), l in s.subtitleLanguages, { upd { it.copy(subtitleLanguages = if (l in it.subtitleLanguages) it.subtitleLanguages - l else it.subtitleLanguages + l) } }, Modifier.traceFocus("set:sub_lang:$l")) }
+                    LANG_CHOICES.forEach { l -> CheckChip(Languages.label(l), l in s.subtitleLanguages, { upd { it.copy(subtitleLanguages = if (l in it.subtitleLanguages) it.subtitleLanguages - l else it.subtitleLanguages + l) } }, "set:sub_lang:$l") }
                 }
                 Choice(str(R.string.subtitle_size), listOf(80 to "80%", 100 to "100%", 125 to "125%", 150 to "150%"), s.subtitleSize, "set:sub_size") { v -> upd { it.copy(subtitleSize = v) } }
                 Choice(str(R.string.subtitle_colour), listOf("WHITE" to str(R.string.colour_white), "YELLOW" to str(R.string.colour_yellow), "CYAN" to str(R.string.colour_frost)), s.subtitleColor, "set:sub_colour") { v -> upd { it.copy(subtitleColor = v) } }
@@ -439,7 +472,7 @@ private fun AboutGroup(session: ProfileSession) {
                     graph.updateDevice { it.copy(lastUpdateCheckMs = System.currentTimeMillis()) }
                 }
             }, modifier = Modifier.traceFocus("about:check_updates"))
-            VyrkChip(str(R.string.automatic_checks), d.autoUpdateChecks, { graph.updateDevice { it.copy(autoUpdateChecks = !it.autoUpdateChecks) } }, Modifier.traceFocus("about:auto_checks"))
+            CheckChip(str(R.string.automatic_checks), d.autoUpdateChecks, { graph.updateDevice { it.copy(autoUpdateChecks = !it.autoUpdateChecks) } }, "about:auto_checks")
         }
         status?.let { Text(it, style = Vyrk.type.bodyM, color = c.textSecondary) }
         available?.let { a ->

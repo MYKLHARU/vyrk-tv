@@ -266,7 +266,8 @@ fun BrowsePage(
 
         // Backdrop: hero artwork (the focused poster's artwork is drawn under the header below).
         val showBackdrop = focusedPoster == null && heroEnabled && listState.firstVisibleItemIndex == 0
-        if (showBackdrop && active) Backdrop(heroArt.backdrops, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(heroH + 40.dp + Dimens.navHeight))
+        // It reaches down behind the first row (Continue Watching), as in the reference layout.
+        if (showBackdrop && active) Backdrop(heroArt.backdrops, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(heroH + 200.dp + Dimens.navHeight))
 
         CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
             LazyColumn(

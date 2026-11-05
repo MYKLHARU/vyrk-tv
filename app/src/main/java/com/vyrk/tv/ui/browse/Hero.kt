@@ -38,6 +38,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -96,8 +97,15 @@ fun Backdrop(urls: List<String>, modifier: Modifier = Modifier) {
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
             0f to shade, 0.22f to shade, 0.36f to shade.copy(alpha = 0.82f), 0.50f to shade.copy(alpha = 0.40f), 0.64f to Color.Transparent,
         )))
-        // Bottom: into the page colour, where the first row starts.
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.52f to Color.Transparent, 0.80f to bg.copy(alpha = 0.70f), 1f to bg)))
+        // VYRK's light: a cool teal haze where the artwork meets the text, a violet glow low on the
+        // left. Under the bottom fade, so both die out with the artwork instead of ending in an edge.
+        val c = Vyrk.colors
+        Box(Modifier.fillMaxSize().drawBehind {
+            drawRect(Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.22f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.36f), radius = size.width * 0.38f))
+            drawRect(Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.30f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(0f, size.height * 0.78f), radius = size.width * 0.32f))
+        })
+        // Bottom: into the page colour. Gentle, so the artwork still shows behind the first row.
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.50f to Color.Transparent, 0.82f to bg.copy(alpha = 0.55f), 1f to bg)))
     }
 }
 
@@ -205,11 +213,12 @@ fun CreditLines(full: MetaItem?, meta: MetaPreview, reserve: Boolean = false, ic
 }
 
 /**
- * Hero logo box. Logos are trimmed of empty margins and scaled to fill it, so a typical logo is
- * about 1.7× the size it had (it was drawn at its own pixel size, padding included).
+ * Logo box shared by the hero and the title header, so a title's logo keeps its size as focus
+ * moves between them. Logos are trimmed of empty margins and scaled to fit; 360 dp wide leaves
+ * the artwork room, as in the reference layout.
  */
-private val HERO_LOGO_W = 480.dp
-private val HERO_LOGO_H = 200.dp
+private val HERO_LOGO_W = 360.dp
+private val HERO_LOGO_H = 150.dp
 private val HERO_TEXT_W = 520.dp
 
 @Composable
@@ -297,12 +306,12 @@ private fun HeroRoundButton(icon: Int, description: String, trace: String, onCli
         modifier = Modifier.size(size).traceFocus(trace).semantics { contentDescription = description },
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(CircleShape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
-            containerColor = c.shade.copy(alpha = 0.35f), contentColor = c.text,
+            containerColor = c.shade.copy(alpha = if (size < 40.dp) 0.22f else 0.35f), contentColor = c.text,
             focusedContainerColor = c.text, focusedContentColor = c.background,
         ),
         scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.08f, pressedScale = 0.95f),
         border = androidx.tv.material3.ClickableSurfaceDefaults.border(
-            border = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.dp, c.text.copy(alpha = 0.38f))),
+            border = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.dp, c.text.copy(alpha = if (size < 40.dp) 0.22f else 0.38f))),
             focusedBorder = androidx.tv.material3.Border.None,
         ),
         glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
@@ -324,13 +333,13 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
         ) {
             // Logo: everything the fixed-height lines below leave, so short or square logos still read
             // from the sofa and the text never shifts as a title's details load.
-            HeroLogo(meta.id, meta.name.ifBlank { full?.name.orEmpty() }, art.logos, 420.dp, 170.dp, Vyrk.type.displayM, Modifier.weight(1f))
+            HeroLogo(meta.id, meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayM, Modifier.weight(1f))
             Box(Modifier.height(10.dp))
             MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(8.dp))
             Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyS, color = c.textSecondary, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Box(Modifier.height(4.dp))
-            CreditLines(full, meta, reserve = true)
+            CreditLines(full, meta, reserve = true, icons = true)
             Box(Modifier.height(6.dp))
             Text(str(R.string.header_hint), style = Vyrk.type.labelS, color = c.textMuted)
         }

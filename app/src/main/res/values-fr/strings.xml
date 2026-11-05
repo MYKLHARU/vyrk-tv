@@ -105,6 +105,7 @@
     <string name="hero_rotation_desc">Passer automatiquement au titre suivant</string>
     <string name="hidden_n">Masqués (%1$d)</string>
     <string name="hidden_rows">Rangées masquées</string>
+    <string name="hidden_rows_desc">Rangées masquées de l\'Accueil</string>
     <string name="hidden_synopsis">Résumé masqué jusqu\'au visionnage</string>
     <string name="hidden_tabs">Onglets masqués</string>
     <string name="hidden_tabs_desc">Onglets retirés de la barre de navigation</string>
@@ -158,6 +159,7 @@
     <string name="no_stream_addons">Aucun module installé ne propose de flux pour ce titre. Installez-en un dans Paramètres › Modules.</string>
     <string name="no_trailer">Pas de bande-annonce pour ce titre.</string>
     <string name="none">Aucun</string>
+    <string name="none_hidden">Aucune masquée</string>
     <string name="not_affiliated">VYRK n\'héberge aucun contenu et n\'est pas affilié à Stremio.</string>
     <string name="not_now">Pas maintenant</string>
     <string name="not_playable_here">Illisible sur ce téléviseur</string>
@@ -252,7 +254,7 @@
     <string name="settings_subtitles_sub">Quand les sous-titres s\'affichent et leur style</string>
     <string name="share_hint">Les autres profils de ce téléviseur peuvent utiliser vos modules de flux. Ils ne voient jamais leurs URL.</string>
     <string name="share_stream_addons">Partager les modules de flux avec les autres profils</string>
-    <string name="show_top10_card">Réafficher la suggestion Top 10</string>
+    <string name="show_again">Afficher à nouveau</string>
     <string name="shows">Séries</string>
     <string name="sign_in_stremio">Se connecter avec Stremio</string>
     <string name="sign_out">Se déconnecter</string>
@@ -323,6 +325,8 @@
     <string name="top10_add">Ajouter les rangées Top 10</string>
     <string name="top10_card_body">Ajoute le module tiers gratuit Streaming Catalogs, qui liste les titres populaires de chaque service.</string>
     <string name="top10_card_title">Le Top 10 de vos services de streaming</string>
+    <string name="top10_suggestion">Suggestion Top 10</string>
+    <string name="top10_suggestion_desc">La carte de l\'Accueil qui propose les rangées Top 10</string>
     <string name="trailer">Bande-annonce</string>
     <string name="trailer_refused">Cette bande-annonce ne peut pas être lue ici. Ouvrez-la dans YouTube depuis la page d\'infos.</string>
     <string name="try_again">Réessayer</string>

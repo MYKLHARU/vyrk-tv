@@ -2,6 +2,14 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Home: the featured artwork now reaches down behind the first row, with a soft teal haze and violet light. The title logo is smaller and the same size in the hero and in the header above the rows. The carousel arrows are quieter.
+- Continue Watching cards are wider, closer to a cinema frame.
+- Settings: every row's controls start in the same column, and options are separate pills that wrap when needed. Poster size and Accent colour sit side by side, like Featured hero and Hero rotation (one under the other at the Large interface size). The group's header stays in place while the rows scroll. Hidden rows and the Top 10 suggestion are proper rows, and language lists use tick boxes.
+- Panels have a soft aurora light, and buttons are pills everywhere.
+- An empty Library shows an icon with its message.
+
 ## v0.1.6
 
 - New look: deep navy with soft teal and violet light, frosted glass panels, thin edges and a brighter frost accent.
