@@ -308,7 +308,8 @@ fun BrowsePage(
                         hasProgress = heroMeta?.let { library[it.id]?.isInContinueWatching } == true,
                         watchReq = watchReq,
                         onWatch = { heroMeta?.let { onPlay(it, null) } },
-                        onInfo = { heroMeta?.let { app.push(Overlay.Info(it, null)) } },
+                        // Hold OK or Menu: the title menu, as on posters (remove from Continue Watching, details, library).
+                        onMenu = { heroMeta?.let { app.push(Overlay.ItemMenu(it, null)) } },
                         onPrev = { model.heroIndex = (heroIndex - 1 + heroItems.size) % heroItems.size },
                         onNext = { model.heroIndex = (heroIndex + 1) % heroItems.size },
                         onFocusChanged = { f ->

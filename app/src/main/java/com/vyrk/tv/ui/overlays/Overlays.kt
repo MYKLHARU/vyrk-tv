@@ -1,5 +1,6 @@
 package com.vyrk.tv.ui.overlays
 
+import com.vyrk.tv.ui.components.glassPanel
 import android.os.Build
 import android.view.WindowManager
 import androidx.compose.foundation.background
@@ -158,7 +159,7 @@ private fun ItemMenu(o: Overlay.ItemMenu) {
     val removedMsg = str(R.string.removed_from_cw, o.meta.name)
     val c = Vyrk.colors
     Box(Modifier.fillMaxSize().background(c.scrim), contentAlignment = Alignment.CenterEnd) {
-        Column(Modifier.padding(end = 60.dp).width(340.dp).background(c.panel, RoundedCornerShape(22.dp)).padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(end = 60.dp).width(340.dp).glassPanel(RoundedCornerShape(22.dp)).padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(o.meta.name, style = Vyrk.type.headlineS, color = c.text, maxLines = 2)
             Spacer(Modifier.height(4.dp))
             val full = Modifier.fillMaxWidth()

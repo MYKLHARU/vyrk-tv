@@ -285,14 +285,21 @@ fun PlayerModel.engineSubtitleStyle(): Triple<Color, Color, Float> {
 @Composable
 private fun ConnectingView(m: PlayerModel, onExit: () -> Unit) {
     val c = Vyrk.colors
-    // No Cancel button: Back leaves. Focus sits on Other sources when there is a choice, otherwise
-    // on an invisible holder, so keys still reach the player and focus is never lost.
-    val otherReq = remember { FocusRequester() }
+    // No buttons: Back leaves. Focus sits on an invisible holder, so keys still reach the player
+    // and focus is never lost.
+    // The player window may not have focus yet when this first composes: ask until the holder has it.
     val holdReq = remember { FocusRequester() }
-    val hasOthers = m.candidates.size > 1
-    LaunchedEffect(hasOthers) { runCatching { (if (hasOthers) otherReq else holdReq).requestFocus() } }
+    var held by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        repeat(20) {
+            if (held) return@LaunchedEffect
+            runCatching { holdReq.requestFocus() }
+            kotlinx.coroutines.delay(150)
+        }
+    }
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.size(1.dp).focusRequester(holdReq).focusable().traceFocus("player:connecting"))
+        // Focus observers go before the focus target they watch.
+        Box(Modifier.size(1.dp).onFocusChanged { held = it.isFocused }.traceFocus("player:connecting").focusRequester(holdReq).focusable())
         val bg = m.meta?.background ?: m.request.meta.background
         if (bg != null) AsyncImage(bg, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         Box(Modifier.fillMaxSize().background(c.background.copy(alpha = 0.82f)))
@@ -304,11 +311,6 @@ private fun ConnectingView(m: PlayerModel, onExit: () -> Unit) {
                 progress = m.loadProgress,
                 description = m.connecting,
             )
-            Spacer(Modifier.height(40.dp))
-            // Kept at its height when hidden, so the logo doesn't move when sources arrive.
-            Box(Modifier.height(Dimens.buttonHeight)) {
-                if (hasOthers) VyrkButton(stringResource(R.string.other_sources), onClick = { m.phase = Phase.PLAYING; m.panel = Panel.SOURCES }, style = ButtonStyle.GHOST, modifier = Modifier.focusRequester(otherReq).traceFocus("player:connecting_other"))
-            }
         }
     }
 }

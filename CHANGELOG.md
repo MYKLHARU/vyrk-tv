@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Holding OK (or pressing Menu) on the featured hero's Watch now opens the title's menu, like on posters and Continue Watching cards: Remove from Continue Watching (when the title is in it), More info, Preview, library and watched. The menu is on glass, like the other panels.
+- While a movie loads, the screen shows only the filling logo: Other sources is gone too. Back still leaves.
+
 ## v0.1.9
 
 - Featured hero: Left and Right on Watch now move to the previous or next title straight away, and the arrow on that side lights up. You no longer move onto the arrows to use them.

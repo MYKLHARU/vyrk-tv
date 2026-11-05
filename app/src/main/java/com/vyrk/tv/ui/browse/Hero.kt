@@ -234,7 +234,7 @@ fun Hero(
     hasProgress: Boolean,
     watchReq: FocusRequester,
     onWatch: () -> Unit,
-    onInfo: () -> Unit,
+    onMenu: () -> Unit,
     onPrev: () -> Unit,
     onNext: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
@@ -269,7 +269,7 @@ fun Hero(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 VyrkButton(
                     if (hasProgress) str(R.string.resume) else str(R.string.watch_now),
-                    onClick = onWatch, onLongClick = onInfo, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
+                    onClick = onWatch, onLongClick = onMenu, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
                     height = 42.dp, horizontalPadding = 22.dp, glow = true, shape = Dimens.pillShape,
                     modifier = Modifier.focusRequester(watchReq).traceFocus("hero:watch")
                         // Left and Right on Watch now move through the carousel; no need to reach the arrows.
@@ -277,7 +277,7 @@ fun Hero(
                         .onPreviewKeyEvent { e ->
                             val first = e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0
                             when {
-                                e.type == KeyEventType.KeyUp && e.key == Key.Menu -> { onInfo(); true }
+                                e.type == KeyEventType.KeyUp && e.key == Key.Menu -> { onMenu(); true }
                                 carousel && e.key == Key.DirectionLeft -> { if (first) { pressed = -1; onPrev() }; e.type == KeyEventType.KeyDown }
                                 carousel && e.key == Key.DirectionRight -> { if (first) { pressed = 1; onNext() }; e.type == KeyEventType.KeyDown }
                                 else -> false

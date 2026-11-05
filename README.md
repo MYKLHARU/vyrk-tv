@@ -88,7 +88,7 @@ adb install -r vyrk-<version>-arm64-v8a.apk
 | D-pad | Everywhere | Moves focus |
 | OK | Poster | Opens the info page |
 | OK | Hero, info page | Plays (Resume with progress) |
-| Hold OK, or Menu | Hero | Opens the info page |
+| Hold OK, or Menu | Hero | Opens the title menu |
 | Hold OK, or Menu | Poster | Opens the item menu |
 | Play/Pause | Poster | Opens the preview card |
 | Back | Anywhere | Closes the innermost layer; on Home, goes to the tab strip |

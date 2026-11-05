@@ -63,6 +63,13 @@ expect '^top10card:not_now$' "Not now"
 key KEYCODE_DPAD_CENTER 1.5 "dismiss card"
 expect '^hero:watch$' "focus returns to hero after Not now"
 
+# ---------------------------------------------------------------- hold OK on the hero: title menu
+longpress KEYCODE_DPAD_CENTER 2
+expect '^menu:play$' "hold OK on Watch now opens the title menu"
+shot hero-menu
+key KEYCODE_BACK 1.5 "close the menu"
+expect '^hero:watch$' "Back closes the menu and returns to Watch now"
+
 # ---------------------------------------------------------------- a row, preview card, info page
 key KEYCODE_DPAD_DOWN 2 "into first row"
 expect '^poster:.*#0$' "first title of a row"
