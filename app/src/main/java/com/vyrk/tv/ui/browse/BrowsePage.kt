@@ -372,15 +372,29 @@ fun BrowsePage(
     }
 }
 
+/**
+ * Full details for [meta], or null while they load. Never another title's: when [meta] changes,
+ * produceState keeps its previous value until its new run sets one, and for that frame the header
+ * paired the new title with the old title's details (its logo then got kept for the new title).
+ * Each value is tagged with the id it was fetched for and only returned for that id.
+ */
 @Composable
 fun produceMeta(session: ProfileSession, meta: MetaPreview?, debounceMs: Long = 0): androidx.compose.runtime.State<com.vyrk.core.addon.MetaItem?> {
     val graph = LocalGraph.current
-    return androidx.compose.runtime.produceState(initialValue = meta?.let { graph.metaCache.peek(it.type, it.id) }, meta?.id) {
-        val m = meta ?: run { value = null; return@produceState }
-        graph.metaCache.peek(m.type, m.id)?.let { value = it; return@produceState }
-        value = null
+    val fetched = androidx.compose.runtime.produceState<Pair<String?, com.vyrk.core.addon.MetaItem?>>(
+        initialValue = meta?.id to meta?.let { graph.metaCache.peek(it.type, it.id) }, meta?.id,
+    ) {
+        val m = meta ?: run { value = null to null; return@produceState }
+        graph.metaCache.peek(m.type, m.id)?.let { value = m.id to it; return@produceState }
+        value = m.id to null
         if (debounceMs > 0) delay(debounceMs)
-        value = graph.metaCache.get(session.effectiveAddons(), m.type, m.id)
+        value = m.id to graph.metaCache.get(session.effectiveAddons(), m.type, m.id)
+    }
+    val id = meta?.id
+    return remember(id) {
+        androidx.compose.runtime.derivedStateOf {
+            fetched.value.takeIf { it.first == id }?.second ?: meta?.let { graph.metaCache.peek(it.type, it.id) }
+        }
     }
 }
 
@@ -399,13 +413,16 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
     val addonLogo = com.vyrk.core.art.Artwork.forLogo(full?.logo ?: meta?.logo)
     val addonBackdrop = com.vyrk.core.art.Artwork.forBackdrop(full?.background ?: meta?.background, size)
     val needTmdb = meta != null && graph.tmdb.enabled && (addonLogo == null || addonBackdrop == null)
-    val tmdb by androidx.compose.runtime.produceState<com.vyrk.core.tmdb.TmdbArtwork?>(null, meta?.id, needTmdb) {
-        value = null
+    // Tagged with the id it was fetched for, like produceMeta: the previous title's TMDB logo must
+    // never be offered for the next one in the frame before this restarts.
+    val fetched by androidx.compose.runtime.produceState<Pair<String?, com.vyrk.core.tmdb.TmdbArtwork?>>(null to null, meta?.id, needTmdb) {
+        value = meta?.id to null
         val m = meta ?: return@produceState
         if (!needTmdb) return@produceState
         if (debounceMs > 0) delay(debounceMs)
-        value = graph.tmdb.artwork(m.id, m.type, size)
+        value = m.id to graph.tmdb.artwork(m.id, m.type, size)
     }
+    val tmdb = fetched.takeIf { it.first == meta?.id }?.second
     val id = meta?.id ?: return TitleArt.NONE
     return remember(id, addonLogo, addonBackdrop, tmdb) {
         TitleArt(
