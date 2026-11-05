@@ -1,5 +1,8 @@
 package com.vyrk.tv.ui.browse
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusProperties
 import com.vyrk.tv.ui.components.glassPanel
@@ -239,8 +242,9 @@ fun Hero(
     val meta = items.getOrNull(index) ?: return
     val c = Vyrk.colors
     val carousel = items.size > 1
-    val prevReq = remember { FocusRequester() }
-    val nextReq = remember { FocusRequester() }
+    // Which arrow to light up briefly after Left (-1) or Right (+1) on Watch now.
+    var pressed by remember { mutableIntStateOf(0) }
+    LaunchedEffect(pressed, index) { if (pressed != 0) { kotlinx.coroutines.delay(260); pressed = 0 } }
     Box(
         Modifier.fillMaxWidth().height(height).onFocusChanged { onFocusChanged(it.hasFocus) }
             // Coming in from the tabs or the rows always lands on Watch now, not on whichever
@@ -268,22 +272,25 @@ fun Hero(
                     onClick = onWatch, onLongClick = onInfo, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
                     height = 42.dp, horizontalPadding = 22.dp, glow = true, shape = Dimens.pillShape,
                     modifier = Modifier.focusRequester(watchReq).traceFocus("hero:watch")
-                        // Left and Right go to the arrows at the sides of the hero.
-                        .then(if (carousel) Modifier.focusProperties { left = prevReq; right = nextReq } else Modifier)
-                        .onPreviewKeyEvent { e -> if (e.type == KeyEventType.KeyUp && e.key == Key.Menu) { onInfo(); true } else false },
+                        // Left and Right on Watch now move through the carousel; no need to reach the arrows.
+                        // A held key doesn't race through the titles (repeats are ignored).
+                        .onPreviewKeyEvent { e ->
+                            val first = e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0
+                            when {
+                                e.type == KeyEventType.KeyUp && e.key == Key.Menu -> { onInfo(); true }
+                                carousel && e.key == Key.DirectionLeft -> { if (first) { pressed = -1; onPrev() }; e.type == KeyEventType.KeyDown }
+                                carousel && e.key == Key.DirectionRight -> { if (first) { pressed = 1; onNext() }; e.type == KeyEventType.KeyDown }
+                                else -> false
+                            }
+                        },
                 )
             }
         }
-        // Carousel: an arrow at each side of the hero, and the position dots level with Watch now.
+        // Carousel: an arrow at each side of the hero (shown, not focused: Left and Right on Watch now
+        // move through the titles and light the arrow up), and the position dots level with Watch now.
         if (carousel) {
-            HeroRoundButton(
-                R.drawable.ic_left, str(R.string.previous), "hero:prev", onPrev, size = 36.dp,
-                modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp).focusRequester(prevReq).focusProperties { right = watchReq },
-            )
-            HeroRoundButton(
-                R.drawable.ic_right, str(R.string.next), "hero:next", onNext, size = 36.dp,
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).focusRequester(nextReq).focusProperties { left = watchReq },
-            )
+            HeroArrow(R.drawable.ic_left, lit = pressed < 0, Modifier.align(Alignment.CenterStart).padding(start = 8.dp))
+            HeroArrow(R.drawable.ic_right, lit = pressed > 0, Modifier.align(Alignment.CenterEnd).padding(end = 8.dp))
             Row(
                 Modifier.align(Alignment.BottomEnd).padding(end = Dimens.screenMargin, bottom = 39.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
@@ -298,29 +305,19 @@ fun Hero(
     }
 }
 
-/** Round outlined icon button on the hero (the carousel arrows). */
+/** A carousel arrow at the side of the hero. Not focusable; [lit] when its key was just pressed. */
 @Composable
-private fun HeroRoundButton(icon: Int, description: String, trace: String, onClick: () -> Unit, size: Dp = 42.dp, modifier: Modifier = Modifier) {
+private fun HeroArrow(icon: Int, lit: Boolean, modifier: Modifier = Modifier) {
     val c = Vyrk.colors
-    androidx.tv.material3.Surface(
-        onClick = onClick,
-        modifier = modifier.size(size).traceFocus(trace).semantics { contentDescription = description },
-        shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(CircleShape),
-        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
-            containerColor = c.shade.copy(alpha = if (size < 40.dp) 0.22f else 0.35f), contentColor = c.text,
-            focusedContainerColor = c.text, focusedContentColor = c.background,
-        ),
-        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.08f, pressedScale = 0.95f),
-        border = androidx.tv.material3.ClickableSurfaceDefaults.border(
-            border = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.dp, c.text.copy(alpha = if (size < 40.dp) 0.22f else 0.38f))),
-            focusedBorder = androidx.tv.material3.Border.None,
-        ),
-        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
-    ) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            com.vyrk.tv.ui.components.Icon(icon, null, Modifier.size(size * 0.45f), tint = androidx.tv.material3.LocalContentColor.current)
-        }
-    }
+    val fill by androidx.compose.animation.animateColorAsState(if (lit) c.accent else c.shade.copy(alpha = 0.22f), motionSpec(Motion.FAST), label = "arrow-fill")
+    val ink by androidx.compose.animation.animateColorAsState(if (lit) c.onAccent else c.text, motionSpec(Motion.FAST), label = "arrow-ink")
+    val zoom by androidx.compose.animation.core.animateFloatAsState(if (lit) com.vyrk.tv.ui.theme.focusZoom(1.12f) else 1f, motionSpec(Motion.FAST), label = "arrow-zoom")
+    Box(
+        modifier.size(36.dp).graphicsLayer { scaleX = zoom; scaleY = zoom }
+            .background(fill, CircleShape)
+            .border(1.dp, if (lit) c.accent else c.text.copy(alpha = 0.22f), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) { com.vyrk.tv.ui.components.Icon(icon, null, Modifier.size(16.dp), tint = ink) }
 }
 
 /** Header shown while a poster has focus: artwork, logo and facts for that title. */

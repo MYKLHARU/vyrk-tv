@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Featured hero: Left and Right on Watch now move to the previous or next title straight away, and the arrow on that side lights up. You no longer move onto the arrows to use them.
+- While a movie loads, the logo fills in without the bright bar moving across it, and there is no Cancel button (Back still leaves). Other sources still shows when there's a choice.
+
 ## v0.1.8
 
 - First run opens straight on the Stremio sign-in QR code; "Use without an account" is a small button beside it.

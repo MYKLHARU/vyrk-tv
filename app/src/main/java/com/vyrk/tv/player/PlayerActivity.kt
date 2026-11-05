@@ -1,5 +1,6 @@
 package com.vyrk.tv.player
 
+import com.vyrk.tv.ui.theme.Dimens
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.WindowManager
@@ -284,9 +285,14 @@ fun PlayerModel.engineSubtitleStyle(): Triple<Color, Color, Float> {
 @Composable
 private fun ConnectingView(m: PlayerModel, onExit: () -> Unit) {
     val c = Vyrk.colors
-    val cancelReq = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { cancelReq.requestFocus() } }
+    // No Cancel button: Back leaves. Focus sits on Other sources when there is a choice, otherwise
+    // on an invisible holder, so keys still reach the player and focus is never lost.
+    val otherReq = remember { FocusRequester() }
+    val holdReq = remember { FocusRequester() }
+    val hasOthers = m.candidates.size > 1
+    LaunchedEffect(hasOthers) { runCatching { (if (hasOthers) otherReq else holdReq).requestFocus() } }
     Box(Modifier.fillMaxSize()) {
+        Box(Modifier.size(1.dp).focusRequester(holdReq).focusable().traceFocus("player:connecting"))
         val bg = m.meta?.background ?: m.request.meta.background
         if (bg != null) AsyncImage(bg, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         Box(Modifier.fillMaxSize().background(c.background.copy(alpha = 0.82f)))
@@ -299,9 +305,9 @@ private fun ConnectingView(m: PlayerModel, onExit: () -> Unit) {
                 description = m.connecting,
             )
             Spacer(Modifier.height(40.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (m.candidates.size > 1) VyrkButton(stringResource(R.string.other_sources), onClick = { m.phase = Phase.PLAYING; m.panel = Panel.SOURCES }, style = ButtonStyle.GHOST, modifier = Modifier.traceFocus("player:connecting_other"))
-                VyrkButton(stringResource(R.string.cancel), onClick = onExit, style = ButtonStyle.GHOST, modifier = Modifier.focusRequester(cancelReq).traceFocus("player:connecting_cancel"))
+            // Kept at its height when hidden, so the logo doesn't move when sources arrive.
+            Box(Modifier.height(Dimens.buttonHeight)) {
+                if (hasOthers) VyrkButton(stringResource(R.string.other_sources), onClick = { m.phase = Phase.PLAYING; m.panel = Panel.SOURCES }, style = ButtonStyle.GHOST, modifier = Modifier.focusRequester(otherReq).traceFocus("player:connecting_other"))
             }
         }
     }
@@ -309,7 +315,7 @@ private fun ConnectingView(m: PlayerModel, onExit: () -> Unit) {
 
 /**
  * Draws the logo twice: a faint base and a full-brightness copy clipped to [progress] of its
- * width, with a soft accent edge where the fill is. Falls back to the title in large type.
+ * width (no bright edge where the fill is). Falls back to the title in large type.
  */
 @Composable
 private fun LogoLoader(logo: String?, title: String, progress: Float, description: String) {
@@ -329,13 +335,6 @@ private fun LogoLoader(logo: String?, title: String, progress: Float, descriptio
             translate((size.width - w) / 2, (size.height - h) / 2) {
                 with(painter) { draw(androidx.compose.ui.geometry.Size(w, h), alpha = 0.18f) }
                 clipRect(right = w * p) { with(painter) { draw(androidx.compose.ui.geometry.Size(w, h)) } }
-                if (p in 0.01f..0.99f) {
-                    val x = w * p
-                    drawRect(
-                        Brush.horizontalGradient(listOf(Color.Transparent, c.accent.copy(alpha = 0.55f), Color.Transparent), startX = x - 18f, endX = x + 18f),
-                        topLeft = androidx.compose.ui.geometry.Offset(x - 18f, 0f), size = androidx.compose.ui.geometry.Size(36f, h),
-                    )
-                }
             }
         }
     } else {
