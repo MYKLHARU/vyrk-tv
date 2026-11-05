@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.2
 
 - The title page is full screen: the title's artwork fills the screen behind its logo, facts, synopsis, cast with photos, and Play, Trailer, library and more buttons. Down or the more button shows episodes or sources with the details and full cast; Back returns.
 - While you move along a row, the header no longer jumps as a title's details load, and a title's logo no longer changes to a different one moments after it appears.
