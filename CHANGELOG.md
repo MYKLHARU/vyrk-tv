@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.8
 
 - First run opens straight on the Stremio sign-in QR code; "Use without an account" is a small button beside it.
 - Profiles are gone: VYRK opens straight to Home with one profile, with no profile picker or PIN. Settings is a gear at the top right instead of the avatar menu. The add-on sharing switches (only used between profiles) are gone too.
