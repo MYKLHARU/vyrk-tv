@@ -113,6 +113,7 @@ not run yet.
 | Audio prefs, original language, avoid commentary, remember choice, passthrough, TV-speaker, Clear Dialogue | `core/playback/Tracks.kt`, `AudioEffects.kt` | Built | core (selection) |
 | Subtitle modes, forced-only, memory per title, delay ±10 s, size/colour/background, safe markup stripping | `core/subtitles`, `PlayerModel` | Partial | core; delay and style apply to add-on subtitles only, not embedded tracks |
 | Up Next with autoplay, binge continuity, Still Watching after three, sleep timers | `PlayerModel` | Built | — |
+| The next episode starts at its beginning: choosing it stops the current one and saves nothing until the next shows its first frame; progress is saved against the video the player actually has; a saved point past the credits is never resumed (repairs entries saved wrongly by 0.1.10 and older) | `PlayerModel.playNext`, `LibraryRules.resumeMs` | Done | core (resume rules), E2E (GoT S1E1 → S1E2 starts at 0 ms) |
 | Frame-rate matching restoring the original mode | `PlayerActivity` | Built | — |
 | Skip intro / recap from IntroDB community timings (Show button / Automatic / Off); Up Next at the credits start when known | `core/playback/Segments.kt`, `PlayerModel` | Done | core, E2E (GoT S1E1 via live IntroDB), live probe |
 | Timeline chapter markers: IntroDB segments (intro/recap tinted) merged with Matroska chapters | `core/playback/Chapters.kt`, `PlayerActivity.Timeline` | Done | core, E2E |

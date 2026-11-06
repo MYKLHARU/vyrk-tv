@@ -255,6 +255,31 @@ key KEYCODE_DPAD_UP 1.0 "chapter mode"
 shot timeline-chapters
 key KEYCODE_DPAD_CENTER 2 "seek"
 expect '^player:timeline$' "focus stays on the timeline after seeking"
+
+# ---------------------------------------------------------------- the next episode starts at its start
+# Fast-forward to the end: Up Next (or the end of the file) moves on to S1E2, which must start at
+# the beginning. Up to 0.1.10 the old episode's credits kept playing while S1E2 loaded, and that
+# position was saved against S1E2, which then started at the end.
+"$ADB" logcat -c
+NEXT_START=""
+for _ in $(seq 1 30); do
+  "$ADB" shell input keyevent KEYCODE_MEDIA_FAST_FORWARD; sleep 0.8
+  EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+  NEXT_START=$(printf '%s\n' "$EV" | grep -o 'play_start tt0944947:1:2 [0-9]*' | tail -n 1 || true)
+  [[ -n "$NEXT_START" ]] && break
+  printf '%s\n' "$EV" | grep -q 'upnext_offered' && break
+done
+for _ in $(seq 1 30); do
+  [[ -n "$NEXT_START" ]] && break
+  sleep 1
+  EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+  NEXT_START=$(printf '%s\n' "$EV" | grep -o 'play_start tt0944947:1:2 [0-9]*' | tail -n 1 || true)
+done
+if [[ -z "$NEXT_START" ]]; then fail "the next episode (S1E2) never started"
+elif (( ${NEXT_START##* } < 5000 )); then log "ok: the next episode starts at ${NEXT_START##* } ms"
+else fail "the next episode started at ${NEXT_START##* } ms, not at its start"; fi
+sleep 6
+shot next-episode
 back_from_player
 
 # ---------------------------------------------------------------- results

@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Fixed: when Up Next moved on to the next episode, it could start at the end of that episode. The episode that's finishing now stops as soon as the next one is chosen, and its position is no longer saved against the next one. Episodes already saved that way start from the beginning.
+
 ## v0.1.10
 
 - Holding OK (or pressing Menu) on the featured hero's Watch now opens the title's menu, like on posters and Continue Watching cards: Remove from Continue Watching (when the title is in it), More info, Preview, library and watched. The menu is on glass, like the other panels.

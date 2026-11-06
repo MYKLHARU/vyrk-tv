@@ -76,6 +76,19 @@ object LibraryRules {
         return item
     }
 
+    /**
+     * Where playback of [videoId] starts: the saved position when the library item is on that
+     * video, unless it is past the credits (nothing left to watch), then the start. Versions up to
+     * 0.1.10 could save the end of the previous episode against the next one while Up Next loaded
+     * it; this also keeps those entries from starting at the end.
+     */
+    fun resumeMs(item: LibraryItem?, videoId: String): Long {
+        val s = item?.state ?: return 0
+        if (item.isLive || s.videoId != videoId || s.timeOffset <= 1) return 0
+        if (s.duration > 0 && s.timeOffset >= s.duration * CREDITS_THRESHOLD_COEF) return 0
+        return s.timeOffset
+    }
+
     fun advanceToVideo(item: LibraryItem, videoId: String): LibraryItem {
         val s = item.state
         return item.copy(

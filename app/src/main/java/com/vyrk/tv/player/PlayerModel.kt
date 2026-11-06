@@ -114,6 +114,8 @@ class PlayerModel(
     private var policy = RecoveryPolicy(1, false)
     private var index = 0
     private var item: LibraryItem? = null
+    /** The video whose file the engine has, so progress is saved against it (not the one loading next). */
+    private var playingVideoId: String? = null
     private var firstFrame = false
     private var firstFrameJob: Job? = null
     private var lastPushMs = SystemClock.elapsedRealtime()
@@ -176,8 +178,7 @@ class PlayerModel(
         }
         policy = RecoveryPolicy(playable.size, userPicked)
         index = 0
-        val resume = item?.takeIf { it.state.videoId == vid && it.state.timeOffset > 1 }?.state?.timeOffset ?: 0L
-        playCandidate(resume)
+        playCandidate(LibraryRules.resumeMs(item, vid))
         loadSubtitles(vid)
     }
 
@@ -203,7 +204,9 @@ class PlayerModel(
         connecting = s(com.vyrk.tv.R.string.connecting_to, r.candidate.addonName, quality(r).ifEmpty { "—" })
         progressTo(0.5f)
         firstFrame = false
+        playingVideoId = video?.id ?: request.videoId ?: request.meta.id
         Diagnostics.log("player", "candidate ${index + 1}/${candidates.size} from ${r.candidate.addonId}")
+        android.util.Log.i("VyrkEvent", "play_start $playingVideoId $startMs")
         engine.prepare(r.candidate.stream, startMs)
         firstFrameJob?.cancel()
         firstFrameJob = scope.launch {
@@ -370,8 +373,7 @@ class PlayerModel(
         }
     }
 
-    private fun startPositionFallback(): Long =
-        item?.takeIf { it.state.videoId == video?.id }?.state?.timeOffset?.takeIf { it > 1 } ?: 0L
+    private fun startPositionFallback(): Long = video?.id?.let { LibraryRules.resumeMs(item, it) } ?: 0L
 
     /** Asks the same add-on for a fresh link to the same file, then resumes. */
     private suspend fun refreshLink(pos: Long) {
@@ -519,6 +521,12 @@ class PlayerModel(
         saveProgress(final = true)
         if (auto) autoplayedInRow++ else autoplayedInRow = 0
         if (auto && settings.askStillWatching && autoplayedInRow >= 3) { stillWatching = true; engine.player.pause(); return }
+        // Stop this episode (its credits kept playing while the next one's sources loaded, and its
+        // position near the end was saved against the next episode, which then started there) and
+        // save nothing until the next one shows its first frame.
+        engine.player.pause()
+        firstFrame = false
+        firstFrameJob?.cancel()
         request = request.copy(videoId = nv.id, picked = null, ranked = null)
         prefsApplied = false
         selectedSub = null
@@ -538,7 +546,7 @@ class PlayerModel(
         if (isLive || !firstFrame) return
         val p = engine.player
         val dur = p.duration.takeIf { it != C.TIME_UNSET && it > 0 } ?: return
-        val vid = video?.id ?: request.videoId ?: request.meta.id
+        val vid = playingVideoId ?: video?.id ?: request.videoId ?: request.meta.id
         val base = session.item(request.meta.id) ?: item ?: return
         val wb = meta?.takeIf { it.videos.isNotEmpty() }?.let { base.watchedBitField(it.videos) }
         var (next, _) = LibraryRules.onTimeChanged(base, vid, p.currentPosition, dur, now, wb)
@@ -589,7 +597,7 @@ class PlayerModel(
                 // Credits start from IntroDB when known, otherwise the last 30 s or past 90%.
                 val credits = skipOffer.creditsStartMs
                 val near = if (credits != null) position >= credits else duration - position < 30_000 || position > duration * LibraryRules.CREDITS_THRESHOLD_COEF
-                if (near && !upNext && playing) { upNext = true; upNextCountdown = 10 }
+                if (near && !upNext && playing) { upNext = true; upNextCountdown = 10; android.util.Log.i("VyrkEvent", "upnext_offered ${video?.id}") }
                 if (upNext && n % 2 == 0) { upNextCountdown--; if (upNextCountdown <= 0) playNext(auto = true) }
             }
         }

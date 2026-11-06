@@ -19,6 +19,22 @@ class LibraryRulesTest {
     )
 
     @Test
+    fun resumeStartsAtTheSavedPointButNeverPastTheCredits() {
+        fun ep(video: String, offset: Long) = LibraryItem(
+            id = "tt0944947", name = "Show", type = "series", mtimeMs = now,
+            state = LibraryItemState(videoId = video, timeOffset = offset, duration = 3_000_000),
+        )
+        assertEquals(600_000, LibraryRules.resumeMs(ep("tt0944947:1:2", 600_000), "tt0944947:1:2"))
+        // The saved point belongs to another episode.
+        assertEquals(0, LibraryRules.resumeMs(ep("tt0944947:1:1", 600_000), "tt0944947:1:2"))
+        // Past the credits (what an older version saved against the next episode): start over.
+        assertEquals(0, LibraryRules.resumeMs(ep("tt0944947:1:2", 2_900_000), "tt0944947:1:2"))
+        // Advanced to this episode but not started.
+        assertEquals(0, LibraryRules.resumeMs(ep("tt0944947:1:2", 1), "tt0944947:1:2"))
+        assertEquals(0, LibraryRules.resumeMs(null, "tt0944947:1:2"))
+    }
+
+    @Test
     fun continueWatchingRules() {
         assertTrue(movie(offset = 10).isInContinueWatching)
         assertFalse(movie(offset = 0).isInContinueWatching)
