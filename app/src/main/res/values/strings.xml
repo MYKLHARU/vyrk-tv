@@ -24,7 +24,7 @@
     <string name="audio_subtitles">Audio &amp; subtitles</string>
     <string name="audio_switched">That audio track stopped working. Switched to %1$s.</string>
     <string name="audio_track_n">Track %1$d</string>
-    <string name="automatic_checks">Automatic checks</string>
+    <string name="automatic_updates">Update automatically</string>
     <string name="autoplay_next">Play next episode automatically</string>
     <string name="avoid_commentary">Avoid commentary tracks</string>
     <string name="back">Back</string>
@@ -189,7 +189,6 @@
     <string name="preview_manual">Manual</string>
     <string name="preview_sound">Preview sound</string>
     <string name="previews">Previews</string>
-    <string name="previous">Previous</string>
     <string name="rating_attribution">Rating from IMDb, via your add-ons.</string>
     <string name="ready_when_you_are">Ready when you are</string>
     <string name="recent_searches">Recent searches</string>
@@ -318,8 +317,11 @@
     <string name="up_next_in">Up next: %1$s in %2$d s</string>
     <string name="up_to_date">You have the latest version.</string>
     <string name="update_failed">Update check failed: %1$s</string>
+    <string name="update_install_failed">Couldn\'t install the update: %1$s</string>
+    <string name="update_needs_permission">VYRK %1$s is out. To update automatically, allow VYRK to install apps: Settings › About &amp; updates › Download and install.</string>
     <string name="update_source">Source: %1$s</string>
     <string name="updates">Updates</string>
+    <string name="updating_to">Updating VYRK to %1$s. It closes for a moment: open it again when it\'s done.</string>
     <string name="use_without_account">Use without an account</string>
     <string name="voice_search">Voice search</string>
     <string name="watch_now">Watch now</string>

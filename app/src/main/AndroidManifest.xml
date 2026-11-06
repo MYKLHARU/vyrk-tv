@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Self-update from GitHub Releases. Removed in store builds (src/store/AndroidManifest.xml). -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Android 12+: lets VYRK install its own updates without asking, once it installed the current version. -->
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
 
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -71,6 +73,10 @@
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.Vyrk.Player" />
+
+        <receiver
+            android:name=".data.UpdateStatusReceiver"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

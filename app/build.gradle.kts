@@ -14,6 +14,8 @@ val appId = prop("vyrk.applicationId", "com.vyrk.tv")
 val verName = prop("vyrk.versionName", "0.1.0")
 val verCode = prop("vyrk.versionCode", "1").toInt()
 val updateRepo = prop("vyrk.updateRepo")
+// Test builds only: read the "latest release" JSON from this URL instead of GitHub's API.
+val updateCheckUrl = prop("vyrk.updateCheckUrl")
 val top10Url = prop("vyrk.top10AddonUrl")
 val storeBuild = prop("vyrk.storeBuild", "false").toBoolean()
 // TMDB key for cast and crew pages: from -Pvyrk.tmdbApiKey or the TMDB_API_KEY environment variable.
@@ -38,6 +40,7 @@ android {
         versionName = verName
         resValue("string", "app_name", appName)
         buildConfigField("String", "UPDATE_REPO", "\"$updateRepo\"")
+        buildConfigField("String", "UPDATE_CHECK_URL", "\"$updateCheckUrl\"")
         buildConfigField("String", "TOP10_ADDON_URL", "\"$top10Url\"")
         buildConfigField("boolean", "STORE_BUILD", storeBuild.toString())
         buildConfigField("String", "TMDB_API_KEY", "\"${tmdbKey.replace("\"", "")}\"")

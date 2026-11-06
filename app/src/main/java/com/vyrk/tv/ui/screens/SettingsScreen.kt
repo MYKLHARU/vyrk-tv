@@ -466,7 +466,7 @@ private fun AboutGroup(session: ProfileSession) {
                     graph.updateDevice { it.copy(lastUpdateCheckMs = System.currentTimeMillis()) }
                 }
             }, modifier = Modifier.traceFocus("about:check_updates"))
-            CheckChip(str(R.string.automatic_checks), d.autoUpdateChecks, { graph.updateDevice { it.copy(autoUpdateChecks = !it.autoUpdateChecks) } }, "about:auto_checks")
+            CheckChip(str(R.string.automatic_updates), d.autoUpdateChecks, { graph.updateDevice { it.copy(autoUpdateChecks = !it.autoUpdateChecks) } }, "about:auto_checks")
         }
         status?.let { Text(it, style = Vyrk.type.bodyM, color = c.textSecondary) }
         available?.let { a ->

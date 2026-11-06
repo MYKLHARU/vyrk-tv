@@ -19,6 +19,15 @@ data class GithubRelease(
 
 object Updates {
     const val CHECK_EVERY_MS = 4L * 3600 * 1000
+    /** Opening the app checks again once this long has passed since the last check. */
+    const val OPEN_CHECK_GAP_MS = 10L * 60 * 1000
+
+    /** A release build ("0.1.11"), not a CI or pre-release one ("0.1.0-ci.41", "1.0.0-beta"). */
+    fun isReleaseVersion(versionName: String): Boolean = versionName.isNotBlank() && '-' !in versionName && '+' !in versionName
+
+    /** Check on opening the app: automatic updates on, and not checked in the last few minutes. */
+    fun shouldCheckOnOpen(lastCheckMs: Long, nowMs: Long, automatic: Boolean): Boolean =
+        automatic && (lastCheckMs <= 0 || nowMs < lastCheckMs || nowMs - lastCheckMs >= OPEN_CHECK_GAP_MS)
 
     fun latestUrl(repo: String): String? =
         repo.trim().takeIf { Regex("""^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$""").matches(it) }

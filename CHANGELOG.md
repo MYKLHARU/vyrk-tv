@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- VYRK updates itself: when you open it, it checks for a new version, downloads it, says "Updating VYRK to …" and installs it. VYRK closes for a moment while that happens; open it again when it's done. It never interrupts a film. On Android 12 and newer, once VYRK has installed one update itself, the next ones install without asking; on older Android (such as the NVIDIA SHIELD), Android asks you to confirm each update. Turn it off in Settings › About & updates › Update automatically.
+
 ## v0.1.11
 
 - Fixed: when Up Next moved on to the next episode, it could start at the end of that episode. The episode that's finishing now stops as soon as the next one is chosen, and its position is no longer saved against the next one. Episodes already saved that way start from the beginning.

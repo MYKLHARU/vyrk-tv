@@ -46,7 +46,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Settings** — in the menu under your avatar: a glass sidebar with eight groups and compact rows, each with a short description, over the artwork you were last looking at, blurred.
 
-**TV integration** — Watch Next on the launcher, MediaSession, frame-rate matching, passthrough, in-app updates from GitHub Releases.
+**TV integration** — Watch Next on the launcher, MediaSession, frame-rate matching, passthrough, automatic updates from GitHub Releases when you open VYRK.
 
 **Privacy** — no ads, analytics, tracking or VYRK account. Your Stremio key and add-on URLs are encrypted with an Android Keystore key and redacted everywhere they're shown or logged. VYRK talks to your add-ons, the Stremio account service, IntroDB (intro timings, by IMDb ID only), TMDB (cast pages, only when the build has a key), YouTube for trailers and GitHub for updates.
 

@@ -24,7 +24,7 @@
     <string name="audio_subtitles">ऑडियो और सबटाइटल</string>
     <string name="audio_switched">वह ऑडियो ट्रैक काम नहीं कर रहा। %1$s पर बदला गया।</string>
     <string name="audio_track_n">ट्रैक %1$d</string>
-    <string name="automatic_checks">अपने-आप जाँच</string>
+    <string name="automatic_updates">अपने-आप अपडेट करें</string>
     <string name="autoplay_next">अगला एपिसोड अपने-आप चलाएँ</string>
     <string name="avoid_commentary">कमेंट्री ट्रैक से बचें</string>
     <string name="back">वापस</string>
@@ -189,7 +189,6 @@
     <string name="preview_manual">मैन्युअल</string>
     <string name="preview_sound">प्रीव्यू की आवाज़</string>
     <string name="previews">प्रीव्यू</string>
-    <string name="previous">पिछला</string>
     <string name="rating_attribution">IMDb की रेटिंग, आपके ऐड-ऑन के ज़रिए।</string>
     <string name="ready_when_you_are">आप तैयार, तो हम तैयार</string>
     <string name="recent_searches">हाल की खोजें</string>
@@ -318,8 +317,11 @@
     <string name="up_next_in">आगे: %1$s, %2$d सेकंड में</string>
     <string name="up_to_date">आपके पास नया संस्करण है।</string>
     <string name="update_failed">अपडेट जाँच विफल: %1$s</string>
+    <string name="update_install_failed">अपडेट इंस्टॉल नहीं हो सका: %1$s</string>
+    <string name="update_needs_permission">VYRK %1$s आ गया है। अपने-आप अपडेट के लिए VYRK को ऐप इंस्टॉल करने की अनुमति दें: सेटिंग › जानकारी और अपडेट › डाउनलोड करके इंस्टॉल करें।</string>
     <string name="update_source">स्रोत: %1$s</string>
     <string name="updates">अपडेट</string>
+    <string name="updating_to">VYRK को %1$s पर अपडेट किया जा रहा है। यह कुछ पल के लिए बंद होगा: पूरा होने पर फिर से खोलें।</string>
     <string name="use_without_account">बिना खाते के इस्तेमाल करें</string>
     <string name="voice_search">आवाज़ से खोज</string>
     <string name="watch_now">अभी देखें</string>

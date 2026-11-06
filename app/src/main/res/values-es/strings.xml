@@ -24,7 +24,7 @@
     <string name="audio_subtitles">Audio y subtítulos</string>
     <string name="audio_switched">Esa pista de audio dejó de funcionar. Se cambió a %1$s.</string>
     <string name="audio_track_n">Pista %1$d</string>
-    <string name="automatic_checks">Comprobación automática</string>
+    <string name="automatic_updates">Actualizar automáticamente</string>
     <string name="autoplay_next">Reproducir el siguiente episodio automáticamente</string>
     <string name="avoid_commentary">Evitar pistas de comentarios</string>
     <string name="back">Atrás</string>
@@ -189,7 +189,6 @@
     <string name="preview_manual">Manual</string>
     <string name="preview_sound">Sonido de la vista previa</string>
     <string name="previews">Vistas previas</string>
-    <string name="previous">Anterior</string>
     <string name="rating_attribution">Puntuación de IMDb, a través de tus complementos.</string>
     <string name="ready_when_you_are">Listo cuando tú quieras</string>
     <string name="recent_searches">Búsquedas recientes</string>
@@ -318,8 +317,11 @@
     <string name="up_next_in">A continuación: %1$s en %2$d s</string>
     <string name="up_to_date">Tienes la última versión.</string>
     <string name="update_failed">Error al buscar actualizaciones: %1$s</string>
+    <string name="update_install_failed">No se pudo instalar la actualización: %1$s</string>
+    <string name="update_needs_permission">Ya está VYRK %1$s. Para actualizar automáticamente, permite que VYRK instale apps: Ajustes › Acerca de y actualizaciones › Descargar e instalar.</string>
     <string name="update_source">Origen: %1$s</string>
     <string name="updates">Actualizaciones</string>
+    <string name="updating_to">Actualizando VYRK a %1$s. Se cerrará un momento: ábrelo de nuevo cuando termine.</string>
     <string name="use_without_account">Usar sin cuenta</string>
     <string name="voice_search">Búsqueda por voz</string>
     <string name="watch_now">Ver ahora</string>

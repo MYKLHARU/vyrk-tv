@@ -255,6 +255,17 @@ class ProfileAndUpdateTest {
         assertTrue(Updates.isNewer("v1.2.0", "1.1.9"))
         assertFalse(Updates.isNewer("v1.2.0", "1.2.0"))
         assertFalse(Updates.isNewer("v1.2.0", "1.10.0"))
+        assertTrue(Updates.isNewer("v0.1.10", "0.1.9"))
+        // Opening the app checks unless it checked in the last ten minutes, or automatic updates are off.
+        val t = 1_750_000_000_000L
+        assertTrue(Updates.shouldCheckOnOpen(0, t, automatic = true))
+        assertFalse(Updates.shouldCheckOnOpen(t - 60_000, t, automatic = true))
+        assertTrue(Updates.shouldCheckOnOpen(t - Updates.OPEN_CHECK_GAP_MS, t, automatic = true))
+        assertTrue(Updates.shouldCheckOnOpen(t + 60_000, t, automatic = true)) // clock went back
+        assertFalse(Updates.shouldCheckOnOpen(0, t, automatic = false))
+        assertTrue(Updates.isReleaseVersion("0.1.11"))
+        assertFalse(Updates.isReleaseVersion("0.1.0-ci.41"))
+        assertFalse(Updates.isReleaseVersion(""))
         val rel = GithubRelease("v2.0.0", assets = listOf(GithubAsset("vyrk-2.0.0-arm64-v8a.apk", "u1"), GithubAsset("vyrk-2.0.0-universal.apk", "u2")))
         assertEquals("u1", Updates.pickAsset(rel, "1.0.0", listOf("arm64-v8a"))!!.browser_download_url)
         assertEquals("u2", Updates.pickAsset(rel, "1.0.0", listOf("x86"))!!.browser_download_url)
