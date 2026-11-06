@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Fixed: a hard edge across Home and the other pages near the bottom of the screen (seen above "TMDB Trending – Movies"). The wallpaper stopped short of the bottom of the screen by the height of the top bar; it now reaches the bottom and blends all the way down.
+
 ## v0.1.14
 
 - The wallpaper now blends into the app towards the bottom: the picture is strong at the top and through the featured title, then melts into VYRK's own background, where the rows sit.

@@ -1,5 +1,6 @@
 package com.vyrk.tv.ui.browse
 
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
@@ -299,7 +300,14 @@ fun BrowsePage(
             heroEnabled -> heroArt.backdrops
             else -> emptyList()
         }
-        if (active && wallpaper.isNotEmpty()) Wallpaper(wallpaper, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(screenH))
+        // Taller than this page (it reaches up behind the bar), so its height must not be capped to the
+        // page's: a plain height() was, which left the bottom bar-height of the screen uncovered with
+        // a hard edge above the last row.
+        if (active && wallpaper.isNotEmpty()) Wallpaper(
+            wallpaper,
+            Modifier.offset(y = -Dimens.navHeight).fillMaxWidth()
+                .wrapContentHeight(androidx.compose.ui.Alignment.Top, unbounded = true).height(screenH),
+        )
         val headerBottomPx = with(density) { headerH.toPx() }
 
         CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
