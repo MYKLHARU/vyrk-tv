@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.11
 
 - Fixed: when Up Next moved on to the next episode, it could start at the end of that episode. The episode that's finishing now stops as soon as the next one is chosen, and its position is no longer saved against the next one. Episodes already saved that way start from the beginning.
 
