@@ -374,6 +374,13 @@ fun BrowsePage(
                                 flags.heroFocused.set(false); flags.top10CardFocused.set(false)
                                 session.rememberFocus(tabKey, FocusMemory(row.key, i, m.id))
                                 if (row.kind != RowKind.CONTINUE && i >= row.items.size - 6) model.loadMore(row)
+                                // The wallpaper for the titles either side, ahead of time, so moving along the row
+                                // finds them ready (same screen size as the wallpaper asks for).
+                                val dm = context.resources.displayMetrics
+                                val size = backdropSize(dm.widthPixels)
+                                listOf(i + 1, i - 1, i + 2).forEach { j ->
+                                    row.items.getOrNull(j)?.let { n -> com.vyrk.core.art.Artwork.forBackdrop(n.background, size)?.let { prefetchImage(context, model, it, dm.widthPixels, dm.heightPixels) } }
+                                }
                             },
                         ) },
                         listState = model.rowListState(row.key),

@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- The wallpaper now blends into the app towards the bottom: the picture is strong at the top and through the featured title, then melts into VYRK's own background, where the rows sit.
+- Changing title blends the wallpaper properly: the current picture stays until the next one has loaded, then they cross-fade (it used to start fading straight away, so on a slower connection the old picture faded out and the new one popped in). The pictures for the titles either side of the one you're on are fetched ahead.
+
 ## v0.1.13
 
 - The featured title's artwork is now a full-screen wallpaper: it fills the whole screen behind the hero and the rows instead of fading out under the hero. Moving into the rows, the wallpaper changes to the title you're on, and rows you scroll past slide away under the title's details.

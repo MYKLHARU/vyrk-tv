@@ -1,5 +1,7 @@
 package com.vyrk.tv.ui.browse
 
+import androidx.compose.ui.draw.drawWithContent
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.graphicsLayer
@@ -75,39 +77,70 @@ data class TitleArt(val logos: List<String>, val backdrops: List<String>) {
     companion object { val NONE = TitleArt(emptyList(), emptyList()) }
 }
 
+/** How long one wallpaper takes to blend into the next. */
+private const val WALLPAPER_FADE_MS = 700
+/** Longest the previous title's wallpaper stays while the next one loads. */
+private const val WALLPAPER_HOLD_MS = 1_200L
+
 /**
- * Full-screen wallpaper behind the hero, the title header and the rows: the title's artwork across
- * the whole screen, never fading out into the page colour. Darkened on the left under the logo and
- * text and towards the bottom under the rows (the picture still shows through), with VYRK's teal
- * and violet light. Cross-fades from one title to the next.
+ * Full-screen wallpaper behind the hero, the title header and the rows: the title's artwork from
+ * the top of the screen, darkened on the left under the logo and text, with a teal haze, blending
+ * into the app's own ambient background towards the bottom, where the rows sit.
+ *
+ * Changing title blends the pictures: the current one stays fully on screen until the next has
+ * loaded (at most [WALLPAPER_HOLD_MS]), then they cross-fade (it used to start fading at once, so on a slower TV the old picture
+ * faded out over nothing and the new one popped in). Requests are screen-sized, like the hero's
+ * prefetch, so prefetched pictures come straight from memory.
  */
 @Composable
 fun Wallpaper(urls: List<String>, modifier: Modifier = Modifier) {
     val c = Vyrk.colors
     val shade = c.shade
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val loader = remember(context) { coil3.SingletonImageLoader.get(context) }
+    val dm = context.resources.displayMetrics
+    fun request(url: String) = coil3.request.ImageRequest.Builder(context).data(url).size(dm.widthPixels, dm.heightPixels).build()
     var attempt by remember(urls) { mutableIntStateOf(0) }
-    val url = urls.getOrNull(attempt)
-    Box(modifier.background(c.background)) {
-        Crossfade(url, animationSpec = com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.SLOW), label = "wallpaper") { u ->
-            if (u != null) AsyncImage(
-                u, null, contentScale = ContentScale.Crop, alignment = Alignment.Center,
-                onError = { if (urls.getOrNull(attempt) == u) attempt += 1 },
-                modifier = Modifier.fillMaxSize(),
-            )
+    val target = urls.getOrNull(attempt)
+    // The picture on screen; not reset when the title changes, so it stays until the next is ready.
+    var shown by remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(target) {
+        if (target == null || target == shown) return@LaunchedEffect
+        // Don't keep another title's picture behind this one's details for long: if the new picture
+        // is slow, the old one fades to the plain background and the new one fades in when it's here.
+        val hold = launch { kotlinx.coroutines.delay(WALLPAPER_HOLD_MS); if (shown != target) shown = null }
+        val result = loader.execute(request(target))
+        hold.cancel()
+        if (result is coil3.request.SuccessResult) shown = target
+        else if (urls.getOrNull(attempt) == target) attempt += 1
+    }
+    Box(modifier) {
+        // The app's own background (navy, violet low on the left, teal high on the right), as on
+        // Library and Settings: what the picture blends into at the bottom.
+        com.vyrk.tv.ui.components.AmbientBackground()
+        Box(
+            Modifier.fillMaxSize()
+                .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                .drawWithContent {
+                    drawContent()
+                    // Fully there down to about half way, then melting into the background below.
+                    drawRect(Brush.verticalGradient(0f to Color.Black, 0.50f to Color.Black, 0.68f to Color.Black.copy(alpha = 0.62f), 0.86f to Color.Black.copy(alpha = 0.16f), 1f to Color.Transparent), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
+                },
+        ) {
+            Crossfade(shown, animationSpec = com.vyrk.tv.ui.theme.motionSpec(WALLPAPER_FADE_MS), label = "wallpaper") { u ->
+                if (u != null) AsyncImage(request(u), null, contentScale = ContentScale.Crop, alignment = Alignment.Center, modifier = Modifier.fillMaxSize())
+            }
+            // Left: under the logo, facts and synopsis.
+            Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
+                0f to shade.copy(alpha = 0.92f), 0.30f to shade.copy(alpha = 0.78f), 0.50f to shade.copy(alpha = 0.50f), 0.70f to shade.copy(alpha = 0.22f), 1f to shade.copy(alpha = 0.12f),
+            )))
+            // A teal haze where the picture meets the text.
+            Box(Modifier.fillMaxSize().drawBehind {
+                drawRect(Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.18f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.30f), radius = size.width * 0.40f))
+            })
         }
-        // Left: under the logo, facts and synopsis.
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
-            0f to shade.copy(alpha = 0.92f), 0.30f to shade.copy(alpha = 0.78f), 0.50f to shade.copy(alpha = 0.50f), 0.70f to shade.copy(alpha = 0.22f), 1f to shade.copy(alpha = 0.12f),
-        )))
-        // VYRK's light: a teal haze where the picture meets the text, violet low on the left.
-        Box(Modifier.fillMaxSize().drawBehind {
-            drawRect(Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.18f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.30f), radius = size.width * 0.40f))
-            drawRect(Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.26f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(0f, size.height * 0.88f), radius = size.width * 0.36f))
-        })
-        // Top under the bar, then darker towards the bottom under the rows; never solid.
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-            0f to shade.copy(alpha = 0.30f), 0.14f to Color.Transparent, 0.48f to shade.copy(alpha = 0.10f), 0.72f to shade.copy(alpha = 0.50f), 1f to shade.copy(alpha = 0.80f),
-        )))
+        // Under the bar.
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to shade.copy(alpha = 0.30f), 0.14f to Color.Transparent)))
     }
 }
 
