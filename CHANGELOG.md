@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.14
 
 - The wallpaper now blends into the app towards the bottom: the picture is strong at the top and through the featured title, then melts into VYRK's own background, where the rows sit.
 - Changing title blends the wallpaper properly: the current picture stays until the next one has loaded, then they cross-fade (it used to start fading straight away, so on a slower connection the old picture faded out and the new one popped in). The pictures for the titles either side of the one you're on are fetched ahead.
