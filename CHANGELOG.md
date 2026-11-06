@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.13
 
 - The featured title's artwork is now a full-screen wallpaper: it fills the whole screen behind the hero and the rows instead of fading out under the hero. Moving into the rows, the wallpaper changes to the title you're on, and rows you scroll past slide away under the title's details.
 
