@@ -27,6 +27,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.focusGroup
@@ -289,15 +291,25 @@ fun BrowsePage(
         val rowTitleH = 30.dp
         flags.posterTarget.set(with(density) { (headerH + rowTitleH).toPx() })
 
-        // Backdrop: hero artwork (the focused poster's artwork is drawn under the header below).
-        val showBackdrop = focusedPoster == null && heroEnabled && listState.firstVisibleItemIndex == 0
-        // It reaches down behind the first row (Continue Watching), as in the reference layout.
-        if (showBackdrop && active) Backdrop(heroArt.backdrops, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(heroH + 200.dp + Dimens.navHeight))
+        // Full-screen wallpaper behind everything: the hero's artwork, or the focused title's while a
+        // row has focus. The title header below draws over it with no background of its own.
+        val headerShown = focusedPoster != null && !heroFocused && active
+        val wallpaper = when {
+            headerShown -> headerArt.backdrops
+            heroEnabled -> heroArt.backdrops
+            else -> emptyList()
+        }
+        if (active && wallpaper.isNotEmpty()) Wallpaper(wallpaper, Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(screenH))
+        val headerBottomPx = with(density) { headerH.toPx() }
 
         CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize().clipToBounds(),
+                // Under the title header, rows that scroll up are cut off at its bottom edge (it has
+                // no background now, so they would show through the text).
+                modifier = Modifier.fillMaxSize().clipToBounds().drawWithContent {
+                    if (headerShown) clipRect(top = headerBottomPx) { this@drawWithContent.drawContent() } else drawContent()
+                },
                 contentPadding = PaddingValues(bottom = 200.dp),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Dimens.rowGap),
             ) {
@@ -384,12 +396,10 @@ fun BrowsePage(
             androidx.activity.compose.BackHandler { app.preview = null }
             com.vyrk.tv.ui.preview.PreviewCard(pm, sound = settings.previewSound, modifier = Modifier.padding(top = 12.dp, end = Dimens.screenMargin))
         }
-        // Title header over the list while a poster has focus.
+        // Title header over the wallpaper while a poster has focus.
         val fp = focusedPoster
-        if (fp != null && !heroFocused && active) {
-            // Opaque: rows above the focused one scroll beneath it.
-            Box(Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(headerH + Dimens.navHeight).background(com.vyrk.tv.ui.theme.Vyrk.colors.background)) {
-                Backdrop(headerArt.backdrops, Modifier.fillMaxSize())
+        if (fp != null && headerShown) {
+            Box(Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(headerH + Dimens.navHeight)) {
                 TitleHeader(fp, headerFull, headerArt, headerH, trailerPlaying = false)
                 if (settings.previews == PreviewMode.AUTOMATIC && app.overlays.isEmpty()) {
                     HeaderTrailer(meta = fp, full = headerFull, sound = settings.previewSound, modifier = Modifier.padding(end = Dimens.screenMargin, top = Dimens.navHeight + 12.dp))

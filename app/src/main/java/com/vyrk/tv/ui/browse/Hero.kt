@@ -76,39 +76,38 @@ data class TitleArt(val logos: List<String>, val backdrops: List<String>) {
 }
 
 /**
- * Cinematic backdrop: the picture fills the right of the hero (subjects usually sit right of
- * centre) and stays untinted there. A black-navy fade comes in from the left under the text and
- * from the bottom into the page; nothing covers the whole image.
+ * Full-screen wallpaper behind the hero, the title header and the rows: the title's artwork across
+ * the whole screen, never fading out into the page colour. Darkened on the left under the logo and
+ * text and towards the bottom under the rows (the picture still shows through), with VYRK's teal
+ * and violet light. Cross-fades from one title to the next.
  */
 @Composable
-fun Backdrop(urls: List<String>, modifier: Modifier = Modifier) {
-    val bg = Vyrk.colors.background
-    val shade = Vyrk.colors.shade
+fun Wallpaper(urls: List<String>, modifier: Modifier = Modifier) {
+    val c = Vyrk.colors
+    val shade = c.shade
     var attempt by remember(urls) { mutableIntStateOf(0) }
     val url = urls.getOrNull(attempt)
-    Box(modifier) {
-        Crossfade(url, animationSpec = com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.SLOW), label = "backdrop") { u ->
-            if (u != null) Box(Modifier.fillMaxSize()) {
-                AsyncImage(
-                    u, null, contentScale = ContentScale.Crop, alignment = Alignment.Center,
-                    onError = { if (urls.getOrNull(attempt) == u) attempt += 1 },
-                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().fillMaxWidth(0.80f),
-                )
-            }
+    Box(modifier.background(c.background)) {
+        Crossfade(url, animationSpec = com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.SLOW), label = "wallpaper") { u ->
+            if (u != null) AsyncImage(
+                u, null, contentScale = ContentScale.Crop, alignment = Alignment.Center,
+                onError = { if (urls.getOrNull(attempt) == u) attempt += 1 },
+                modifier = Modifier.fillMaxSize(),
+            )
         }
-        // Left: solid under the title and text, clear from about two-thirds across.
+        // Left: under the logo, facts and synopsis.
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
-            0f to shade, 0.22f to shade, 0.36f to shade.copy(alpha = 0.82f), 0.50f to shade.copy(alpha = 0.40f), 0.64f to Color.Transparent,
+            0f to shade.copy(alpha = 0.92f), 0.30f to shade.copy(alpha = 0.78f), 0.50f to shade.copy(alpha = 0.50f), 0.70f to shade.copy(alpha = 0.22f), 1f to shade.copy(alpha = 0.12f),
         )))
-        // VYRK's light: a cool teal haze where the artwork meets the text, a violet glow low on the
-        // left. Under the bottom fade, so both die out with the artwork instead of ending in an edge.
-        val c = Vyrk.colors
+        // VYRK's light: a teal haze where the picture meets the text, violet low on the left.
         Box(Modifier.fillMaxSize().drawBehind {
-            drawRect(Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.22f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.36f), radius = size.width * 0.38f))
-            drawRect(Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.30f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(0f, size.height * 0.78f), radius = size.width * 0.32f))
+            drawRect(Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.18f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.30f), radius = size.width * 0.40f))
+            drawRect(Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.26f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(0f, size.height * 0.88f), radius = size.width * 0.36f))
         })
-        // Bottom: into the page colour. Gentle, so the artwork still shows behind the first row.
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.50f to Color.Transparent, 0.82f to bg.copy(alpha = 0.55f), 1f to bg)))
+        // Top under the bar, then darker towards the bottom under the rows; never solid.
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+            0f to shade.copy(alpha = 0.30f), 0.14f to Color.Transparent, 0.48f to shade.copy(alpha = 0.10f), 0.72f to shade.copy(alpha = 0.50f), 1f to shade.copy(alpha = 0.80f),
+        )))
     }
 }
 

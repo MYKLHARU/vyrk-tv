@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- The featured title's artwork is now a full-screen wallpaper: it fills the whole screen behind the hero and the rows instead of fading out under the hero. Moving into the rows, the wallpaper changes to the title you're on, and rows you scroll past slide away under the title's details.
+
 ## v0.1.12
 
 - VYRK updates itself: when you open it, it checks for a new version, downloads it, says "Updating VYRK to …" and installs it. VYRK closes for a moment while that happens; open it again when it's done. It never interrupts a film. On Android 12 and newer, once VYRK has installed one update itself, the next ones install without asking; on older Android (such as the NVIDIA SHIELD), Android asks you to confirm each update. Turn it off in Settings › About & updates › Update automatically.
