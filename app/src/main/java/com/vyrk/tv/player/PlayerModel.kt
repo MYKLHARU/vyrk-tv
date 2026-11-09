@@ -96,6 +96,7 @@ class PlayerModel(
     var subDelayMs by mutableStateOf(0L)
     var cues by mutableStateOf<List<Cue>>(emptyList())
     var selectedAudio by mutableStateOf<String?>(null)
+    private var recoveryAudio: String? = null
 
     // Timeline: container chapters merged with IntroDB segments.
     var markers by mutableStateOf<List<Chapter>>(emptyList())
@@ -236,13 +237,14 @@ class PlayerModel(
 
     private fun quality(r: Ranked) = listOf(r.info.resolutionLabel, r.info.releaseType.label).filter { it.isNotEmpty() }.joinToString(" ")
 
-    private fun playCandidate(startMs: Long) {
+    private fun playCandidate(startMs: Long, audioOverride: String? = null) {
         val r = candidates.getOrNull(index) ?: return
         val generation = ++streamGeneration
         completionSaved = false
         subtitleJob?.cancel()
         prefsApplied = false
         selectedSub = null; selectedAudio = null; cues = emptyList(); externalSubs.clear()
+        recoveryAudio = audioOverride
         failedAudio.clear()
         incompleteReason = null
         endedHandled = false
@@ -260,7 +262,7 @@ class PlayerModel(
         playingVideoId = video?.id ?: request.videoId ?: request.meta.id
         Diagnostics.log("player", "candidate ${index + 1}/${candidates.size} from ${r.candidate.addonId}")
         android.util.Log.i("VyrkEvent", "play_start $playingVideoId $startMs")
-        engine.prepare(r.candidate.stream, startMs)
+        engine.prepare(r.candidate.stream, startMs, preserveAudio = audioOverride != null)
         resetProgressClock()
         scope.launch { loadSubtitles(playingVideoId!!, r, generation) }
         firstFrameJob?.cancel()
@@ -403,6 +405,7 @@ class PlayerModel(
         val next = TrackSelector.fallbackAudio(tracks, current, failedAudio, AudioPrefs(st.audioLanguages, st.originalLanguage, originalLanguageCode, st.avoidCommentary)) ?: return false
         val pos = engine.player.currentPosition
         selectedAudio = next.id
+        recoveryAudio = next.id
         engine.select(C.TRACK_TYPE_AUDIO, next.id)
         Diagnostics.log("player", "audio track failed; switched to ${next.language ?: "?"} ${next.codec ?: ""}")
         android.util.Log.i("VyrkEvent", "audio_switched")
@@ -422,12 +425,12 @@ class PlayerModel(
         }
         val pos = engine.player.currentPosition.takeIf { firstFrame } ?: startPositionFallback()
         when (action) {
-            RecoveryAction.Retry, RecoveryAction.EnableFfmpegAudio -> playCandidate(pos)
+            RecoveryAction.Retry, RecoveryAction.EnableFfmpegAudio -> playCandidate(pos, recoveryAudio)
             RecoveryAction.TryOtherAudioTrack -> {
                 val tracks = engine.audioTracks()
                 val next = tracks.firstOrNull { it.id != selectedAudio && !it.isDefault } ?: tracks.firstOrNull()
                 next?.let { selectedAudio = it.id; engine.select(C.TRACK_TYPE_AUDIO, it.id) }
-                playCandidate(pos)
+                playCandidate(pos, next?.id)
             }
             RecoveryAction.RefreshLink -> scope.launch { refreshLink(pos) }
             RecoveryAction.NextCandidate -> {
@@ -527,7 +530,9 @@ class PlayerModel(
     private fun applyTrackPrefs() {
         val st = settings
         val mem = session.titleMemory(request.meta.id)
-        val audio = TrackSelector.selectAudio(engine.audioTracks(), AudioPrefs(st.audioLanguages, st.originalLanguage, originalLanguageCode, st.avoidCommentary, mem.audio))
+        val tracks = engine.audioTracks()
+        val audio = tracks.firstOrNull { it.id == recoveryAudio }
+            ?: TrackSelector.selectAudio(tracks, AudioPrefs(st.audioLanguages, st.originalLanguage, originalLanguageCode, st.avoidCommentary, mem.audio))
         if (audio != null && !audio.isDefault) { engine.select(C.TRACK_TYPE_AUDIO, audio.id) }
         selectedAudio = audio?.id
         if (prefsApplied && selectedSub != null) return
@@ -559,6 +564,7 @@ class PlayerModel(
     }
 
     fun selectAudio(id: String) {
+        recoveryAudio = null
         selectedAudio = id
         engine.select(C.TRACK_TYPE_AUDIO, id)
         session.updateTitleMemory(request.meta.id) { it.copy(audio = engine.audioTracks().firstOrNull { t -> t.id == id }?.language ?: id) }

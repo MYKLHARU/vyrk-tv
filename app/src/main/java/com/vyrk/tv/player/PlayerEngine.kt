@@ -76,7 +76,7 @@ class PlayerEngine(
         .setSeekForwardIncrementMs(10_000)
         .build()
 
-    fun prepare(stream: Stream, startMs: Long) {
+    fun prepare(stream: Stream, startMs: Long, preserveAudio: Boolean = false) {
         val url = stream.url ?: return
         val headers = stream.behaviorHints.proxyHeaders?.request.orEmpty()
         dataSource.setDefaultRequestProperties(headers)
@@ -86,9 +86,11 @@ class PlayerEngine(
                 url.contains(".mpd", true) -> setMimeType(MimeTypes.APPLICATION_MPD)
             }
         }.build()
-        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
-            .clearOverridesOfType(C.TRACK_TYPE_AUDIO).clearOverridesOfType(C.TRACK_TYPE_TEXT)
-            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false).setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false).build()
+        val tracks = player.trackSelectionParameters.buildUpon()
+            .clearOverridesOfType(C.TRACK_TYPE_TEXT)
+            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false).setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+        if (!preserveAudio) tracks.clearOverridesOfType(C.TRACK_TYPE_AUDIO)
+        player.trackSelectionParameters = tracks.build()
         player.setMediaItem(item, startMs.coerceAtLeast(0))
         player.prepare()
         player.playWhenReady = true

@@ -118,6 +118,19 @@ class AuditReproductionsTest {
         assertNotEquals(failedSource, f.model.current!!.candidate.stream.url)
     }
 
+    @Test fun startupAudioRecoveryKeepsItsAlternateTrackThroughPrepare() = runTest {
+        val f = fixture(backgroundScope)
+        f.engine.audio = f.engine.audio + com.vyrk.core.playback.AudioTrack("alternate", "deu", "Alternate")
+        f.model.start(); runCurrent()
+        repeat(2) { f.model.onError(androidx.media3.common.PlaybackException(ErrorClass.AUDIO_TRACK)) }
+        assertTrue(f.engine.preservedAudio)
+        f.model.onFirstFrame()
+        assertEquals("alternate", f.model.selectedAudio)
+        // An explicit source switch must still clear the old source's recovery override.
+        f.model.pickSource(f.model.candidates[1])
+        assertFalse(f.engine.preservedAudio)
+    }
+
     @Test fun runtimeUsedForRankingShouldUnderstandHours() = runTest {
         val f = fixture(backgroundScope, show.copy(runtime = "1h 35min"))
         assertEquals(95, f.model.prefs("show").runtimeMinutes)
