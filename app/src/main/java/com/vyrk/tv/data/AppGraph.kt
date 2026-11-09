@@ -87,13 +87,13 @@ class AppGraph(val context: Context) {
     fun updateDevice(f: (DeviceSettings) -> DeviceSettings) {
         _deviceSettings.update(f)
         val s = _deviceSettings.value
-        AtomicFiles.writeTextLater(deviceFile, AppJson.encodeToString(DeviceSettings.serializer(), s))
+        AtomicFiles.writeTextLater(deviceFile) { AppJson.encodeToString(DeviceSettings.serializer(), s) }
     }
 
     @Synchronized
     private fun saveProfiles() {
         val list = _profiles.value
-        AtomicFiles.writeTextLater(profilesFile, AppJson.encodeToString(ListSerializer(Profile.serializer()), list))
+        AtomicFiles.writeTextLater(profilesFile) { AppJson.encodeToString(ListSerializer(Profile.serializer()), list) }
     }
 
     fun profileDir(id: String) = File(root, "p/$id")
@@ -115,10 +115,15 @@ class AppGraph(val context: Context) {
 
     @Synchronized
     fun deleteProfile(id: String) {
-        if (_session.value?.profile?.id == id) { _session.value?.close(); _session.value = null }
+        val closing = _session.value?.takeIf { it.profile.id == id }
+        if (closing != null) { closing.close(); _session.value = null }
         _profiles.update { it.filterNot { p -> p.id == id } }
         saveProfiles()
-        scope.launch(Dispatchers.IO) { AtomicFiles.flush(); profileDir(id).deleteRecursively() }
+        scope.launch(Dispatchers.IO) {
+            closing?.scope?.coroutineContext?.get(kotlinx.coroutines.Job)?.join()
+            AtomicFiles.flush()
+            profileDir(id).deleteRecursively()
+        }
     }
 
     fun setPin(id: String, pin: String?) = updateProfile(id) { it.copy(pinHash = pin?.let { p -> PinHasher.hash(p) }, pinFailures = 0, pinLockedUntilMs = 0) }

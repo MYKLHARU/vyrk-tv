@@ -55,6 +55,7 @@ class ProfileSession(
     private val sharedAddons: () -> List<Descriptor>,
 ) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    @Volatile private var closed = false
     private val now get() = System.currentTimeMillis()
 
     private val _addons = MutableStateFlow<List<Descriptor>>(emptyList())
@@ -124,22 +125,25 @@ class ProfileSession(
         scope.launch { refreshNewEpisodes(force = false) }
     }
 
-    fun close() { scope.cancel() }
+    @Synchronized
+    fun close() { closed = true; scope.cancel() }
 
     // ---- Settings and session state ----
 
     @Synchronized
     fun updateSettings(transform: (ProfileSettings) -> ProfileSettings) {
+        if (closed) return
         _settings.update(transform)
         val snapshot = _settings.value
-        AtomicFiles.writeTextLater(settingsFile, AppJson.encodeToString(ProfileSettings.serializer(), snapshot))
+        AtomicFiles.writeTextLater(settingsFile) { AppJson.encodeToString(ProfileSettings.serializer(), snapshot) }
     }
 
     @Synchronized
     fun updateState(transform: (SessionState) -> SessionState) {
+        if (closed) return
         _state.update(transform)
         val snapshot = _state.value
-        AtomicFiles.writeTextLater(stateFile, AppJson.encodeToString(SessionState.serializer(), snapshot))
+        AtomicFiles.writeTextLater(stateFile) { AppJson.encodeToString(SessionState.serializer(), snapshot) }
     }
 
     fun rememberFocus(tab: String, memory: FocusMemory) = updateState { it.copy(focus = it.focus + (tab to memory)) }
@@ -317,14 +321,17 @@ class ProfileSession(
 
     // ---- Library ----
 
+    @Synchronized
     private fun saveLibrary() {
-        val arr = JsonArray(_library.value.values.map { it.toJson() })
-        AtomicFiles.writeTextLater(libraryFile, arr.toString())
+        if (closed) return
+        val snapshot = _library.value
+        AtomicFiles.writeTextLater(libraryFile) { JsonArray(snapshot.values.map { it.toJson() }).toString() }
     }
 
     /** Every local change: stamp mtime, update the flow at once, save, mark pending, push. */
     @Synchronized
     fun putItem(item: LibraryItem, pushSoon: Boolean = true) {
+        if (closed) return
         val stamped = LibraryRules.touch(item, now)
         _library.update { it + (stamped.id to stamped) }
         pending.mark(stamped.id)

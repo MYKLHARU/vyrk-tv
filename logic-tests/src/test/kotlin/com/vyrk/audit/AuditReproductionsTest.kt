@@ -263,7 +263,10 @@ class AuditReproductionsTest {
         val dir = Files.createTempDirectory("vyrk-close-").toFile()
         val s = session(FakeHttp(), dir = dir)
         repeat(100) { value -> s.updateSettings { it.copy(posterSize = value) } }
-        s.close(); AtomicFiles.flush()
+        s.close()
+        // A late callback from the disposed screen must not replace the saved choice.
+        s.updateSettings { it.copy(posterSize = -1) }
+        AtomicFiles.flush()
         val reopened = session(FakeHttp(), dir = dir)
         reopened.load()
         assertEquals(99, reopened.settings.value.posterSize)
