@@ -85,7 +85,7 @@ class ProfileSession(
     private val addonsPushMutex = Mutex()
     private var pushJob: Job? = null
     private var addonRetryJob: Job? = null
-    private var authKey: String? = null
+    @Volatile private var authKey: String? = null
 
     private val addonsFile = File(dir, "addons.enc")
     private val authFile = File(dir, "auth.enc")
@@ -112,7 +112,7 @@ class ProfileSession(
         val storedAddons = vault.readSecret(addonsFile)?.let {
             runCatching { ProtocolJson.decodeFromString(ListSerializer(Descriptor.serializer()), it) }.getOrNull()
         }
-        authKey = vault.readSecret(authFile)?.takeIf { it.isNotBlank() }
+        authKey = vault.readSecret(authFile)?.takeIf { it.isNotBlank() && !_state.value.signedOut }
         _account.value = when {
             authKey != null -> AccountState.Connected(profile.accountEmail ?: "")
             profile.accountEmail != null && !_state.value.signedOut -> AccountState.Expired(profile.accountEmail)
@@ -199,33 +199,37 @@ class ProfileSession(
     }
 
     private suspend fun setAddons(push: Boolean, transform: (List<Descriptor>) -> List<Descriptor>) {
+        val keyAtEdit = authKey
         addonsMutex.withLock {
+            if (authKey != keyAtEdit) return
             val list = transform(_addons.value)
             _addons.value = list
-            if (push) updateState { it.copy(addonsRevision = it.addonsRevision + 1) }
+            if (push && _account.value != AccountState.None)
+                updateState { it.copy(addonsRevision = it.addonsRevision + 1) }
             vault.writeSecret(addonsFile, ProtocolJson.encodeToString(ListSerializer(Descriptor.serializer()), list))
         }
-        if (push && !saveAddonsToAccount() && authKey != null) {
+        if (push && !saveAddonsToAccount(keyAtEdit) && keyAtEdit != null && authKey == keyAtEdit) {
             addonRetryJob?.cancel()
             addonRetryJob = scope.launch {
                 for (waitMs in listOf(5_000L, 15_000L, 60_000L)) {
                     delay(waitMs)
-                    if (saveAddonsToAccount()) break
+                    if (saveAddonsToAccount(keyAtEdit)) break
                 }
             }
         }
     }
 
     /** Saves the add-on list back to the account; returns false without an account or on error. */
-    suspend fun saveAddonsToAccount(): Boolean = addonsPushMutex.withLock {
-        val key = authKey ?: return@withLock false
+    suspend fun saveAddonsToAccount(expectedKey: String? = authKey): Boolean = addonsPushMutex.withLock {
+        val key = expectedKey ?: return@withLock false
+        if (authKey != key) return@withLock false
         val (list, revision) = addonsMutex.withLock { _addons.value to _state.value.addonsRevision }
         try {
             accountApi.addonCollectionSet(key, list)
-            updateState { it.copy(addonsSyncedRevision = revision) }
+            if (authKey == key) updateState { it.copy(addonsSyncedRevision = revision) }
             true
         } catch (e: ApiError) {
-            if (e.isSessionExpired) onExpired(); false
+            if (e.isSessionExpired && authKey == key) onExpired(); false
         } catch (e: Exception) {
             Diagnostics.log("account", "addonCollectionSet failed: ${e.message}"); false
         }
@@ -235,21 +239,42 @@ class ProfileSession(
 
     suspend fun connectAccount(key: String, onProfileEmail: suspend (String) -> Unit) {
         val user = accountApi.getUser(key)
-        authKey = key
-        vault.writeSecret(authFile, key)
+        val owner = _state.value.addonsAccountEmail ?: profile.accountEmail
+        val sameAccount = owner.equals(user.email, ignoreCase = true)
+        // Fetch a new account's collection before switching. If it fails, keep the old local
+        // collection and pending edits rather than treating an unknown collection as empty.
+        val remote = if (sameAccount) null else accountApi.addonCollectionGet(key)
+        addonRetryJob?.cancel()
+        while (_syncing.value) delay(25)
+        // Pending edits belong to the account that made them. Signing in to a different
+        // account must fetch its collection, never overwrite it with another account's list.
+        addonsPushMutex.withLock {
+            authKey = key
+            updateState { it.copy(
+                addonsSyncedRevision = if (sameAccount) it.addonsSyncedRevision else it.addonsRevision,
+                addonsAccountEmail = user.email,
+                signedOut = false,
+            ) }
+            if (remote != null) addonsMutex.withLock {
+                _addons.value = remote
+                vault.writeSecret(addonsFile, ProtocolJson.encodeToString(ListSerializer(Descriptor.serializer()), remote))
+            }
+            vault.writeSecret(authFile, key)
+        }
         onProfileEmail(user.email)
         _account.value = AccountState.Connected(user.email)
-        updateState { it.copy(signedOut = false) }
         syncNow()
     }
 
     suspend fun logout() {
-        authKey?.let { k -> runCatching { accountApi.logout(k) } }
+        addonRetryJob?.cancel()
+        val key = authKey
         authKey = null
-        vault.writeSecret(authFile, "")
         updateState { it.copy(signedOut = true) }
         _account.value = AccountState.None
+        vault.writeSecret(authFile, "")
         AtomicFiles.flush()
+        key?.let { k -> runCatching { accountApi.logout(k) } }
     }
 
     private fun onExpired() {
@@ -265,7 +290,7 @@ class ProfileSession(
         if (!_syncing.compareAndSet(false, true)) return
         try {
             // An unsuccessful cloud write must never be overwritten by an older remote list.
-            if (_state.value.addonsRevision != _state.value.addonsSyncedRevision) saveAddonsToAccount()
+            if (_state.value.addonsRevision != _state.value.addonsSyncedRevision) saveAddonsToAccount(key)
             val revision = _state.value.addonsRevision
             if (revision == _state.value.addonsSyncedRevision) {
                 val remote = accountApi.addonCollectionGet(key)
@@ -286,7 +311,7 @@ class ProfileSession(
             plan.push.forEach { pending.mark(it) }
             pushPending()
         } catch (e: ApiError) {
-            if (e.isSessionExpired) onExpired()
+            if (e.isSessionExpired && authKey == key) onExpired()
         } catch (e: Exception) {
             Diagnostics.log("sync", "sync failed: ${e.message}")
         } finally {
@@ -303,7 +328,7 @@ class ProfileSession(
             accountApi.datastorePut(key, items)
             pending.confirm(sent)
         } catch (e: ApiError) {
-            if (e.isSessionExpired) onExpired()
+            if (e.isSessionExpired && authKey == key) onExpired()
         } catch (e: Exception) {
             Diagnostics.log("sync", "push failed: ${e.message}")
         }

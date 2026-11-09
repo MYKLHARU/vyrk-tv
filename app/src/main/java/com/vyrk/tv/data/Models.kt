@@ -116,6 +116,7 @@ data class SessionState(
     val pendingIds: Set<String> = emptySet(),
     val addonsRevision: Long = 0,
     val addonsSyncedRevision: Long = 0,
+    val addonsAccountEmail: String? = null,
     val signedOut: Boolean = false,
 )
 

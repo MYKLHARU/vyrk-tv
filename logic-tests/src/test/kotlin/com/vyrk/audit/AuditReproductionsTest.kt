@@ -35,11 +35,12 @@ class AuditReproductionsTest {
     private class FakeHttp : HttpTransport {
         var remote = listOf<Descriptor>()
         var rejectAddonWrites = false
+        var email = "audit@example.invalid"
         var getter: suspend (String) -> HttpResult = { HttpResult(200, "{}") }
         override suspend fun get(url: String, headers: Map<String, String>, timeoutMs: Long) = getter(url)
         override suspend fun postJson(url: String, body: String, timeoutMs: Long): HttpResult {
             val result = when (url.substringAfterLast('/')) {
-                "getUser" -> """{"_id":"synthetic-user","email":"audit@example.invalid"}"""
+                "getUser" -> """{"_id":"synthetic-user","email":"$email"}"""
                 "addonCollectionGet" -> """{"addons":${ProtocolJson.encodeToString(ListSerializer(Descriptor.serializer()), remote)}}"""
                 "addonCollectionSet" -> {
                     if (rejectAddonWrites) throw IOException("Synthetic offline add-on save")
@@ -170,6 +171,30 @@ class AuditReproductionsTest {
         http.remote = emptyList()
         s.syncNow()
         assertTrue(s.addons.value.isEmpty(), "A valid empty remote collection must clear local add-ons")
+    }
+
+    @Test fun guestAddonsDoNotOverwriteAnAccountsCollectionOnSignIn() = runBlocking {
+        val http = FakeHttp().apply { remote = listOf(descriptor("account")) }
+        val s = session(http)
+        s.install(descriptor("guest"))
+        s.connectAccount("synthetic-key") {}
+        assertEquals(listOf("account"), http.remote.map { it.manifest.id })
+        assertEquals(http.remote, s.addons.value)
+    }
+
+    @Test fun pendingChangesCannotOverwriteADifferentAccountsAddons() = runBlocking {
+        val http = FakeHttp().apply { remote = listOf(descriptor("old-account")) }
+        val s = session(http)
+        s.connectAccount("synthetic-old-key") {}
+        http.rejectAddonWrites = true
+        s.install(descriptor("pending-old-account-edit"))
+        s.logout()
+        http.email = "other@example.invalid"
+        http.remote = listOf(descriptor("other-account"))
+        http.rejectAddonWrites = false
+        s.connectAccount("synthetic-other-key") {}
+        assertEquals(listOf("other-account"), http.remote.map { it.manifest.id })
+        assertEquals(http.remote, s.addons.value)
     }
 
     @Test fun signingOutShouldRemainSignedOutAfterRestart() = runBlocking {
