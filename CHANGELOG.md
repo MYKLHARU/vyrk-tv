@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.18
+
+- High-bitrate on-demand playback uses a larger, memory-bounded sample buffer and a longer refill cushion. Playback has its own network connections, preserves provider-required headers, and gives large remux files longer to produce their first frame. Live TV keeps short startup and refill targets.
+- Artwork keeps the catalogue image you selected while full details arrive. Changing titles clears the previous picture, including when the new image fails, and movie/series artwork with the same ID no longer shares state.
+- Anime artwork can use IMDb mappings supplied by the metadata provider, including Anime Catalogs' Kitsu metadata, without changing episode or stream IDs. Backup artwork is prepared even when the supplied logo URL is broken. Empty logos try the next source, and slow or failed logos keep a readable title on screen.
+- Added tests against the actual Media3 buffering rules, playback networking and artwork selection, plus isolated emulator checks for high-bitrate playback and delayed or missing artwork.
+
 ## v0.1.17
 
 - Seeking no longer counts skipped content as watched. Rewinding saves the earlier resume point, and moving between episodes no longer counts viewing time twice.

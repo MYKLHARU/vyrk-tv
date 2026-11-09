@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Development-only playback probe. Never included in a release APK. -->
+        <activity android:name=".player.BufferProbeActivity" android:exported="true"
+            android:screenOrientation="landscape" android:theme="@style/Theme.Vyrk.Player" />
+        <activity android:name=".player.ArtworkProbeActivity" android:exported="true"
+            android:screenOrientation="landscape" android:theme="@style/Theme.Vyrk.Player" />
+    </application>
+</manifest>

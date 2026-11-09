@@ -63,7 +63,7 @@ jobs:
           VYRK_KEY_ALIAS: ${{ secrets.VYRK_KEY_ALIAS }}
           VYRK_KEY_PASSWORD: ${{ secrets.VYRK_KEY_PASSWORD }}
         run: >
-          ./gradlew --stacktrace :core:test :logic-tests:test :app:assembleRelease
+          ./gradlew --stacktrace :core:test :logic-tests:test :app:testDebugUnitTest :app:assembleRelease
           -Pvyrk.versionName=${{ steps.version.outputs.name }}
           -Pvyrk.versionCode=${{ steps.version.outputs.code }}
 
@@ -89,6 +89,7 @@ jobs:
           path: |
             core/build/reports/tests/
             logic-tests/build/reports/tests/
+            app/build/reports/tests/
 
       - name: Publish ci-latest pre-release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

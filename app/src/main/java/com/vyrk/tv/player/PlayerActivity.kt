@@ -112,7 +112,8 @@ class PlayerActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         originalModeId = window.attributes.preferredDisplayModeId
         val dev = graph.deviceSettings.value
-        val engine = PlayerEngine(this, graph.http, dev.passthrough, dev.softwareAudio) { bps -> graph.updateDevice { it.copy(measuredBps = bps) } }
+        val engine = PlayerEngine(this, graph.http, dev.passthrough, dev.softwareAudio,
+            onBandwidth = { bps -> graph.updateDevice { it.copy(measuredBps = bps) } }, live = com.vyrk.core.addon.isLiveType(req.meta.type))
         engine.dialogue.clearDialogue = dev.clearDialogue && !dev.passthrough
         engine.dialogue.tvSpeaker = dev.tvSpeakerMode && !dev.passthrough
         val m = PlayerModel(graph, session, lifecycleScope, engine, req) { id, args -> getString(id, *args) }

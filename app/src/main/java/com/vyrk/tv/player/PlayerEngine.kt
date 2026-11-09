@@ -23,6 +23,8 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
+import androidx.media3.exoplayer.upstream.DefaultAllocator
+import com.vyrk.core.playback.PlaybackBuffering
 import com.vyrk.core.addon.Stream
 import com.vyrk.core.lang.Languages
 import com.vyrk.core.playback.AudioTrack
@@ -42,6 +44,7 @@ class PlayerEngine(
     passthrough: Boolean,
     preferFfmpeg: Boolean,
     private val onBandwidth: (Double) -> Unit,
+    live: Boolean = false,
 ) {
     val dialogue = DialogueProcessor()
     private val bandwidth = BandwidthMeter()
@@ -51,7 +54,10 @@ class PlayerEngine(
         }
     }
     val trackSelector = DefaultTrackSelector(context)
-    private val dataSource = OkHttpDataSource.Factory(http)
+    private val mediaHttp = PlaybackNetwork.client(http)
+    private val dataSource = OkHttpDataSource.Factory(mediaHttp)
+    val bufferConfig = PlaybackBuffering.forHeap(Runtime.getRuntime().maxMemory(), live)
+    private val allocator = DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE)
 
     private val renderers = object : DefaultRenderersFactory(context) {
         override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean): AudioSink {
@@ -68,6 +74,7 @@ class PlayerEngine(
     val player: ExoPlayer = ExoPlayer.Builder(context, renderers)
         .setTrackSelector(trackSelector)
         .setBandwidthMeter(meter)
+        .setLoadControl(PlaybackLoadControls.create(bufferConfig, allocator))
         .setMediaSourceFactory(DefaultMediaSourceFactory(dataSource))
         .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), true)
         .setHandleAudioBecomingNoisy(true)
@@ -140,5 +147,18 @@ class PlayerEngine(
         trackSelector.parameters = b.build()
     }
 
-    fun release() = player.release()
+    /** Redacted diagnostics: sample buffer and heap sizes, never URLs, headers or credentials. */
+    fun bufferDiagnostics(): String {
+        val runtime = Runtime.getRuntime()
+        return "aheadMs=${(player.bufferedPosition - player.currentPosition).coerceAtLeast(0)} " +
+            "loading=${player.isLoading} sampleBytes=${allocator.totalBytesAllocated} budgetBytes=${bufferConfig.targetBytes} " +
+            "heapUsed=${runtime.totalMemory() - runtime.freeMemory()} heapMax=${runtime.maxMemory()}"
+    }
+
+    fun release() {
+        player.release()
+        mediaHttp.dispatcher.cancelAll()
+        mediaHttp.connectionPool.evictAll()
+        mediaHttp.dispatcher.executorService.shutdown()
+    }
 }
