@@ -2,7 +2,6 @@ package com.vyrk.tv
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
@@ -12,7 +11,6 @@ import androidx.compose.runtime.getValue
 import com.vyrk.tv.ui.AppRoot
 import com.vyrk.tv.ui.KeyBus
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     /** Links received from other apps, consumed by the UI after a profile is open. */
@@ -20,14 +18,7 @@ class MainActivity : ComponentActivity() {
 
     data class IncomingLink(val uri: String, val external: Boolean, val nonce: Long = System.nanoTime())
 
-    override fun attachBaseContext(base: Context) {
-        // In-app language override.
-        val lang = base.getSharedPreferences("locale", MODE_PRIVATE).getString("lang", "") ?: ""
-        if (lang.isEmpty()) { super.attachBaseContext(base); return }
-        val locale = Locale.forLanguageTag(lang)
-        val cfg = Configuration(base.resources.configuration).apply { setLocale(locale) }
-        super.attachBaseContext(base.createConfigurationContext(cfg))
-    }
+    override fun attachBaseContext(base: Context) = super.attachBaseContext(AppLocale.wrap(base))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

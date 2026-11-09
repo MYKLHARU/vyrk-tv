@@ -133,6 +133,7 @@ fun AddonActions(session: ProfileSession, typing: String?, onTyping: (String?) -
     val scope = rememberCoroutineScope()
     val c = Vyrk.colors
     val savedMsg = str(R.string.saved_to_account)
+    val state by session.state.collectAsState()
     // When the keyboard closes, its keys leave the screen: give focus back to Install from URL.
     val installReq = remember { FocusRequester() }
     var refocus by remember { mutableStateOf(false) }
@@ -143,6 +144,8 @@ fun AddonActions(session: ProfileSession, typing: String?, onTyping: (String?) -
                 modifier = Modifier.focusRequester(installReq).traceFocus("addons:install_url"))
             if (account is AccountState.Connected) VyrkButton(str(R.string.save_to_account), onClick = { scope.launch { if (session.saveAddonsToAccount()) app.showToast(savedMsg) } }, modifier = Modifier.traceFocus("addons:save"))
         }
+        if (account is AccountState.Connected && state.addonsRevision != state.addonsSyncedRevision)
+            Text(str(R.string.addons_pending_sync), style = Vyrk.type.bodyS, color = c.textMuted)
         return
     }
     Column(Modifier.fillMaxWidth().background(c.glass, RoundedCornerShape(16.dp)).padding(14.dp)) {

@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.layout.requiredWidth
@@ -91,6 +92,7 @@ import com.vyrk.tv.ui.theme.VyrkTheme
 import com.vyrk.tv.ui.traceFocus
 import java.text.DateFormat
 import java.util.Date
+import kotlinx.coroutines.flow.first
 
 @OptIn(UnstableApi::class)
 class PlayerActivity : ComponentActivity() {
@@ -98,6 +100,8 @@ class PlayerActivity : ComponentActivity() {
     private var model: PlayerModel? = null
     private var mediaSession: MediaSession? = null
     private var originalModeId = 0
+
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(com.vyrk.tv.AppLocale.wrap(base))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,6 +122,9 @@ class PlayerActivity : ComponentActivity() {
             override fun onRenderedFirstFrame() {
                 m.onFirstFrame()
                 if (dev.frameRateMatching) matchFrameRate(engine)
+            }
+            override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
+                m.onPositionDiscontinuity()
             }
             override fun onPlayerError(error: PlaybackException) = m.onError(error)
             override fun onPlaybackStateChanged(playbackState: Int) = m.onPlaybackState(playbackState)
@@ -140,7 +147,7 @@ class PlayerActivity : ComponentActivity() {
                     m.phase == Phase.PLAYING && m.panel != Panel.NONE -> { m.panel = Panel.NONE; m.showControls() }
                     m.phase == Phase.PLAYING && m.scrubTarget != null -> m.scrubCancel()
                     m.phase == Phase.PLAYING && m.stallPrompt -> m.stallPrompt = false
-                    m.phase == Phase.PLAYING && m.upNext -> { m.upNext = false; m.upNextCountdown = 10_000 }
+                    m.phase == Phase.PLAYING && m.upNext -> { m.dismissUpNext() }
                     m.phase == Phase.PLAYING && m.controlsVisible -> { m.controlsVisible = false; FocusTrace.set(PLAYER_LAYER, "player:video") }
                     else -> finish()
                 }
@@ -594,7 +601,7 @@ private fun channelsName(n: Int): String? = when (n) {
 private fun AudioSubsPanel(m: PlayerModel) {
     val c = Vyrk.colors
     val selectedReq = remember { FocusRequester() }
-    LaunchedEffect(Unit) { kotlinx.coroutines.delay(80); runCatching { selectedReq.requestFocus() } }
+    val listState = rememberLazyListState()
     val title = m.meta?.name ?: m.request.meta.name
     val sub = m.video?.let { v -> if (v.season != null && v.episode != null) "S${v.season}E${v.episode} · ${v.displayTitle}" else null }
         ?: (m.meta?.releaseInfo ?: m.request.meta.releaseInfo)?.take(4)
@@ -603,6 +610,16 @@ private fun AudioSubsPanel(m: PlayerModel) {
     val inFile = stringResource(R.string.tag_in_file)
     val forced = stringResource(R.string.tag_forced)
     val commentary = stringResource(R.string.tag_commentary)
+    val subsSelectedIndex = subs.indexOfFirst { it.id == m.selectedSub }
+    // The selected subtitle can be below the viewport (especially with many audio tracks).
+    // Materialize its row before requesting focus instead of dropping a one-shot request.
+    val focusRow = audio.size + 2 + if (subsSelectedIndex >= 0) subsSelectedIndex + 1 else 0
+    LaunchedEffect(focusRow, m.selectedSub, subs.map { it.id }) {
+        listState.scrollToItem(focusRow)
+        androidx.compose.runtime.snapshotFlow { listState.layoutInfo.visibleItemsInfo.any { it.index == focusRow } }.first { it }
+        androidx.compose.runtime.withFrameNanos { }
+        selectedReq.requestFocus()
+    }
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)), contentAlignment = Alignment.CenterStart) {
         Column(
             Modifier.padding(start = 28.dp, top = 24.dp, bottom = 24.dp).width(400.dp).fillMaxHeight()
@@ -611,8 +628,7 @@ private fun AudioSubsPanel(m: PlayerModel) {
         ) {
             Text(stringResource(R.string.audio_subtitles), style = Vyrk.type.headlineL, color = c.text)
             Text(listOfNotNull(title, sub).joinToString("  ·  "), style = Vyrk.type.bodyM, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            val subsSelectedIndex = subs.indexOfFirst { it.id == m.selectedSub }
-            LazyColumn(Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            LazyColumn(Modifier.padding(top = 4.dp), state = listState, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 item { SectionHeader(stringResource(R.string.audio)) }
                 itemsIndexed(audio, key = { _, t -> "a" + t.id }) { i, t ->
                     // "und" (undetermined) and friends aren't languages: number the track instead.
@@ -749,7 +765,7 @@ private fun Prompt(text: String, yes: String, onYes: () -> Unit, no: String, onN
 private fun UpNext(m: PlayerModel) {
     val nv = m.nextVideo ?: return
     val label = if (nv.season != null && nv.episode != null) "S${nv.season}E${nv.episode} ${nv.displayTitle}" else nv.displayTitle
-    Prompt(stringResource(R.string.up_next_in, label, m.upNextCountdown), stringResource(R.string.play_now), { m.playNext(auto = false) }, stringResource(R.string.cancel)) { m.upNext = false; m.upNextCountdown = 10_000 }
+    Prompt(stringResource(R.string.up_next_in, label, m.upNextCountdown), stringResource(R.string.play_now), { m.playNext(auto = false) }, stringResource(R.string.cancel)) { m.dismissUpNext() }
 }
 
 @Composable

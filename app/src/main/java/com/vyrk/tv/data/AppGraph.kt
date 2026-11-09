@@ -34,7 +34,7 @@ class AppGraph(val context: Context) {
     val accountApi = StremioAccountApi(transport)
     val vault = SecretVault()
     val device = DeviceCapabilities(context)
-    val metaCache = com.vyrk.tv.ui.browse.MetaCache(addonClient)
+    val metaCache = com.vyrk.tv.ui.browse.MetaCache(addonClient, { session.value?.effectiveAddons().orEmpty() })
     // Failures are logged with the API path and reason only; the key never appears.
     val tmdb = com.vyrk.core.tmdb.TmdbClient(transport, BuildConfig.TMDB_API_KEY) { path, reason -> com.vyrk.tv.ui.Perf.log("tmdb $path failed: $reason") }
     /** Hand-off from the UI to PlayerActivity (same process). */
@@ -72,6 +72,7 @@ class AppGraph(val context: Context) {
     }
 
     suspend fun load() {
+        AtomicFiles.flush()
         _profiles.value = AtomicFiles.readText(profilesFile)?.let {
             runCatching { AppJson.decodeFromString(ListSerializer(Profile.serializer()), it) }.getOrNull()
         } ?: emptyList()
@@ -82,19 +83,22 @@ class AppGraph(val context: Context) {
         _ready.value = true
     }
 
+    @Synchronized
     fun updateDevice(f: (DeviceSettings) -> DeviceSettings) {
         _deviceSettings.update(f)
         val s = _deviceSettings.value
-        scope.launch { AtomicFiles.writeText(deviceFile, AppJson.encodeToString(DeviceSettings.serializer(), s)) }
+        AtomicFiles.writeTextLater(deviceFile) { AppJson.encodeToString(DeviceSettings.serializer(), s) }
     }
 
+    @Synchronized
     private fun saveProfiles() {
         val list = _profiles.value
-        scope.launch { AtomicFiles.writeText(profilesFile, AppJson.encodeToString(ListSerializer(Profile.serializer()), list)) }
+        AtomicFiles.writeTextLater(profilesFile) { AppJson.encodeToString(ListSerializer(Profile.serializer()), list) }
     }
 
     fun profileDir(id: String) = File(root, "p/$id")
 
+    @Synchronized
     fun createProfile(name: String, colorIndex: Int): Profile? {
         if (_profiles.value.size >= MAX_PROFILES) return null
         val p = Profile(UUID.randomUUID().toString(), name.trim().ifEmpty { "Viewer" }, colorIndex, createdMs = System.currentTimeMillis())
@@ -103,16 +107,23 @@ class AppGraph(val context: Context) {
         return p
     }
 
+    @Synchronized
     fun updateProfile(id: String, f: (Profile) -> Profile) {
         _profiles.update { list -> list.map { if (it.id == id) f(it) else it } }
         saveProfiles()
     }
 
+    @Synchronized
     fun deleteProfile(id: String) {
-        if (_session.value?.profile?.id == id) { _session.value?.close(); _session.value = null }
+        val closing = _session.value?.takeIf { it.profile.id == id }
+        if (closing != null) { closing.close(); _session.value = null }
         _profiles.update { it.filterNot { p -> p.id == id } }
         saveProfiles()
-        scope.launch(Dispatchers.IO) { profileDir(id).deleteRecursively() }
+        scope.launch(Dispatchers.IO) {
+            closing?.scope?.coroutineContext?.get(kotlinx.coroutines.Job)?.join()
+            AtomicFiles.flush()
+            profileDir(id).deleteRecursively()
+        }
     }
 
     fun setPin(id: String, pin: String?) = updateProfile(id) { it.copy(pinHash = pin?.let { p -> PinHasher.hash(p) }, pinFailures = 0, pinLockedUntilMs = 0) }

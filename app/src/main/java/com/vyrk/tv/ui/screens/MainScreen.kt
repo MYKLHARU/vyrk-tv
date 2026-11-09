@@ -89,6 +89,9 @@ fun MainScreen(session: ProfileSession) {
             (t != Tab.LIVE || CatalogRules.hasLiveCatalogs(addons)) && (t == Tab.HOME || t.key !in settings.hiddenTabs)
         }
     }
+    LaunchedEffect(tabs) {
+        if (app.tab !in tabs) { app.tab = Tab.HOME; app.focusTabsTick++ }
+    }
     // One permanent requester per tab and per right-side button.
     val tabReqs = remember { Tab.entries.associateWith { FocusRequester() } }
     val searchReq = remember { FocusRequester() }
@@ -132,7 +135,7 @@ fun MainScreen(session: ProfileSession) {
     // building it; a further press before then skips it (Home → Anime builds neither Movies nor
     // Series on the way).
     var laggedTab by remember { mutableStateOf(app.tab) }
-    val shownTab = if (app.tab in keptPages) app.tab else laggedTab
+    val shownTab = com.vyrk.tv.data.visibleTab(if (app.tab in keptPages) app.tab else laggedTab, tabs)
     LaunchedEffect(app.tab) {
         val target = app.tab
         val kept = target in keptPages

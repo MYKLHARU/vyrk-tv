@@ -31,9 +31,9 @@ MANIFEST = {
     "version": "1.0.0",
     "name": "VYRK Test Add-on",
     "description": "Local add-on for automated tests: a broken 4K link, a working 720p file, a remote sample, a subtitle and a torrent.",
-    "resources": ["stream", "subtitles", "catalog"],
+    "resources": ["stream", "subtitles", "catalog", {"name": "meta", "types": ["series"], "idPrefixes": ["vyrk-"]}],
     "types": ["movie", "series"],
-    "idPrefixes": ["tt"],
+    "idPrefixes": ["tt", "vyrk-"],
     "catalogs": [
         {"type": "movie", "id": "vyrk-test-search", "name": "Test search", "extra": [{"name": "search", "isRequired": True}]}
     ],
@@ -69,6 +69,12 @@ def ensure_media():
 def streams_for(vid: str):
     bbb = vid == BBB and (MEDIA / "bbb-clip.mp4").exists()
     local = f"{BASE}/media/bbb-clip.mp4" if bbb else f"{BASE}/media/sample-720p.mp4"
+    if vid.startswith("vyrk-"):
+        # Two local sources: suspiciously short first, a full-length alternate.
+        return [
+            {"name": "VYRK fixture 720p", "title": "Fixture.720p.H264.mp4", "url": f"{BASE}/media/sample-720p.mp4"},
+            {"name": "VYRK fixture 480p", "title": "Fixture.480p.H264.mp4", "url": f"{BASE}/media/{'sample-full.mp4' if vid.startswith('vyrk-short') else 'sample-720p.mp4'}"},
+        ]
     return [
         {
             "name": "[RD+] VYRK Test\n4K",
@@ -115,10 +121,16 @@ class Handler(SimpleHTTPRequestHandler):
         path = unquote(self.path.split("?")[0])
         if path == "/manifest.json":
             return self._json(MANIFEST)
+        if path.startswith("/meta/series/vyrk-"):
+            mid = path.rsplit("/", 1)[-1].removesuffix(".json")
+            runtime = "45 min" if mid == "vyrk-short" else "10 min"
+            return self._json({"meta": {"id": mid, "type": "series", "name": "VYRK Playback Fixture", "runtime": runtime,
+                "videos": [{"id": f"{mid}:1:{n}", "title": f"Episode {n}", "season": 1, "episode": n,
+                    "released": "2020-01-01T00:00:00.000Z", "runtime": runtime} for n in (1, 2)]}})
         if path.startswith("/stream/"):
             parts = path[len("/stream/"):].removesuffix(".json").split("/")
             vid = parts[1] if len(parts) > 1 else ""
-            return self._json({"streams": streams_for(vid) if vid.startswith("tt") else []})
+            return self._json({"streams": streams_for(vid) if vid.startswith(("tt", "vyrk-")) else []})
         if path.startswith("/subtitles/"):
             return self._json({"subtitles": [{"id": "vyrk-en-addon", "url": f"{BASE}/subs/en.srt", "lang": "eng"}]})
         if path.startswith("/catalog/movie/vyrk-test-search/"):

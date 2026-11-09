@@ -5,7 +5,7 @@ Thanks for helping. VYRK is GPL-3.0; by contributing you agree your work is rele
 ## Build
 
 - JDK 17 or newer and the Android SDK (platform 37).
-- `./gradlew :core:test` runs the unit tests.
+- `./gradlew :core:test :logic-tests:test` runs the unit tests, including the app player/session regressions with synthetic platform boundaries.
 - `./gradlew :app:assembleDebug` or `:app:assembleRelease` builds APKs (release builds are signed with the public debug key unless the `VYRK_*` signing variables are set).
 
 Keep `core` free of Android dependencies. Rules that can be tested without a device (protocol, ranking, library, recovery) belong in `core` with unit tests.

@@ -13,6 +13,7 @@
     <string name="add_to_library">Zur Mediathek hinzufügen</string>
     <string name="addon_refreshed">Add-on aktualisiert</string>
     <string name="addon_url">Add-on-URL</string>
+    <string name="addons_pending_sync">Auf diesem Fernseher gespeichert. Kontosynchronisierung ausstehend.</string>
     <string name="airs_on">Läuft am %1$s</string>
     <string name="always_show_sources">Quellen immer anzeigen</string>
     <string name="any">Beliebig</string>

@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+
 package com.vyrk.core.addon
 
 import kotlinx.serialization.SerialName
@@ -178,6 +180,8 @@ data class MetaPreview(
     val logo: String? = null,
     val description: String? = null,
     val releaseInfo: String? = null,
+    @kotlinx.serialization.json.JsonNames("original_language")
+    val originalLanguage: String? = null,
     val runtime: String? = null,
     val imdbRating: String? = null,
     val genres: List<String> = emptyList(),
@@ -202,6 +206,8 @@ data class MetaItem(
     val description: String? = null,
     val releaseInfo: String? = null,
     val released: String? = null,
+    @kotlinx.serialization.json.JsonNames("original_language")
+    val originalLanguage: String? = null,
     val runtime: String? = null,
     val imdbRating: String? = null,
     val year: String? = null,
@@ -238,7 +244,7 @@ data class MetaItem(
     fun toPreview(): MetaPreview = MetaPreview(
         id = id, type = type, name = name, poster = poster, posterShape = posterShape,
         background = background, logo = logo, description = description, releaseInfo = releaseInfo,
-        runtime = runtime, imdbRating = imdbRating, genres = allGenres, links = links,
+        originalLanguage = originalLanguage, runtime = runtime, imdbRating = imdbRating, genres = allGenres, links = links,
         trailers = trailers, trailerStreams = trailerStreams, behaviorHints = behaviorHints,
         cast = castNames, director = directorNames,
     )

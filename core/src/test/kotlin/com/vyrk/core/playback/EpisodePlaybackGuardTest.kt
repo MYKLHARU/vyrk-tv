@@ -174,7 +174,7 @@ class EpisodePlaybackGuardTest {
 
     @Test fun lateEarlyEndCanUndoOnlyThisSessionsWatchedMark() {
         val original = LibraryItem("show", "Show", "series", state = LibraryItemState(videoId = episode.id, timesWatched = 2))
-        val marked = LibraryRules.onTimeChanged(original, episode.id, 35 * minute, 45 * minute, 1_000, original.watchedBitField(meta.videos)).first
+        val marked = LibraryRules.onTimeChanged(original, episode.id, 35 * minute, 45 * minute, 1_000, original.watchedBitField(meta.videos), playedMs = 35 * minute).first
         assertEquals(3, marked.state.timesWatched)
         assertTrue(marked.watchedBitField(meta.videos).getVideo(episode.id))
         assertEquals(IncompleteReason.EARLY_END, guard().endReason(35 * minute, 45 * minute))

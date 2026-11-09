@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "vyrk-tv"
-include(":core", ":app")
+include(":core", ":app", ":logic-tests")

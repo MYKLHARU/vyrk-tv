@@ -130,6 +130,22 @@ class TmdbClient(
 
     suspend fun personCredits(id: Long): List<PersonCredit> = get("/person/$id/combined_credits")?.let { parsePersonCredits(it) }.orEmpty()
 
+    private val languageCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    suspend fun originalLanguage(metaId: String, type: String): String? {
+        if (!enabled) return null
+        val cacheKey = "$type:$metaId"
+        languageCache[cacheKey]?.let { return it }
+        val target = when {
+            metaId.startsWith("tt") -> findByImdb(metaId.substringBefore(':'), type == "series") ?: return null
+            metaId.startsWith("tmdb:") -> (metaId.removePrefix("tmdb:").substringBefore(':').toLongOrNull() ?: return null) to (if (type == "series") "tv" else "movie")
+            else -> return null
+        }
+        val language = (get("/${target.second}/${target.first}")?.get("original_language") as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() } ?: return null
+        languageCache[cacheKey] = language
+        return language
+    }
+
     private val artworkCache = java.util.concurrent.ConcurrentHashMap<String, TmdbArtwork>()
 
     /**

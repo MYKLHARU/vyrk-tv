@@ -30,6 +30,11 @@ class DialogueProcessor : BaseAudioProcessor() {
         val remaining = inputBuffer.remaining()
         if (remaining == 0) return
         val out = replaceOutputBuffer(remaining)
+        if (!clearDialogue && !tvSpeaker) {
+            out.put(inputBuffer)
+            out.flip()
+            return
+        }
         val inS = inputBuffer.order(ByteOrder.nativeOrder()).asShortBuffer()
         val outS = out.order(ByteOrder.nativeOrder()).asShortBuffer()
         val n = inS.remaining()

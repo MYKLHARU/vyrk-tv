@@ -16,7 +16,6 @@ import com.vyrk.tv.data.Tab
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
 
 enum class RowKind { CONTINUE, TOP10, CATALOG }
 
@@ -29,23 +28,6 @@ class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initial
     var hasMore by mutableStateOf(true)
     var loadedOnce by mutableStateOf(false)
     internal var job: Job? = null
-}
-
-/** Full metas for headers and the hero, shared by every screen. */
-class MetaCache(private val client: AddonClient) {
-    private val cache = ConcurrentHashMap<String, MetaItem>()
-    /** Bumped when a meta is added, so screens that fill items from [peek] can redraw. */
-    var version by androidx.compose.runtime.mutableIntStateOf(0)
-        private set
-    fun peek(type: String, id: String): MetaItem? = cache["$type:$id"]
-    suspend fun get(addons: List<Descriptor>, type: String, id: String): MetaItem? {
-        cache["$type:$id"]?.let { return it }
-        val m = client.firstMeta(addons, type, id) ?: return null
-        put(m, "$type:$id")
-        return m
-    }
-    fun put(m: MetaItem) = put(m, "${m.type}:${m.id}")
-    private fun put(m: MetaItem, key: String) { cache[key] = m; version += 1 }
 }
 
 /**
