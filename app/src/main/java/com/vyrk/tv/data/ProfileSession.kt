@@ -80,7 +80,10 @@ class ProfileSession(
 
     private val pending = PendingChanges()
     private val pushMutex = Mutex()
+    private val addonsMutex = Mutex()
+    private val addonsPushMutex = Mutex()
     private var pushJob: Job? = null
+    private var addonRetryJob: Job? = null
     private var authKey: String? = null
 
     private val addonsFile = File(dir, "addons.enc")
@@ -98,6 +101,7 @@ class ProfileSession(
     }
 
     suspend fun load() {
+        AtomicFiles.flush()
         _settings.value = AtomicFiles.readText(settingsFile)?.let { runCatching { AppJson.decodeFromString(ProfileSettings.serializer(), it) }.getOrNull() } ?: ProfileSettings()
         _state.value = AtomicFiles.readText(stateFile)?.let { runCatching { AppJson.decodeFromString(SessionState.serializer(), it) }.getOrNull() } ?: SessionState()
         _library.value = AtomicFiles.readText(libraryFile)?.let { txt ->
@@ -110,7 +114,7 @@ class ProfileSession(
         authKey = vault.readSecret(authFile)?.takeIf { it.isNotBlank() }
         _account.value = when {
             authKey != null -> AccountState.Connected(profile.accountEmail ?: "")
-            profile.accountEmail != null -> AccountState.Expired(profile.accountEmail)
+            profile.accountEmail != null && !_state.value.signedOut -> AccountState.Expired(profile.accountEmail)
             else -> AccountState.None
         }
         if (storedAddons != null) _addons.value = storedAddons
@@ -124,16 +128,18 @@ class ProfileSession(
 
     // ---- Settings and session state ----
 
+    @Synchronized
     fun updateSettings(transform: (ProfileSettings) -> ProfileSettings) {
         _settings.update(transform)
         val snapshot = _settings.value
-        scope.launch { AtomicFiles.writeText(settingsFile, AppJson.encodeToString(ProfileSettings.serializer(), snapshot)) }
+        AtomicFiles.writeTextLater(settingsFile, AppJson.encodeToString(ProfileSettings.serializer(), snapshot))
     }
 
+    @Synchronized
     fun updateState(transform: (SessionState) -> SessionState) {
         _state.update(transform)
         val snapshot = _state.value
-        scope.launch { AtomicFiles.writeText(stateFile, AppJson.encodeToString(SessionState.serializer(), snapshot)) }
+        AtomicFiles.writeTextLater(stateFile, AppJson.encodeToString(SessionState.serializer(), snapshot))
     }
 
     fun rememberFocus(tab: String, memory: FocusMemory) = updateState { it.copy(focus = it.focus + (tab to memory)) }
@@ -151,7 +157,7 @@ class ProfileSession(
             runCatching { addonClient.manifest(url) }.onSuccess { list += Descriptor(it, url, DescriptorFlags(official = true)) }
                 .onFailure { Diagnostics.log("addons", "default add-on failed: ${it.message}") }
         }
-        if (list.isNotEmpty()) setAddons(list, push = false)
+        if (list.isNotEmpty()) setAddons(push = false) { list }
     }
 
     suspend fun fetchManifest(input: String): Result<Descriptor> = try {
@@ -165,40 +171,55 @@ class ProfileSession(
     }
 
     suspend fun install(d: Descriptor) {
-        val list = _addons.value.filterNot { it.manifest.id == d.manifest.id } + d
-        setAddons(list, push = true)
+        setAddons(push = true) { current -> current.filterNot { it.manifest.id == d.manifest.id } + d }
         Diagnostics.log("addons", "installed ${d.manifest.id} from ${Redact.url(d.transportUrl)}")
     }
 
-    suspend fun remove(id: String) = setAddons(_addons.value.filterNot { it.manifest.id == id }, push = true)
+    suspend fun remove(id: String) = setAddons(push = true) { current -> current.filterNot { it.manifest.id == id } }
 
-    suspend fun move(id: String, delta: Int) {
-        val list = _addons.value.toMutableList()
+    suspend fun move(id: String, delta: Int) = setAddons(push = true) { current ->
+        val list = current.toMutableList()
         val i = list.indexOfFirst { it.manifest.id == id }
-        val j = (i + delta).coerceIn(0, list.lastIndex)
-        if (i < 0 || i == j) return
-        list.add(j, list.removeAt(i))
-        setAddons(list, push = true)
+        if (i >= 0) {
+            val j = (i + delta).coerceIn(0, list.lastIndex)
+            if (i != j) list.add(j, list.removeAt(i))
+        }
+        list
     }
 
     suspend fun refreshAddon(id: String): Boolean {
         val d = _addons.value.firstOrNull { it.manifest.id == id } ?: return false
         val m = runCatching { addonClient.manifest(d.transportUrl) }.getOrNull() ?: return false
-        setAddons(_addons.value.map { if (it.manifest.id == id) it.copy(manifest = m) else it }, push = true)
+        setAddons(push = true) { current -> current.map { if (it.manifest.id == id) it.copy(manifest = m) else it } }
         return true
     }
 
-    private suspend fun setAddons(list: List<Descriptor>, push: Boolean) {
-        _addons.value = list
-        vault.writeSecret(addonsFile, ProtocolJson.encodeToString(ListSerializer(Descriptor.serializer()), list))
-        if (push) saveAddonsToAccount()
+    private suspend fun setAddons(push: Boolean, transform: (List<Descriptor>) -> List<Descriptor>) {
+        addonsMutex.withLock {
+            val list = transform(_addons.value)
+            _addons.value = list
+            if (push) updateState { it.copy(addonsRevision = it.addonsRevision + 1) }
+            vault.writeSecret(addonsFile, ProtocolJson.encodeToString(ListSerializer(Descriptor.serializer()), list))
+        }
+        if (push && !saveAddonsToAccount() && authKey != null) {
+            addonRetryJob?.cancel()
+            addonRetryJob = scope.launch {
+                for (waitMs in listOf(5_000L, 15_000L, 60_000L)) {
+                    delay(waitMs)
+                    if (saveAddonsToAccount()) break
+                }
+            }
+        }
     }
 
     /** Saves the add-on list back to the account; returns false without an account or on error. */
-    suspend fun saveAddonsToAccount(): Boolean {
-        val key = authKey ?: return false
-        return try {
-            accountApi.addonCollectionSet(key, _addons.value); true
+    suspend fun saveAddonsToAccount(): Boolean = addonsPushMutex.withLock {
+        val key = authKey ?: return@withLock false
+        val (list, revision) = addonsMutex.withLock { _addons.value to _state.value.addonsRevision }
+        try {
+            accountApi.addonCollectionSet(key, list)
+            updateState { it.copy(addonsSyncedRevision = revision) }
+            true
         } catch (e: ApiError) {
             if (e.isSessionExpired) onExpired(); false
         } catch (e: Exception) {
@@ -214,8 +235,7 @@ class ProfileSession(
         vault.writeSecret(authFile, key)
         onProfileEmail(user.email)
         _account.value = AccountState.Connected(user.email)
-        val remote = runCatching { accountApi.addonCollectionGet(key) }.getOrNull()
-        if (!remote.isNullOrEmpty()) setAddons(remote, push = false)
+        updateState { it.copy(signedOut = false) }
         syncNow()
     }
 
@@ -223,7 +243,9 @@ class ProfileSession(
         authKey?.let { k -> runCatching { accountApi.logout(k) } }
         authKey = null
         vault.writeSecret(authFile, "")
+        updateState { it.copy(signedOut = true) }
         _account.value = AccountState.None
+        AtomicFiles.flush()
     }
 
     private fun onExpired() {
@@ -236,10 +258,20 @@ class ProfileSession(
     /** Two-way library sync using datastoreMeta → pull newer remote, push newer local. */
     suspend fun syncNow() {
         val key = authKey ?: return
-        if (_syncing.value) return
-        _syncing.value = true
+        if (!_syncing.compareAndSet(false, true)) return
         try {
-            runCatching { accountApi.addonCollectionGet(key) }.onSuccess { if (it.isNotEmpty()) setAddons(it, push = false) }
+            // An unsuccessful cloud write must never be overwritten by an older remote list.
+            if (_state.value.addonsRevision != _state.value.addonsSyncedRevision) saveAddonsToAccount()
+            val revision = _state.value.addonsRevision
+            if (revision == _state.value.addonsSyncedRevision) {
+                val remote = accountApi.addonCollectionGet(key)
+                addonsMutex.withLock {
+                    if (_state.value.addonsRevision == revision && authKey == key) {
+                        _addons.value = remote // A successful empty collection is meaningful.
+                        vault.writeSecret(addonsFile, ProtocolJson.encodeToString(ListSerializer(Descriptor.serializer()), remote))
+                    }
+                }
+            }
             val meta = accountApi.datastoreMeta(key)
             val plan = LibrarySync.plan(_library.value, meta, now)
             if (plan.pull.isNotEmpty()) {
@@ -285,21 +317,20 @@ class ProfileSession(
 
     // ---- Library ----
 
-    private suspend fun saveLibrary() {
+    private fun saveLibrary() {
         val arr = JsonArray(_library.value.values.map { it.toJson() })
-        AtomicFiles.writeText(libraryFile, arr.toString())
+        AtomicFiles.writeTextLater(libraryFile, arr.toString())
     }
 
     /** Every local change: stamp mtime, update the flow at once, save, mark pending, push. */
+    @Synchronized
     fun putItem(item: LibraryItem, pushSoon: Boolean = true) {
         val stamped = LibraryRules.touch(item, now)
         _library.update { it + (stamped.id to stamped) }
         pending.mark(stamped.id)
-        scope.launch {
-            saveLibrary()
-            updateState { it.copy(pendingIds = pending.ids()) }
-            if (pushSoon) schedulePush()
-        }
+        saveLibrary()
+        updateState { it.copy(pendingIds = pending.ids()) }
+        if (pushSoon) schedulePush()
     }
 
     fun item(id: String): LibraryItem? = _library.value[id]

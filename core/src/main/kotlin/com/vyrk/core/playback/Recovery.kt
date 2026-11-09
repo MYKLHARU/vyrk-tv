@@ -56,12 +56,13 @@ class RecoveryPolicy(
     val maxCandidates: Int = 3,
     val retriesPerCandidate: Int = 2,
     val firstFrameTimeoutMs: Long = 12_000,
+    val startIndex: Int = 0,
 ) {
-    var candidateIndex = 0; private set
+    var candidateIndex = startIndex; private set
     private var retries = 0
     private var refreshed = false
     private var audioFallbacks = 0
-    private val limit get() = minOf(candidateCount, maxCandidates)
+    private val limit get() = minOf(candidateCount, startIndex + maxCandidates)
 
     fun onFailure(cls: ErrorClass, canRefresh: Boolean): RecoveryAction {
         if (cls == ErrorClass.BEHIND_LIVE_WINDOW) return RecoveryAction.SeekToLiveEdge

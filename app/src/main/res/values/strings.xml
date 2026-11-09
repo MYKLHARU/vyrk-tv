@@ -13,6 +13,7 @@
     <string name="add_to_library">Add to library</string>
     <string name="addon_refreshed">Add-on refreshed</string>
     <string name="addon_url">Add-on URL</string>
+    <string name="addons_pending_sync">Saved on this TV. Account sync pending.</string>
     <string name="airs_on">Airs %1$s</string>
     <string name="always_show_sources">Always show sources</string>
     <string name="any">Any</string>

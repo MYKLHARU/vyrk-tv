@@ -13,6 +13,7 @@
     <string name="add_to_library">Adicionar à biblioteca</string>
     <string name="addon_refreshed">Complemento atualizado</string>
     <string name="addon_url">URL do complemento</string>
+    <string name="addons_pending_sync">Salvo nesta TV. Sincronização da conta pendente.</string>
     <string name="airs_on">Vai ao ar em %1$s</string>
     <string name="always_show_sources">Sempre mostrar fontes</string>
     <string name="any">Qualquer</string>

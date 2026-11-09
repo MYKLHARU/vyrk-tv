@@ -16,6 +16,8 @@ val AppJson = Json {
 
 /** Top-bar tabs. Add-on management lives in Settings › Add-ons, not here. */
 enum class Tab(val key: String) { HOME("home"), MOVIES("movies"), SERIES("series"), ANIME("anime"), LIVE("live"), LIBRARY("library") }
+fun visibleTab(current: Tab, visible: List<Tab>): Tab = current.takeIf { it in visible } ?: Tab.HOME
+
 enum class PreviewMode { OFF, MANUAL, AUTOMATIC }
 enum class SkipIntroMode { OFF, BUTTON, AUTOMATIC }
 
@@ -112,6 +114,9 @@ data class SessionState(
     val newEpisodes: Map<String, Set<String>> = emptyMap(),
     val newEpisodesCheckedMs: Long? = null,
     val pendingIds: Set<String> = emptySet(),
+    val addonsRevision: Long = 0,
+    val addonsSyncedRevision: Long = 0,
+    val signedOut: Boolean = false,
 )
 
 val ProfileColors = listOf(0xFFA9E1F3, 0xFF6EA8FF, 0xFF7FD1C7, 0xFFB79CFF, 0xFFFFB86B, 0xFFFF7A90)

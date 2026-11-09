@@ -13,6 +13,7 @@
     <string name="add_to_library">लाइब्रेरी में जोड़ें</string>
     <string name="addon_refreshed">ऐड-ऑन रीफ़्रेश हुआ</string>
     <string name="addon_url">ऐड-ऑन URL</string>
+    <string name="addons_pending_sync">इस टीवी पर सहेजा गया। खाते से सिंक होना बाकी है।</string>
     <string name="airs_on">%1$s को प्रसारित होगा</string>
     <string name="always_show_sources">स्रोत हमेशा दिखाएँ</string>
     <string name="any">कोई भी</string>

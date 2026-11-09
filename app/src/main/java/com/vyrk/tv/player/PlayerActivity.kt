@@ -99,6 +99,8 @@ class PlayerActivity : ComponentActivity() {
     private var mediaSession: MediaSession? = null
     private var originalModeId = 0
 
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(com.vyrk.tv.AppLocale.wrap(base))
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         graph = VyrkApp.graph(this)
@@ -118,6 +120,9 @@ class PlayerActivity : ComponentActivity() {
             override fun onRenderedFirstFrame() {
                 m.onFirstFrame()
                 if (dev.frameRateMatching) matchFrameRate(engine)
+            }
+            override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
+                m.onPositionDiscontinuity()
             }
             override fun onPlayerError(error: PlaybackException) = m.onError(error)
             override fun onPlaybackStateChanged(playbackState: Int) = m.onPlaybackState(playbackState)
@@ -140,7 +145,7 @@ class PlayerActivity : ComponentActivity() {
                     m.phase == Phase.PLAYING && m.panel != Panel.NONE -> { m.panel = Panel.NONE; m.showControls() }
                     m.phase == Phase.PLAYING && m.scrubTarget != null -> m.scrubCancel()
                     m.phase == Phase.PLAYING && m.stallPrompt -> m.stallPrompt = false
-                    m.phase == Phase.PLAYING && m.upNext -> { m.upNext = false; m.upNextCountdown = 10_000 }
+                    m.phase == Phase.PLAYING && m.upNext -> { m.dismissUpNext() }
                     m.phase == Phase.PLAYING && m.controlsVisible -> { m.controlsVisible = false; FocusTrace.set(PLAYER_LAYER, "player:video") }
                     else -> finish()
                 }
@@ -749,7 +754,7 @@ private fun Prompt(text: String, yes: String, onYes: () -> Unit, no: String, onN
 private fun UpNext(m: PlayerModel) {
     val nv = m.nextVideo ?: return
     val label = if (nv.season != null && nv.episode != null) "S${nv.season}E${nv.episode} ${nv.displayTitle}" else nv.displayTitle
-    Prompt(stringResource(R.string.up_next_in, label, m.upNextCountdown), stringResource(R.string.play_now), { m.playNext(auto = false) }, stringResource(R.string.cancel)) { m.upNext = false; m.upNextCountdown = 10_000 }
+    Prompt(stringResource(R.string.up_next_in, label, m.upNextCountdown), stringResource(R.string.play_now), { m.playNext(auto = false) }, stringResource(R.string.cancel)) { m.dismissUpNext() }
 }
 
 @Composable

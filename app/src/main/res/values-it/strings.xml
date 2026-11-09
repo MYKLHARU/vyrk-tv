@@ -13,6 +13,7 @@
     <string name="add_to_library">Aggiungi alla libreria</string>
     <string name="addon_refreshed">Componente aggiornato</string>
     <string name="addon_url">URL del componente</string>
+    <string name="addons_pending_sync">Salvato su questa TV. Sincronizzazione con l’account in attesa.</string>
     <string name="airs_on">In onda il %1$s</string>
     <string name="always_show_sources">Mostra sempre le fonti</string>
     <string name="any">Qualsiasi</string>

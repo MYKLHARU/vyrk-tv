@@ -25,24 +25,26 @@ object LibraryRules {
         nowMs: Long,
         watched: WatchedBitField? = null,
         allowCompletion: Boolean = true,
+        playedMs: Long? = null,
     ): Pair<LibraryItem, Boolean> {
         var s = item.state
         val videoId = if (item.isLive) item.id else streamVideoId
         s = s.copy(lastWatchedMs = nowMs)
-        if (s.videoId != videoId) {
+        val changedVideo = s.videoId != videoId
+        if (changedVideo) {
             s = s.copy(
                 videoId = videoId,
-                overallTimeWatched = s.overallTimeWatched + s.timeWatched,
                 timeWatched = 0,
                 flaggedWatched = 0,
                 timeOffset = 0,
                 duration = durationMs,
             )
-        } else {
-            val delta = (timeMs - s.timeOffset).coerceAtLeast(0)
-            s = s.copy(timeWatched = s.timeWatched + delta, overallTimeWatched = s.overallTimeWatched + delta)
         }
-        if (timeMs > s.timeOffset) s = s.copy(timeOffset = timeMs, duration = durationMs)
+        // Position is a resume point, not proof that the intervening content was played.
+        // Callers with a playback clock supply playedMs; infrequent unqualified jumps count zero.
+        val delta = (playedMs ?: if (changedVideo) 0 else (timeMs - s.timeOffset).takeIf { it in 0..10_000 } ?: 0).coerceAtLeast(0)
+        s = s.copy(timeWatched = s.timeWatched + delta, overallTimeWatched = s.overallTimeWatched + delta,
+            timeOffset = timeMs.coerceIn(0, durationMs.takeIf { it > 0 } ?: Long.MAX_VALUE), duration = durationMs)
 
         var crossed = false
         if (allowCompletion && !item.isLive && s.flaggedWatched == 0 && s.duration > 0 &&
@@ -110,7 +112,6 @@ object LibraryRules {
         return item.copy(
             state = s.copy(
                 videoId = videoId,
-                overallTimeWatched = s.overallTimeWatched + s.timeWatched,
                 timeWatched = 0,
                 flaggedWatched = 0,
                 timeOffset = 1,

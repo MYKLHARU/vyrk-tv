@@ -169,6 +169,17 @@ not run yet.
 | CI: build, e2e, showcase jobs | `.github/workflows/ci.yml` | Built | build and e2e pass on every push to `main` (run 41886508067); showcase not run on CI yet |
 | Versioned release: a `vX.Y.Z` tag publishes signed APKs with that version's CHANGELOG section as notes; refuses without signing secrets or notes | `ci.yml`, `ci/release_notes.sh` | Built | notes script run locally; no tag pushed yet |
 
+## v0.1.17 audit fixes
+
+The JVM regression suite (`:logic-tests:test`) compiles the actual player, session, cache and
+audio processing sources with synthetic Android/Media3/keystore boundaries; it uses no real
+credentials or external services. It covers the 16 reproduced audit bugs plus dismissal at
+end of file, restart persistence, delayed cloud saves, metadata expiry, original-language
+selection and hidden-tab fallback. Core tests cover malformed subtitles and TMDB language metadata.
+The emulator journey uses local episode metadata for both short-file recovery and normal
+autoplay. Physical-TV audio output, real-account cloud writes and every translated player
+dialog still require device verification.
+
 ## Not verified, and why
 
 - **Showcase on CI**: the showcase job runs on tags, manual runs and `[showcase]` commits and hasn't run yet. README images come from local runs of `ci/showcase.sh` and `ci/e2e.sh` against the real release APK (API 36 emulator).

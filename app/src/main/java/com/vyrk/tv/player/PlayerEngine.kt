@@ -86,6 +86,9 @@ class PlayerEngine(
                 url.contains(".mpd", true) -> setMimeType(MimeTypes.APPLICATION_MPD)
             }
         }.build()
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .clearOverridesOfType(C.TRACK_TYPE_AUDIO).clearOverridesOfType(C.TRACK_TYPE_TEXT)
+            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false).setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false).build()
         player.setMediaItem(item, startMs.coerceAtLeast(0))
         player.prepare()
         player.playWhenReady = true

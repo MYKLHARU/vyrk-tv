@@ -127,13 +127,22 @@ class PlayerModel(
     private var episodeGuard = EpisodePlaybackGuard(null)
     private var incompleteReason: IncompleteReason? = null
     private var endedHandled = false
+    private var completionSaved = false
+    private var upNextDismissed = false
+    private var loadGeneration = 0
+    private var streamGeneration = 0
+    private var subtitleJob: Job? = null
+    private var originalLanguageCode: String? = null
+    private var progressPosition = 0L
+    private var progressClock = 0L
+    private var progressWasPlaying = false
     private var watchedAddedDuringPlayback = false
     private var previouslyWatched = false
     private val isEpisode get() = request.meta.type == "series"
     private fun sourceId(r: Ranked) = "${r.candidate.addonId}:${r.candidate.key}"
     fun suspectSource(r: Ranked): Boolean = episodeGuard.isSuspect(sourceId(r))
     val sourceChoices: List<Ranked> get() = candidates.sortedBy { suspectSource(it) }
-    val isLive get() = request.meta.type == "tv"
+    val isLive get() = com.vyrk.core.addon.isLiveType(request.meta.type)
 
     private val now get() = System.currentTimeMillis()
     private fun s(id: Int, vararg a: Any) = strings(id, a)
@@ -145,13 +154,24 @@ class PlayerModel(
 
     private suspend fun load() {
         val req = request
+        val generation = ++loadGeneration
+        upNextDismissed = false
         phase = Phase.CONNECTING
         loadProgress = 0f
         progressTo(0.06f)
         connecting = s(com.vyrk.tv.R.string.connecting)
         val addons = session.effectiveAddons()
         val m = graph.metaCache.get(addons, req.meta.type, req.meta.id)
+        if (generation != loadGeneration) return
         meta = m
+        originalLanguageCode = m?.originalLanguage ?: req.meta.originalLanguage
+        if (settings.originalLanguage && originalLanguageCode == null) scope.launch {
+            val language = graph.tmdb.originalLanguage(req.meta.id, req.meta.type)
+            if (generation == loadGeneration) {
+                originalLanguageCode = language
+                if (firstFrame) applyTrackPrefs()
+            }
+        }
         progressTo(0.22f)
         val vid = req.videoId ?: m?.let { mm ->
             mm.videos.filter { (it.season ?: 1) > 0 }.sortedWith(compareBy({ it.season ?: 0 }, { it.episode ?: 0 })).firstOrNull()?.id
@@ -165,7 +185,7 @@ class PlayerModel(
         stallPrompt = false
         panel = Panel.NONE
         resetTimeline()
-        scope.launch { loadSegments(req.meta.type, req.meta.id, vid) }
+        scope.launch { loadSegments(req.meta.type, req.meta.id, vid, generation) }
         item = session.itemFor(req.meta)
         watchedAddedDuringPlayback = false
         previouslyWatched = m?.videos?.let { item?.watchedBitField(it)?.getVideo(vid) } == true
@@ -179,6 +199,7 @@ class PlayerModel(
             if (results.isEmpty()) { fail(Phase.NO_SOURCES, s(com.vyrk.tv.R.string.no_stream_addons)); return }
             StreamRanker.rank(cands, caps(), prefs(req.meta.id))
         }
+        if (generation != loadGeneration) return
         progressTo(0.42f)
         userPicked = req.picked != null
         val playable = buildList {
@@ -198,7 +219,6 @@ class PlayerModel(
         policy = RecoveryPolicy(playable.size, userPicked)
         index = 0
         playCandidate(LibraryRules.resumeMs(item, vid))
-        loadSubtitles(vid)
     }
 
     fun caps() = graph.device.caps(graph.deviceSettings.value.measuredBps)
@@ -210,7 +230,7 @@ class PlayerModel(
             preset = st.preset, maxResolution = st.maxResolution, maxSizeBytes = st.maxSizeGb?.let { it * 1_000_000_000L },
             format = st.format, hdr = st.hdr, audioLanguages = st.audioLanguages,
             rememberedKey = mem.pickedKey, lastBingeGroup = mem.bingeGroup, lastReleaseGroup = mem.releaseGroup,
-            runtimeMinutes = graph.metaCache.peek(request.meta.type, request.meta.id)?.runtime?.let { r -> Regex("""\d+""").find(r)?.value?.toIntOrNull() },
+            runtimeMinutes = graph.metaCache.peek(request.meta.type, request.meta.id)?.runtime?.let { com.vyrk.core.addon.RuntimeText.minutes(it) },
         )
     }
 
@@ -218,6 +238,12 @@ class PlayerModel(
 
     private fun playCandidate(startMs: Long) {
         val r = candidates.getOrNull(index) ?: return
+        val generation = ++streamGeneration
+        completionSaved = false
+        subtitleJob?.cancel()
+        prefsApplied = false
+        selectedSub = null; selectedAudio = null; cues = emptyList(); externalSubs.clear()
+        failedAudio.clear()
         incompleteReason = null
         endedHandled = false
         upNext = false
@@ -235,6 +261,8 @@ class PlayerModel(
         Diagnostics.log("player", "candidate ${index + 1}/${candidates.size} from ${r.candidate.addonId}")
         android.util.Log.i("VyrkEvent", "play_start $playingVideoId $startMs")
         engine.prepare(r.candidate.stream, startMs)
+        resetProgressClock()
+        scope.launch { loadSubtitles(playingVideoId!!, r, generation) }
         firstFrameJob?.cancel()
         firstFrameJob = scope.launch {
             delay(policy.firstFrameTimeoutMs)
@@ -245,6 +273,7 @@ class PlayerModel(
     fun onFirstFrame() {
         if (firstFrame) return
         firstFrame = true
+        resetProgressClock()
         firstFrameJob?.cancel()
         progressTo(1f)
         phase = Phase.PLAYING
@@ -269,12 +298,13 @@ class PlayerModel(
     }
 
     /** IntroDB community timings for this episode or film (IMDb IDs only). */
-    private suspend fun loadSegments(type: String, metaId: String, videoId: String) {
+    private suspend fun loadSegments(type: String, metaId: String, videoId: String, generation: Int) {
         if (settings.skipIntro == SkipIntroMode.OFF && !settings.chapterMarkers) return
         val url = IntroDb.url(type, metaId, videoId) ?: return
         val res = runCatching { graph.transport.get(url, timeoutMs = 8_000) }.getOrNull() ?: return
         if (!res.isSuccess) return
         val found = IntroDb.parse(res.body)
+        if (generation != loadGeneration) return
         segments = found
         skipOffer = SkipOffer(found)
         rebuildMarkers()
@@ -308,6 +338,7 @@ class PlayerModel(
         skipSegment = null
         stall.onSeek(SystemClock.elapsedRealtime())
         engine.player.seekTo(skipOffer.target(s))
+        onPositionDiscontinuity()
     }
 
     fun showNotice(text: String) { notice = text; noticeAt = SystemClock.elapsedRealtime() }
@@ -328,6 +359,7 @@ class PlayerModel(
         if (t == null) return
         stall.onSeek(SystemClock.elapsedRealtime())
         engine.player.seekTo(t)
+        onPositionDiscontinuity()
         position = t
         touch()
     }
@@ -368,7 +400,7 @@ class PlayerModel(
         val current = selectedAudio ?: tracks.firstOrNull { it.isDefault }?.id
         current?.let { failedAudio += it }
         val st = settings
-        val next = TrackSelector.fallbackAudio(tracks, current, failedAudio, AudioPrefs(st.audioLanguages, st.originalLanguage, null, st.avoidCommentary)) ?: return false
+        val next = TrackSelector.fallbackAudio(tracks, current, failedAudio, AudioPrefs(st.audioLanguages, st.originalLanguage, originalLanguageCode, st.avoidCommentary)) ?: return false
         val pos = engine.player.currentPosition
         selectedAudio = next.id
         engine.select(C.TRACK_TYPE_AUDIO, next.id)
@@ -415,9 +447,11 @@ class PlayerModel(
     /** Asks the same add-on for a fresh link to the same file, then resumes. */
     private suspend fun refreshLink(pos: Long) {
         val r = current ?: return
+        val generation = streamGeneration
         val addon = session.effectiveAddons().firstOrNull { it.manifest.id == r.candidate.addonId }
         val vid = video?.id ?: request.videoId ?: request.meta.id
         val fresh = addon?.let { graph.addonClient.streams(it, request.meta.type, vid) }
+        if (generation != streamGeneration) return
         val match = (fresh as? AddonResult.Ok)?.value?.streams?.firstOrNull { st ->
             val c = r.candidate.copy(stream = st)
             c.key == r.candidate.key && st.url != r.candidate.stream.url
@@ -436,7 +470,7 @@ class PlayerModel(
 
     fun retryPicked() {
         val pos = if (incompleteReason != null) 0L else startPositionFallback()
-        policy = RecoveryPolicy(candidates.size, userPicked)
+        policy = RecoveryPolicy(candidates.size, userPicked, startIndex = index)
         playCandidate(pos)
     }
 
@@ -464,20 +498,25 @@ class PlayerModel(
         if (idx < 0) return
         val pos = engine.player.currentPosition
         index = idx
+        policy = RecoveryPolicy(candidates.size, userPicked, startIndex = index)
         playCandidate(pos)
     }
 
-    private suspend fun loadSubtitles(vid: String) {
-        externalSubs.clear()
-        current?.candidate?.stream?.subtitles?.forEachIndexed { i, sub ->
-            externalSubs += ExternalSub("st:$i", Languages.normalise(sub.lang), Languages.label(sub.lang), current?.candidate?.addonName ?: "", sub.url)
-        }
-        val results = graph.addonClient.allSubtitles(session.effectiveAddons(), request.meta.type, vid)
+    private suspend fun loadSubtitles(vid: String, source: Ranked, generation: Int) {
+        val found = source.candidate.stream.subtitles.mapIndexed { i, sub ->
+            ExternalSub("st:$generation:$i", Languages.normalise(sub.lang), Languages.label(sub.lang), source.candidate.addonName, sub.url)
+        }.toMutableList()
+        if (generation != streamGeneration) return
+        externalSubs.addAll(found)
+        val type = request.meta.type
+        val results = graph.addonClient.allSubtitles(session.effectiveAddons(), type, vid)
         results.forEach { (addon, r) ->
             (r as? AddonResult.Ok)?.value?.subtitles?.forEachIndexed { i, sub ->
-                externalSubs += ExternalSub("${addon.manifest.id}:$i", Languages.normalise(sub.lang), Languages.label(sub.lang), addon.manifest.name, sub.url)
+                found += ExternalSub("${addon.manifest.id}:$vid:$i", Languages.normalise(sub.lang), Languages.label(sub.lang), addon.manifest.name, sub.url)
             }
         }
+        if (generation != streamGeneration) return
+        externalSubs.clear(); externalSubs.addAll(found)
         if (firstFrame) applyTrackPrefs()
     }
 
@@ -488,7 +527,7 @@ class PlayerModel(
     private fun applyTrackPrefs() {
         val st = settings
         val mem = session.titleMemory(request.meta.id)
-        val audio = TrackSelector.selectAudio(engine.audioTracks(), AudioPrefs(st.audioLanguages, st.originalLanguage, meta?.country?.let { null }, st.avoidCommentary, mem.audio))
+        val audio = TrackSelector.selectAudio(engine.audioTracks(), AudioPrefs(st.audioLanguages, st.originalLanguage, originalLanguageCode, st.avoidCommentary, mem.audio))
         if (audio != null && !audio.isDefault) { engine.select(C.TRACK_TYPE_AUDIO, audio.id) }
         selectedAudio = audio?.id
         if (prefsApplied && selectedSub != null) return
@@ -499,6 +538,8 @@ class PlayerModel(
     }
 
     fun selectSubtitle(id: String?, remember: Boolean = true) {
+        subtitleJob?.cancel()
+        val generation = streamGeneration
         selectedSub = id
         cues = emptyList()
         when {
@@ -507,9 +548,10 @@ class PlayerModel(
             else -> {
                 engine.select(C.TRACK_TYPE_TEXT, null)
                 val sub = externalSubs.firstOrNull { it.id == id } ?: return
-                scope.launch {
+                subtitleJob = scope.launch {
                     val res = runCatching { graph.transport.get(sub.url, timeoutMs = 15_000) }.getOrNull()
-                    if (res != null && res.isSuccess && selectedSub == id) cues = SubtitleParser.parse(res.body)
+                    if (res != null && res.isSuccess && generation == streamGeneration && selectedSub == id)
+                        cues = runCatching { SubtitleParser.parse(res.body) }.getOrDefault(emptyList())
                 }
             }
         }
@@ -536,6 +578,7 @@ class PlayerModel(
         val target = (p.currentPosition + ms).coerceIn(0, if (p.duration > 0) p.duration else Long.MAX_VALUE)
         stall.onSeek(SystemClock.elapsedRealtime())
         p.seekTo(target)
+        onPositionDiscontinuity()
         position = target
     }
 
@@ -562,7 +605,7 @@ class PlayerModel(
         }
         saveProgress(final = true)
         if (sleep == SleepMode.END_OF_EPISODE) { finishRequested = true; return }
-        if (nextVideo != null && settings.autoplayNext) playNext(auto = true) else finishRequested = true
+        if (nextVideo != null && settings.autoplayNext && !upNextDismissed) playNext(auto = true) else finishRequested = true
     }
 
     var finishRequested by mutableStateOf(false)
@@ -584,7 +627,7 @@ class PlayerModel(
 
     fun playNext(auto: Boolean) {
         val nv = nextVideo ?: return
-        if (auto && (!firstFrame || phase != Phase.PLAYING || incompleteReason != null ||
+        if (auto && (upNextDismissed || !firstFrame || phase != Phase.PLAYING || incompleteReason != null ||
                 (isEpisode && episodeGuard.isShort(engine.player.duration)))) {
             upNext = false
             return
@@ -614,9 +657,23 @@ class PlayerModel(
         panel = Panel.NONE
     }
 
+    fun dismissUpNext() { upNextDismissed = true; upNext = false; upNextCountdown = 10 }
+
+    private fun resetProgressClock() {
+        progressPosition = engine.player.currentPosition
+        progressClock = SystemClock.elapsedRealtime()
+        progressWasPlaying = engine.player.isPlaying
+    }
+
+    /** Media3 seeks/timeline jumps change resume position but never add skipped viewing time. */
+    fun onPositionDiscontinuity() {
+        resetProgressClock()
+        saveProgress()
+    }
+
     /** Saves progress locally on every update and pushes every 3 minutes. */
     fun saveProgress(final: Boolean = false) {
-        if (isLive || !firstFrame) return
+        if (isLive || !firstFrame || completionSaved) return
         val p = engine.player
         val dur = p.duration.takeIf { it != C.TIME_UNSET && it > 0 }
             ?: episodeGuard.progressDuration(0).takeIf { incompleteReason != null && it > 0 } ?: return
@@ -631,9 +688,18 @@ class PlayerModel(
             watchedAddedDuringPlayback = false
         }
         val wb = meta?.takeIf { it.videos.isNotEmpty() }?.let { base.watchedBitField(it.videos) }
-        var (next, crossed) = LibraryRules.onTimeChanged(base, vid, p.currentPosition, progressDuration, now, wb, allowCompletion = safeCompletion)
+        val clock = SystemClock.elapsedRealtime()
+        val delta = p.currentPosition - progressPosition
+        val elapsed = (clock - progressClock).coerceAtLeast(0)
+        val played = if (progressWasPlaying && delta >= 0 && delta <= elapsed * p.playbackParameters.speed + 2_000) delta else 0L
+        resetProgressClock()
+        var (next, crossed) = LibraryRules.onTimeChanged(base, vid, p.currentPosition, progressDuration, now, wb,
+            allowCompletion = safeCompletion, playedMs = played)
         if (crossed) watchedAddedDuringPlayback = true
-        if (final) next = LibraryRules.onPlaybackEnded(next, nextVideo, allowCompletion = safeCompletion)
+        if (final) {
+            next = LibraryRules.onPlaybackEnded(next, nextVideo, allowCompletion = safeCompletion)
+            completionSaved = safeCompletion
+        }
         item = next
         session.putItem(next, pushSoon = false)
         val t = SystemClock.elapsedRealtime()
@@ -685,7 +751,7 @@ class PlayerModel(
             val nv = nextVideo
             if (nv != null && firstFrame && phase == Phase.PLAYING && duration > 0 && !isLive &&
                 incompleteReason == null && (!isEpisode || !episodeGuard.isShort(duration)) &&
-                settings.autoplayNext && sleep != SleepMode.END_OF_EPISODE) {
+                settings.autoplayNext && !upNextDismissed && sleep != SleepMode.END_OF_EPISODE) {
                 // Credits start from IntroDB when known, otherwise the last 30 s or past 90%.
                 val credits = skipOffer.creditsStartMs
                 val near = episodeGuard.upNextDue(position, duration, credits)

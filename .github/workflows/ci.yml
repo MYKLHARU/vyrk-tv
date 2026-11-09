@@ -63,7 +63,7 @@ jobs:
           VYRK_KEY_ALIAS: ${{ secrets.VYRK_KEY_ALIAS }}
           VYRK_KEY_PASSWORD: ${{ secrets.VYRK_KEY_PASSWORD }}
         run: >
-          ./gradlew --stacktrace :core:test :app:assembleRelease
+          ./gradlew --stacktrace :core:test :logic-tests:test :app:assembleRelease
           -Pvyrk.versionName=${{ steps.version.outputs.name }}
           -Pvyrk.versionCode=${{ steps.version.outputs.code }}
 
@@ -86,7 +86,9 @@ jobs:
         if: always()
         with:
           name: unit-test-report
-          path: core/build/reports/tests/
+          path: |
+            core/build/reports/tests/
+            logic-tests/build/reports/tests/
 
       - name: Publish ci-latest pre-release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -116,7 +118,7 @@ jobs:
 
   e2e:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -135,6 +137,8 @@ jobs:
           mkdir -p ci/media
           ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 \
             -t 600 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 32 -c:a aac -b:a 64k -movflags +faststart ci/media/sample-720p.mp4
+          # Cheap stream-copy fixture: full 45-minute alternate for the short-source scenario.
+          ffmpeg -loglevel error -y -stream_loop 4 -i ci/media/sample-720p.mp4 -t 2700 -c copy -movflags +faststart ci/media/sample-full.mp4
           timeout 300 ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
             -c copy -movflags +faststart ci/media/bbb-clip.mp4 || echo "BBB clip unavailable; search playback uses the generated sample"
       - name: Start the test add-on
@@ -153,7 +157,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/e2e ADDON_LOG=ci/out/e2e/addon.log bash ci/e2e.sh
       - name: Publish ci-screens pre-release
-        if: always()
+        if: always() && github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

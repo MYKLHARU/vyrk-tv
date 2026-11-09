@@ -32,7 +32,7 @@ data class LibraryItem(
     val state: LibraryItemState = LibraryItemState(),
     val behaviorHints: LibraryBehaviorHints = LibraryBehaviorHints(),
 ) {
-    val isLive: Boolean get() = behaviorHints.isLive || type == "tv"
+    val isLive: Boolean get() = behaviorHints.isLive || com.vyrk.core.addon.isLiveType(type)
 
     /** stremio-core `is_in_continue_watching`. */
     val isInContinueWatching: Boolean
@@ -115,7 +115,7 @@ data class LibraryItem(
             posterShape = meta.posterShape ?: "poster", removed = true, temp = true,
             ctimeMs = nowMs, mtimeMs = nowMs,
             state = LibraryItemState(lastWatchedMs = nowMs),
-            behaviorHints = LibraryBehaviorHints(defaultVideoId = meta.behaviorHints.defaultVideoId, isLive = meta.type == "tv"),
+            behaviorHints = LibraryBehaviorHints(defaultVideoId = meta.behaviorHints.defaultVideoId, isLive = com.vyrk.core.addon.isLiveType(meta.type)),
         )
     }
 }
@@ -209,7 +209,7 @@ private fun JsonObject.l(k: String): Long {
 
 /** Used by the season guide: the next released episode after [videoId] (season 0 skipped). */
 fun MetaItem.nextVideo(videoId: String, nowMs: Long): Video? {
-    if (type == "tv") return null
+    if (com.vyrk.core.addon.isLiveType(type)) return null
     val sorted = videos.sortedWith(compareBy({ it.season ?: 0 }, { it.episode ?: 0 }))
     val idx = sorted.indexOfFirst { it.id == videoId }
     if (idx < 0) return null

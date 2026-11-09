@@ -256,30 +256,77 @@ shot timeline-chapters
 key KEYCODE_DPAD_CENTER 2 "seek"
 expect '^player:timeline$' "focus stays on the timeline after seeking"
 
-# ---------------------------------------------------------------- the next episode starts at its start
-# Fast-forward to the end: Up Next (or the end of the file) moves on to S1E2, which must start at
-# the beginning. Up to 0.1.10 the old episode's credits kept playing while S1E2 loaded, and that
-# position was saved against S1E2, which then started at the end.
+# Use local, deterministic episode metadata for both the short and full-file scenarios.
+back_from_player
+open_fixture() {
+  adbs am start -a android.intent.action.VIEW -d "'vyrk://open?type=series&id=$1'" "$PKG" >/dev/null
+  sleep 4
+  probe "fixture info"
+  expect '^info:play$' "fixture opens on Play"
+  key KEYCODE_DPAD_CENTER 4 "play fixture"
+  wait_focus '^player:' 40
+  sleep 4
+}
+seek_to_sample_end() {
+  for _ in $(seq 1 22); do
+    "$ADB" shell input keyevent KEYCODE_MEDIA_FAST_FORWARD
+    sleep 0.4
+  done
+  sleep 3
+}
+
+# A ten-minute file presented as a 45-minute episode must stop with recovery choices.
+open_fixture vyrk-short
 "$ADB" logcat -c
+seek_to_sample_end
+wait_focus '^player:incomplete_switch$' 15
+shot short-stream-recovery
+EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+if printf '%s\n' "$EV" | grep -q 'play_start vyrk-short:1:2'; then fail "short stream advanced automatically"; fi
+key KEYCODE_DPAD_RIGHT 0.8 "Retry"
+expect '^player:incomplete_retry$' "Retry is reachable"
+key KEYCODE_DPAD_CENTER 3 "retry short source from the beginning"
+EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+if printf '%s\n' "$EV" | grep -q 'play_start vyrk-short:1:1 0'; then log "ok: Retry starts at zero"; else fail "Retry did not restart at zero"; fi
+seek_to_sample_end
+wait_focus '^player:incomplete_switch$' 15
+key KEYCODE_DPAD_CENTER 1.5 "Switch stream"
+wait_focus '^source:org.vyrk.testaddon:' 10
+shot short-stream-sources
+expect '^source:org.vyrk.testaddon:1$' "full alternative is offered before the short source"
+key KEYCODE_BACK 1.0 "back to recovery choices"
+wait_focus '^player:incomplete_switch$' 10
+key KEYCODE_DPAD_RIGHT 0.5
+key KEYCODE_DPAD_RIGHT 0.5
+expect '^player:incomplete_next$' "manual Next episode is reachable"
+key KEYCODE_DPAD_CENTER 4 "manual next episode"
+EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+if printf '%s\n' "$EV" | grep -q 'play_start vyrk-short:1:2 0'; then log "ok: manual Next starts at zero"; else fail "manual Next did not start episode two"; fi
+seek_to_sample_end
+wait_focus '^player:incomplete_switch$' 15
+key KEYCODE_DPAD_CENTER 1.5 "Switch stream on episode two"
+wait_focus '^source:org.vyrk.testaddon:1$' 10
+key KEYCODE_DPAD_CENTER 4 "play full alternate"
+key KEYCODE_DPAD_DOWN 0.8 "show full alternate controls"
+expect '^player:play_pause$' "Switch stream recovers normal playback"
+shot full-alternate-playing
+back_from_player
+
+# The same ten-minute file with a ten-minute episode runtime must still autoplay S1E2 at zero.
+open_fixture vyrk-full
+"$ADB" logcat -c
+seek_to_sample_end
 NEXT_START=""
-for _ in $(seq 1 30); do
-  "$ADB" shell input keyevent KEYCODE_MEDIA_FAST_FORWARD; sleep 0.8
+for _ in $(seq 1 25); do
   EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
-  NEXT_START=$(printf '%s\n' "$EV" | grep -o 'play_start tt0944947:1:2 [0-9]*' | tail -n 1 || true)
-  [[ -n "$NEXT_START" ]] && break
-  printf '%s\n' "$EV" | grep -q 'upnext_offered' && break
-done
-for _ in $(seq 1 30); do
+  NEXT_START=$(printf '%s\n' "$EV" | grep -o 'play_start vyrk-full:1:2 [0-9]*' | tail -n 1 || true)
   [[ -n "$NEXT_START" ]] && break
   sleep 1
-  EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
-  NEXT_START=$(printf '%s\n' "$EV" | grep -o 'play_start tt0944947:1:2 [0-9]*' | tail -n 1 || true)
 done
-if [[ -z "$NEXT_START" ]]; then fail "the next episode (S1E2) never started"
-elif (( ${NEXT_START##* } < 5000 )); then log "ok: the next episode starts at ${NEXT_START##* } ms"
-else fail "the next episode started at ${NEXT_START##* } ms, not at its start"; fi
-sleep 6
-shot next-episode
+if [[ -z "$NEXT_START" ]]; then fail "the full fixture never autoplayed episode two"
+elif (( ${NEXT_START##* } < 5000 )); then log "ok: full episode autoplays next at ${NEXT_START##* } ms"
+else fail "next episode started at ${NEXT_START##* } ms"; fi
+shot full-stream-next-episode
 back_from_player
 
 # ---------------------------------------------------------------- results

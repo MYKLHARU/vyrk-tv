@@ -23,17 +23,15 @@ object SubtitleParser {
     }
 
     fun parseTime(s: String): Long {
-        val norm = s.replace(',', '.')
-        val parts = norm.split(':')
-        val (h, m, sec) = when (parts.size) {
-            3 -> Triple(parts[0].toLong(), parts[1].toLong(), parts[2])
-            2 -> Triple(0L, parts[0].toLong(), parts[1])
-            else -> return 0
-        }
-        val secParts = sec.split('.')
-        val whole = secParts[0].toLong()
-        val frac = secParts.getOrNull(1)?.padEnd(3, '0')?.take(3)?.toLong() ?: 0
-        return ((h * 3600 + m * 60 + whole) * 1000) + frac
+        val parts = s.replace(',', '.').split(':')
+        if (parts.size !in 2..3) return -1
+        val h = if (parts.size == 3) parts[0].toLongOrNull() ?: return -1 else 0L
+        val m = parts[parts.size - 2].toLongOrNull() ?: return -1
+        val seconds = parts.last().split('.')
+        val whole = seconds[0].toLongOrNull() ?: return -1
+        val frac = seconds.getOrNull(1)?.padEnd(3, '0')?.take(3)?.toLongOrNull() ?: 0
+        if (h < 0 || m !in 0..59 || whole !in 0..59 || h > (Long.MAX_VALUE - 3_599_999) / 3_600_000) return -1
+        return h * 3_600_000 + m * 60_000 + whole * 1000 + frac
     }
 
     fun parse(content: String): List<Cue> {
@@ -49,7 +47,7 @@ object SubtitleParser {
             if (body.isEmpty()) continue
             val start = parseTime(m.groupValues[1])
             val end = parseTime(m.groupValues[2])
-            if (end <= start) continue
+            if (start < 0 || end <= start) continue
             cues += Cue(start, end, body)
         }
         return cues.sortedBy { it.startMs }
