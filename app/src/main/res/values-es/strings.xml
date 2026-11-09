@@ -106,6 +106,8 @@
     <string name="hint_play_pause">Reproducir / pausa</string>
     <string name="hint_seek">Avanzar en la barra</string>
     <string name="in_library">En la biblioteca</string>
+    <string name="incomplete_stream_body">Este stream puede estar incompleto. Prueba otro o vuelve a intentarlo desde el principio.</string>
+    <string name="incomplete_stream_title">El episodio terminó antes de lo esperado</string>
     <string name="install">Instalar</string>
     <string name="install_addon_title">Instalar complemento</string>
     <string name="install_fetch_failed">No se pudo cargar un complemento desde %1$s.</string>
@@ -269,6 +271,7 @@
     <string name="starring_label">Reparto</string>
     <string name="stereo">Estéreo</string>
     <string name="still_watching">¿Sigues viendo?</string>
+    <string name="stream_may_be_incomplete">Este stream puede estar incompleto</string>
     <string name="streams_count">Streams %1$d</string>
     <string name="stremio_account">Cuenta de Stremio</string>
     <string name="sub_always">Siempre</string>
@@ -280,6 +283,7 @@
     <string name="subtitle_mode">Modo</string>
     <string name="subtitle_size">Tamaño</string>
     <string name="subtitles">Subtítulos</string>
+    <string name="switch_stream">Cambiar stream</string>
     <string name="sync_now">Sincronizar ahora</string>
     <string name="sync_style">Sincronía y estilo</string>
     <string name="synced_with_account">Sincronizado con tu cuenta de Stremio</string>

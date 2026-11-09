@@ -354,5 +354,9 @@
     "watched":  "Assistido",
     "welcome_pitch":  "Navegue, escolha e aperte Reproduzir. Tudo pelo controle.",
     "whos_watching":  "Quem está assistindo?",
-    "writers":  "Roteiro"
+    "writers":  "Roteiro",
+    "incomplete_stream_title":  "O episódio terminou antes do esperado",
+    "incomplete_stream_body":  "Este stream pode estar incompleto. Tente outro ou tente novamente desde o início.",
+    "switch_stream":  "Trocar stream",
+    "stream_may_be_incomplete":  "Este stream pode estar incompleto"
 }

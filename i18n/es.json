@@ -354,5 +354,9 @@
     "watched":  "Visto",
     "welcome_pitch":  "Explora, elige y pulsa Reproducir. Todo con el mando.",
     "whos_watching":  "¿Quién está viendo?",
-    "writers":  "Guion"
+    "writers":  "Guion",
+    "incomplete_stream_title":  "El episodio terminó antes de lo esperado",
+    "incomplete_stream_body":  "Este stream puede estar incompleto. Prueba otro o vuelve a intentarlo desde el principio.",
+    "switch_stream":  "Cambiar stream",
+    "stream_may_be_incomplete":  "Este stream puede estar incompleto"
 }

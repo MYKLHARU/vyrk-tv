@@ -354,5 +354,9 @@
     "watched":  "Gesehen",
     "welcome_pitch":  "Stöbern, auswählen, Abspielen drücken. Alles mit der Fernbedienung.",
     "whos_watching":  "Wer schaut?",
-    "writers":  "Drehbuch"
+    "writers":  "Drehbuch",
+    "incomplete_stream_title":  "Episode früher als erwartet beendet",
+    "incomplete_stream_body":  "Dieser Stream ist möglicherweise unvollständig. Wähle einen anderen Stream oder starte ihn erneut von vorn.",
+    "switch_stream":  "Stream wechseln",
+    "stream_may_be_incomplete":  "Dieser Stream ist möglicherweise unvollständig"
 }

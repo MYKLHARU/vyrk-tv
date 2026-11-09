@@ -24,6 +24,7 @@ object LibraryRules {
         durationMs: Long,
         nowMs: Long,
         watched: WatchedBitField? = null,
+        allowCompletion: Boolean = true,
     ): Pair<LibraryItem, Boolean> {
         var s = item.state
         val videoId = if (item.isLive) item.id else streamVideoId
@@ -34,6 +35,8 @@ object LibraryRules {
                 overallTimeWatched = s.overallTimeWatched + s.timeWatched,
                 timeWatched = 0,
                 flaggedWatched = 0,
+                timeOffset = 0,
+                duration = durationMs,
             )
         } else {
             val delta = (timeMs - s.timeOffset).coerceAtLeast(0)
@@ -42,7 +45,7 @@ object LibraryRules {
         if (timeMs > s.timeOffset) s = s.copy(timeOffset = timeMs, duration = durationMs)
 
         var crossed = false
-        if (!item.isLive && s.flaggedWatched == 0 && s.duration > 0 &&
+        if (allowCompletion && !item.isLive && s.flaggedWatched == 0 && s.duration > 0 &&
             s.timeWatched.toDouble() > s.duration * WATCHED_THRESHOLD_COEF
         ) {
             crossed = true
@@ -65,8 +68,9 @@ object LibraryRules {
      * Applied when playback ends or the player closes: once past the credits threshold (or when
      * marked watched) the resume point clears and the pointer advances to [nextVideo].
      */
-    fun onPlaybackEnded(item: LibraryItem, nextVideo: Video?, markedWatched: Boolean = false): LibraryItem {
+    fun onPlaybackEnded(item: LibraryItem, nextVideo: Video?, markedWatched: Boolean = false, allowCompletion: Boolean = true): LibraryItem {
         if (item.isLive) return item.copy(state = item.state.copy(timeOffset = 0, videoId = item.id))
+        if (!allowCompletion) return item
         val s = item.state
         if (markedWatched || s.timeOffset.toDouble() > s.duration * CREDITS_THRESHOLD_COEF) {
             var next = item.copy(state = s.copy(timeOffset = 0))
@@ -74,6 +78,18 @@ object LibraryRules {
             return next
         }
         return item
+    }
+
+    /** Undo only a watched mark added by this playback attempt after a late bad timeline/end. */
+    fun undoPlaybackWatched(item: LibraryItem, videoId: String, videos: List<Video>, previouslyWatched: Boolean): LibraryItem {
+        if (item.state.videoId != videoId) return item
+        val wb = item.watchedBitField(videos)
+        wb.setVideo(videoId, previouslyWatched)
+        return item.copy(state = item.state.copy(
+            flaggedWatched = 0,
+            timesWatched = (item.state.timesWatched - 1).coerceAtLeast(0),
+            watched = if (videos.isEmpty()) item.state.watched else wb.toString(),
+        ))
     }
 
     /**

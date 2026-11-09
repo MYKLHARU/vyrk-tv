@@ -354,5 +354,9 @@
     "watched":  "Watched",
     "welcome_pitch":  "Browse, choose, press Play. Everything with the remote.",
     "whos_watching":  "Who's watching?",
-    "writers":  "Writers"
+    "writers":  "Writers",
+    "incomplete_stream_title":  "Episode ended earlier than expected",
+    "incomplete_stream_body":  "This stream may be incomplete. Try another stream or retry from the beginning.",
+    "switch_stream":  "Switch stream",
+    "stream_may_be_incomplete":  "This stream may be incomplete"
 }

@@ -136,6 +136,7 @@ class PlayerActivity : ComponentActivity() {
             override fun handleOnBackPressed() {
                 KeyBus.onKey(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
                 when {
+                    m.phase == Phase.INCOMPLETE && m.panel != Panel.NONE -> { m.panel = Panel.NONE }
                     m.phase == Phase.PLAYING && m.panel != Panel.NONE -> { m.panel = Panel.NONE; m.showControls() }
                     m.phase == Phase.PLAYING && m.scrubTarget != null -> m.scrubCancel()
                     m.phase == Phase.PLAYING && m.stallPrompt -> m.stallPrompt = false
@@ -253,6 +254,15 @@ fun PlayerScreen(m: PlayerModel, onExit: () -> Unit) {
                 VyrkButton(stringResource(R.string.retry), onClick = { m.retryPicked() }, style = ButtonStyle.PRIMARY, modifier = it.traceFocus("player:ask_retry"))
                 VyrkButton(stringResource(R.string.other_sources), onClick = { m.phase = Phase.PLAYING; m.panel = Panel.SOURCES }, modifier = Modifier.traceFocus("player:ask_other"))
                 VyrkButton(stringResource(R.string.exit), onClick = onExit, modifier = Modifier.traceFocus("player:ask_exit"))
+            }
+            Phase.INCOMPLETE -> {
+                if (m.panel == Panel.SOURCES) SourcesPanel(m)
+                else MessageView(stringResource(R.string.incomplete_stream_title), m.message) {
+                    VyrkButton(stringResource(R.string.switch_stream), onClick = { m.switchStream() }, style = ButtonStyle.PRIMARY, modifier = it.traceFocus("player:incomplete_switch"))
+                    VyrkButton(stringResource(R.string.retry), onClick = { m.retryPicked() }, modifier = Modifier.traceFocus("player:incomplete_retry"))
+                    if (m.nextVideo != null) VyrkButton(stringResource(R.string.next_episode), onClick = { m.playNext(auto = false) }, modifier = Modifier.traceFocus("player:incomplete_next"))
+                    VyrkButton(stringResource(R.string.exit), onClick = onExit, modifier = Modifier.traceFocus("player:incomplete_exit"))
+                }
             }
             Phase.ERROR, Phase.NO_SOURCES -> MessageView(stringResource(R.string.cant_play_title), m.message) {
                 if (m.candidates.size + m.excluded.size > 0) VyrkButton(stringResource(R.string.other_sources), onClick = { m.phase = Phase.PLAYING; m.panel = Panel.SOURCES }, modifier = it.traceFocus("player:err_other"))
@@ -659,11 +669,13 @@ private fun OptionRow(text: String, selected: Boolean, trace: String, onClick: (
 @Composable
 private fun SourcesPanel(m: PlayerModel) {
     val first = remember { FocusRequester() }
+    val choices = m.sourceChoices
     LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
     SidePanel(stringResource(R.string.other_sources)) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(m.candidates, key = { it.candidate.key + it.candidate.addonId }) { r ->
-                val idx = m.candidates.indexOf(r)
+            items(choices, key = { it.candidate.key + it.candidate.addonId }) { r ->
+                val idx = choices.indexOf(r)
+                if (m.suspectSource(r)) Text(stringResource(R.string.stream_may_be_incomplete), style = Vyrk.type.bodyS, color = Vyrk.colors.textMuted)
                 SourceLine(r, current = m.current?.candidate?.key == r.candidate.key, modifier = if (idx == 0) Modifier.focusRequester(first) else Modifier) { m.pickSource(r) }
             }
             if (m.excluded.isNotEmpty()) item { Text(stringResource(R.string.not_playable_here), style = Vyrk.type.labelL, color = Vyrk.colors.textMuted, modifier = Modifier.padding(top = 10.dp)) }

@@ -354,5 +354,9 @@
     "watched":  "Visto",
     "welcome_pitch":  "Sfoglia, scegli, premi Riproduci. Tutto con il telecomando.",
     "whos_watching":  "Chi sta guardando?",
-    "writers":  "Sceneggiatura"
+    "writers":  "Sceneggiatura",
+    "incomplete_stream_title":  "L’episodio è terminato prima del previsto",
+    "incomplete_stream_body":  "Questo stream potrebbe essere incompleto. Prova un altro stream o riprova dall’inizio.",
+    "switch_stream":  "Cambia stream",
+    "stream_may_be_incomplete":  "Questo stream potrebbe essere incompleto"
 }
