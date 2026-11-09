@@ -163,7 +163,7 @@ class TmdbClient(
             metaId.startsWith("tmdb:") -> (metaId.removePrefix("tmdb:").substringBefore(':').toLongOrNull() ?: return null) to (if (type == "series") "tv" else "movie")
             else -> return null
         }
-        val o = get("/${target.second}/${target.first}/images", "include_image_language=en,null") ?: return null
+        val o = get("/${target.second}/${target.first}/images", "include_image_language=en,null,ja") ?: return null
         val art = parseArtwork(o, backdropSize)
         artworkCache[cacheKey] = art
         return art

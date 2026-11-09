@@ -479,10 +479,19 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
         value = titleKey to graph.tmdb.artwork(lookupId, m.type, size)
     }
     val tmdb = fetched.takeIf { it.first == titleKey }?.second
+    val fanart by androidx.compose.runtime.produceState<Pair<String?, List<String>>>(null to emptyList(), titleKey, lookupId) {
+        value = titleKey to emptyList()
+        val m = meta ?: return@produceState
+        val id = lookupId ?: return@produceState
+        if (!graph.fanart.enabled) return@produceState
+        delay(maxOf(debounceMs, 300))
+        value = titleKey to graph.fanart.logos(id, m.type)
+    }
+    val fanartLogos = fanart.takeIf { it.first == titleKey }?.second.orEmpty()
     val preview = meta ?: return TitleArt.NONE
-    return remember(titleKey, preview.logo, preview.background, safeFull?.logo, safeFull?.background, lookupId, tmdb, size) {
+    return remember(titleKey, preview.logo, preview.background, safeFull?.logo, safeFull?.background, lookupId, tmdb, fanartLogos, size) {
         TitleArt(
-            logos = com.vyrk.core.art.Artwork.logos(preview, safeFull, tmdb?.logo),
+            logos = (com.vyrk.core.art.Artwork.logos(preview, safeFull, tmdb?.logo) + fanartLogos).distinct(),
             backdrops = com.vyrk.core.art.Artwork.backdrops(preview, safeFull, tmdb?.backdrop, size),
         )
     }

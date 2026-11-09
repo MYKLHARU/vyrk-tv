@@ -37,6 +37,7 @@ class AppGraph(val context: Context) {
     val metaCache = com.vyrk.tv.ui.browse.MetaCache(addonClient, { session.value?.effectiveAddons().orEmpty() })
     // Failures are logged with the API path and reason only; the key never appears.
     val tmdb = com.vyrk.core.tmdb.TmdbClient(transport, BuildConfig.TMDB_API_KEY) { path, reason -> com.vyrk.tv.ui.Perf.log("tmdb $path failed: $reason") }
+    val fanart = com.vyrk.core.art.FanartClient(transport, BuildConfig.FANART_API_KEY)
     /** Hand-off from the UI to PlayerActivity (same process). */
     @Volatile var pendingPlayback: com.vyrk.tv.player.PlaybackRequest? = null
 
