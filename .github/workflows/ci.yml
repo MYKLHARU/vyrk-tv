@@ -156,6 +156,11 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/e2e ADDON_LOG=ci/out/e2e/addon.log bash ci/e2e.sh
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: e2e-results
+          path: ci/out/e2e/
       - name: Publish ci-screens pre-release
         if: always() && github.event_name == 'push'
         env:

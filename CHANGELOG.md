@@ -7,6 +7,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - Seeking no longer counts skipped content as watched. Rewinding saves the earlier resume point, and moving between episodes no longer counts viewing time twice.
 - Cancelling Up Next stays cancelled for the current episode, including at the end of the file. Short-stream protection and its Switch stream, Retry and manual Next episode choices remain available.
 - Switching sources refreshes subtitles and track choices. Late subtitle, intro-timing and refreshed-link responses cannot replace the current episode or stream. Malformed subtitle timestamps are skipped safely.
+- Audio & subtitles reliably focuses the selected row, including when it starts below the visible list.
 - Offline add-on edits survive sync and restart, retry automatically, and show when account sync is pending. Empty account collections now sync correctly, signing out stays signed out, and rapid settings changes persist in order even when leaving a profile.
 - Fixed recovery after choosing a lower quality, runtimes written in hours, stale metadata after changing providers, and live channels being treated as on-demand videos.
 - Disabled audio effects preserve the original PCM samples. Original-language audio uses add-on or TMDB language metadata, player dialogs respect the app language, and hiding the selected tab returns to Home.
