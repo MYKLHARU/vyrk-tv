@@ -447,8 +447,8 @@ fun ContinueCard(
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.62f to Color.Transparent)))
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.42f to Color.Transparent, 1f to c.shade.copy(alpha = if (focused) 0.75f else 0.88f))))
             Box(Modifier.align(Alignment.TopStart).padding(start = 10.dp, top = 9.dp).width(width * 0.52f).height(height * 0.46f), contentAlignment = Alignment.BottomStart) {
-                val logos = remember(meta.id, meta.logo) { listOfNotNull(com.vyrk.core.art.Artwork.forLogo(meta.logo), com.vyrk.core.art.Artwork.metahubLogo(meta.id)).distinct() }
-                HeroLogo(meta.id, meta.name, logos, width * 0.52f, height * 0.46f, Vyrk.type.titleS, Modifier.fillMaxHeight())
+                val logos = remember(meta.type, meta.id, meta.logo, meta.imdbId) { com.vyrk.core.art.Artwork.logos(meta, null, null) }
+                HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.52f, height * 0.46f, Vyrk.type.titleS, Modifier.fillMaxHeight())
             }
             if (item?.watched == true) {
                 Box(Modifier.align(Alignment.TopEnd).padding(7.dp).size(17.dp).background(c.accent, CircleShape), contentAlignment = Alignment.Center) {

@@ -192,6 +192,9 @@ data class MetaPreview(
     val behaviorHints: MetaBehaviorHints = MetaBehaviorHints(),
     val cast: List<String> = emptyList(),
     val director: List<String> = emptyList(),
+    /** Artwork mapping only; keep the original add-on ID for metadata, streams and episodes. */
+    @kotlinx.serialization.json.JsonNames("imdb_id")
+    val imdbId: String? = null,
 )
 
 @Serializable
@@ -223,6 +226,8 @@ data class MetaItem(
     val trailerStreams: List<TrailerStream> = emptyList(),
     val videos: List<Video> = emptyList(),
     val behaviorHints: MetaBehaviorHints = MetaBehaviorHints(),
+    @kotlinx.serialization.json.JsonNames("imdb_id")
+    val imdbId: String? = null,
 ) {
     /** Genres from `genres`, legacy `genre`, or Genre links, in that order. */
     val allGenres: List<String>
@@ -246,7 +251,7 @@ data class MetaItem(
         background = background, logo = logo, description = description, releaseInfo = releaseInfo,
         originalLanguage = originalLanguage, runtime = runtime, imdbRating = imdbRating, genres = allGenres, links = links,
         trailers = trailers, trailerStreams = trailerStreams, behaviorHints = behaviorHints,
-        cast = castNames, director = directorNames,
+        cast = castNames, director = directorNames, imdbId = imdbId,
     )
 }
 

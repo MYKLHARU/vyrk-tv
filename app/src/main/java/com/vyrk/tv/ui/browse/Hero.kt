@@ -2,6 +2,7 @@ package com.vyrk.tv.ui.browse
 
 import androidx.compose.ui.draw.drawWithContent
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ensureActive
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.graphicsLayer
@@ -79,40 +80,36 @@ data class TitleArt(val logos: List<String>, val backdrops: List<String>) {
 
 /** How long one wallpaper takes to blend into the next. */
 private const val WALLPAPER_FADE_MS = 700
-/** Longest the previous title's wallpaper stays while the next one loads. */
-private const val WALLPAPER_HOLD_MS = 1_200L
 
 /**
  * Full-screen wallpaper behind the hero, the title header and the rows: the title's artwork from
  * the top of the screen, darkened on the left under the logo and text, with a teal haze, blending
  * into the app's own ambient background towards the bottom, where the rows sit.
  *
- * Changing title blends the pictures: the current one stays fully on screen until the next has
- * loaded (at most [WALLPAPER_HOLD_MS]), then they cross-fade (it used to start fading at once, so on a slower TV the old picture
- * faded out over nothing and the new one popped in). Requests are screen-sized, like the hero's
- * prefetch, so prefetched pictures come straight from memory.
+ * Each title keeps its successful image while its details arrive. A new title starts against
+ * the ambient background until its own image is ready. Requests are screen-sized, like the
+ * hero's prefetch, so prefetched pictures come straight from memory.
  */
 @Composable
-fun Wallpaper(urls: List<String>, modifier: Modifier = Modifier) {
+fun Wallpaper(titleKey: String, urls: List<String>, modifier: Modifier = Modifier) {
     val c = Vyrk.colors
     val shade = c.shade
     val context = androidx.compose.ui.platform.LocalContext.current
     val loader = remember(context) { coil3.SingletonImageLoader.get(context) }
     val dm = context.resources.displayMetrics
     fun request(url: String) = coil3.request.ImageRequest.Builder(context).data(url).size(dm.widthPixels, dm.heightPixels).build()
-    var attempt by remember(urls) { mutableIntStateOf(0) }
+    var attempt by remember(titleKey, urls) { mutableIntStateOf(0) }
     val target = urls.getOrNull(attempt)
-    // The picture on screen; not reset when the title changes, so it stays until the next is ready.
-    var shown by remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
-    androidx.compose.runtime.LaunchedEffect(target) {
-        if (target == null || target == shown) return@LaunchedEffect
-        // Don't keep another title's picture behind this one's details for long: if the new picture
-        // is slow, the old one fades to the plain background and the new one fades in when it's here.
-        val hold = launch { kotlinx.coroutines.delay(WALLPAPER_HOLD_MS); if (shown != target) shown = null }
+    // Image state belongs to the title whose text is on screen.
+    var shown by remember(titleKey) { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(titleKey, target) {
+        if (target == null) { shown = null; return@LaunchedEffect }
+        // A successful image stays for this title while richer metadata arrives.
+        if (shown != null) return@LaunchedEffect
         val result = loader.execute(request(target))
-        hold.cancel()
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
         if (result is coil3.request.SuccessResult) shown = target
-        else if (urls.getOrNull(attempt) == target) attempt += 1
+        else if (urls.getOrNull(attempt) == target) { shown = null; attempt += 1 }
     }
     Box(modifier) {
         // The app's own background (navy, violet low on the left, teal high on the right), as on
@@ -127,8 +124,10 @@ fun Wallpaper(urls: List<String>, modifier: Modifier = Modifier) {
                     drawRect(Brush.verticalGradient(0f to Color.Black, 0.50f to Color.Black, 0.68f to Color.Black.copy(alpha = 0.62f), 0.86f to Color.Black.copy(alpha = 0.16f), 1f to Color.Transparent), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
                 },
         ) {
-            Crossfade(shown, animationSpec = com.vyrk.tv.ui.theme.motionSpec(WALLPAPER_FADE_MS), label = "wallpaper") { u ->
-                if (u != null) AsyncImage(request(u), null, contentScale = ContentScale.Crop, alignment = Alignment.Center, modifier = Modifier.fillMaxSize())
+            androidx.compose.runtime.key(titleKey) {
+                Crossfade(shown, animationSpec = com.vyrk.tv.ui.theme.motionSpec(WALLPAPER_FADE_MS), label = "wallpaper") { u ->
+                    if (u != null) AsyncImage(request(u), null, contentScale = ContentScale.Crop, alignment = Alignment.Center, modifier = Modifier.fillMaxSize())
+                }
             }
             // Left: under the logo, facts and synopsis.
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
@@ -175,12 +174,19 @@ fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, m
         coil3.request.ImageRequest.Builder(context).data(url)
             .transformations(com.vyrk.tv.ui.components.TrimTransparent()).build()
     }
-    AsyncImage(
-        model = request, contentDescription = name, contentScale = ContentScale.Fit, alignment = Alignment.BottomStart,
-        onSuccess = { shownLogos.putIfAbsent(titleId, url) },
-        onError = { if (shownLogos[titleId] == url) shownLogos.remove(titleId); failed = failed + url },
-        modifier = modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight(),
-    )
+    var loaded by remember(titleId, url) { androidx.compose.runtime.mutableStateOf(false) }
+    Box(modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight(), contentAlignment = Alignment.BottomStart) {
+        // Keep a readable name while a slow/broken provider works through its candidates.
+        if (!loaded) Text(name.ifBlank { " " }, style = textStyle, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        androidx.compose.runtime.key(titleId, url) {
+            AsyncImage(
+                model = request, contentDescription = if (loaded) name else null, contentScale = ContentScale.Fit, alignment = Alignment.BottomStart,
+                onSuccess = { loaded = true; shownLogos.putIfAbsent(titleId, url) },
+                onError = { if (shownLogos[titleId] == url) shownLogos.remove(titleId); failed = failed + url },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+    }
 }
 
 /** Logo artwork if the title has one, else the title as text. */
@@ -290,7 +296,7 @@ fun Hero(
             Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            HeroLogo(meta.id, full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f))
+            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f))
             Box(Modifier.height(12.dp))
             MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(10.dp))
@@ -363,7 +369,7 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
         ) {
             // Logo: everything the fixed-height lines below leave, so short or square logos still read
             // from the sofa and the text never shifts as a title's details load.
-            HeroLogo(meta.id, meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayM, Modifier.weight(1f))
+            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayM, Modifier.weight(1f))
             Box(Modifier.height(10.dp))
             MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(8.dp))

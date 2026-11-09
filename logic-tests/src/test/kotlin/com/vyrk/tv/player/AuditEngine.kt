@@ -29,4 +29,5 @@ class PlayerEngine {
     fun embeddedTextTracks() = texts
     fun select(type: Int, id: String?) { selections += type to id }
     fun classify(error: androidx.media3.common.PlaybackException) = error.errorClass
+    fun bufferDiagnostics() = "synthetic buffer metrics"
 }

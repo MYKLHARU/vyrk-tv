@@ -6,8 +6,27 @@ package com.vyrk.core.art
  * Patterns are compiled once: Android's regex compiler is slow on TV processors.
  */
 object Artwork {
+    /** IDs can collide across movie/series catalogues; artwork belongs to the complete identity. */
+    fun titleKey(type: String, id: String): String = "$type:$id"
+
+    fun matchingMeta(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem?): com.vyrk.core.addon.MetaItem? =
+        full?.takeIf { it.type == meta.type && it.id == meta.id }
+
+    /** Explicit provider mappings allow Kitsu/MAL titles to use artwork without changing playback IDs. */
+    fun lookupId(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem? = null): String? =
+        imdbId(meta.id) ?: meta.imdbId?.let(::imdbId) ?: matchingMeta(meta, full)?.imdbId?.let(::imdbId)
+            ?: meta.id.takeIf { tmdbId.matches(it) }
+
+    /** Keep the catalogue image the viewer selected; full metadata adds fallbacks, not a swap. */
+    fun backdrops(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem?, tmdb: String?, size: String): List<String> =
+        listOfNotNull(forBackdrop(meta.background, size), forBackdrop(matchingMeta(meta, full)?.background, size), tmdb, lookupId(meta, full)?.let(::metahubBackground)).distinct()
+
+    fun logos(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem?, tmdb: String?): List<String> =
+        listOfNotNull(forLogo(meta.logo), forLogo(matchingMeta(meta, full)?.logo), tmdb, lookupId(meta, full)?.let(::metahubLogo)).distinct()
+
     private const val METAHUB = "https://images.metahub.space"
     private val imdb = Regex("""tt\d{5,10}""")
+    private val tmdbId = Regex("""tmdb:\d+""")
     private val tmdbSized = Regex("""^(https?://image\.tmdb\.org/t/p/)(w\d+|h\d+|original)(/.+)$""")
     private val metahubSized = Regex("""^(https?://images\.metahub\.space/(?:logo|background|poster)/)(small|medium|large)(/.+)$""")
 

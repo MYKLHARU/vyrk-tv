@@ -83,7 +83,8 @@ class OkHttpTransport(private val client: OkHttpClient) : HttpTransport {
             // same add-on) behind each other; image hosts serve many small files at once.
             .dispatcher(okhttp3.Dispatcher().apply { maxRequests = 64; maxRequestsPerHost = 16 })
             .addInterceptor { chain ->
-                chain.proceed(chain.request().newBuilder().header("User-Agent", userAgent).build())
+                val request = chain.request()
+                chain.proceed(if (request.header("User-Agent") == null) request.newBuilder().header("User-Agent", userAgent).build() else request)
             }
             .build()
     }

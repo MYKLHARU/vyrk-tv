@@ -47,9 +47,9 @@ not run yet.
 | Tabs: the open tab is an accent pill with a soft glow, the focused tab is filled with the accent; one permanent FocusRequester per tab | `MainScreen.NavTab` | Done | E2E, API 36 emulator captures |
 | Up into the bar lands on the active tab; Back on a tab → Home; Back on Home → tab strip | `MainScreen` | Done | E2E |
 | Hero: backdrop, large logo, facts, IMDb, genres, synopsis, Starring and Director with icons; Watch now/Resume (accent pill) as its only button; hold OK or Menu opens the title menu (Remove from Continue Watching when it's there, More info, Preview, library, watched); Left/Right on Watch now move through the carousel (repeats ignored), lighting the arrow at that side; the arrows at the left and right edges are indicators, not focusable; position dots level with Watch now; coming in from the tabs or rows always lands on Watch now; the same height on every page | `browse/Hero.kt` | Built | E2E (Movies and Series open on Watch now) |
-| Full-screen wallpaper: the hero's artwork, or the focused title's while a row has focus, from the top of the screen behind the hero, the title header and the rows; darkened on the left under the text with a teal haze; fully there to about half way, then blending into the app's own ambient background (navy, violet, teal) at the bottom. Changing title: the current picture stays until the next has loaded, then a 0.7 s cross-fade (screen-sized requests share the hero prefetch; the titles either side of the focused poster are fetched ahead); if the next is slow, the old one fades to the background after 1.2 s. The title header has no background: rows above the focused one are cut off at its bottom edge | `Hero.Wallpaper`, `BrowsePage` | Built | API 36 emulator: captures (hero, rows), screen recordings of hero changes (cross-fade over 19–25 frames, was 14–16 and starting before the picture loaded), E2E. The 1.2 s fallback wasn't seen happen (pictures were cached or slow only after a fresh install) |
+| Full-screen wallpaper behind the hero and rows, shaded under text and blending into the ambient background. The selected catalogue image stays while full details arrive. Changing title clears the previous image immediately; the new title fades in when its own image loads. Failed images try this title's fallbacks, then stay ambient. Metadata, TMDB requests and logo caches use both type and ID | `Hero.Wallpaper`, `BrowsePage`, `core/art/Artwork` | Done | core regression tests and isolated API 36 emulator captures: later metadata, movie/series ID collision, delayed image followed by a missing image |
 | Title logos trimmed of empty margins (`TrimTransparent`) and fitted to one box shared by the hero and the title header (360×150), so a logo keeps its size as focus moves; bold title when no logo loads | `Hero.HeroLogo`, `components/TrimTransparent` | Done | API 36 emulator captures |
-| Artwork fallbacks: add-on art (TMDB/metahub URLs asked at hero size), then TMDB English-first logo/textless backdrop when the add-on gives none, then Cinemeta (metahub) by IMDb id; next candidate on load error | `core/art/Artwork`, `rememberTitleArt`, `TmdbClient.artwork` | Built | core (URL rules, TMDB picking and lookup against documented response shapes); metahub path seen on the SHIELD; live TMDB not exercised (local builds have no TMDB key) |
+| Artwork fallbacks: catalogue art, matching full metadata, TMDB, then metahub. Explicit provider IMDb mappings enable anime fallbacks without changing Kitsu playback IDs. Prepare TMDB fallbacks even for a supplied URL that might fail; empty transparent logos try the next source; a readable title remains while loading or after failure | `core/art/Artwork`, `rememberTitleArt`, `HeroLogo`, `TrimTransparent` | Done | core mapping/selection tests; isolated API 36 captures for failed, empty, delayed and later-metadata logos. Anime Catalogs' public Kitsu metadata mapping checked; live TMDB not exercised (local builds have no key) |
 | Continue Watching filled from the full meta when the library entry has no name or poster (Game of Thrones showed a blank card); posters fall back to Cinemeta's by IMDb id, then a titled card, never blank; header uses the full meta's logo and backdrop | `BrowsePage`, `Rows.Poster` | Done | SHIELD screenshot (Game of Thrones card, logo and backdrop) |
 | Continue Watching cards are wide (184×84 dp, about 2.2 : 1): backdrop (add-on, then Cinemeta, then poster), title logo, play button, 3 dp accent progress bar, episode and time left, tick when watched; zoom on focus | `Rows.ContinueCard` | Done | API 36 emulator captures ("S1 E1 · 1m left"), E2E (focus restored after restart) |
 | Top bar fades into the artwork on browse pages and Settings (no solid edge); Library and Search sit in ambient teal/violet light under a lighter fade | `MainScreen`, `components/Design.AmbientBackground` | Done | API 36 emulator captures |
@@ -168,6 +168,28 @@ not run yet.
 | Content descriptions on posters and icon buttons | `Rows.kt`, `Controls.kt` | Built | E2E (uiautomator dump) |
 | CI: build, e2e, showcase jobs | `.github/workflows/ci.yml` | Built | build and e2e pass on every push to `main` (run 41886508067); showcase not run on CI yet |
 | Versioned release: a `vX.Y.Z` tag publishes signed APKs with that version's CHANGELOG section as notes; refuses without signing secrets or notes | `ci.yml`, `ci/release_notes.sh` | Built | notes script run locally; no tag pushed yet |
+
+## v0.1.18 buffering and artwork
+
+On-demand playback uses 60–120 s time targets with a compressed-sample byte limit of half
+the available Java heap, capped at 256 MiB. Initial playback targets 4 s; rebuffering targets
+10 s, with the byte limit taking priority so a large remux cannot cause unbounded allocation
+or wait forever for a time target that will not fit. Live TV retains 1 s startup / 2 s refill
+targets and a 32 MiB cap. The app requests the larger Android heap, caps the artwork memory
+cache at 32 MiB, and isolates media connections from image/catalogue requests. Explicit
+provider headers survive the app User-Agent interceptor. Remux or 20 GB+ on-demand sources
+have 30 s to produce a first frame before recovery, rather than 12 s.
+
+Actual Media3 unit tests verify time and byte thresholds; HTTP tests verify independent
+request queues, headers and timeouts. `ci/buffer_probe.py` compares defaults and production
+settings using a synthetic 120 Mb/s stream with controlled pauses on an emulator.
+`ci/artwork_probe.py` captures delayed metadata, movie/series ID collisions and missing images
+after rapid title changes using the production artwork composables. It also checks broken and
+fully transparent logos, later logo metadata and readable titles during slow/failed loads.
+Anime Catalogs redirects Kitsu metadata requests to Anime Kitsu; its `imdb_id` is now retained
+for artwork lookup only. Titles without supplied art or a valid mapping keep a text title;
+no title-name guessing is used. A physical Shield with
+a real 50 GB+ remux, provider delivery, HDR and audio passthrough still needs device verification.
 
 ## v0.1.17 audit fixes
 

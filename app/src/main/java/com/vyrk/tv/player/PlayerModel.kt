@@ -267,7 +267,7 @@ class PlayerModel(
         scope.launch { loadSubtitles(playingVideoId!!, r, generation) }
         firstFrameJob?.cancel()
         firstFrameJob = scope.launch {
-            delay(policy.firstFrameTimeoutMs)
+            delay(maxOf(policy.firstFrameTimeoutMs, com.vyrk.core.playback.PlaybackBuffering.startupTimeoutMs(isLive, r.info)))
             if (!firstFrame) handle(policy.onFirstFrameTimeout())
         }
     }
@@ -275,6 +275,7 @@ class PlayerModel(
     fun onFirstFrame() {
         if (firstFrame) return
         firstFrame = true
+        Diagnostics.log("player", "first frame ${engine.bufferDiagnostics()}")
         resetProgressClock()
         firstFrameJob?.cancel()
         progressTo(1f)
@@ -595,6 +596,7 @@ class PlayerModel(
 
     fun onPlaybackState(state: Int) {
         if (state == Player.STATE_BUFFERING && firstFrame) {
+            Diagnostics.log("player", "rebuffer ${engine.bufferDiagnostics()}")
             if (stall.onBuffering(SystemClock.elapsedRealtime())) stallPrompt = true
         }
         if (state == Player.STATE_ENDED) onEnded()

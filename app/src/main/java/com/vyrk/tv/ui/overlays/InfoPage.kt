@@ -133,8 +133,7 @@ fun InfoPage(o: Overlay.Info) {
     val library by session.library.collectAsState()
     val sstate by session.state.collectAsState()
     val meta = o.meta
-    var full by remember { mutableStateOf(graph.metaCache.peek(meta.type, meta.id)) }
-    LaunchedEffect(meta.id) { if (full == null) full = graph.metaCache.get(session.effectiveAddons(), meta.type, meta.id) }
+    val full by com.vyrk.tv.ui.browse.produceMeta(session, meta)
     // Cast and crew with photos from TMDB, when the build has a TMDB key and the title has an IMDb ID.
     var tmdbCredits by remember { mutableStateOf<Credits?>(null) }
     LaunchedEffect(meta.id) {
@@ -191,7 +190,7 @@ fun InfoPage(o: Overlay.Info) {
     BoxWithConstraints(Modifier.fillMaxSize().background(c.shade)) {
         val pageH = maxHeight
         val offset by animateDpAsState(if (page == 1) -pageH else 0.dp, if (settings.reduceMotion) snap() else tween(320), label = "info-page")
-        TitleBackdrop(art.backdrops)
+        androidx.compose.runtime.key(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id)) { TitleBackdrop(art.backdrops) }
         // Page two darkens the artwork as it slides up over it.
         val dim = if (pageH.value > 0f) (-offset.value / pageH.value).coerceIn(0f, 1f) else 0f
         if (dim > 0f) Box(Modifier.fillMaxSize().background(c.shade.copy(alpha = 0.86f * dim)))
@@ -202,7 +201,7 @@ fun InfoPage(o: Overlay.Info) {
                     Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 44.dp).width(PAGE_TEXT_W)) {
                         // Fixed slots throughout, so nothing moves while the details and cast load.
                         Box(Modifier.width(LOGO_W).height(LOGO_H), contentAlignment = Alignment.BottomStart) {
-                            HeroLogo(meta.id, name, art.logos, LOGO_W, LOGO_H, Vyrk.type.displayL, Modifier.fillMaxHeight())
+                            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), name, art.logos, LOGO_W, LOGO_H, Vyrk.type.displayL, Modifier.fillMaxHeight())
                         }
                         Spacer(Modifier.height(18.dp))
                         TitleFacts(meta, full)

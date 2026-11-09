@@ -10,7 +10,7 @@ import coil3.transform.Transformation
  * text. Runs on Coil's decode thread; images without alpha are returned unchanged.
  */
 class TrimTransparent(private val alphaThreshold: Int = 10) : Transformation() {
-    override val cacheKey: String = "trimTransparent:$alphaThreshold"
+    override val cacheKey: String = "trimTransparent:v2:$alphaThreshold"
 
     override suspend fun transform(input: Bitmap, size: Size): Bitmap {
         if (!input.hasAlpha()) return input
@@ -25,11 +25,12 @@ class TrimTransparent(private val alphaThreshold: Int = 10) : Transformation() {
         var bottom = h - 1
         while (top < bottom && rowEmpty(top)) top++
         while (bottom > top && rowEmpty(bottom)) bottom--
+        require(top != bottom || !rowEmpty(top)) { "Logo has no visible pixels" }
         var left = 0
         var right = w - 1
         while (left < right && colEmpty(left, top, bottom)) left++
         while (right > left && colEmpty(right, top, bottom)) right--
-        // Nothing visible (or almost): keep the original rather than a sliver.
+        // Very small visible images keep their original dimensions rather than a sliver.
         if (right - left < 8 || bottom - top < 8) return input
         // One pixel of margin keeps anti-aliased edges.
         top = (top - 1).coerceAtLeast(0); left = (left - 1).coerceAtLeast(0)
