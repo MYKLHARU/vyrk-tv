@@ -23,6 +23,7 @@ val storeBuild = prop("vyrk.storeBuild", "false").toBoolean()
 // A byte-order mark or spaces around the value (easy to get when setting the secret from Windows
 // PowerShell) made TMDB reject every request; TmdbClient also cleans the key up.
 val tmdbKey = prop("vyrk.tmdbApiKey", System.getenv("TMDB_API_KEY") ?: "").replace("﻿", "").trim()
+val fanartKey = (System.getenv("FANART_API_KEY") ?: "").trim().takeIf { it.matches(Regex("[a-fA-F0-9]{32}")) }.orEmpty()
 
 // Release signing comes from the environment. Without it, builds are signed with the committed
 // debug key in ci/debug-signing/, which is NOT secret and only for testing.
@@ -44,6 +45,7 @@ android {
         buildConfigField("String", "TOP10_ADDON_URL", "\"$top10Url\"")
         buildConfigField("boolean", "STORE_BUILD", storeBuild.toString())
         buildConfigField("String", "TMDB_API_KEY", "\"${tmdbKey.replace("\"", "")}\"")
+        buildConfigField("String", "FANART_API_KEY", "\"$fanartKey\"")
         vectorDrawables.useSupportLibrary = true
     }
 

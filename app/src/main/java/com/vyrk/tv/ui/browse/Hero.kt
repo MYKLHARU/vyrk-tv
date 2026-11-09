@@ -163,10 +163,20 @@ fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, m
     val candidates = remember(titleId, logos, kept) { (listOfNotNull(kept) + logos).distinct() }
     var failed by remember(titleId) { androidx.compose.runtime.mutableStateOf(emptySet<String>()) }
     val url = if (kept != null && kept !in failed) kept else candidates.firstOrNull { it !in failed }
-    if (url == null) {
-        Box(modifier.widthIn(max = maxWidth), contentAlignment = Alignment.BottomStart) {
+    var textFallback by remember(titleId) { androidx.compose.runtime.mutableStateOf(false) }
+    LaunchedEffect(titleId, url) {
+        // Give full metadata time to contribute a logo before settling on a text title.
+        // Once text is visible, keep it stable for this visit instead of swapping it later.
+        if (url == null) { kotlinx.coroutines.delay(4_000); textFallback = true }
+    }
+    if (textFallback) {
+        Box(modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight(), contentAlignment = Alignment.BottomStart) {
             Text(name.ifBlank { " " }, style = textStyle, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
+        return
+    }
+    if (url == null) {
+        Box(modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight())
         return
     }
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -176,8 +186,7 @@ fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, m
     }
     var loaded by remember(titleId, url) { androidx.compose.runtime.mutableStateOf(false) }
     Box(modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight(), contentAlignment = Alignment.BottomStart) {
-        // Keep a readable name while a slow/broken provider works through its candidates.
-        if (!loaded) Text(name.ifBlank { " " }, style = textStyle, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        // Reserve the logo slot while loading; text is only a settled failure fallback.
         androidx.compose.runtime.key(titleId, url) {
             AsyncImage(
                 model = request, contentDescription = if (loaded) name else null, contentScale = ContentScale.Fit, alignment = Alignment.BottomStart,

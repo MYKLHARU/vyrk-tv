@@ -51,10 +51,10 @@ class ArtworkProbeActivity : ComponentActivity() {
                 handler.postDelayed({ meta.value = preview("second", "movie", "blue") }, 1500)
                 handler.postDelayed({ meta.value = preview("third", "movie", "missing") }, 4000)
             }
-            "logo-fallback", "logo-empty", "logo-missing", "logo-slow" -> Unit
-            "logo-update" -> {
+            "logo-fallback", "logo-empty", "logo-missing", "logo-slow", "logo-live" -> Unit
+            "logo-update", "logo-late" -> {
                 meta.value = preview("kitsu:fixture", "series", "missing")
-                handler.postDelayed({ full.value = MetaItem("kitsu:fixture", "series", logo = image("blue")) }, 3000)
+                handler.postDelayed({ full.value = MetaItem("kitsu:fixture", "series", logo = image("blue")) }, if (case == "logo-late") 7000 else 3000)
             }
             else -> error("unknown case")
         }
@@ -63,12 +63,16 @@ class ArtworkProbeActivity : ComponentActivity() {
                 VyrkTheme(AccentChoice.FROST) {
                     val m = meta.value
                     val art = rememberTitleArt(m, full.value)
+                    val liveLogos = androidx.compose.runtime.produceState<List<String>>(emptyList()) {
+                        if (case == "logo-live") value = VyrkApp.graph(this@ArtworkProbeActivity).fanart.logos("tt2560140", "series")
+                    }.value
                     if (case?.startsWith("logo-") == true) {
                         val logos = when (case) {
                             "logo-fallback" -> listOf(image("missing"), image("blue"))
                             "logo-empty" -> listOf(image("empty"), image("blue"))
                             "logo-missing" -> listOf(image("missing"))
                             "logo-slow" -> listOf(image("long-red"))
+                            "logo-live" -> liveLogos
                             else -> art.logos
                         }
                         Box(Modifier.fillMaxSize().background(Vyrk.colors.background), contentAlignment = Alignment.Center) {

@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.19
+
+- Title text no longer flashes before a logo loads. The logo slot stays reserved during loading; when no logo is available, text appears after a short metadata grace period and stays stable for that visit, including if artwork arrives late.
+- Added direct Fanart.tv logo fallbacks using verified IMDb/TMDB mappings, with English-first HD selection, Japanese alternatives, caching and retry backoff. TMDB artwork lookup also includes Japanese images. Existing successful artwork stays selected.
+
 ## v0.1.18
 
 - High-bitrate on-demand playback uses a larger, memory-bounded sample buffer and a longer refill cushion. Playback has its own network connections, preserves provider-required headers, and gives large remux files longer to produce their first frame. Live TV keeps short startup and refill targets.

@@ -59,6 +59,7 @@ jobs:
       - name: Unit tests and release APKs
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          FANART_API_KEY: ${{ secrets.FANART_API_KEY }}
           VYRK_KEYSTORE_PASSWORD: ${{ secrets.VYRK_KEYSTORE_PASSWORD }}
           VYRK_KEY_ALIAS: ${{ secrets.VYRK_KEY_ALIAS }}
           VYRK_KEY_PASSWORD: ${{ secrets.VYRK_KEY_PASSWORD }}

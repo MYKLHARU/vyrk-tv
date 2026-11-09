@@ -146,7 +146,7 @@ class TmdbTest {
         val tmdb = TmdbClient(f, "v3key")
         val art = tmdb.artwork("tt0944947", "series", "w1280")
         assertEquals("https://image.tmdb.org/t/p/w1280/textless.jpg", art?.backdrop)
-        assertTrue(f.urls[1].startsWith("https://api.themoviedb.org/3/tv/1399/images?include_image_language=en,null&api_key="))
+        assertTrue(f.urls[1].startsWith("https://api.themoviedb.org/3/tv/1399/images?include_image_language=en,null,ja&api_key="))
         tmdb.artwork("tt0944947", "series", "w1280")
         assertEquals(2, f.urls.size)
         // tmdb: ids skip /find; other ids are not looked up.

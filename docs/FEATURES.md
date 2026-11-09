@@ -169,6 +169,20 @@ not run yet.
 | CI: build, e2e, showcase jobs | `.github/workflows/ci.yml` | Built | build and e2e pass on every push to `main` (run 41886508067); showcase not run on CI yet |
 | Versioned release: a `vX.Y.Z` tag publishes signed APKs with that version's CHANGELOG section as notes; refuses without signing secrets or notes | `ci.yml`, `ci/release_notes.sh` | Built | notes script run locally; no tag pushed yet |
 
+## v0.1.19 logo transition and Fanart.tv
+
+The title logo slot stays reserved while an image loads. If all candidates are missing or
+failed, allow four seconds for metadata to contribute another candidate before showing text.
+Once a text fallback appears, keep it for that visit, so late artwork cannot replace it.
+The artwork probe checks both an empty loading slot and text remaining stable after late metadata.
+
+Fanart.tv adds up to six HD/legacy logo fallbacks after the supplied, TMDB and metahub art,
+using verified IMDb or explicitly sourced TMDB IDs. English, neutral and Japanese logos are
+preferred in that order. The client caches successful/empty answers with expiry, bounds the
+cache to 256 titles, and backs off on authentication failures or rate limiting. API keys are
+passed in headers and no provider errors or bodies are logged. Unmapped anime keeps its title
+fallback; no title-name search guesses a different season. TMDB includes Japanese artwork.
+
 ## v0.1.18 buffering and artwork
 
 On-demand playback uses 60–120 s time targets with a compressed-sample byte limit of half

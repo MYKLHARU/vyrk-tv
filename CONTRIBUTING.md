@@ -10,6 +10,11 @@ Thanks for helping. VYRK is GPL-3.0; by contributing you agree your work is rele
 
 Keep `core` free of Android dependencies. Rules that can be tested without a device (protocol, ranking, library, recovery) belong in `core` with unit tests.
 
+Optional `FANART_API_KEY` is supplied as an environment variable locally or a GitHub Actions
+secret for shared releases. Never commit a real key. It is sent in the API header, not URLs;
+do not log request headers. Like other client-side project keys, it is included in the APK
+and is not protected from extraction by the build-secret storage.
+
 ## Strings
 
 No user-visible text is hard-coded in Kotlin.
