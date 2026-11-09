@@ -17,6 +17,8 @@ import com.vyrk.core.library.LibraryRules
 import com.vyrk.core.library.nextVideo
 import com.vyrk.core.playback.AudioPrefs
 import com.vyrk.core.playback.Chapter
+import com.vyrk.core.playback.EpisodePlaybackGuard
+import com.vyrk.core.playback.IncompleteReason
 import com.vyrk.core.playback.IntroDb
 import com.vyrk.core.playback.Markers
 import com.vyrk.core.playback.MkvChapters
@@ -48,7 +50,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-enum class Phase { CONNECTING, PLAYING, ASK, ERROR, NO_SOURCES }
+enum class Phase { CONNECTING, PLAYING, ASK, INCOMPLETE, ERROR, NO_SOURCES }
 enum class Panel { NONE, AUDIO_SUBS, SOURCES, SLEEP }
 enum class SleepMode { OFF, END_OF_EPISODE, MINUTES_60 }
 
@@ -122,6 +124,15 @@ class PlayerModel(
     private val stall = StallDetector()
     private var autoplayedInRow = 0
     private var userPicked = false
+    private var episodeGuard = EpisodePlaybackGuard(null)
+    private var incompleteReason: IncompleteReason? = null
+    private var endedHandled = false
+    private var watchedAddedDuringPlayback = false
+    private var previouslyWatched = false
+    private val isEpisode get() = request.meta.type == "series"
+    private fun sourceId(r: Ranked) = "${r.candidate.addonId}:${r.candidate.key}"
+    fun suspectSource(r: Ranked): Boolean = episodeGuard.isSuspect(sourceId(r))
+    val sourceChoices: List<Ranked> get() = candidates.sortedBy { suspectSource(it) }
     val isLive get() = request.meta.type == "tv"
 
     private val now get() = System.currentTimeMillis()
@@ -147,9 +158,17 @@ class PlayerModel(
         } ?: req.meta.id
         video = m?.videos?.firstOrNull { it.id == vid }
         nextVideo = m?.nextVideo(vid, now)
+        episodeGuard = EpisodePlaybackGuard(EpisodePlaybackGuard.runtime(m, video))
+        incompleteReason = null
+        upNext = false
+        upNextCountdown = 10
+        stallPrompt = false
+        panel = Panel.NONE
         resetTimeline()
         scope.launch { loadSegments(req.meta.type, req.meta.id, vid) }
         item = session.itemFor(req.meta)
+        watchedAddedDuringPlayback = false
+        previouslyWatched = m?.videos?.let { item?.watchedBitField(it)?.getVideo(vid) } == true
 
         val streamType = req.meta.type
         val ranked: List<Ranked> = req.ranked ?: run {
@@ -199,7 +218,15 @@ class PlayerModel(
 
     private fun playCandidate(startMs: Long) {
         val r = candidates.getOrNull(index) ?: return
+        incompleteReason = null
+        endedHandled = false
+        upNext = false
+        upNextCountdown = 10
+        stallPrompt = false
+        position = 0
+        duration = 0
         current = r
+        episodeGuard.beginSource(sourceId(r))
         phase = Phase.CONNECTING
         connecting = s(com.vyrk.tv.R.string.connecting_to, r.candidate.addonName, quality(r).ifEmpty { "—" })
         progressTo(0.5f)
@@ -355,6 +382,12 @@ class PlayerModel(
     }
 
     private fun handle(action: RecoveryAction) {
+        // A retry is an explicit choice once a source is known to be incomplete.
+        if (isEpisode && current?.let { suspectSource(it) } == true &&
+            action in listOf(RecoveryAction.Retry, RecoveryAction.RefreshLink, RecoveryAction.EnableFfmpegAudio, RecoveryAction.TryOtherAudioTrack)) {
+            showIncomplete(IncompleteReason.SHORT_STREAM)
+            return
+        }
         val pos = engine.player.currentPosition.takeIf { firstFrame } ?: startPositionFallback()
         when (action) {
             RecoveryAction.Retry, RecoveryAction.EnableFfmpegAudio -> playCandidate(pos)
@@ -365,7 +398,11 @@ class PlayerModel(
                 playCandidate(pos)
             }
             RecoveryAction.RefreshLink -> scope.launch { refreshLink(pos) }
-            RecoveryAction.NextCandidate -> { index = policy.candidateIndex; playCandidate(pos) }
+            RecoveryAction.NextCandidate -> {
+                val next = candidates.getOrNull(policy.candidateIndex)
+                if (next != null && suspectSource(next)) handle(policy.onFirstFrameTimeout())
+                else { index = policy.candidateIndex; playCandidate(pos) }
+            }
             RecoveryAction.SeekToLiveEdge -> { engine.player.seekToDefaultPosition(); engine.player.prepare() }
             RecoveryAction.AskUser -> { phase = Phase.ASK; message = s(com.vyrk.tv.R.string.source_failed_body) }
             RecoveryAction.LinkExpired -> fail(Phase.ERROR, s(com.vyrk.tv.R.string.link_expired))
@@ -397,11 +434,18 @@ class PlayerModel(
 
     private fun fail(p: Phase, msg: String) { phase = p; message = msg; controlsVisible = false }
 
-    fun retryPicked() { policy = RecoveryPolicy(candidates.size, userPicked); playCandidate(startPositionFallback()) }
+    fun retryPicked() {
+        val pos = if (incompleteReason != null) 0L else startPositionFallback()
+        policy = RecoveryPolicy(candidates.size, userPicked)
+        playCandidate(pos)
+    }
+
+    fun switchStream() { panel = Panel.SOURCES }
 
     /** User chose a source in the Other sources panel. */
     fun pickSource(r: Ranked) {
-        val pos = if (firstFrame) engine.player.currentPosition else startPositionFallback()
+        saveProgress()
+        val pos = if (incompleteReason != null) 0L else if (firstFrame) engine.player.currentPosition else startPositionFallback()
         userPicked = true
         val rest = candidates.filter { it.candidate.key != r.candidate.key }
         candidates.clear(); candidates.add(r); candidates.addAll(rest)
@@ -416,7 +460,7 @@ class PlayerModel(
         stallPrompt = false
         val cur = current ?: return
         val curRes = cur.info.resolution ?: return
-        val idx = candidates.indexOfFirst { (it.info.resolution ?: 0) in 1 until curRes }
+        val idx = candidates.indexOfFirst { !suspectSource(it) && (it.info.resolution ?: 0) in 1 until curRes }
         if (idx < 0) return
         val pos = engine.player.currentPosition
         index = idx
@@ -508,6 +552,14 @@ class PlayerModel(
     }
 
     private fun onEnded() {
+        if (endedHandled) return
+        endedHandled = true
+        if (isEpisode) {
+            val p = engine.player
+            episodeGuard.observeDuration(p.duration)
+            val reason = if (!firstFrame) IncompleteReason.UNKNOWN_END else episodeGuard.endReason(p.currentPosition, p.duration)
+            if (reason != null) { showIncomplete(reason); return }
+        }
         saveProgress(final = true)
         if (sleep == SleepMode.END_OF_EPISODE) { finishRequested = true; return }
         if (nextVideo != null && settings.autoplayNext) playNext(auto = true) else finishRequested = true
@@ -515,8 +567,28 @@ class PlayerModel(
 
     var finishRequested by mutableStateOf(false)
 
+    private fun showIncomplete(reason: IncompleteReason) {
+        incompleteReason = reason
+        current?.let { episodeGuard.rememberSuspect(sourceId(it)) }
+        upNext = false
+        upNextCountdown = 10
+        stallPrompt = false
+        firstFrameJob?.cancel()
+        engine.player.pause()
+        saveProgress()
+        panel = Panel.NONE
+        fail(Phase.INCOMPLETE, s(com.vyrk.tv.R.string.incomplete_stream_body))
+        // Never log a source URL or key: either may contain add-on credentials.
+        Diagnostics.log("player", "incomplete reason=$reason reportedMs=${engine.player.duration} positionMs=${engine.player.currentPosition} expectedMs=${episodeGuard.expected?.durationMs} delivery=${current?.info?.delivery}")
+    }
+
     fun playNext(auto: Boolean) {
         val nv = nextVideo ?: return
+        if (auto && (!firstFrame || phase != Phase.PLAYING || incompleteReason != null ||
+                (isEpisode && episodeGuard.isShort(engine.player.duration)))) {
+            upNext = false
+            return
+        }
         upNext = false
         saveProgress(final = true)
         if (auto) autoplayedInRow++ else autoplayedInRow = 0
@@ -525,6 +597,7 @@ class PlayerModel(
         // position near the end was saved against the next episode, which then started there) and
         // save nothing until the next one shows its first frame.
         engine.player.pause()
+        endedHandled = true
         firstFrame = false
         firstFrameJob?.cancel()
         request = request.copy(videoId = nv.id, picked = null, ranked = null)
@@ -545,12 +618,22 @@ class PlayerModel(
     fun saveProgress(final: Boolean = false) {
         if (isLive || !firstFrame) return
         val p = engine.player
-        val dur = p.duration.takeIf { it != C.TIME_UNSET && it > 0 } ?: return
+        val dur = p.duration.takeIf { it != C.TIME_UNSET && it > 0 }
+            ?: episodeGuard.progressDuration(0).takeIf { incompleteReason != null && it > 0 } ?: return
+        if (isEpisode) episodeGuard.observeDuration(dur)
+        val safeCompletion = !isEpisode || (incompleteReason == null && !episodeGuard.isShort(dur))
+        if (!safeCompletion) current?.let { episodeGuard.rememberSuspect(sourceId(it)) }
+        val progressDuration = if (isEpisode) episodeGuard.progressDuration(dur) else dur
         val vid = playingVideoId ?: video?.id ?: request.videoId ?: request.meta.id
-        val base = session.item(request.meta.id) ?: item ?: return
+        var base = session.item(request.meta.id) ?: item ?: return
+        if (!safeCompletion && watchedAddedDuringPlayback) {
+            base = LibraryRules.undoPlaybackWatched(base, vid, meta?.videos.orEmpty(), previouslyWatched)
+            watchedAddedDuringPlayback = false
+        }
         val wb = meta?.takeIf { it.videos.isNotEmpty() }?.let { base.watchedBitField(it.videos) }
-        var (next, _) = LibraryRules.onTimeChanged(base, vid, p.currentPosition, dur, now, wb)
-        if (final) next = LibraryRules.onPlaybackEnded(next, nextVideo)
+        var (next, crossed) = LibraryRules.onTimeChanged(base, vid, p.currentPosition, progressDuration, now, wb, allowCompletion = safeCompletion)
+        if (crossed) watchedAddedDuringPlayback = true
+        if (final) next = LibraryRules.onPlaybackEnded(next, nextVideo, allowCompletion = safeCompletion)
         item = next
         session.putItem(next, pushSoon = false)
         val t = SystemClock.elapsedRealtime()
@@ -566,6 +649,13 @@ class PlayerModel(
             duration = p.duration.takeIf { it != C.TIME_UNSET } ?: 0
             buffered = p.bufferedPosition
             playing = p.isPlaying
+            if (isEpisode && firstFrame) {
+                episodeGuard.observeDuration(duration)
+                if (episodeGuard.isShort(duration)) {
+                    current?.let { episodeGuard.rememberSuspect(sourceId(it)) }
+                    upNext = false
+                }
+            }
             if (controlsVisible && panel == Panel.NONE && !scrubber.active && SystemClock.elapsedRealtime() - lastInteraction > 5_000 && playing) controlsVisible = false
             val clock = SystemClock.elapsedRealtime()
             // Loading bar: buffer ahead of the start point (Media3 starts at about 2.5 s), plus a slow creep.
@@ -593,13 +683,16 @@ class PlayerModel(
             if (sleep == SleepMode.MINUTES_60 && sleepDeadline > 0 && SystemClock.elapsedRealtime() > sleepDeadline) { p.pause(); finishRequested = true }
             // Up Next in the last 30 seconds (or past the credits threshold).
             val nv = nextVideo
-            if (nv != null && duration > 0 && !isLive && settings.autoplayNext && sleep != SleepMode.END_OF_EPISODE) {
+            if (nv != null && firstFrame && phase == Phase.PLAYING && duration > 0 && !isLive &&
+                incompleteReason == null && (!isEpisode || !episodeGuard.isShort(duration)) &&
+                settings.autoplayNext && sleep != SleepMode.END_OF_EPISODE) {
                 // Credits start from IntroDB when known, otherwise the last 30 s or past 90%.
                 val credits = skipOffer.creditsStartMs
-                val near = if (credits != null) position >= credits else duration - position < 30_000 || position > duration * LibraryRules.CREDITS_THRESHOLD_COEF
+                val near = episodeGuard.upNextDue(position, duration, credits)
+                if (!near) { upNext = false; upNextCountdown = 10 }
                 if (near && !upNext && playing) { upNext = true; upNextCountdown = 10; android.util.Log.i("VyrkEvent", "upnext_offered ${video?.id}") }
-                if (upNext && n % 2 == 0) { upNextCountdown--; if (upNextCountdown <= 0) playNext(auto = true) }
-            }
+                if (upNext && playing && panel == Panel.NONE && !scrubber.active && n % 2 == 0) { upNextCountdown--; if (upNextCountdown <= 0) playNext(auto = true) }
+            } else upNext = false
         }
     }
 

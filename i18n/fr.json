@@ -354,5 +354,9 @@
     "watched":  "Vu",
     "welcome_pitch":  "Parcourez, choisissez, appuyez sur Lecture. Tout à la télécommande.",
     "whos_watching":  "Qui regarde ?",
-    "writers":  "Scénario"
+    "writers":  "Scénario",
+    "incomplete_stream_title":  "L’épisode s’est terminé plus tôt que prévu",
+    "incomplete_stream_body":  "Ce flux est peut-être incomplet. Essayez un autre flux ou réessayez depuis le début.",
+    "switch_stream":  "Changer de flux",
+    "stream_may_be_incomplete":  "Ce flux est peut-être incomplet"
 }

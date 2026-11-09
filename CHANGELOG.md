@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Episode streams that are much shorter than their runtime metadata no longer trigger Up Next or automatic next-episode playback. Early or unverifiable ends offer Switch stream, Retry from the beginning, Next episode and Exit, while retaining the episode's resume point and avoiding a new watched mark. Suspect sources are labelled and placed below alternatives for the current episode.
+- Episode-specific runtimes take priority over a show's average, with tolerance for different releases and genuinely short episodes. Incorrect credits timings far before the stream's end are ignored, and Up Next pauses while playback is paused or a panel is open.
+
 ## v0.1.15
 
 - Fixed: a hard edge across Home and the other pages near the bottom of the screen (seen above "TMDB Trending – Movies"). The wallpaper stopped short of the bottom of the screen by the height of the top bar; it now reaches the bottom and blends all the way down.

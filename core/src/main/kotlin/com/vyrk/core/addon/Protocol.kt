@@ -158,6 +158,8 @@ data class Video(
     val episode: Int? = null,
     val streams: List<Stream> = emptyList(),
     val trailers: List<Stream> = emptyList(),
+    /** Episode runtime in minutes or add-on text (for example "45 min"). */
+    val runtime: String? = null,
 ) {
     val seriesInfo: SeriesInfo?
         get() = if (season != null && episode != null) SeriesInfo(season, episode) else null

@@ -106,6 +106,8 @@
     <string name="hint_play_pause">Play / pause</string>
     <string name="hint_seek">Seek on the bar</string>
     <string name="in_library">In library</string>
+    <string name="incomplete_stream_body">This stream may be incomplete. Try another stream or retry from the beginning.</string>
+    <string name="incomplete_stream_title">Episode ended earlier than expected</string>
     <string name="install">Install</string>
     <string name="install_addon_title">Install add-on</string>
     <string name="install_fetch_failed">Couldn\'t load an add-on from %1$s.</string>
@@ -269,6 +271,7 @@
     <string name="starring_label">Starring</string>
     <string name="stereo">Stereo</string>
     <string name="still_watching">Are you still watching?</string>
+    <string name="stream_may_be_incomplete">This stream may be incomplete</string>
     <string name="streams_count">Streams %1$d</string>
     <string name="stremio_account">Stremio account</string>
     <string name="sub_always">Always</string>
@@ -280,6 +283,7 @@
     <string name="subtitle_mode">Mode</string>
     <string name="subtitle_size">Size</string>
     <string name="subtitles">Subtitles</string>
+    <string name="switch_stream">Switch stream</string>
     <string name="sync_now">Sync now</string>
     <string name="sync_style">Sync &amp; Style</string>
     <string name="synced_with_account">Synced with your Stremio account</string>

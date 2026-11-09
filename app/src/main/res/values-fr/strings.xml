@@ -106,6 +106,8 @@
     <string name="hint_play_pause">Lecture / pause</string>
     <string name="hint_seek">Parcourir la barre</string>
     <string name="in_library">Dans la bibliothèque</string>
+    <string name="incomplete_stream_body">Ce flux est peut-être incomplet. Essayez un autre flux ou réessayez depuis le début.</string>
+    <string name="incomplete_stream_title">L’épisode s’est terminé plus tôt que prévu</string>
     <string name="install">Installer</string>
     <string name="install_addon_title">Installer un module</string>
     <string name="install_fetch_failed">Impossible de charger un module depuis %1$s.</string>
@@ -269,6 +271,7 @@
     <string name="starring_label">Distribution</string>
     <string name="stereo">Stéréo</string>
     <string name="still_watching">Regardez-vous toujours ?</string>
+    <string name="stream_may_be_incomplete">Ce flux est peut-être incomplet</string>
     <string name="streams_count">Flux %1$d</string>
     <string name="stremio_account">Compte Stremio</string>
     <string name="sub_always">Toujours</string>
@@ -280,6 +283,7 @@
     <string name="subtitle_mode">Mode</string>
     <string name="subtitle_size">Taille</string>
     <string name="subtitles">Sous-titres</string>
+    <string name="switch_stream">Changer de flux</string>
     <string name="sync_now">Synchroniser</string>
     <string name="sync_style">Synchro et style</string>
     <string name="synced_with_account">Synchronisé avec votre compte Stremio</string>
