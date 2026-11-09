@@ -165,11 +165,12 @@ fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, m
     val url = if (kept != null && kept !in failed) kept else candidates.firstOrNull { it !in failed }
     var textFallback by remember(titleId) { androidx.compose.runtime.mutableStateOf(false) }
     LaunchedEffect(titleId, url, loading) {
-        // Give full metadata time to contribute a logo before settling on a text title.
-        // Once text is visible, keep it stable for this visit instead of swapping it later.
-        if (url == null && !loading) { kotlinx.coroutines.delay(4_000); textFallback = true }
+        // Metadata and provider lookups own the loading state. Never latch text over a valid
+        // logo which arrives after a timeout, provider refresh or previously missing metadata.
+        if (url != null || loading) textFallback = false
+        else { kotlinx.coroutines.delay(4_000); textFallback = true }
     }
-    if (textFallback) {
+    if (textFallback && url == null && !loading) {
         Box(modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight(), contentAlignment = Alignment.BottomStart) {
             Text(name.ifBlank { " " }, style = textStyle, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }

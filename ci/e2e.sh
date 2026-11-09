@@ -329,6 +329,24 @@ else fail "next episode started at ${NEXT_START##* } ms"; fi
 shot full-stream-next-episode
 back_from_player
 
+# Ordinary info page, using AIO's real MAL/relation/canonical-parent response shape.
+adbs am start -a android.intent.action.VIEW -d "'vyrk://open?type=series&id=mal:62516'" "$PKG" >/dev/null
+sleep 11
+wait_focus '^info:play$' 10
+shot aio-season-logo
+adbs uiautomator dump /sdcard/aio-season-logo.xml >/dev/null
+"$ADB" pull /sdcard/aio-season-logo.xml "$OUT/aio-season-logo.xml" >/dev/null
+if python - "$OUT/aio-season-logo.xml" <<'PY'
+import sys, xml.etree.ElementTree as E
+nodes = list(E.parse(sys.argv[1]).iter('node'))
+title = 'DAN DA DAN Season 3'
+assert any(n.get('class') == 'android.widget.ImageView' and n.get('content-desc') == title for n in nodes), 'AIO season logo was not rendered'
+assert not any(n.get('text') == title for n in nodes), 'Text fallback hid the AIO logo'
+PY
+then log "ok: delayed AIO season metadata renders its inherited logo in the normal info page"
+else fail "AIO season logo failed in normal info page"; fi
+key KEYCODE_BACK 1 "close AIO fixture"
+
 # ---------------------------------------------------------------- results
 "$ADB" logcat -d > "$OUT/logcat.txt" || true
 PKGS=$(adbs cmd package list packages -U "$PKG" || true)

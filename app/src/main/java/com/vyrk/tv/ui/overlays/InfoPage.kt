@@ -133,7 +133,8 @@ fun InfoPage(o: Overlay.Info) {
     val library by session.library.collectAsState()
     val sstate by session.state.collectAsState()
     val meta = o.meta
-    val full by com.vyrk.tv.ui.browse.produceMeta(session, meta)
+    val details = com.vyrk.tv.ui.browse.produceMeta(session, meta)
+    val full by details
     // Cast and crew with photos from TMDB, when the build has a TMDB key and the title has an IMDb ID.
     var tmdbCredits by remember { mutableStateOf<Credits?>(null) }
     LaunchedEffect(meta.id) {
@@ -184,7 +185,7 @@ fun InfoPage(o: Overlay.Info) {
     androidx.activity.compose.BackHandler(enabled = page == 1) { runCatching { playReq.requestFocus() } }
 
     val c = Vyrk.colors
-    val art = rememberTitleArt(meta, full)
+    val art = rememberTitleArt(meta, full, metadataLoading = details.loading)
     val name = full?.name?.takeIf { it.isNotBlank() } ?: meta.name
     val synopsis = full?.description ?: meta.description ?: ""
     BoxWithConstraints(Modifier.fillMaxSize().background(c.shade)) {

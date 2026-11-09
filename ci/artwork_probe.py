@@ -75,7 +75,7 @@ def main():
         adb("install", "-r", str(args.apk))
         cases = (("metadata", "red", 5), ("type", "blue", 5), ("missing", "ambient", 6),
                  ("logo-fallback", "blue", 3), ("logo-empty", "blue", 3), ("logo-update", "blue", 5),
-                 ("logo-missing", "text", 7), ("logo-slow", "blank", 4), ("logo-late", "text", 10),
+                 ("logo-missing", "text", 7), ("logo-slow", "blank", 4), ("logo-late", "blue", 10),
                  ("logo-pending", "blue", 10), ("logo-season", "blue", 5))
         for case, expected, seconds in cases:
             adb("shell", "am", "force-stop", package)

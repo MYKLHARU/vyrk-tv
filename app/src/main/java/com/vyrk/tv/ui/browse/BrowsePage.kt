@@ -163,10 +163,12 @@ fun BrowsePage(
     var focusedPoster by model::focusedPoster
     var focusedRowKey by model::focusedRowKey
     val heroMeta = heroItems.getOrNull(heroIndex)
-    val heroFull by produceMeta(session, heroMeta)
-    val headerFull by produceMeta(session, focusedPoster, debounceMs = 250)
-    val heroArt = rememberTitleArt(heroMeta, heroFull)
-    val headerArt = rememberTitleArt(focusedPoster, headerFull, debounceMs = 300)
+    val heroDetails = produceMeta(session, heroMeta)
+    val headerDetails = produceMeta(session, focusedPoster, debounceMs = 250)
+    val heroFull by heroDetails
+    val headerFull by headerDetails
+    val heroArt = rememberTitleArt(heroMeta, heroFull, metadataLoading = heroDetails.loading)
+    val headerArt = rememberTitleArt(focusedPoster, headerFull, debounceMs = 300, metadataLoading = headerDetails.loading)
     val heroEnabled = settings.heroEnabled && heroItems.isNotEmpty() && model.tab != Tab.LIVE
     // Settings draws the artwork you were last looking at, blurred, behind its glass panels.
     val shownBackdrop = (if (heroEnabled) heroArt else headerArt).backdrops.firstOrNull()
@@ -432,25 +434,28 @@ fun BrowsePage(
  * Each value is tagged with the id it was fetched for and only returned for that id.
  */
 @Composable
-fun produceMeta(session: ProfileSession, meta: MetaPreview?, debounceMs: Long = 0): androidx.compose.runtime.State<com.vyrk.core.addon.MetaItem?> {
+fun produceMeta(session: ProfileSession, meta: MetaPreview?, debounceMs: Long = 0): MetaState {
     val graph = LocalGraph.current
     val key = meta?.let { com.vyrk.core.art.Artwork.titleKey(it.type, it.id) }
-    val fetched = androidx.compose.runtime.produceState<Pair<String?, com.vyrk.core.addon.MetaItem?>>(
-        initialValue = key to meta?.let { graph.metaCache.peek(it.type, it.id) }, key,
+    val fetched = androidx.compose.runtime.produceState<Triple<String?, com.vyrk.core.addon.MetaItem?, Boolean>>(
+        initialValue = Triple(key, meta?.let { graph.metaCache.peek(it.type, it.id) }, meta != null), session, key,
     ) {
-        val m = meta ?: run { value = null to null; return@produceState }
-        graph.metaCache.peek(m.type, m.id)?.let { value = key to it; return@produceState }
-        value = key to null
+        val m = meta ?: run { value = Triple(null, null, false); return@produceState }
+        graph.metaCache.peek(m.type, m.id)?.let { value = Triple(key, it, false); return@produceState }
+        value = Triple(key, null, true)
         if (debounceMs > 0) delay(debounceMs)
-        value = key to graph.metaCache.get(session.effectiveAddons(), m.type, m.id)
+        value = Triple(key, graph.metaCache.get(session.effectiveAddons(), m.type, m.id), false)
     }
-    return remember(key) {
-        androidx.compose.runtime.derivedStateOf {
-            meta?.let { m -> com.vyrk.core.art.Artwork.matchingMeta(m,
+    return remember(session, key) {
+        object : MetaState {
+            override val value: com.vyrk.core.addon.MetaItem? get() = meta?.let { m -> com.vyrk.core.art.Artwork.matchingMeta(m,
                 fetched.value.takeIf { it.first == key }?.second ?: graph.metaCache.peek(m.type, m.id)) }
+            override val loading: Boolean get() = meta != null && value == null && (fetched.value.first != key || fetched.value.third)
         }
     }
 }
+
+interface MetaState : androidx.compose.runtime.State<com.vyrk.core.addon.MetaItem?> { val loading: Boolean }
 
 /** TMDB backdrop size for this screen: original on screens wider than 1280 px (1080p and 4K), else w1280. */
 fun backdropSize(screenWidthPx: Int): String = if (screenWidthPx > 1280) "original" else "w1280"
@@ -461,7 +466,7 @@ fun backdropSize(screenWidthPx: Int): String = if (screenWidthPx > 1280) "origin
  * and the add-on gave none, then Cinemeta's by IMDb id. Each is tried in turn if one fails to load.
  */
 @Composable
-fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, debounceMs: Long = 0): TitleArt {
+fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, debounceMs: Long = 0, metadataLoading: Boolean = false): TitleArt {
     val graph = LocalGraph.current
     val size = backdropSize(androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels)
     val safeFull = meta?.let { com.vyrk.core.art.Artwork.matchingMeta(it, full) }
@@ -471,21 +476,22 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
     val needTmdb = lookupId != null && graph.tmdb.enabled
     // Tagged with the id it was fetched for, like produceMeta: the previous title's TMDB logo must
     // never be offered for the next one in the frame before this restarts.
-    val fetched by androidx.compose.runtime.produceState<Pair<String?, com.vyrk.core.tmdb.TmdbArtwork?>>(null to null, titleKey, lookupId, needTmdb, size) {
-        value = titleKey to null
+    val fetched by androidx.compose.runtime.produceState<Triple<String?, com.vyrk.core.tmdb.TmdbArtwork?, Boolean>>(Triple(null, null, false), titleKey, lookupId, needTmdb, size) {
+        value = Triple(titleKey, null, needTmdb)
         val m = meta ?: return@produceState
         if (!needTmdb) return@produceState
         delay(maxOf(debounceMs, 300))
-        value = titleKey to graph.tmdb.artwork(lookupId, m.type, size)
+        value = Triple(titleKey, graph.tmdb.artwork(lookupId, m.type, size), false)
     }
     val tmdb = fetched.takeIf { it.first == titleKey }?.second
-    val fanart by androidx.compose.runtime.produceState<Pair<String?, List<String>>>(null to emptyList(), titleKey, lookupId) {
-        value = titleKey to emptyList()
+    val needFanart = lookupId != null && graph.fanart.enabled
+    val fanart by androidx.compose.runtime.produceState<Triple<String?, List<String>, Boolean>>(Triple(null, emptyList(), false), titleKey, lookupId) {
+        value = Triple(titleKey, emptyList(), needFanart)
         val m = meta ?: return@produceState
         val id = lookupId ?: return@produceState
         if (!graph.fanart.enabled) return@produceState
         delay(maxOf(debounceMs, 300))
-        value = titleKey to graph.fanart.logos(id, m.type)
+        value = Triple(titleKey, graph.fanart.logos(id, m.type), false)
     }
     val fanartLogos = fanart.takeIf { it.first == titleKey }?.second.orEmpty()
     val prequel = meta?.let { com.vyrk.core.art.SeasonLogos.prequel(it, safeFull) }
@@ -501,7 +507,10 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
         value = titleKey to urls
     }
     val inheritedLogos = seasonLogos.takeIf { it.first == titleKey }?.second.orEmpty()
-    val logosLoading = inherit && (seasonLogos.first != titleKey || seasonLogos.second == null)
+    val logosLoading = metadataLoading ||
+        (needTmdb && (fetched.first != titleKey || fetched.third)) ||
+        (needFanart && (fanart.first != titleKey || fanart.third)) ||
+        (inherit && (seasonLogos.first != titleKey || seasonLogos.second == null))
     val preview = meta ?: return TitleArt.NONE
     return remember(titleKey, preview.logo, preview.background, safeFull?.logo, safeFull?.background, lookupId, tmdb, fanartLogos, inheritedLogos, logosLoading, size) {
         TitleArt(
