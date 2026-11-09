@@ -169,6 +169,15 @@ not run yet.
 | CI: build, e2e, showcase jobs | `.github/workflows/ci.yml` | Built | build and e2e pass on every push to `main` (run 41886508067); showcase not run on CI yet |
 | Versioned release: a `vX.Y.Z` tag publishes signed APKs with that version's CHANGELOG section as notes; refuses without signing secrets or notes | `ci.yml`, `ci/release_notes.sh` | Built | notes script run locally; no tag pushed yet |
 
+## v0.1.21 AIO Metadata compatibility
+
+Accept explicit prequel categories as well as Kitsu's Franchise/Prequel labels, with MAL
+and Kitsu child/link IDs. A canonical parent ID is accepted only when its explicit provider
+mapping matches the requested relation ID and its series name/type match. Selected IDs are
+never rewritten. Metadata/provider loading flags prevent premature text fallback, and a valid
+late logo is allowed to recover. The normal emulator journey tests an AIO-shaped MAL child,
+six-second metadata delay and IMDb parent with a matching Kitsu stamp through the real info page.
+
 ## v0.1.20 anime season logos
 
 When a Kitsu series season has neither a supplied logo nor a verified artwork mapping,

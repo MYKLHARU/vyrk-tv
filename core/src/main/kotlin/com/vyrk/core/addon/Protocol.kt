@@ -228,6 +228,11 @@ data class MetaItem(
     val behaviorHints: MetaBehaviorHints = MetaBehaviorHints(),
     @kotlinx.serialization.json.JsonNames("imdb_id")
     val imdbId: String? = null,
+    /** Explicit provider mappings, used only to validate artwork relation responses. */
+    @kotlinx.serialization.json.JsonNames("_kitsuId", "kitsu_id")
+    val kitsuId: String? = null,
+    @kotlinx.serialization.json.JsonNames("_malId", "mal_id")
+    val malId: String? = null,
 ) {
     /** Genres from `genres`, legacy `genre`, or Genre links, in that order. */
     val allGenres: List<String>

@@ -16,6 +16,9 @@ import json
 import os
 import subprocess
 import sys
+import time
+import struct
+import zlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote
@@ -31,7 +34,7 @@ MANIFEST = {
     "version": "1.0.0",
     "name": "VYRK Test Add-on",
     "description": "Local add-on for automated tests: a broken 4K link, a working 720p file, a remote sample, a subtitle and a torrent.",
-    "resources": ["stream", "subtitles", "catalog", {"name": "meta", "types": ["series"], "idPrefixes": ["vyrk-"]}],
+    "resources": ["stream", "subtitles", "catalog", {"name": "meta", "types": ["series"], "idPrefixes": ["vyrk-", "mal:62516", "kitsu:49425"]}],
     "types": ["movie", "series"],
     "idPrefixes": ["tt", "vyrk-"],
     "catalogs": [
@@ -121,6 +124,23 @@ class Handler(SimpleHTTPRequestHandler):
         path = unquote(self.path.split("?")[0])
         if path == "/manifest.json":
             return self._json(MANIFEST)
+        if path == "/meta/series/mal:62516.json":
+            # Actual AIO field shape: MAL child, lower-case relation, canonical IMDb parent.
+            # Delay past the old four-second text latch; ordinary InfoPage loading must wait.
+            time.sleep(6)
+            return self._json({"meta": {"id": "mal:62516", "type": "series", "name": "DAN DA DAN Season 3",
+                "_kitsuId": "50163", "_malId": "62516", "logo": None,
+                "links": [{"name": "DAN DA DAN Season 2", "category": "prequel", "url": "stremio:///detail/series/kitsu:49425"}]}})
+        if path == "/meta/series/kitsu:49425.json":
+            return self._json({"meta": {"id": "tt30217403", "type": "series", "name": "DAN DA DAN",
+                "_kitsuId": "49425", "_malId": "60543", "imdb_id": "tt30217403", "logo": f"{BASE}/artwork/logo.png"}})
+        if path == "/artwork/logo.png":
+            def chunk(kind, data):
+                return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff)
+            body = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(b"\0\xff\0\0")) + chunk(b"IEND", b"")
+            self.send_response(200); self.send_header("Content-Type", "image/png"); self.send_header("Content-Length", str(len(body))); self.end_headers()
+            self.wfile.write(body)
+            return
         if path.startswith("/meta/series/vyrk-"):
             mid = path.rsplit("/", 1)[-1].removesuffix(".json")
             runtime = "45 min" if mid == "vyrk-short" else "10 min"

@@ -2,6 +2,12 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.21
+
+- Fixed anime season logos from AIO Metadata, including Dan Da Dan Season 3's MAL entry. Prequel relations accept AIO's category format and validate canonical parent IDs using explicit MAL/Kitsu mappings.
+- Text fallback waits for metadata and artwork lookups, and no longer permanently hides a valid logo arriving later. Deep-linked titles can use their loaded name for relation validation.
+- Added the actual AIO response shape and delayed metadata to the normal app journey, alongside provider-alias regression tests.
+
 ## v0.1.20
 
 - Anime seasons without a logo or artwork ID can inherit a series logo through an explicit prequel link when the series names match. This fixes Dandadan Season 3 while keeping that season's episodes, playback IDs and other artwork unchanged. Unrelated prequels and cycles are rejected.
