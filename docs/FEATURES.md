@@ -169,6 +169,16 @@ not run yet.
 | CI: build, e2e, showcase jobs | `.github/workflows/ci.yml` | Built | build and e2e pass on every push to `main` (run 41886508067); showcase not run on CI yet |
 | Versioned release: a `vX.Y.Z` tag publishes signed APKs with that version's CHANGELOG section as notes; refuses without signing secrets or notes | `ci.yml`, `ci/release_notes.sh` | Built | notes script run locally; no tag pushed yet |
 
+## v0.1.20 anime season logos
+
+When a Kitsu series season has neither a supplied logo nor a verified artwork mapping,
+follow an explicit Franchise / Prequel link through the user's existing metadata providers.
+Borrow only logos from a matching series name after removing a season suffix; do not change
+the selected season's metadata, IDs, episodes, background or playback. Only Kitsu series links
+are accepted, with at most three visited prequels, cycle detection and a 12 s lookup timeout.
+The logo slot stays reserved during this lookup. Regression fixtures cover Dandadan S3 to S2,
+unrelated prequels, wrong returned IDs/types, external links, cycles and delayed completion.
+
 ## v0.1.19 logo transition and Fanart.tv
 
 The title logo slot stays reserved while an image loads. If all candidates are missing or

@@ -39,6 +39,7 @@ class ArtworkProbeActivity : ComponentActivity() {
         fun preview(id: String, type: String, name: String) = MetaPreview(id, type, id, background = image(name), logo = image(name))
         val meta = mutableStateOf(preview("shared", "movie", "red"))
         val full = mutableStateOf<MetaItem?>(null)
+        val pending = mutableStateOf(false)
         val case = intent.getStringExtra("case")
         when (case) {
             "metadata" -> handler.postDelayed({ full.value = MetaItem("shared", "movie", background = image("blue"), logo = image("blue")) }, 3000)
@@ -55,6 +56,18 @@ class ArtworkProbeActivity : ComponentActivity() {
             "logo-update", "logo-late" -> {
                 meta.value = preview("kitsu:fixture", "series", "missing")
                 handler.postDelayed({ full.value = MetaItem("kitsu:fixture", "series", logo = image("blue")) }, if (case == "logo-late") 7000 else 3000)
+            }
+            "logo-pending" -> {
+                pending.value = true
+                meta.value = preview("pending", "series", "missing").copy(logo = null)
+                handler.postDelayed({ full.value = MetaItem("pending", "series", logo = image("blue")); pending.value = false }, 7000)
+            }
+            "logo-season", "logo-season-live" -> {
+                meta.value = preview("kitsu:50163", "series", "missing").copy(name = "Dandadan 3rd Season", logo = null)
+                full.value = MetaItem("kitsu:50163", "series", "Dandadan 3rd Season", links = listOf(
+                    com.vyrk.core.addon.Link("Prequel: Dandadan 2nd Season", "Franchise", "stremio:///detail/series/kitsu:49425")))
+                VyrkApp.graph(this).metaCache.put(MetaItem("kitsu:49425", "series", "Dandadan 2nd Season", logo =
+                    if (case == "logo-season-live") "https://assets.fanart.tv/fanart/dandadan-656822e401831.png" else image("blue")))
             }
             else -> error("unknown case")
         }
@@ -76,7 +89,7 @@ class ArtworkProbeActivity : ComponentActivity() {
                             else -> art.logos
                         }
                         Box(Modifier.fillMaxSize().background(Vyrk.colors.background), contentAlignment = Alignment.Center) {
-                            HeroLogo("$case:$token", "Anime fixture", logos, 600.dp, 300.dp, Vyrk.type.displayL)
+                            HeroLogo("$case:$token", "Anime fixture", logos, 600.dp, 300.dp, Vyrk.type.displayL, loading = art.logosLoading || pending.value)
                         }
                     } else Wallpaper(Artwork.titleKey(m.type, m.id), art.backdrops, Modifier.fillMaxSize())
                 }
