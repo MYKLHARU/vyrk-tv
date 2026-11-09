@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.20
+
+- Anime seasons without a logo or artwork ID can inherit a series logo through an explicit prequel link when the series names match. This fixes Dandadan Season 3 while keeping that season's episodes, playback IDs and other artwork unchanged. Unrelated prequels and cycles are rejected.
+- Logo loading waits for the season fallback lookup before settling on text, with a bounded timeout.
+
 ## v0.1.19
 
 - Title text no longer flashes before a logo loads. The logo slot stays reserved during loading; when no logo is available, text appears after a short metadata grace period and stays stable for that visit, including if artwork arrives late.

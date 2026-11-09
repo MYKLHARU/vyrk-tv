@@ -74,7 +74,7 @@ import com.vyrk.tv.ui.traceFocus
 
 /** Artwork candidates for one title, best first; the next one is tried when one fails to load. */
 @Immutable
-data class TitleArt(val logos: List<String>, val backdrops: List<String>) {
+data class TitleArt(val logos: List<String>, val backdrops: List<String>, val logosLoading: Boolean = false) {
     companion object { val NONE = TitleArt(emptyList(), emptyList()) }
 }
 
@@ -158,16 +158,16 @@ private val shownLogos = java.util.concurrent.ConcurrentHashMap<String, String>(
  * bold type. The first logo that loads for [titleId] is kept (see [shownLogos]).
  */
 @Composable
-fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, maxHeight: Dp, textStyle: TextStyle, modifier: Modifier = Modifier) {
+fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, maxHeight: Dp, textStyle: TextStyle, modifier: Modifier = Modifier, loading: Boolean = false) {
     val kept = shownLogos[titleId]
     val candidates = remember(titleId, logos, kept) { (listOfNotNull(kept) + logos).distinct() }
     var failed by remember(titleId) { androidx.compose.runtime.mutableStateOf(emptySet<String>()) }
     val url = if (kept != null && kept !in failed) kept else candidates.firstOrNull { it !in failed }
     var textFallback by remember(titleId) { androidx.compose.runtime.mutableStateOf(false) }
-    LaunchedEffect(titleId, url) {
+    LaunchedEffect(titleId, url, loading) {
         // Give full metadata time to contribute a logo before settling on a text title.
         // Once text is visible, keep it stable for this visit instead of swapping it later.
-        if (url == null) { kotlinx.coroutines.delay(4_000); textFallback = true }
+        if (url == null && !loading) { kotlinx.coroutines.delay(4_000); textFallback = true }
     }
     if (textFallback) {
         Box(modifier.width(maxWidth).heightIn(max = maxHeight).fillMaxHeight(), contentAlignment = Alignment.BottomStart) {
@@ -305,7 +305,7 @@ fun Hero(
             Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f))
+            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f), loading = art.logosLoading)
             Box(Modifier.height(12.dp))
             MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(10.dp))
@@ -378,7 +378,7 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
         ) {
             // Logo: everything the fixed-height lines below leave, so short or square logos still read
             // from the sofa and the text never shifts as a title's details load.
-            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayM, Modifier.weight(1f))
+            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayM, Modifier.weight(1f), loading = art.logosLoading)
             Box(Modifier.height(10.dp))
             MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(8.dp))

@@ -488,11 +488,26 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
         value = titleKey to graph.fanart.logos(id, m.type)
     }
     val fanartLogos = fanart.takeIf { it.first == titleKey }?.second.orEmpty()
+    val prequel = meta?.let { com.vyrk.core.art.SeasonLogos.prequel(it, safeFull) }
+    val inherit = prequel != null && lookupId == null && meta?.logo.isNullOrBlank() && safeFull?.logo.isNullOrBlank()
+    val seasonLogos by androidx.compose.runtime.produceState<Pair<String?, List<String>?>>(null to null, titleKey, inherit, prequel, safeFull) {
+        value = titleKey to if (inherit) null else emptyList()
+        val m = meta ?: return@produceState
+        if (!inherit) return@produceState
+        delay(maxOf(debounceMs, 300))
+        val urls = kotlinx.coroutines.withTimeoutOrNull(12_000) {
+            com.vyrk.core.art.SeasonLogos.resolve(m, safeFull) { id -> graph.metaCache.get(graph.session.value?.effectiveAddons().orEmpty(), "series", id) }
+        }.orEmpty()
+        value = titleKey to urls
+    }
+    val inheritedLogos = seasonLogos.takeIf { it.first == titleKey }?.second.orEmpty()
+    val logosLoading = inherit && (seasonLogos.first != titleKey || seasonLogos.second == null)
     val preview = meta ?: return TitleArt.NONE
-    return remember(titleKey, preview.logo, preview.background, safeFull?.logo, safeFull?.background, lookupId, tmdb, fanartLogos, size) {
+    return remember(titleKey, preview.logo, preview.background, safeFull?.logo, safeFull?.background, lookupId, tmdb, fanartLogos, inheritedLogos, logosLoading, size) {
         TitleArt(
-            logos = (com.vyrk.core.art.Artwork.logos(preview, safeFull, tmdb?.logo) + fanartLogos).distinct(),
+            logos = (com.vyrk.core.art.Artwork.logos(preview, safeFull, tmdb?.logo) + fanartLogos + inheritedLogos).distinct(),
             backdrops = com.vyrk.core.art.Artwork.backdrops(preview, safeFull, tmdb?.backdrop, size),
+            logosLoading = logosLoading,
         )
     }
 }

@@ -201,7 +201,7 @@ fun InfoPage(o: Overlay.Info) {
                     Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 44.dp).width(PAGE_TEXT_W)) {
                         // Fixed slots throughout, so nothing moves while the details and cast load.
                         Box(Modifier.width(LOGO_W).height(LOGO_H), contentAlignment = Alignment.BottomStart) {
-                            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), name, art.logos, LOGO_W, LOGO_H, Vyrk.type.displayL, Modifier.fillMaxHeight())
+                            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), name, art.logos, LOGO_W, LOGO_H, Vyrk.type.displayL, Modifier.fillMaxHeight(), loading = art.logosLoading)
                         }
                         Spacer(Modifier.height(18.dp))
                         TitleFacts(meta, full)
