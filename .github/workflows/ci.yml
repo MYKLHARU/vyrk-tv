@@ -141,7 +141,7 @@ jobs:
             -t 600 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 32 -c:a aac -b:a 64k -movflags +faststart ci/media/sample-720p.mp4
           # Cheap stream-copy fixture: full 45-minute alternate for the short-source scenario.
           ffmpeg -loglevel error -y -stream_loop 4 -i ci/media/sample-720p.mp4 -t 2700 -c copy -movflags +faststart ci/media/sample-full.mp4
-          timeout 300 ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
+          timeout --kill-after=10s 120s ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
             -c copy -movflags +faststart ci/media/bbb-clip.mp4 || echo "BBB clip unavailable; search playback uses the generated sample"
       - name: Start the test add-on
         run: |

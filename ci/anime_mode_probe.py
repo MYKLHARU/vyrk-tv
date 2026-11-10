@@ -20,7 +20,7 @@ a = p.parse_args()
 a.out.mkdir(parents=True, exist_ok=True)
 
 def adb(*args):
-    return subprocess.check_output([a.adb, *args], text=True, encoding='utf-8', errors='replace')
+    return subprocess.check_output([a.adb, *args], text=True, encoding='utf-8', errors='replace', timeout=45)
 
 def key(k, pause=.4):
     adb('shell', 'input', 'keyevent', 'KEYCODE_'+k)
@@ -54,7 +54,7 @@ def click(text):
     key('DPAD_CENTER',1)
 
 def capture(name):
-    (a.out/(name+'.png')).write_bytes(subprocess.check_output([a.adb,'exec-out','screencap','-p']))
+    (a.out/(name+'.png')).write_bytes(subprocess.check_output([a.adb,'exec-out','screencap','-p'], timeout=45))
     ns=nodes()
     (a.out/(name+'.xml')).write_text(ET.tostring(ET.fromstring(adb('shell','cat','/sdcard/anime-mode.xml')),encoding='unicode'),encoding='utf-8')
     return ' '.join(n.get('text','')+' '+n.get('content-desc','') for n in ns)

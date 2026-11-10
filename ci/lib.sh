@@ -4,41 +4,48 @@
 
 log() { echo "[e2e] $*"; }
 fail() { echo "[e2e] FAIL: $*" | tee -a "$TRACE"; FAILURES=$((FAILURES + 1)); }
-adbs() { "$ADB" shell "$@" | tr -d '\r'; }
+# A disconnected or wedged emulator must fail the journey, not hold it indefinitely.
+adb_run() { timeout --kill-after=5s 45s "$ADB" "$@"; }
+adbs() { adb_run shell "$@" | tr -d '\r'; }
 
 shot() {
   STEP=$((STEP + 1))
   local name; name=$(printf '%02d-%s' "$STEP" "$1")
-  "$ADB" exec-out screencap -p > "$OUT/$name.png"
+  adb_run exec-out screencap -p > "$OUT/$name.png"
   log "screenshot $name"
 }
 
 # Capture whole outputs before filtering: an early-exiting grep under pipefail kills the
 # producer with SIGPIPE (exit 141) on Linux.
-focus_now() { local o; o=$("$ADB" logcat -d -s VyrkFocus:I 2>/dev/null || true); printf '%s\n' "$o" | tail -n 1 | sed 's/.*VyrkFocus: [A-Z_0-9]* -> //' | tr -d '\r'; }
+focus_now() { local o; o=$(adb_run logcat -d -s VyrkFocus:I 2>/dev/null || true); printf '%s\n' "$o" | tail -n 1 | sed 's/.*VyrkFocus: [A-Z_0-9]* -> //' | tr -d '\r'; }
 window_now() { local o; o=$(adbs dumpsys window 2>/dev/null || true); printf '%s\n' "$o" | grep 'mCurrentFocus' | head -n 1 | sed 's/.*{//; s/}.*//' || true; }
 
 # Press a key (name or code), wait, record "key | focused element | focused window".
 key() {
   local k=$1 wait=${2:-1.3} label=${3:-}
-  "$ADB" shell input keyevent "$k"
+  printf '%s input\n' "$k" > "$OUT/adb-stage.txt"
+  adb_run shell input keyevent "$k"
   sleep "$wait"
   # Back goes through the back dispatcher (Android 13+), not key dispatch: probe to read focus.
-  if [[ "$k" == KEYCODE_BACK ]]; then "$ADB" shell input keyevent KEYCODE_SHIFT_LEFT; sleep 0.8; fi
-  local f w; f=$(focus_now); w=$(window_now)
+  if [[ "$k" == KEYCODE_BACK ]]; then adb_run shell input keyevent KEYCODE_SHIFT_LEFT; sleep 0.8; fi
+  local f w
+  printf '%s logcat\n' "$k" > "$OUT/adb-stage.txt"
+  f=$(focus_now)
+  printf '%s window\n' "$k" > "$OUT/adb-stage.txt"
+  w=$(window_now)
   echo "$k | ${f:-?} | ${w:-?} ${label:+| $label}" >> "$TRACE"
   if [[ -z "$f" || "$f" == "none" ]]; then fail "focus lost after $k ($label)"; fi
   if [[ "$w" != *"$PKG"* ]]; then
     # Never keep pressing keys in another app (shared emulators, launcher): stop the journey.
     fail "focused window is not VYRK after $k: $w"
     log "aborting so no further keys reach another app"
-    "$ADB" logcat -d > "$OUT/logcat.txt" 2>/dev/null || true
+    adb_run logcat -d > "$OUT/logcat.txt" 2>/dev/null || true
     exit 1
   fi
 }
 
 longpress() {
-  "$ADB" shell input keyevent --longpress "$1"
+  adb_run shell input keyevent --longpress "$1"
   sleep "${2:-1.5}"
   local f; f=$(focus_now)
   echo "LONGPRESS $1 | ${f:-?} | $(window_now)" >> "$TRACE"
