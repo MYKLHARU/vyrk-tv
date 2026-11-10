@@ -167,7 +167,7 @@ jobs:
           ram-size: 2048M
           heap-size: 512M
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader -feature -Vulkan -noaudio -no-boot-anim -no-snapshot -no-metrics
+          emulator-options: -no-window -gpu swangle -noaudio -no-boot-anim -no-snapshot -no-metrics
           script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/e2e ADDON_LOG=ci/out/e2e/addon.log bash ci/e2e.sh
       - name: Emulator host diagnostics
         if: failure()
@@ -236,7 +236,7 @@ jobs:
           ram-size: 2048M
           heap-size: 512M
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader -feature -Vulkan -noaudio -no-boot-anim -no-snapshot -no-metrics
+          emulator-options: -no-window -gpu swangle -noaudio -no-boot-anim -no-snapshot -no-metrics
           script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/showcase bash ci/showcase.sh
       - name: Build README images
         run: |
