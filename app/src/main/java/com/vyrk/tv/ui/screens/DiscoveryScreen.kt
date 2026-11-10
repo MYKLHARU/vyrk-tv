@@ -73,7 +73,7 @@ fun DiscoveryScreen(session: ProfileSession) {
             VyrkButton(tabLabel(if (type == "movie") Tab.MOVIES else Tab.SERIES) + " ▾", { menu = 0 },
                 modifier = Modifier.focusRequester(controls[0]).traceFocus("discover:type"))
             VyrkButton((ref?.name ?: str(R.string.discover_catalog)) + " ▾", { menu = 1 },
-                enabled = catalogs.isNotEmpty(), modifier = Modifier.weight(1f).focusRequester(controls[1]).traceFocus("discover:catalog"))
+                enabled = catalogs.isNotEmpty(), modifier = Modifier.widthIn(max = 380.dp).focusRequester(controls[1]).traceFocus("discover:catalog"))
             VyrkButton((genre ?: str(R.string.anime_all_genres)) + " ▾", { menu = 2 },
                 enabled = ref?.let { DiscoveryRules.genres(it, settings.animeMode).isNotEmpty() } == true,
                 modifier = Modifier.focusRequester(controls[2]).traceFocus("discover:genre"))
@@ -85,6 +85,7 @@ fun DiscoveryScreen(session: ProfileSession) {
         else if (row != null) key(row) {
             Column(Modifier.weight(1f)) {
                 if (row.loading) Text(str(R.string.loading), color = c.textMuted)
+                if (row.error != null) Text(str(R.string.row_error), color = c.textMuted)
                 if (row.loadedOnce && row.items.isEmpty() && !row.loading && row.error == null)
                     Text(str(R.string.anime_no_matches), color = c.textMuted)
                 LazyVerticalGrid(GridCells.Adaptive(130.dp), modifier = Modifier.fillMaxSize()
@@ -100,9 +101,9 @@ fun DiscoveryScreen(session: ProfileSession) {
                             traceLabel = "discover:poster#$index")
                     }
                     if (row.error != null || row.hasMore && row.loadedOnce) item(key = "discover-page") {
-                        VyrkButton(str(if (row.error != null) R.string.retry else R.string.anime_load_more),
-                            { if (row.error != null) model.retry(row) else model.loadMore(row) },
-                            enabled = !row.loading, modifier = Modifier.traceFocus("discover:page"))
+                        VyrkButton(str(if (row.loading) R.string.loading else if (row.error != null) R.string.retry else R.string.anime_load_more),
+                            { if (!row.loading) { if (row.error != null && row.items.isEmpty()) model.retry(row) else model.loadMore(row) } },
+                            modifier = Modifier.traceFocus("discover:page"))
                     }
                 }
             }
@@ -132,8 +133,8 @@ fun DiscoveryScreen(session: ProfileSession) {
                         itemsIndexed(values) { index, (value, label) ->
                             VyrkButton((if (value == selected) "✓ " else "") + label, onClick = {
                                 when (which) {
-                                    0 -> { type = value!!; catalogKey = null; selectedGenre = null }
-                                    1 -> { catalogKey = value; selectedGenre = null }
+                                    0 -> if (type != value) { type = value!!; catalogKey = null; selectedGenre = null }
+                                    1 -> if (ref?.key != value) { catalogKey = value; selectedGenre = null }
                                     else -> selectedGenre = value
                                 }
                                 closeMenu()
