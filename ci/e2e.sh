@@ -96,6 +96,27 @@ key KEYCODE_DPAD_CENTER 5 "open info page"
 expect '^info:play$' "info page opens with Play focused"
 shot info-page
 
+# Handle only the specific recovery prompt shown by the slow software decoder.
+# Exercise the real remote choice instead of letting a media shortcut bypass it.
+dismiss_stall_prompt() {
+  probe "current playback prompt"
+  if [[ "$(focus_now)" == prompt:yes ]]; then
+    adbs uiautomator dump /sdcard/stall-prompt.xml >/dev/null
+    adb_run pull /sdcard/stall-prompt.xml "$OUT/stall-prompt.xml" >/dev/null
+    if grep -q 'Playback keeps pausing' "$OUT/stall-prompt.xml"; then
+      key KEYCODE_DPAD_RIGHT 0.5 "Keep trying on the software renderer"
+      expect '^prompt:no$' "stall recovery Keep trying is reachable"
+      key KEYCODE_DPAD_LEFT 0.4 "back to lower quality"
+      expect '^prompt:yes$' "prompt owns Left"
+      key KEYCODE_DPAD_RIGHT 0.4 "Keep trying again"
+      key KEYCODE_DPAD_UP 0.4 "prompt retains focus above"
+      expect '^prompt:no$' "prompt prevents focus escaping to the timeline"
+      key KEYCODE_DPAD_CENTER 1 "continue the local sample"
+      wait_focus '^player:' 10
+    fi
+  fi
+}
+
 # ---------------------------------------------------------------- play: broken 4K fails over
 ADDON_START=0
 [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]] && ADDON_START=$(wc -l < "$ADDON_LOG")
@@ -106,16 +127,7 @@ wait_focus '^player:' 30
 sleep 25
 shot player
 probe "player after decoder warmup"
-# Software-rendered CI can legitimately offer recovery while the decoder warms up.
-if [[ "$(focus_now)" == prompt:yes ]]; then
-  adbs uiautomator dump /sdcard/stall-prompt.xml >/dev/null
-  adb_run pull /sdcard/stall-prompt.xml "$OUT/stall-prompt.xml" >/dev/null
-  if grep -q 'Playback keeps pausing' "$OUT/stall-prompt.xml"; then
-    key KEYCODE_DPAD_RIGHT 0.5 "Keep trying on the software renderer"
-    expect '^prompt:no$' "stall recovery Keep trying is reachable"
-    key KEYCODE_DPAD_CENTER 1 "continue the local sample"
-  fi
-fi
+dismiss_stall_prompt
 expect '^player:' "player has focus"
 if [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]]; then
   tail -n +"$((ADDON_START + 1))" "$ADDON_LOG" > "$OUT/addon-requests-during-play.txt"
@@ -274,6 +286,7 @@ EVENTS=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
 # IntroDB is an external service: report, but don't fail the build on its availability.
 if printf '%s\n' "$EVENTS" | grep -q 'skip_offered INTRO'; then log "ok: Skip intro offered from IntroDB timings"
 else log "warn: Skip intro not seen ($(printf '%s\n' "$EVENTS" | grep -o 'introdb_segments [0-9]*' | tail -n 1 || echo 'no IntroDB answer'))"; fi
+dismiss_stall_prompt
 key KEYCODE_DPAD_DOWN 1.5 "show controls"
 key KEYCODE_DPAD_UP 1.2 "to timeline"
 expect '^player:timeline$' "timeline takes focus above the controls"

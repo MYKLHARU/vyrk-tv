@@ -7,6 +7,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - Moved Anime mode into a compact top-menu switch and removed the redundant standalone Anime tab. Regular browsing uses the full page height again.
 - Added Discover: a poster grid with Movies/Series, installed catalogue and genre selectors, filtered pagination, retry and empty results. Discover follows Anime mode.
 - Removed Live from Settings' Hidden tabs controls and added Discover to the default/hidden tab choices.
+- Fixed remote arrows and OK in playback recovery and Still watching prompts so they operate the prompt instead of seeking beneath it.
 
 ## v0.1.22
 
