@@ -116,18 +116,16 @@ for _ in range(4):
     if 'poster:' in focus(): break
     key('DPAD_DOWN')
 wait_focus('poster:',5)
-key('DPAD_RIGHT'); wait_focus(r'row:.*:more',5)
-key('DPAD_CENTER',2)
-text=capture('anime-sparse-page')
-assert 'Anime Fixture Next Film' in text and 'Anime Fixture Drama Film' not in text
-key('DPAD_CENTER',2)
-wait_focus('seeall#0',5)
-key('DPAD_RIGHT'); wait_focus('seeall:page',5)
-key('DPAD_CENTER',2)
-text=capture('anime-see-all-page')
-assert 'Anime Fixture Next Film' in text and 'Anime Fixture Drama Film' not in text
-key('BACK')
-key('BACK')
+# Load more (or See all at the end) sits after the posters; Load more brings in every film page.
+for _ in range(3):
+    for _ in range(6):
+        if re.search(r'row:.*:more', focus()): break
+        key('DPAD_RIGHT')
+    wait_focus(r'row:.*:more',5)
+    text=capture('anime-load-more')
+    if 'Anime Fixture Next Film' in text: break
+    key('DPAD_CENTER',2)
+assert 'Anime Fixture Drama Film' in text and 'Anime Fixture Next Film' in text
 adb('shell','am','force-stop',a.package)
 adb('shell','am','start','-n',a.package+'/com.vyrk.tv.MainActivity')
 time.sleep(5)
