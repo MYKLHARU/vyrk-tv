@@ -451,7 +451,9 @@ private fun KeyHint(key: String, text: String) {
 private fun Controls(m: PlayerModel) {
     val c = Vyrk.colors
     val playReq = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { playReq.requestFocus() } }
+    LaunchedEffect(m.stallPrompt, m.stillWatching) {
+        if (!m.stallPrompt && !m.stillWatching) runCatching { playReq.requestFocus() }
+    }
     val meta = m.meta
     val title = meta?.name ?: m.request.meta.name
     val v = m.video
