@@ -279,6 +279,7 @@ expect '^info:play$' "Back on page two returns to Play"
 adb_run shell input keyevent KEYCODE_DPAD_CENTER
 wait_focus '^player:' 40
 sleep 12
+dismiss_stall_prompt
 for _ in $(seq 1 15); do adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD; sleep 0.4; done
 sleep 7
 shot skip-intro-pill
@@ -309,6 +310,7 @@ open_fixture() {
   sleep 4
 }
 seek_to_sample_end() {
+  dismiss_stall_prompt
   for _ in $(seq 1 22); do
     adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD
     sleep 0.4
