@@ -290,8 +290,16 @@ fun BrowseRow(
         if (row.items.isEmpty()) return@LaunchedEffect
         val target = idx.coerceAtMost(row.items.lastIndex)
         listState.scrollToItem((target - 1).coerceAtLeast(0))
-        kotlinx.coroutines.delay(32)
-        runCatching { restoreReq.requestFocus() }
+        // Wait for placement, not a fixed wall-clock delay. Slow TV renderers can need
+        // longer than 32 ms to re-place a kept page beneath the browse controls.
+        androidx.compose.runtime.withFrameNanos { }
+        repeat(24) {
+            androidx.compose.runtime.withFrameNanos { }
+            if (runCatching { restoreReq.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) {
+                onRestored()
+                return@LaunchedEffect
+            }
+        }
         onRestored()
     }
 

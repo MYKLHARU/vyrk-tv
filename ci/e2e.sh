@@ -104,6 +104,16 @@ adb_run shell input keyevent KEYCODE_DPAD_CENTER
 echo "KEYCODE_DPAD_CENTER | (player starting) | $(window_now) | Play" >> "$TRACE"
 wait_focus '^player:' 30
 sleep 25
+# Software-rendered CI can legitimately offer recovery while the decoder warms up.
+if [[ "$(focus_now)" == prompt:yes ]]; then
+  adbs uiautomator dump /sdcard/stall-prompt.xml >/dev/null
+  adb_run pull /sdcard/stall-prompt.xml "$OUT/stall-prompt.xml" >/dev/null
+  if grep -q 'Playback keeps pausing' "$OUT/stall-prompt.xml"; then
+    key KEYCODE_DPAD_RIGHT 0.5 "Keep trying on the software renderer"
+    expect '^prompt:no$' "stall recovery Keep trying is reachable"
+    key KEYCODE_DPAD_CENTER 1 "continue the local sample"
+  fi
+fi
 shot player
 probe "player"
 expect '^player:' "player has focus"
@@ -144,6 +154,7 @@ sleep 2
 adb_run logcat -c
 adbs am start -n "$PKG/.MainActivity" >/dev/null
 sleep 12
+wait_focus '^poster:cw#0$' 30
 probe "after restart"
 expect '^poster:cw#0$' "focus restored to the Continue Watching poster after restart"
 shot restored-after-restart
@@ -179,6 +190,7 @@ expect '^tab:home$' "Back from a row goes to the tab strip"
 key KEYCODE_DPAD_RIGHT 1.5 "Movies"; key KEYCODE_DPAD_LEFT 1.5 "Home again"
 key KEYCODE_DPAD_DOWN 2.5 "back into Home"
 [[ "$(focus_now)" == 'browse:mode' ]] && key KEYCODE_DPAD_DOWN 1 "past mode switch"
+wait_focus "^$KEEP\$" 15
 if [[ "$(focus_now)" == "$KEEP" ]]; then log "ok: Home kept the selected title across a tab switch ($KEEP)"; else fail "Home lost its place: expected '$KEEP', focus is '$(focus_now)'"; fi
 
 # ---------------------------------------------------------------- tour every tab

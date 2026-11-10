@@ -235,7 +235,7 @@ fun MainScreen(session: ProfileSession) {
             NavGear(active = app.section == Section.SETTINGS, settingsReq) { app.section = Section.SETTINGS }
         }
 
-        if (app.section == Section.TABS) AnimeModeBar(session, settings.animeMode, settings.animeGenre,
+        if (app.section == Section.TABS) AnimeModeBar(session, settings.animeMode, settings.animeGenre, tabReqs.getValue(app.tab),
             Modifier.padding(top = Dimens.navHeight).onFocusChanged {
                 filtersHaveFocus = it.hasFocus; app.navFocused = it.hasFocus || navHasFocus
             })
@@ -243,9 +243,12 @@ fun MainScreen(session: ProfileSession) {
 }
 
 @Composable
-private fun AnimeModeBar(session: ProfileSession, anime: Boolean, genre: String?, modifier: Modifier) {
+private fun AnimeModeBar(session: ProfileSession, anime: Boolean, genre: String?, navRequester: FocusRequester, modifier: Modifier) {
     val app = LocalApp.current
-    Row(modifier.fillMaxWidth().height(48.dp).padding(horizontal = Dimens.screenMargin),
+    Row(modifier.fillMaxWidth().height(48.dp).padding(horizontal = Dimens.screenMargin)
+        .focusProperties { onExit = {
+            if (requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Up) runCatching { navRequester.requestFocus() }
+        } }.focusGroup(),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         com.vyrk.tv.ui.components.VyrkButton(
             str(if (anime) R.string.switch_regular else R.string.switch_anime),

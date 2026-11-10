@@ -22,21 +22,34 @@ a.out.mkdir(parents=True, exist_ok=True)
 def adb(*args):
     return subprocess.check_output([a.adb, *args], text=True, encoding='utf-8', errors='replace', timeout=45)
 
-def key(k, pause=.4):
-    adb('shell', 'input', 'keyevent', 'KEYCODE_'+k)
-    time.sleep(pause)
-
-def focus():
-    key('SHIFT_LEFT', .1)
+def record():
     lines=adb('logcat', '-d', '-s', 'VyrkFocus').splitlines()
     return lines[-1] if lines else ''
 
+def focus():
+    before=record()
+    adb('shell','input','keyevent','KEYCODE_SHIFT_LEFT')
+    end=time.monotonic()+8
+    while time.monotonic()<end:
+        current=record()
+        if current != before and 'KEYCODE_SHIFT_LEFT -> ' in current: return current
+        time.sleep(.15)
+    raise AssertionError('No fresh focus report')
+
+def key(k, pause=.4):
+    adb('shell', 'input', 'keyevent', 'KEYCODE_'+k)
+    time.sleep(pause)
+    return focus()
+
 def wait_focus(label, seconds=35):
     end=time.monotonic()+seconds
+    last=''
     while time.monotonic()<end:
-        if re.search(label, focus()): return
+        try: last=focus()
+        except (AssertionError,subprocess.SubprocessError): last='No fresh focus report'
+        if re.search(label, last): return
         time.sleep(.3)
-    raise AssertionError('Focus timeout: '+label+'; '+focus())
+    raise AssertionError('Focus timeout: '+label+'; '+last)
 
 def nodes():
     adb('shell', 'uiautomator', 'dump', '/sdcard/anime-mode.xml')
@@ -134,6 +147,32 @@ assert 'Anime Fixture Comedy' in text and 'Anime Fixture Action' not in text
 click('Switch to Regular')
 time.sleep(2)
 assert 'Switch to Anime' in capture('regular-restored')
+# The added bar must preserve normal-page focus memory and tab navigation too.
+tab(0); key('DPAD_DOWN'); wait_focus('browse:mode',5)
+key('DPAD_DOWN')
+for _ in range(5):
+    if 'poster:' in focus(): break
+    key('DPAD_DOWN')
+wait_focus('poster:',10)
+key('DPAD_DOWN')
+wait_focus('poster:',10)
+key('DPAD_RIGHT'); key('DPAD_RIGHT')
+saved=focus().split(' -> ',1)[-1].strip()
+assert saved.startswith('poster:') and saved.endswith('#2')
+key('BACK'); wait_focus('tab:home',10)
+key('DPAD_RIGHT'); wait_focus('tab:movies',10)
+key('DPAD_LEFT'); wait_focus('tab:home',10)
+key('DPAD_DOWN'); wait_focus('browse:mode',5)
+key('DPAD_DOWN'); wait_focus(re.escape(saved)+r'$',15)
+capture('regular-focus-restored')
+for _ in range(7):
+    if 'browse:mode' in focus(): break
+    key('DPAD_UP')
+wait_focus('browse:mode',5)
+key('DPAD_UP'); wait_focus('tab:home',5)
+key('DPAD_RIGHT'); wait_focus('tab:movies',5)
+key('DPAD_RIGHT'); wait_focus('tab:series',5)
 (a.out/'results.json').write_text(json.dumps({'passed':True,'checks':['anime home','movie/series separation',
-    'genre filtering','remote genre navigation','saved mode and genre','regular view restored']},indent=2))
+    'genre filtering','remote genre navigation','saved mode and genre','regular view restored',
+    'normal poster focus restored','single-key tab navigation']},indent=2))
 print('PASS: normal anime-mode UI and profile persistence')
