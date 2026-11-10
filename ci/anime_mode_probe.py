@@ -119,9 +119,9 @@ wait_focus('poster:',5)
 # Load more (or See all at the end) sits after the posters; Load more brings in every film page.
 for _ in range(3):
     for _ in range(6):
-        if re.search(r'row:.*:more', focus()): break
+        if re.search(r'row:.*:(more|see_all)', focus()): break
         key('DPAD_RIGHT')
-    wait_focus(r'row:.*:more',5)
+    wait_focus(r'row:.*:(more|see_all)',5)
     text=capture('anime-load-more')
     if 'Anime Fixture Next Film' in text: break
     key('DPAD_CENTER',2)
