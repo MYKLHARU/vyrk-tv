@@ -156,6 +156,7 @@
     "move_down":  "Sposta giù",
     "move_up":  "Sposta su",
     "needs_streaming_server":  "Richiede il server di streaming locale di Stremio, che VYRK non include. Viene ignorato.",
+    "addon_not_encrypted":  "Usa http, non https: altri sulla rete possono leggere questo indirizzo, incluse le credenziali che contiene.",
     "next":  "Avanti",
     "next_episode":  "Episodio successivo",
     "no_account":  "Accesso non effettuato. La libreria è salvata su questo televisore.",

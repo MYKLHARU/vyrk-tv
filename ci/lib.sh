@@ -7,6 +7,8 @@ fail() { echo "[e2e] FAIL: $*" | tee -a "$TRACE"; FAILURES=$((FAILURES + 1)); }
 # A disconnected or wedged emulator must fail the journey, not hold it indefinitely.
 adb_run() { timeout --kill-after=5s 45s "$ADB" "$@"; }
 adbs() { adb_run shell "$@" | tr -d '\r'; }
+# VYRK's focus trace and playback events are off unless switched on (see CONTRIBUTING.md).
+enable_traces() { adbs setprop log.tag.VyrkFocus DEBUG; adbs setprop log.tag.VyrkEvent DEBUG; }
 
 shot() {
   STEP=$((STEP + 1))

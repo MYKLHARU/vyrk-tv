@@ -11,6 +11,7 @@
     <string name="accent_teal">टील</string>
     <string name="accent_violet">बैंगनी</string>
     <string name="add_to_library">लाइब्रेरी में जोड़ें</string>
+    <string name="addon_not_encrypted">https नहीं, http का उपयोग करता है: नेटवर्क पर दूसरे लोग यह पता पढ़ सकते हैं, इसमें मौजूद साइन-इन जानकारी समेत।</string>
     <string name="addon_refreshed">ऐड-ऑन रीफ़्रेश हुआ</string>
     <string name="addon_url">ऐड-ऑन URL</string>
     <string name="addons_pending_sync">इस टीवी पर सहेजा गया। खाते से सिंक होना बाकी है।</string>

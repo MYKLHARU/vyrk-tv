@@ -44,7 +44,9 @@ object KeyBus {
 
     fun onKey(event: KeyEvent): Boolean {
         Perf.onKey(event)
-        if (event.action == KeyEvent.ACTION_UP) {
+        // Focus trace for the test journeys, off unless switched on with
+        // `adb shell setprop log.tag.VyrkFocus DEBUG`.
+        if (event.action == KeyEvent.ACTION_UP && Log.isLoggable("VyrkFocus", Log.DEBUG)) {
             val key = KeyEvent.keyCodeToString(event.keyCode)
             // Read focus after the event has been handled and focus has moved.
             main.postDelayed({ Log.i("VyrkFocus", "$key -> ${FocusTrace.current}") }, 150)

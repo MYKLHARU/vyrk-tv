@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Add-ons that use plain http on a public server now show a warning on the install screen and in Settings › Add-ons: anyone on the network can read their address, including a sign-in inside it. Add-ons on your home network are not flagged.
+- Release builds no longer write a log line for every remote key press and playback event. The test journeys switch these traces on.
+
 ## v0.1.22
 
 - Added a per-profile Switch to Anime / Switch to Regular control. Anime mode limits Home, Movies and Series to anime catalogues and separates films from series using each title's type.

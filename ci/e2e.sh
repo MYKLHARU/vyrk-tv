@@ -44,6 +44,7 @@ if [[ -n "$APK" ]]; then
   adb_run install -r "$APK"
 fi
 adbs pm clear "$PKG" >/dev/null || true
+enable_traces
 adb_run logcat -c
 adbs am start -n "$PKG/.MainActivity" >/dev/null
 sleep 8
