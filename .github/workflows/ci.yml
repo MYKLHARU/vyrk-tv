@@ -135,11 +135,9 @@ jobs:
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
       - name: Media for the test add-on
         run: |
-          if ! command -v ffmpeg >/dev/null; then
-            echo "Installing test media tools"
-            sudo timeout --kill-after=5s 120s apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update -qq
-            sudo timeout --kill-after=5s 120s apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y -qq ffmpeg
-          fi
+          timeout --kill-after=5s 120s python3 ci/install_test_ffmpeg.py --directory "$RUNNER_TEMP/vyrk-test-tools"
+          export PATH="$RUNNER_TEMP/vyrk-test-tools:$PATH"
+          echo "$RUNNER_TEMP/vyrk-test-tools" >> "$GITHUB_PATH"
           mkdir -p ci/media
           echo "Generating the required local playback sample"
           timeout --kill-after=5s 180s ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 \
@@ -147,8 +145,11 @@ jobs:
           # Cheap stream-copy fixture: full 45-minute alternate for the short-source scenario.
           timeout --kill-after=5s 60s ffmpeg -loglevel error -y -stream_loop 4 -i ci/media/sample-720p.mp4 -t 2700 -c copy -movflags +faststart ci/media/sample-full.mp4
           echo "Fetching the optional remote clip (local sample is the fallback)"
-          timeout --kill-after=10s 120s ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
-            -c copy -movflags +faststart ci/media/bbb-clip.mp4 || echo "BBB clip unavailable; search playback uses the generated sample"
+          if ! timeout --kill-after=10s 120s ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
+            -c copy -movflags +faststart ci/media/bbb-clip.mp4; then
+            rm -f ci/media/bbb-clip.mp4
+            echo "BBB clip unavailable; search playback uses the generated sample"
+          fi
       - name: Start the test add-on
         run: |
           mkdir -p ci/out/e2e
@@ -218,9 +219,11 @@ jobs:
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
       - name: Media and test add-on
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          timeout --kill-after=5s 120s python3 ci/install_test_ffmpeg.py --directory "$RUNNER_TEMP/vyrk-test-tools"
+          export PATH="$RUNNER_TEMP/vyrk-test-tools:$PATH"
+          echo "$RUNNER_TEMP/vyrk-test-tools" >> "$GITHUB_PATH"
           mkdir -p ci/media ci/out/showcase
-          timeout 300 ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
+          timeout --kill-after=10s 120s ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
             -c copy -movflags +faststart ci/media/bbb-clip.mp4
           cp ci/media/bbb-clip.mp4 ci/media/sample-720p.mp4
           nohup python3 ci/test_addon.py > ci/out/showcase/addon.log 2>&1 &
