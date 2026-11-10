@@ -325,12 +325,16 @@ open_fixture() {
   sleep 4
 }
 seek_to_sample_end() {
-  dismiss_stall_prompt
-  for _ in $(seq 1 22); do
-    adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD
-    sleep 0.4
+  # The stall prompt owns the remote: if it comes up during the seek, close it and seek again.
+  for _ in 1 2 3; do
+    dismiss_stall_prompt
+    for _ in $(seq 1 22); do
+      adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD
+      sleep 0.4
+    done
+    sleep 3
+    [[ "$(focus_now)" == prompt:yes ]] || break
   done
-  sleep 3
 }
 
 # A ten-minute file presented as a 45-minute episode must stop with recovery choices.
