@@ -366,9 +366,14 @@ fun BrowseRow(
                             )
                         }
                     }
-                    if (row.kind == RowKind.CATALOG && row.items.size >= 10) item {
+                    if (row.kind == RowKind.CATALOG && (row.items.size >= 10 ||
+                        row.animeOnly && row.ref?.catalog?.supportsExtra("skip") == true)) item(key = "catalog-action") {
                         Box(Modifier.size(posterWidth, height), contentAlignment = Alignment.Center) {
-                            VyrkButton(str(R.string.see_all), onClick = onSeeAll, style = ButtonStyle.SECONDARY, modifier = Modifier.traceFocus("row:${row.key}:see_all"))
+                            val more = row.animeOnly && row.hasMore
+                            VyrkButton(str(if (more) R.string.anime_load_more else R.string.see_all),
+                                onClick = { if (row.animeOnly && row.hasMore) onLoadMore() else onSeeAll() },
+                                style = ButtonStyle.SECONDARY,
+                                modifier = Modifier.traceFocus("row:${row.key}:${if (more) "more" else "see_all"}"))
                         }
                     }
                 }

@@ -125,7 +125,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/anime-mode/manifest.json":
             return self._json({"id": "org.vyrk.animefixture", "name": "Anime mode fixture", "version": "1.0.0",
                 "types": ["movie", "series", "anime"], "resources": ["catalog"], "catalogs": [
-                    {"type": "movie", "id": "anime/films", "name": "Anime fixture films"},
+                    {"type": "movie", "id": "anime/films", "name": "Anime fixture films", "extraSupported": ["skip"]},
                     {"type": "series", "id": "anime/shows", "name": "Anime fixture shows",
                      "extra": [{"name": "genre", "options": ["Action", "Comedy", "Science Fiction"]}]},
                     {"type": "anime", "id": "anime/mixed", "name": "Anime fixture mixed"},
@@ -136,6 +136,10 @@ class Handler(SimpleHTTPRequestHandler):
             comedy = {"id": "mal:90003", "type": "series", "name": "Anime Fixture Comedy", "genres": ["Comedy"], "poster": f"{BASE}/artwork/logo.png"}
             items = [film] if "/films" in path else [action, comedy]
             if "/mixed" in path: items = [film, action, comedy]
+            if "/films" in path and "skip=" in path:
+                skip = int(path.split("skip=", 1)[1].removesuffix(".json").split("&")[0])
+                items = ([dict(film, id="mal:90009", name="Anime Fixture Drama Film", genres=["Drama"])] if skip == 1 else
+                         [dict(film, id="mal:90010", name="Anime Fixture Next Film")] if skip == 2 else [])
             if "/regular" in path: items = [{"id": "tt90004", "type": "series", "name": "Regular Fixture Show"}]
             if "genre=" in path:
                 genre = path.split("genre=", 1)[1].removesuffix(".json").split("&")[0]

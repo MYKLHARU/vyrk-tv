@@ -392,7 +392,7 @@ fun BrowsePage(
                                 focusedPoster = m; focusedRowKey = row.key
                                 flags.heroFocused.set(false); flags.top10CardFocused.set(false)
                                 session.rememberFocus(tabKey, FocusMemory(row.key, i, m.id))
-                                if (row.kind != RowKind.CONTINUE && i >= row.items.size - 6) model.loadMore(row)
+                                if (!row.animeOnly && row.kind != RowKind.CONTINUE && i >= row.items.size - 6) model.loadMore(row)
                                 // The wallpaper for the titles either side, ahead of time, so moving along the row
                                 // finds them ready (same screen size as the wallpaper asks for).
                                 val dm = context.resources.displayMetrics

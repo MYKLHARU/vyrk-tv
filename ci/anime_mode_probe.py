@@ -91,6 +91,23 @@ click('Action')
 time.sleep(2)
 text=capture('anime-action')
 assert 'Anime Fixture Action' in text and 'Anime Fixture Comedy' not in text
+tab(1)
+key('DPAD_DOWN'); wait_focus(r'browse:(mode|genre:)',5)
+key('DPAD_DOWN'); wait_focus('poster:',5)
+key('DPAD_RIGHT'); wait_focus(r'row:.*:more',5)
+key('DPAD_CENTER',2)
+text=capture('anime-sparse-page')
+assert 'Anime Fixture Next Film' in text and 'Anime Fixture Drama Film' not in text
+key('DPAD_CENTER',2)
+wait_focus('seeall#0',5)
+key('DPAD_RIGHT'); wait_focus('seeall:page',5)
+key('DPAD_CENTER',2)
+text=capture('anime-see-all-page')
+assert 'Anime Fixture Next Film' in text and 'Anime Fixture Drama Film' not in text
+key('BACK')
+key('BACK')
+tab(2)
+click('Action')
 # Genre chips remain focused while data refreshes. Select Comedy using the TV remote.
 wait_focus('browse:genre:Action',5)
 key('DPAD_RIGHT'); wait_focus('browse:genre:Adventure',5)

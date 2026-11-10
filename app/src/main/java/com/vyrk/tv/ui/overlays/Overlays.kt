@@ -309,6 +309,11 @@ private fun SeeAll(o: Overlay.SeeAll) {
                     onClick = { app.push(Overlay.Info(m, null)) }, onLongClick = { app.push(Overlay.ItemMenu(m, null)) }, onPlayPause = {},
                     traceLabel = "seeall#$i")
             }
+            if (row.animeOnly && row.items.isNotEmpty() && o.ref.catalog.supportsExtra("skip")) item(key = "catalog-page") {
+                VyrkButton(str(if (row.hasMore) R.string.anime_load_more else R.string.close),
+                    onClick = { if (row.hasMore) model.loadMore(row) else closeOverlay(app, o) },
+                    modifier = Modifier.traceFocus("seeall:page"))
+            }
         }
     }
 }
