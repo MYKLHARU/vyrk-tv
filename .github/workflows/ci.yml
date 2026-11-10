@@ -135,12 +135,18 @@ jobs:
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
       - name: Media for the test add-on
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          if ! command -v ffmpeg >/dev/null; then
+            echo "Installing test media tools"
+            sudo timeout --kill-after=5s 120s apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update -qq
+            sudo timeout --kill-after=5s 120s apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y -qq ffmpeg
+          fi
           mkdir -p ci/media
-          ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 \
+          echo "Generating the required local playback sample"
+          timeout --kill-after=5s 180s ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 \
             -t 600 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 32 -c:a aac -b:a 64k -movflags +faststart ci/media/sample-720p.mp4
           # Cheap stream-copy fixture: full 45-minute alternate for the short-source scenario.
-          ffmpeg -loglevel error -y -stream_loop 4 -i ci/media/sample-720p.mp4 -t 2700 -c copy -movflags +faststart ci/media/sample-full.mp4
+          timeout --kill-after=5s 60s ffmpeg -loglevel error -y -stream_loop 4 -i ci/media/sample-720p.mp4 -t 2700 -c copy -movflags +faststart ci/media/sample-full.mp4
+          echo "Fetching the optional remote clip (local sample is the fallback)"
           timeout --kill-after=10s 120s ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
             -c copy -movflags +faststart ci/media/bbb-clip.mp4 || echo "BBB clip unavailable; search playback uses the generated sample"
       - name: Start the test add-on
