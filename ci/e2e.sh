@@ -104,6 +104,8 @@ adb_run shell input keyevent KEYCODE_DPAD_CENTER
 echo "KEYCODE_DPAD_CENTER | (player starting) | $(window_now) | Play" >> "$TRACE"
 wait_focus '^player:' 30
 sleep 25
+shot player
+probe "player after decoder warmup"
 # Software-rendered CI can legitimately offer recovery while the decoder warms up.
 if [[ "$(focus_now)" == prompt:yes ]]; then
   adbs uiautomator dump /sdcard/stall-prompt.xml >/dev/null
@@ -114,8 +116,6 @@ if [[ "$(focus_now)" == prompt:yes ]]; then
     key KEYCODE_DPAD_CENTER 1 "continue the local sample"
   fi
 fi
-shot player
-probe "player"
 expect '^player:' "player has focus"
 if [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]]; then
   tail -n +"$((ADDON_START + 1))" "$ADDON_LOG" > "$OUT/addon-requests-during-play.txt"
