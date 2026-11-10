@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.24
 
 - Removed the genre bar under the top menu in Anime mode. Anime pages show every anime title; Discover still filters by genre.
 
