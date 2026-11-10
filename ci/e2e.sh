@@ -298,6 +298,13 @@ else log "warn: Skip intro not seen ($(printf '%s\n' "$EVENTS" | grep -o 'introd
 dismiss_stall_prompt
 key KEYCODE_DPAD_DOWN 1.5 "show controls"
 key KEYCODE_DPAD_UP 1.2 "to timeline"
+# The stall prompt can come back between the dismissal and these keys; close it and try again.
+for _ in 1 2; do
+  [[ "$(focus_now)" == prompt:yes ]] || break
+  dismiss_stall_prompt
+  key KEYCODE_DPAD_DOWN 1.5 "show controls again"
+  key KEYCODE_DPAD_UP 1.2 "to timeline again"
+done
 expect '^player:timeline$' "timeline takes focus above the controls"
 key KEYCODE_DPAD_RIGHT 0.4 "scrub"; key KEYCODE_DPAD_RIGHT 0.4
 shot timeline-scrub
