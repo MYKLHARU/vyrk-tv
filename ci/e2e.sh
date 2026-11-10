@@ -21,17 +21,30 @@ FAILURES=0
 
 source "$(dirname "$0")/lib.sh"
 
+diagnostics_on_exit() {
+  local ci_exitcode=$?
+  trap - EXIT
+  if (( ci_exitcode != 0 )); then
+    log "journey exited with $ci_exitcode; collecting bounded diagnostics"
+    timeout --kill-after=2s 15s "$ADB" logcat -d > "$OUT/logcat-failure.txt" 2>&1 || true
+    timeout --kill-after=2s 10s "$ADB" shell dumpsys activity activities > "$OUT/activity-failure.txt" 2>&1 || true
+    timeout --kill-after=2s 10s "$ADB" exec-out screencap -p > "$OUT/failure.png" 2>/dev/null || true
+  fi
+  exit "$ci_exitcode"
+}
+trap diagnostics_on_exit EXIT
+
 # ---------------------------------------------------------------- setup
-"$ADB" wait-for-device
+adb_run wait-for-device
 for _ in $(seq 1 60); do [[ "$(adbs getprop sys.boot_completed)" == 1 ]] && break; sleep 2; done
 for _ in $(seq 1 30); do adbs pm path android >/dev/null 2>&1 && break; sleep 2; done
 log "device: $(adbs getprop ro.product.model) API $(adbs getprop ro.build.version.sdk), $(adbs wm size)"
 if [[ -n "$APK" ]]; then
-  "$ADB" uninstall "$PKG" >/dev/null 2>&1 || true
-  "$ADB" install -r "$APK"
+  adb_run uninstall "$PKG" >/dev/null 2>&1 || true
+  adb_run install -r "$APK"
 fi
 adbs pm clear "$PKG" >/dev/null || true
-"$ADB" logcat -c
+adb_run logcat -c
 adbs am start -n "$PKG/.MainActivity" >/dev/null
 sleep 8
 
@@ -87,10 +100,20 @@ shot info-page
 ADDON_START=0
 [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]] && ADDON_START=$(wc -l < "$ADDON_LOG")
 # The player is a new activity: wait for it to take focus rather than sampling at a fixed time.
-"$ADB" shell input keyevent KEYCODE_DPAD_CENTER
+adb_run shell input keyevent KEYCODE_DPAD_CENTER
 echo "KEYCODE_DPAD_CENTER | (player starting) | $(window_now) | Play" >> "$TRACE"
 wait_focus '^player:' 30
 sleep 25
+# Software-rendered CI can legitimately offer recovery while the decoder warms up.
+if [[ "$(focus_now)" == prompt:yes ]]; then
+  adbs uiautomator dump /sdcard/stall-prompt.xml >/dev/null
+  adb_run pull /sdcard/stall-prompt.xml "$OUT/stall-prompt.xml" >/dev/null
+  if grep -q 'Playback keeps pausing' "$OUT/stall-prompt.xml"; then
+    key KEYCODE_DPAD_RIGHT 0.5 "Keep trying on the software renderer"
+    expect '^prompt:no$' "stall recovery Keep trying is reachable"
+    key KEYCODE_DPAD_CENTER 1 "continue the local sample"
+  fi
+fi
 shot player
 probe "player"
 expect '^player:' "player has focus"
@@ -128,9 +151,10 @@ expect '^poster:cw#0$' "Continue Watching row is first"
 shot continue-watching
 adbs am force-stop "$PKG"
 sleep 2
-"$ADB" logcat -c
+adb_run logcat -c
 adbs am start -n "$PKG/.MainActivity" >/dev/null
 sleep 12
+wait_focus '^poster:cw#0$' 30
 probe "after restart"
 expect '^poster:cw#0$' "focus restored to the Continue Watching poster after restart"
 shot restored-after-restart
@@ -147,8 +171,8 @@ shot removed-toast
 sleep 1
 probe "after remove"
 expect '^hero:watch$' "focus lands on the hero when the row empties"
-"$ADB" shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
-"$ADB" pull /sdcard/ui.xml "$OUT/ui-after-remove.xml" >/dev/null 2>&1 || true
+adb_run shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
+adb_run pull /sdcard/ui.xml "$OUT/ui-after-remove.xml" >/dev/null 2>&1 || true
 if grep -qE 'content-desc="[^"]*, [0-9]+%' "$OUT/ui-after-remove.xml" 2>/dev/null; then
   fail "a poster still shows a progress percentage after removal"
 else
@@ -165,13 +189,17 @@ key KEYCODE_BACK 1.5 "to the tab strip"
 expect '^tab:home$' "Back from a row goes to the tab strip"
 key KEYCODE_DPAD_RIGHT 1.5 "Movies"; key KEYCODE_DPAD_LEFT 1.5 "Home again"
 key KEYCODE_DPAD_DOWN 2.5 "back into Home"
+[[ "$(focus_now)" == 'browse:mode' ]] && key KEYCODE_DPAD_DOWN 1 "past mode switch"
+wait_focus "^$KEEP\$" 15
 if [[ "$(focus_now)" == "$KEEP" ]]; then log "ok: Home kept the selected title across a tab switch ($KEEP)"; else fail "Home lost its place: expected '$KEEP', focus is '$(focus_now)'"; fi
 
 # ---------------------------------------------------------------- tour every tab
 until_focus KEYCODE_DPAD_UP '^tab:home$' 8
 for t in movies series anime library; do
   until_focus KEYCODE_DPAD_RIGHT "^tab:$t\$" 3 && {
-    sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"; probe "$t content"
+    sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"
+    [[ "$(focus_now)" == 'browse:mode' ]] && key KEYCODE_DPAD_DOWN 1 "past mode switch"
+    probe "$t content"
     # The featured row is there on the first visit, without scrolling or a second visit.
     [[ $t == movies || $t == series ]] && expect '^hero:watch$' "$t opens with its featured row"
     until_focus KEYCODE_DPAD_UP "^tab:$t\$" 6
@@ -236,13 +264,13 @@ expect '^info:watched$' "more opens page two"
 shot info-series-page-two
 key KEYCODE_BACK 1.6 "back to page one"
 expect '^info:play$' "Back on page two returns to Play"
-"$ADB" shell input keyevent KEYCODE_DPAD_CENTER
+adb_run shell input keyevent KEYCODE_DPAD_CENTER
 wait_focus '^player:' 40
 sleep 12
-for _ in $(seq 1 15); do "$ADB" shell input keyevent KEYCODE_MEDIA_FAST_FORWARD; sleep 0.4; done
+for _ in $(seq 1 15); do adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD; sleep 0.4; done
 sleep 7
 shot skip-intro-pill
-EVENTS=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+EVENTS=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
 # IntroDB is an external service: report, but don't fail the build on its availability.
 if printf '%s\n' "$EVENTS" | grep -q 'skip_offered INTRO'; then log "ok: Skip intro offered from IntroDB timings"
 else log "warn: Skip intro not seen ($(printf '%s\n' "$EVENTS" | grep -o 'introdb_segments [0-9]*' | tail -n 1 || echo 'no IntroDB answer'))"; fi
@@ -269,7 +297,7 @@ open_fixture() {
 }
 seek_to_sample_end() {
   for _ in $(seq 1 22); do
-    "$ADB" shell input keyevent KEYCODE_MEDIA_FAST_FORWARD
+    adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD
     sleep 0.4
   done
   sleep 3
@@ -277,16 +305,16 @@ seek_to_sample_end() {
 
 # A ten-minute file presented as a 45-minute episode must stop with recovery choices.
 open_fixture vyrk-short
-"$ADB" logcat -c
+adb_run logcat -c
 seek_to_sample_end
 wait_focus '^player:incomplete_switch$' 15
 shot short-stream-recovery
-EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+EV=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
 if printf '%s\n' "$EV" | grep -q 'play_start vyrk-short:1:2'; then fail "short stream advanced automatically"; fi
 key KEYCODE_DPAD_RIGHT 0.8 "Retry"
 expect '^player:incomplete_retry$' "Retry is reachable"
 key KEYCODE_DPAD_CENTER 3 "retry short source from the beginning"
-EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+EV=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
 if printf '%s\n' "$EV" | grep -q 'play_start vyrk-short:1:1 0'; then log "ok: Retry starts at zero"; else fail "Retry did not restart at zero"; fi
 seek_to_sample_end
 wait_focus '^player:incomplete_switch$' 15
@@ -300,7 +328,7 @@ key KEYCODE_DPAD_RIGHT 0.5
 key KEYCODE_DPAD_RIGHT 0.5
 expect '^player:incomplete_next$' "manual Next episode is reachable"
 key KEYCODE_DPAD_CENTER 4 "manual next episode"
-EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+EV=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
 if printf '%s\n' "$EV" | grep -q 'play_start vyrk-short:1:2 0'; then log "ok: manual Next starts at zero"; else fail "manual Next did not start episode two"; fi
 seek_to_sample_end
 wait_focus '^player:incomplete_switch$' 15
@@ -314,11 +342,11 @@ back_from_player
 
 # The same ten-minute file with a ten-minute episode runtime must still autoplay S1E2 at zero.
 open_fixture vyrk-full
-"$ADB" logcat -c
+adb_run logcat -c
 seek_to_sample_end
 NEXT_START=""
 for _ in $(seq 1 25); do
-  EV=$("$ADB" logcat -d -s VyrkEvent:I 2>/dev/null || true)
+  EV=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
   NEXT_START=$(printf '%s\n' "$EV" | grep -o 'play_start vyrk-full:1:2 [0-9]*' | tail -n 1 || true)
   [[ -n "$NEXT_START" ]] && break
   sleep 1
@@ -335,7 +363,7 @@ sleep 11
 wait_focus '^info:play$' 10
 shot aio-season-logo
 adbs uiautomator dump /sdcard/aio-season-logo.xml >/dev/null
-"$ADB" pull /sdcard/aio-season-logo.xml "$OUT/aio-season-logo.xml" >/dev/null
+adb_run pull /sdcard/aio-season-logo.xml "$OUT/aio-season-logo.xml" >/dev/null
 if python - "$OUT/aio-season-logo.xml" <<'PY'
 import sys, xml.etree.ElementTree as E
 nodes = list(E.parse(sys.argv[1]).iter('node'))
@@ -347,11 +375,15 @@ then log "ok: delayed AIO season metadata renders its inherited logo in the norm
 else fail "AIO season logo failed in normal info page"; fi
 key KEYCODE_BACK 1 "close AIO fixture"
 
+if ! python ci/anime_mode_probe.py --adb "$ADB" --package "$PKG" --out "$OUT/anime-mode"; then
+  fail "anime mode normal-app journey failed"
+fi
+
 # ---------------------------------------------------------------- results
-"$ADB" logcat -d > "$OUT/logcat.txt" || true
+adb_run logcat -d > "$OUT/logcat.txt" || true
 PKGS=$(adbs cmd package list packages -U "$PKG" || true)
 APP_UID=$(printf '%s\n' "$PKGS" | grep -oE 'uid:[0-9]+' | head -n 1 | cut -d: -f2 || true)
-"$ADB" logcat -d --uid="$APP_UID" > "$OUT/logcat-app.txt" 2>/dev/null || grep -i vyrk "$OUT/logcat.txt" > "$OUT/logcat-app.txt" || true
+adb_run logcat -d --uid="$APP_UID" > "$OUT/logcat-app.txt" 2>/dev/null || grep -i vyrk "$OUT/logcat.txt" > "$OUT/logcat-app.txt" || true
 if grep -qiE 'authKey|password=|token=|10\.0\.2\.2:7000/[^ ]*manifest' "$OUT/logcat-app.txt"; then fail "secret-like text or an unredacted add-on URL in VYRK's logcat"; fi
 if grep -q 'FATAL EXCEPTION' "$OUT/logcat.txt"; then fail "app crashed (see logcat.txt)"; fi
 log "trace: $(wc -l < "$TRACE") keys"

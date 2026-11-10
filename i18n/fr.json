@@ -1,4 +1,10 @@
 {
+    "switch_anime": "Passer aux animés",
+    "switch_regular": "Revenir au mode normal",
+    "anime_all_genres": "Tous les genres",
+    "anime_no_catalogs": "Aucun catalogue animé ici. Ajoutez-en ou activez-en un dans les paramètres.",
+    "anime_no_matches": "Aucun titre correspondant sur cette page. Les genres dépendent des étiquettes du module.",
+    "anime_load_more": "Charger plus",
     "addons_pending_sync": "Enregistré sur ce téléviseur. Synchronisation du compte en attente.",
     "about_body":  "Client Android TV libre et open source pour les modules Stremio. Sans publicité, statistiques ni pistage. VYRK n'héberge, n'indexe ni ne fournit aucun contenu et n'est pas affilié à Stremio.",
     "accent_amber":  "Ambre",

@@ -85,6 +85,7 @@ object CatalogRules {
 
     private val animePrefixes = listOf("kitsu:", "mal:", "anilist:", "anidb:")
     private val animeName = Regex("""(?i)\b(anime|animes)\b""")
+    private val animeCatalogId = Regex("^(mal|kitsu|anilist|anidb)[.:/]", RegexOption.IGNORE_CASE)
 
     /** Anime only from reliable signals: the type, known anime ID prefixes, or explicit naming. */
     fun isAnime(meta: MetaPreview): Boolean =
@@ -92,6 +93,8 @@ object CatalogRules {
 
     fun isAnimeCatalog(ref: CatalogRef): Boolean =
         ref.catalog.type == "anime" || animeName.containsMatchIn(ref.name) ||
+            animeName.containsMatchIn(ref.catalog.id.replace('/', ' ').replace('.', ' ').replace('_', ' ')) ||
+            animeCatalogId.containsMatchIn(ref.catalog.id) ||
             ref.addon.manifest.idPrefixes?.let { p -> p.isNotEmpty() && p.all { x -> animePrefixes.any { x.startsWith(it) } } } == true
 
     fun hasLiveCatalogs(addons: List<Descriptor>): Boolean =

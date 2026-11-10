@@ -1,4 +1,10 @@
 {
+    "switch_anime": "Switch to Anime",
+    "switch_regular": "Switch to Regular",
+    "anime_all_genres": "All genres",
+    "anime_no_catalogs": "No anime catalogues here. Add or enable an anime catalogue in Settings.",
+    "anime_no_matches": "No matching titles in this catalogue page. Genre results depend on the tags supplied by your add-on.",
+    "anime_load_more": "Load more",
     "addons_pending_sync": "Saved on this TV. Account sync pending.",
     "about_body":  "Free, open-source Android TV client for Stremio add-ons. No ads, analytics or tracking. VYRK hosts, indexes and provides no media and isn't affiliated with Stremio.",
     "accent_amber":  "Amber",

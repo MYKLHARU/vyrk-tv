@@ -121,7 +121,7 @@ jobs:
   e2e:
     needs: build
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
@@ -135,14 +135,21 @@ jobs:
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
       - name: Media for the test add-on
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          timeout --kill-after=5s 120s python3 ci/install_test_ffmpeg.py --directory "$RUNNER_TEMP/vyrk-test-tools"
+          export PATH="$RUNNER_TEMP/vyrk-test-tools:$PATH"
+          echo "$RUNNER_TEMP/vyrk-test-tools" >> "$GITHUB_PATH"
           mkdir -p ci/media
-          ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 \
-            -t 600 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 32 -c:a aac -b:a 64k -movflags +faststart ci/media/sample-720p.mp4
+          echo "Generating the required local playback sample"
+          timeout --kill-after=5s 180s ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=10 -f lavfi -i sine=frequency=440:sample_rate=48000 \
+            -t 600 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 32 -g 50 -c:a aac -b:a 64k -movflags +faststart ci/media/sample-720p.mp4
           # Cheap stream-copy fixture: full 45-minute alternate for the short-source scenario.
-          ffmpeg -loglevel error -y -stream_loop 4 -i ci/media/sample-720p.mp4 -t 2700 -c copy -movflags +faststart ci/media/sample-full.mp4
-          timeout 300 ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
-            -c copy -movflags +faststart ci/media/bbb-clip.mp4 || echo "BBB clip unavailable; search playback uses the generated sample"
+          timeout --kill-after=5s 60s ffmpeg -loglevel error -y -stream_loop 4 -i ci/media/sample-720p.mp4 -t 2700 -c copy -movflags +faststart ci/media/sample-full.mp4
+          echo "Fetching the optional remote clip (local sample is the fallback)"
+          if ! timeout --kill-after=10s 120s ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
+            -c copy -movflags +faststart ci/media/bbb-clip.mp4; then
+            rm -f ci/media/bbb-clip.mp4
+            echo "BBB clip unavailable; search playback uses the generated sample"
+          fi
       - name: Start the test add-on
         run: |
           mkdir -p ci/out/e2e
@@ -155,9 +162,21 @@ jobs:
           target: android-tv
           arch: x86
           profile: tv_1080p
+          # Pin before the 37.2.x graphics cleanup crashes also reported by Chromium.
+          # https://chromium.googlesource.com/chromium/src/tools/android/+/53a24f44b2957a8937bb63f3d150081c73df0532
+          emulator-build: '15917651' # 37.1.11 stable
+          ram-size: 2048M
+          heap-size: 512M
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          emulator-options: -no-window -gpu swangle -noaudio -no-boot-anim -no-snapshot -no-metrics
           script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/e2e ADDON_LOG=ci/out/e2e/addon.log bash ci/e2e.sh
+      - name: Emulator host diagnostics
+        if: failure()
+        run: |
+          mkdir -p ci/out/e2e
+          free -h > ci/out/e2e/host-memory.txt
+          ps -eo pid,ppid,comm,rss --sort=-rss > ci/out/e2e/host-processes.txt
+          sudo dmesg -T | grep -iE 'out of memory|oom|killed process|segfault|qemu|emulator' | tail -n 80 > ci/out/e2e/host-kernel.txt || true
       - uses: actions/upload-artifact@v5
         if: always()
         with:
@@ -183,7 +202,7 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') ||
       (github.event_name == 'push' && contains(github.event.head_commit.message, '[showcase]'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
@@ -200,9 +219,11 @@ jobs:
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
       - name: Media and test add-on
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          timeout --kill-after=5s 120s python3 ci/install_test_ffmpeg.py --directory "$RUNNER_TEMP/vyrk-test-tools"
+          export PATH="$RUNNER_TEMP/vyrk-test-tools:$PATH"
+          echo "$RUNNER_TEMP/vyrk-test-tools" >> "$GITHUB_PATH"
           mkdir -p ci/media ci/out/showcase
-          timeout 300 ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
+          timeout --kill-after=10s 120s ffmpeg -loglevel error -y -rw_timeout 30000000 -ss 0 -t 150 -i https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4 \
             -c copy -movflags +faststart ci/media/bbb-clip.mp4
           cp ci/media/bbb-clip.mp4 ci/media/sample-720p.mp4
           nohup python3 ci/test_addon.py > ci/out/showcase/addon.log 2>&1 &
@@ -214,8 +235,11 @@ jobs:
           target: android-tv
           arch: x86
           profile: tv_1080p
+          emulator-build: '15917651' # Match the emulator regression journey.
+          ram-size: 2048M
+          heap-size: 512M
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          emulator-options: -no-window -gpu swangle -noaudio -no-boot-anim -no-snapshot -no-metrics
           script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/showcase bash ci/showcase.sh
       - name: Build README images
         run: |

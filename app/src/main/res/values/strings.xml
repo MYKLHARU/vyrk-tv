@@ -16,6 +16,10 @@
     <string name="addons_pending_sync">Saved on this TV. Account sync pending.</string>
     <string name="airs_on">Airs %1$s</string>
     <string name="always_show_sources">Always show sources</string>
+    <string name="anime_all_genres">All genres</string>
+    <string name="anime_load_more">Load more</string>
+    <string name="anime_no_catalogs">No anime catalogues here. Add or enable an anime catalogue in Settings.</string>
+    <string name="anime_no_matches">No matching titles in this catalogue page. Genre results depend on the tags supplied by your add-on.</string>
     <string name="any">Any</string>
     <string name="app_language">App language</string>
     <string name="ask_still_watching">Ask if I\'m still watching</string>
@@ -284,6 +288,8 @@
     <string name="subtitle_mode">Mode</string>
     <string name="subtitle_size">Size</string>
     <string name="subtitles">Subtitles</string>
+    <string name="switch_anime">Switch to Anime</string>
+    <string name="switch_regular">Switch to Regular</string>
     <string name="switch_stream">Switch stream</string>
     <string name="sync_now">Sync now</string>
     <string name="sync_style">Sync &amp; Style</string>

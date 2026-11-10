@@ -290,8 +290,16 @@ fun BrowseRow(
         if (row.items.isEmpty()) return@LaunchedEffect
         val target = idx.coerceAtMost(row.items.lastIndex)
         listState.scrollToItem((target - 1).coerceAtLeast(0))
-        kotlinx.coroutines.delay(32)
-        runCatching { restoreReq.requestFocus() }
+        // Wait for placement, not a fixed wall-clock delay. Slow TV renderers can need
+        // longer than 32 ms to re-place a kept page beneath the browse controls.
+        androidx.compose.runtime.withFrameNanos { }
+        repeat(24) {
+            androidx.compose.runtime.withFrameNanos { }
+            if (runCatching { restoreReq.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) {
+                onRestored()
+                return@LaunchedEffect
+            }
+        }
         onRestored()
     }
 
@@ -305,8 +313,11 @@ fun BrowseRow(
                 Text(str(R.string.row_error), style = Vyrk.type.bodyM, color = c.textMuted)
                 VyrkButton(str(R.string.retry), onClick = onRetry, modifier = Modifier.traceFocus("row:${row.key}:retry"))
             }
-            row.items.isEmpty() && row.loadedOnce && !row.loading -> Box(Modifier.padding(start = Dimens.screenMargin).height(48.dp), contentAlignment = Alignment.CenterStart) {
-                Text(str(R.string.row_empty), style = Vyrk.type.bodyM, color = c.textMuted)
+            row.items.isEmpty() && row.loadedOnce && !row.loading -> Row(Modifier.padding(start = Dimens.screenMargin).height(48.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(str(if (row.animeOnly) R.string.anime_no_matches else R.string.row_empty), style = Vyrk.type.bodyM, color = c.textMuted)
+                if (row.hasMore) VyrkButton(str(R.string.anime_load_more), onClick = onLoadMore,
+                    modifier = Modifier.traceFocus("row:${row.key}:more"))
             }
             row.items.isEmpty() -> Row(Modifier.padding(start = Dimens.screenMargin), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 repeat(7) { Box(Modifier.size(posterWidth, height).clip(Dimens.posterShape).background(c.raised.copy(alpha = 0.6f))) }
@@ -363,9 +374,14 @@ fun BrowseRow(
                             )
                         }
                     }
-                    if (row.kind == RowKind.CATALOG && row.items.size >= 10) item {
+                    if (row.kind == RowKind.CATALOG && (row.items.size >= 10 ||
+                        row.animeOnly && row.ref?.catalog?.supportsExtra("skip") == true)) item(key = "catalog-action") {
                         Box(Modifier.size(posterWidth, height), contentAlignment = Alignment.Center) {
-                            VyrkButton(str(R.string.see_all), onClick = onSeeAll, style = ButtonStyle.SECONDARY, modifier = Modifier.traceFocus("row:${row.key}:see_all"))
+                            val more = row.animeOnly && row.hasMore
+                            VyrkButton(str(if (more) R.string.anime_load_more else R.string.see_all),
+                                onClick = { if (row.animeOnly && row.hasMore) onLoadMore() else onSeeAll() },
+                                style = ButtonStyle.SECONDARY,
+                                modifier = Modifier.traceFocus("row:${row.key}:${if (more) "more" else "see_all"}"))
                         }
                     }
                 }
