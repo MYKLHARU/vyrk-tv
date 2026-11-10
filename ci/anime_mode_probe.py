@@ -60,9 +60,16 @@ def nodes():
 
 def click(text):
     tab(0)
-    key('DPAD_DOWN')
-    wait_focus('browse:mode',5)
-    if not text.startswith('Switch to '):
+    if text.startswith('Switch to '):
+        for _ in range(10):
+            if 'nav:anime' in focus(): break
+            key('DPAD_RIGHT')
+        wait_focus('nav:anime',5)
+    else:
+        key('DPAD_DOWN'); wait_focus('browse:genre:',5)
+        for _ in range(18):
+            if 'browse:genre:all' in focus(): break
+            key('DPAD_LEFT')
         for _ in range(18):
             if 'browse:genre:'+text in focus(): break
             key('DPAD_RIGHT')
@@ -151,8 +158,7 @@ click('Switch to Regular')
 time.sleep(2)
 assert 'Switch to Anime' in capture('regular-restored')
 # The added bar must preserve normal-page focus memory and tab navigation too.
-tab(0); key('DPAD_DOWN'); wait_focus('browse:mode',5)
-key('DPAD_DOWN')
+tab(0); key('DPAD_DOWN')
 for _ in range(5):
     if 'poster:' in focus(): break
     key('DPAD_DOWN')
@@ -165,17 +171,47 @@ assert saved.startswith('poster:') and saved.endswith('#2')
 key('BACK'); wait_focus('tab:home',10)
 key('DPAD_RIGHT'); wait_focus('tab:movies',10)
 key('DPAD_LEFT'); wait_focus('tab:home',10)
-key('DPAD_DOWN'); wait_focus('browse:mode',5)
 key('DPAD_DOWN'); wait_focus(re.escape(saved)+r'$',15)
 capture('regular-focus-restored')
-for _ in range(7):
-    if 'browse:mode' in focus(): break
-    key('DPAD_UP')
-wait_focus('browse:mode',5)
-key('DPAD_UP'); wait_focus('tab:home',5)
+tab(0)
 key('DPAD_RIGHT'); wait_focus('tab:movies',5)
 key('DPAD_RIGHT'); wait_focus('tab:series',5)
+# Discover has its own type/catalogue/genre selectors and follows Anime mode.
+click('Switch to Anime')
+tab(3); key('DPAD_DOWN'); wait_focus('discover:type',10)
+
+def discover_pick(which, target):
+    # Return to the filter row from the grid, then start at Content type.
+    tab(3); key('DPAD_DOWN'); wait_focus('discover:type',10)
+    for _ in range(which): key('DPAD_RIGHT')
+    key('DPAD_CENTER'); wait_focus('discover:option:',10)
+    for _ in range(30):
+        adb('shell','uiautomator','dump','/sdcard/discover.xml')
+        root=ET.fromstring(adb('shell','cat','/sdcard/discover.xml'))
+        focused=[n for n in root.iter('node') if n.get('focused')=='true']
+        text=' '.join(n.get('text','')+' '+n.get('content-desc','') for f in focused for n in f.iter('node'))
+        if target in text:
+            key('DPAD_CENTER',2); return
+        key('DPAD_DOWN')
+    raise AssertionError('Discover option not reached: '+target)
+
+discover_pick(1,'Anime fixture films')
+text=capture('discover-movies')
+assert 'Anime Fixture Film' in text and 'Anime Fixture Action' not in text
+# Series changes catalogue selection, and the new selector remains usable.
+discover_pick(0,'Series')
+discover_pick(1,'Anime fixture shows')
+discover_pick(2,'Action')
+text=capture('discover-series-action')
+assert 'Anime Fixture Action' in text and 'Anime Fixture Comedy' not in text
+discover_pick(2,'Comedy')
+text=capture('discover-series-comedy')
+assert 'Anime Fixture Comedy' in text and 'Anime Fixture Action' not in text
+# Back cancels a selector, retains the chosen genre, and returns to its button.
+tab(3); key('DPAD_DOWN'); key('DPAD_RIGHT'); key('DPAD_RIGHT'); key('DPAD_CENTER')
+wait_focus('discover:option:',5); key('BACK'); wait_focus('discover:genre',5)
+click('Switch to Regular')
 (a.out/'results.json').write_text(json.dumps({'passed':True,'checks':['anime home','movie/series separation',
     'genre filtering','remote genre navigation','saved mode and genre','regular view restored',
-    'normal poster focus restored','single-key tab navigation']},indent=2))
+    'normal poster focus restored','single-key tab navigation','Discover type and catalogue','Discover genres','selector cancellation']},indent=2))
 print('PASS: normal anime-mode UI and profile persistence')

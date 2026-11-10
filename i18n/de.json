@@ -366,5 +366,10 @@
     "incomplete_stream_title":  "Episode früher als erwartet beendet",
     "incomplete_stream_body":  "Dieser Stream ist möglicherweise unvollständig. Wähle einen anderen Stream oder starte ihn erneut von vorn.",
     "switch_stream":  "Stream wechseln",
-    "stream_may_be_incomplete":  "Dieser Stream ist möglicherweise unvollständig"
+    "stream_may_be_incomplete":  "Dieser Stream ist möglicherweise unvollständig",
+    "tab_discover": "Entdecken",
+    "discover_type": "Inhaltstyp",
+    "discover_catalog": "Katalog",
+    "discover_genre": "Genre",
+    "discover_no_catalogs": "Keine passenden Kataloge. Füge in den Einstellungen ein Katalog-Add-on hinzu oder ändere den Inhaltstyp."
 }

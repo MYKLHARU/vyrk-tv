@@ -75,6 +75,10 @@
     <string name="died_on">Morto il %1$s</string>
     <string name="director">Regia</string>
     <string name="director_line">Regia: %1$s</string>
+    <string name="discover_catalog">Catalogo</string>
+    <string name="discover_genre">Genere</string>
+    <string name="discover_no_catalogs">Nessun catalogo corrispondente. Aggiungi un componente catalogo nelle Impostazioni o cambia il tipo di contenuto.</string>
+    <string name="discover_type">Tipo di contenuto</string>
     <string name="display">Schermo</string>
     <string name="dolby_vision_decoder">Decoder Dolby Vision</string>
     <string name="done">Fatto</string>
@@ -298,6 +302,7 @@
     <string name="syncing">Sincronizzazione…</string>
     <string name="system_default">Predefinita di sistema</string>
     <string name="tab_anime">Anime</string>
+    <string name="tab_discover">Scopri</string>
     <string name="tab_home">Home</string>
     <string name="tab_library">Libreria</string>
     <string name="tab_live">Diretta</string>

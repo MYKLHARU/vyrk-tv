@@ -366,5 +366,10 @@
     "incomplete_stream_title":  "Episode ended earlier than expected",
     "incomplete_stream_body":  "This stream may be incomplete. Try another stream or retry from the beginning.",
     "switch_stream":  "Switch stream",
-    "stream_may_be_incomplete":  "This stream may be incomplete"
+    "stream_may_be_incomplete":  "This stream may be incomplete",
+    "tab_discover": "Discover",
+    "discover_type": "Content type",
+    "discover_catalog": "Catalogue",
+    "discover_genre": "Genre",
+    "discover_no_catalogs": "No matching catalogues. Add a catalogue add-on in Settings or change content type."
 }

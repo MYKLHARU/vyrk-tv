@@ -75,6 +75,10 @@
     <string name="died_on">Gestorben %1$s</string>
     <string name="director">Regie</string>
     <string name="director_line">Regie: %1$s</string>
+    <string name="discover_catalog">Katalog</string>
+    <string name="discover_genre">Genre</string>
+    <string name="discover_no_catalogs">Keine passenden Kataloge. Füge in den Einstellungen ein Katalog-Add-on hinzu oder ändere den Inhaltstyp.</string>
+    <string name="discover_type">Inhaltstyp</string>
     <string name="display">Display</string>
     <string name="dolby_vision_decoder">Dolby-Vision-Decoder</string>
     <string name="done">Fertig</string>
@@ -298,6 +302,7 @@
     <string name="syncing">Synchronisiere…</string>
     <string name="system_default">Systemstandard</string>
     <string name="tab_anime">Anime</string>
+    <string name="tab_discover">Entdecken</string>
     <string name="tab_home">Start</string>
     <string name="tab_library">Mediathek</string>
     <string name="tab_live">Live</string>

@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.focusable
@@ -147,7 +148,7 @@ class PlayerActivity : ComponentActivity() {
                     m.phase == Phase.INCOMPLETE && m.panel != Panel.NONE -> { m.panel = Panel.NONE }
                     m.phase == Phase.PLAYING && m.panel != Panel.NONE -> { m.panel = Panel.NONE; m.showControls() }
                     m.phase == Phase.PLAYING && m.scrubTarget != null -> m.scrubCancel()
-                    m.phase == Phase.PLAYING && m.stallPrompt -> m.stallPrompt = false
+                    m.phase == Phase.PLAYING && m.stallPrompt -> { m.stallPrompt = false; m.showControls() }
                     m.phase == Phase.PLAYING && m.upNext -> { m.dismissUpNext() }
                     m.phase == Phase.PLAYING && m.controlsVisible -> { m.controlsVisible = false; FocusTrace.set(PLAYER_LAYER, "player:video") }
                     else -> finish()
@@ -183,7 +184,8 @@ class PlayerActivity : ComponentActivity() {
         fun consume(block: () -> Unit): Boolean { block(); consumedUp += code; return true }
         if (code == KeyEvent.KEYCODE_BACK) return false // handled by the back dispatcher
         if (m.phase != Phase.PLAYING) return false
-        if (m.panel != Panel.NONE) return false
+        // Modal prompts own arrows and OK; playback shortcuts must not seek beneath them.
+        if (m.panel != Panel.NONE || m.stallPrompt || m.stillWatching) return false
         when (code) {
             KeyEvent.KEYCODE_CAPTIONS, KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK -> return consume { m.panel = Panel.AUDIO_SUBS; m.showControls() }
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> return consume { m.togglePlay(); m.showControls() }
@@ -284,7 +286,7 @@ fun PlayerScreen(m: PlayerModel, onExit: () -> Unit) {
                 if (m.panel == Panel.AUDIO_SUBS) AudioSubsPanel(m)
                 if (m.panel == Panel.SOURCES) SourcesPanel(m)
                 if (m.panel == Panel.SLEEP) SleepPanel(m)
-                if (m.stallPrompt) Prompt(stringResource(R.string.stall_prompt), stringResource(R.string.lower_quality), { m.lowerQuality() }, stringResource(R.string.keep_trying)) { m.stallPrompt = false }
+                if (m.stallPrompt) Prompt(stringResource(R.string.stall_prompt), stringResource(R.string.lower_quality), { m.lowerQuality() }, stringResource(R.string.keep_trying)) { m.stallPrompt = false; m.showControls() }
                 if (m.upNext && m.nextVideo != null && !m.controlsVisible) UpNext(m)
                 if (m.stillWatching) Prompt(stringResource(R.string.still_watching), stringResource(R.string.continue_playing), { m.confirmStillWatching() }, stringResource(R.string.exit)) { onExit() }
             }
@@ -449,7 +451,9 @@ private fun KeyHint(key: String, text: String) {
 private fun Controls(m: PlayerModel) {
     val c = Vyrk.colors
     val playReq = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { playReq.requestFocus() } }
+    LaunchedEffect(m.stallPrompt, m.stillWatching) {
+        if (!m.stallPrompt && !m.stillWatching) runCatching { playReq.requestFocus() }
+    }
     val meta = m.meta
     val title = meta?.name ?: m.request.meta.name
     val v = m.video
@@ -751,7 +755,8 @@ private fun Prompt(text: String, yes: String, onYes: () -> Unit, no: String, onN
     val req = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { req.requestFocus() } }
     Box(Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.BottomEnd) {
-        Column(Modifier.width(380.dp).background(c.panel, RoundedCornerShape(18.dp)).padding(20.dp).focusGroup()) {
+        Column(Modifier.width(380.dp).background(c.panel, RoundedCornerShape(18.dp)).padding(20.dp)
+            .focusProperties { onExit = { cancelFocusChange() } }.focusGroup()) {
             Text(text, style = Vyrk.type.titleL, color = c.text)
             Spacer(Modifier.height(12.dp))
             WrapRow {

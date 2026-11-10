@@ -366,5 +366,10 @@
     "incomplete_stream_title":  "L’épisode s’est terminé plus tôt que prévu",
     "incomplete_stream_body":  "Ce flux est peut-être incomplet. Essayez un autre flux ou réessayez depuis le début.",
     "switch_stream":  "Changer de flux",
-    "stream_may_be_incomplete":  "Ce flux est peut-être incomplet"
+    "stream_may_be_incomplete":  "Ce flux est peut-être incomplet",
+    "tab_discover": "Découvrir",
+    "discover_type": "Type de contenu",
+    "discover_catalog": "Catalogue",
+    "discover_genre": "Genre",
+    "discover_no_catalogs": "Aucun catalogue correspondant. Ajoutez un module de catalogue dans les paramètres ou changez de type de contenu."
 }

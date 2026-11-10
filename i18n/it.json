@@ -366,5 +366,10 @@
     "incomplete_stream_title":  "L’episodio è terminato prima del previsto",
     "incomplete_stream_body":  "Questo stream potrebbe essere incompleto. Prova un altro stream o riprova dall’inizio.",
     "switch_stream":  "Cambia stream",
-    "stream_may_be_incomplete":  "Questo stream potrebbe essere incompleto"
+    "stream_may_be_incomplete":  "Questo stream potrebbe essere incompleto",
+    "tab_discover": "Scopri",
+    "discover_type": "Tipo di contenuto",
+    "discover_catalog": "Catalogo",
+    "discover_genre": "Genere",
+    "discover_no_catalogs": "Nessun catalogo corrispondente. Aggiungi un componente catalogo nelle Impostazioni o cambia il tipo di contenuto."
 }

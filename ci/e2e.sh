@@ -97,6 +97,27 @@ key KEYCODE_DPAD_CENTER 5 "open info page"
 expect '^info:play$' "info page opens with Play focused"
 shot info-page
 
+# Handle only the specific recovery prompt shown by the slow software decoder.
+# Exercise the real remote choice instead of letting a media shortcut bypass it.
+dismiss_stall_prompt() {
+  probe "current playback prompt"
+  if [[ "$(focus_now)" == prompt:yes ]]; then
+    adbs uiautomator dump /sdcard/stall-prompt.xml >/dev/null
+    adb_run pull /sdcard/stall-prompt.xml "$OUT/stall-prompt.xml" >/dev/null
+    if grep -q 'Playback keeps pausing' "$OUT/stall-prompt.xml"; then
+      key KEYCODE_DPAD_RIGHT 0.5 "Keep trying on the software renderer"
+      expect '^prompt:no$' "stall recovery Keep trying is reachable"
+      key KEYCODE_DPAD_LEFT 0.4 "back to lower quality"
+      expect '^prompt:yes$' "prompt owns Left"
+      key KEYCODE_DPAD_RIGHT 0.4 "Keep trying again"
+      key KEYCODE_DPAD_UP 0.4 "prompt retains focus above"
+      expect '^prompt:no$' "prompt prevents focus escaping to the timeline"
+      key KEYCODE_DPAD_CENTER 1 "continue the local sample"
+      wait_focus '^player:' 10
+    fi
+  fi
+}
+
 # ---------------------------------------------------------------- play: broken 4K fails over
 ADDON_START=0
 [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]] && ADDON_START=$(wc -l < "$ADDON_LOG")
@@ -105,18 +126,9 @@ adb_run shell input keyevent KEYCODE_DPAD_CENTER
 echo "KEYCODE_DPAD_CENTER | (player starting) | $(window_now) | Play" >> "$TRACE"
 wait_focus '^player:' 30
 sleep 25
-# Software-rendered CI can legitimately offer recovery while the decoder warms up.
-if [[ "$(focus_now)" == prompt:yes ]]; then
-  adbs uiautomator dump /sdcard/stall-prompt.xml >/dev/null
-  adb_run pull /sdcard/stall-prompt.xml "$OUT/stall-prompt.xml" >/dev/null
-  if grep -q 'Playback keeps pausing' "$OUT/stall-prompt.xml"; then
-    key KEYCODE_DPAD_RIGHT 0.5 "Keep trying on the software renderer"
-    expect '^prompt:no$' "stall recovery Keep trying is reachable"
-    key KEYCODE_DPAD_CENTER 1 "continue the local sample"
-  fi
-fi
 shot player
-probe "player"
+probe "player after decoder warmup"
+dismiss_stall_prompt
 expect '^player:' "player has focus"
 if [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]]; then
   tail -n +"$((ADDON_START + 1))" "$ADDON_LOG" > "$OUT/addon-requests-during-play.txt"
@@ -133,9 +145,16 @@ fi
 
 key KEYCODE_DPAD_DOWN 1.5 "show controls"
 shot player-controls
+# The slow software decoder can raise the stall prompt again at any point; it owns the remote, so
+# CC would not reach the player while it is up.
+dismiss_stall_prompt
 key KEYCODE_CAPTIONS 2 "CC opens Audio & subtitles"
 # The CI emulator can be slow to give the panel window focus: wait, and press CC once more if it never opened.
-for _ in 1 2 3 4 5; do [[ "$(focus_now)" =~ ^panel: ]] && break; probe "panel" >/dev/null 2>&1 || true; sleep 1; done
+for _ in 1 2 3 4 5; do
+  [[ "$(focus_now)" =~ ^panel: ]] && break
+  if [[ "$(focus_now)" == prompt:yes ]]; then dismiss_stall_prompt; key KEYCODE_CAPTIONS 2 "CC after the stall prompt"; continue; fi
+  probe "panel" >/dev/null 2>&1 || true; sleep 1
+done
 [[ "$(focus_now)" =~ ^panel: ]] || key KEYCODE_CAPTIONS 3 "CC again"
 expect '^panel:' "Audio & subtitles panel"
 shot audio-subtitles
@@ -196,7 +215,7 @@ if [[ "$(focus_now)" == "$KEEP" ]]; then log "ok: Home kept the selected title a
 
 # ---------------------------------------------------------------- tour every tab
 until_focus KEYCODE_DPAD_UP '^tab:home$' 8
-for t in movies series anime library; do
+for t in movies series discover library; do
   until_focus KEYCODE_DPAD_RIGHT "^tab:$t\$" 3 && {
     sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"
     [[ "$(focus_now)" == 'browse:mode' ]] && key KEYCODE_DPAD_DOWN 1 "past mode switch"
@@ -268,6 +287,7 @@ expect '^info:play$' "Back on page two returns to Play"
 adb_run shell input keyevent KEYCODE_DPAD_CENTER
 wait_focus '^player:' 40
 sleep 12
+dismiss_stall_prompt
 for _ in $(seq 1 15); do adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD; sleep 0.4; done
 sleep 7
 shot skip-intro-pill
@@ -275,6 +295,7 @@ EVENTS=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
 # IntroDB is an external service: report, but don't fail the build on its availability.
 if printf '%s\n' "$EVENTS" | grep -q 'skip_offered INTRO'; then log "ok: Skip intro offered from IntroDB timings"
 else log "warn: Skip intro not seen ($(printf '%s\n' "$EVENTS" | grep -o 'introdb_segments [0-9]*' | tail -n 1 || echo 'no IntroDB answer'))"; fi
+dismiss_stall_prompt
 key KEYCODE_DPAD_DOWN 1.5 "show controls"
 key KEYCODE_DPAD_UP 1.2 "to timeline"
 expect '^player:timeline$' "timeline takes focus above the controls"
@@ -297,6 +318,7 @@ open_fixture() {
   sleep 4
 }
 seek_to_sample_end() {
+  dismiss_stall_prompt
   for _ in $(seq 1 22); do
     adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD
     sleep 0.4
