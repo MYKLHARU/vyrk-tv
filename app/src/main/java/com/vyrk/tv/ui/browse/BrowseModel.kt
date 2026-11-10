@@ -161,8 +161,8 @@ class BrowseModel(
                     val repeatedPage = !reset && ids == row.lastPageIds
                     row.lastPageIds = ids
                     row.fetchedCount = skip + raw.size
-                    val incoming = raw.filter { !row.animeOnly || AnimeBrowse.matches(it, row.browseType, row.genre,
-                        trustedCatalog = CatalogRules.isAnimeCatalog(ref), serverFiltered = serverGenre != null) }
+                    val incoming = raw.filter { AnimeBrowse.matches(it, row.browseType, row.genre,
+                        trustedCatalog = !row.animeOnly || CatalogRules.isAnimeCatalog(ref), serverFiltered = serverGenre != null) }
                     val merged = (if (reset) incoming else row.items + incoming).distinctBy { it.type + ":" + it.id }
                     row.items = if (row.kind == RowKind.TOP10) merged.take(CatalogRules.TOP_N) else merged
                     row.hasMore = row.kind != RowKind.TOP10 && raw.isNotEmpty() && !repeatedPage && ref.catalog.supportsExtra("skip")

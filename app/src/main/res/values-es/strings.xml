@@ -74,6 +74,10 @@
     <string name="died_on">Murió: %1$s</string>
     <string name="director">Dirección</string>
     <string name="director_line">Dirección: %1$s</string>
+    <string name="discover_catalog">Catálogo</string>
+    <string name="discover_genre">Género</string>
+    <string name="discover_no_catalogs">No hay catálogos compatibles. Añade un complemento de catálogo en Ajustes o cambia el tipo de contenido.</string>
+    <string name="discover_type">Tipo de contenido</string>
     <string name="display">Pantalla</string>
     <string name="dolby_vision_decoder">Decodificador Dolby Vision</string>
     <string name="done">Listo</string>
@@ -297,6 +301,7 @@
     <string name="syncing">Sincronizando…</string>
     <string name="system_default">Predeterminado del sistema</string>
     <string name="tab_anime">Anime</string>
+    <string name="tab_discover">Descubrir</string>
     <string name="tab_home">Inicio</string>
     <string name="tab_library">Biblioteca</string>
     <string name="tab_live">En directo</string>

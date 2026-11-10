@@ -365,5 +365,10 @@
     "incomplete_stream_title":  "एपिसोड उम्मीद से पहले खत्म हो गया",
     "incomplete_stream_body":  "यह स्ट्रीम अधूरी हो सकती है। दूसरी स्ट्रीम आज़माएँ या शुरुआत से फिर कोशिश करें।",
     "switch_stream":  "स्ट्रीम बदलें",
-    "stream_may_be_incomplete":  "यह स्ट्रीम अधूरी हो सकती है"
+    "stream_may_be_incomplete":  "यह स्ट्रीम अधूरी हो सकती है",
+    "tab_discover": "खोजें",
+    "discover_type": "सामग्री का प्रकार",
+    "discover_catalog": "कैटलॉग",
+    "discover_genre": "शैली",
+    "discover_no_catalogs": "कोई मेल खाता कैटलॉग नहीं। सेटिंग में कैटलॉग ऐड-ऑन जोड़ें या सामग्री का प्रकार बदलें।"
 }

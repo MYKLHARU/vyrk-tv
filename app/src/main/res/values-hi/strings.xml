@@ -74,6 +74,10 @@
     <string name="died_on">निधन %1$s</string>
     <string name="director">निर्देशक</string>
     <string name="director_line">निर्देशक: %1$s</string>
+    <string name="discover_catalog">कैटलॉग</string>
+    <string name="discover_genre">शैली</string>
+    <string name="discover_no_catalogs">कोई मेल खाता कैटलॉग नहीं। सेटिंग में कैटलॉग ऐड-ऑन जोड़ें या सामग्री का प्रकार बदलें।</string>
+    <string name="discover_type">सामग्री का प्रकार</string>
     <string name="display">डिस्प्ले</string>
     <string name="dolby_vision_decoder">Dolby Vision डिकोडर</string>
     <string name="done">हो गया</string>
@@ -297,6 +301,7 @@
     <string name="syncing">सिंक हो रहा है…</string>
     <string name="system_default">सिस्टम डिफ़ॉल्ट</string>
     <string name="tab_anime">एनिमे</string>
+    <string name="tab_discover">खोजें</string>
     <string name="tab_home">होम</string>
     <string name="tab_library">लाइब्रेरी</string>
     <string name="tab_live">लाइव</string>

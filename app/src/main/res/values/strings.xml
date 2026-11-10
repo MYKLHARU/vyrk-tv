@@ -74,6 +74,10 @@
     <string name="died_on">Died %1$s</string>
     <string name="director">Director</string>
     <string name="director_line">Director: %1$s</string>
+    <string name="discover_catalog">Catalogue</string>
+    <string name="discover_genre">Genre</string>
+    <string name="discover_no_catalogs">No matching catalogues. Add a catalogue add-on in Settings or change content type.</string>
+    <string name="discover_type">Content type</string>
     <string name="display">Display</string>
     <string name="dolby_vision_decoder">Dolby Vision decoder</string>
     <string name="done">Done</string>
@@ -297,6 +301,7 @@
     <string name="syncing">Syncing…</string>
     <string name="system_default">System default</string>
     <string name="tab_anime">Anime</string>
+    <string name="tab_discover">Discover</string>
     <string name="tab_home">Home</string>
     <string name="tab_library">Library</string>
     <string name="tab_live">Live</string>

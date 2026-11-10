@@ -254,3 +254,15 @@ dialog still require device verification.
 - **Translations and 720p/4K layouts on screen**: strings were generated and validated, but only English at 1080p was looked at (the SHIELD also draws its interface at 1080p).
 - **Live TV catalogues**: none of the installed add-ons provides one.
 - **Matroska chapters on a device and mid-film audio fallback**: tested in core only; no test file with chapters or a deliberately broken audio track was played.
+
+
+## Discover and menu mode switch (v0.1.23)
+
+The small Anime icon alongside Search and Settings toggles per-profile Anime mode on OK.
+It replaces the standalone Anime tab. Regular pages have no secondary control bar; anime
+Home/Movies/Series retain the sixteen genre chips. Discover provides a poster grid with
+Movies/Series, catalogue (with provider name), and genre selectors using installed add-ons.
+Selectors apply on OK, cancel on Back, and return focus to the originating button.
+Only catalogue inputs the app can satisfy are listed; required genre catalogues select a
+valid option, and search-only catalogues are excluded. Hidden rows remain hidden.
+Live is no longer listed in Settings' Hidden tabs. Existing Live catalogue support remains.

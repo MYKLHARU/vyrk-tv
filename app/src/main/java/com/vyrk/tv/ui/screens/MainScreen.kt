@@ -50,6 +50,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -86,7 +87,7 @@ fun MainScreen(session: ProfileSession) {
 
     val tabs = remember(addons, settings.hiddenTabs, settings.animeMode) {
         Tab.entries.filter { t ->
-            (!settings.animeMode || t !in setOf(Tab.ANIME, Tab.LIVE)) &&
+            t != Tab.ANIME && (!settings.animeMode || t != Tab.LIVE) &&
                 (t != Tab.LIVE || CatalogRules.hasLiveCatalogs(addons)) && (t == Tab.HOME || t.key !in settings.hiddenTabs)
         }
     }
@@ -97,6 +98,9 @@ fun MainScreen(session: ProfileSession) {
     val tabReqs = remember { Tab.entries.associateWith { FocusRequester() } }
     val searchReq = remember { FocusRequester() }
     val settingsReq = remember { FocusRequester() }
+    val animeReq = remember { FocusRequester() }
+    val genreBar = settings.animeMode && app.section == Section.TABS && app.tab in setOf(Tab.HOME, Tab.MOVIES, Tab.SERIES)
+    var discoverVisited by remember(session) { mutableStateOf(false) }
     var navHasFocus by remember { mutableStateOf(false) }
     var filtersHaveFocus by remember { mutableStateOf(false) }
 
@@ -167,9 +171,9 @@ fun MainScreen(session: ProfileSession) {
         // Settings sits on glass over the last featured artwork, blurred, reaching up behind the bar.
         // Library, Search and Profiles have no artwork: they sit in the ambient teal/violet light.
         if (app.section == Section.SETTINGS) SettingsBackdrop(app.backdrop)
-        else if (app.section != Section.TABS || shownTab == Tab.LIBRARY) com.vyrk.tv.ui.components.AmbientBackground()
+        else if (app.section != Section.TABS || shownTab in setOf(Tab.LIBRARY, Tab.DISCOVER)) com.vyrk.tv.ui.components.AmbientBackground()
         // Pages start under the bar; artwork may reach up behind it.
-        Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight + if (app.section == Section.TABS) 48.dp else 0.dp)) {
+        Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight + if (genreBar) 48.dp else 0.dp)) {
             if (!loaded) return@Box
             when (app.section) {
                 Section.SEARCH -> SearchScreen(session)
@@ -177,6 +181,8 @@ fun MainScreen(session: ProfileSession) {
                 Section.TABS -> if (shownTab == Tab.LIBRARY) LibraryScreen(session, onPlay)
             }
             val onTabs = app.section == Section.TABS
+            if (onTabs && shownTab == Tab.DISCOVER) discoverVisited = true
+            if (discoverVisited) Box(Modifier.fillMaxSize().keepAlive(onTabs && shownTab == Tab.DISCOVER)) { DiscoveryScreen(session) }
             if (onTabs && shownTab.isCatalogue() && shownTab !in keptPages) keptPages += shownTab
             keptPages.removeAll { it !in tabs }
             keptPages.forEach { t ->
@@ -189,7 +195,7 @@ fun MainScreen(session: ProfileSession) {
         // The bar has no solid edge: it fades from the page colour down into the artwork (catalogue
         // pages, and Settings over its blurred backdrop). Library, Search and Profiles get a lighter
         // fade over the ambient light, so the bar never reads as a solid band.
-        val artwork = (app.section == Section.TABS && shownTab != Tab.LIBRARY) || app.section == Section.SETTINGS
+        val artwork = (app.section == Section.TABS && shownTab !in setOf(Tab.LIBRARY, Tab.DISCOVER)) || app.section == Section.SETTINGS
         // Light enough not to tint the artwork (it was 94 % navy at the top), dark enough for the tabs.
         val shade = Vyrk.colors.shade
         if (artwork) Box(Modifier.fillMaxWidth().height(Dimens.navHeight + 56.dp).background(Brush.verticalGradient(
@@ -213,8 +219,8 @@ fun MainScreen(session: ProfileSession) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Wordmark(20.dp)
-            Spacer(Modifier.width(28.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.width(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 tabs.forEach { t ->
                     NavTab(
                         label = tabLabel(t),
@@ -231,11 +237,18 @@ fun MainScreen(session: ProfileSession) {
                 SearchPill(app.section == Section.SEARCH, searchReq, Modifier.widthIn(max = 188.dp).fillMaxWidth()) { app.section = Section.SEARCH }
             }
             Spacer(Modifier.width(10.dp))
-            // The avatar opens the profile menu: switch profile, Settings.
+            AnimeMenuSwitch(settings.animeMode, animeReq) {
+                session.updateSettings { it.copy(animeMode = !it.animeMode) }
+                app.preview = null; app.backdrop = null
+                app.section = Section.TABS
+                if (app.tab !in setOf(Tab.HOME, Tab.MOVIES, Tab.SERIES, Tab.DISCOVER)) app.tab = Tab.HOME
+            }
+            Spacer(Modifier.width(8.dp))
+            // Settings remains accessible alongside the mode switch.
             NavGear(active = app.section == Section.SETTINGS, settingsReq) { app.section = Section.SETTINGS }
         }
 
-        if (app.section == Section.TABS) AnimeModeBar(session, settings.animeMode, settings.animeGenre, tabReqs.getValue(app.tab),
+        if (genreBar) AnimeModeBar(session, settings.animeMode, settings.animeGenre, tabReqs.getValue(app.tab),
             Modifier.padding(top = Dimens.navHeight).onFocusChanged {
                 filtersHaveFocus = it.hasFocus; app.navFocused = it.hasFocus || navHasFocus
             })
@@ -250,14 +263,6 @@ private fun AnimeModeBar(session: ProfileSession, anime: Boolean, genre: String?
             if (requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Up) runCatching { navRequester.requestFocus() }
         } }.focusGroup(),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        com.vyrk.tv.ui.components.VyrkButton(
-            str(if (anime) R.string.switch_regular else R.string.switch_anime),
-            onClick = {
-                session.updateSettings { it.copy(animeMode = !it.animeMode) }
-                app.preview = null; app.backdrop = null; app.tab = Tab.HOME; app.focusTabsTick++
-            }, height = 32.dp, shape = Dimens.pillShape,
-            modifier = Modifier.traceFocus("browse:mode"),
-        )
         if (anime && app.tab in setOf(Tab.HOME, Tab.MOVIES, Tab.SERIES)) androidx.compose.foundation.lazy.LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
@@ -280,6 +285,7 @@ fun tabLabel(t: Tab): String = when (t) {
     Tab.HOME -> str(R.string.tab_home)
     Tab.MOVIES -> str(R.string.tab_movies)
     Tab.SERIES -> str(R.string.tab_series)
+    Tab.DISCOVER -> str(R.string.tab_discover)
     Tab.ANIME -> str(R.string.tab_anime)
     Tab.LIVE -> str(R.string.tab_live)
     Tab.LIBRARY -> str(R.string.tab_library)
@@ -289,6 +295,7 @@ fun tabIcon(t: Tab): Int = when (t) {
     Tab.HOME -> R.drawable.ic_home
     Tab.MOVIES -> R.drawable.ic_movie
     Tab.SERIES -> R.drawable.ic_tv
+    Tab.DISCOVER -> R.drawable.ic_search
     Tab.ANIME -> R.drawable.ic_anime
     Tab.LIVE -> R.drawable.ic_live
     Tab.LIBRARY -> R.drawable.ic_library
@@ -318,7 +325,7 @@ private fun NavTab(label: String, icon: Int, active: Boolean, requester: FocusRe
             .then(if (active || focused) Modifier.shadow(if (focused) 16.dp else 10.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
             .background(fill, Dimens.pillShape)
             .border(1.dp, edge, Dimens.pillShape)
-            .padding(horizontal = 13.dp, vertical = 7.dp),
+            .padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
@@ -351,6 +358,23 @@ private fun SearchPill(active: Boolean, requester: FocusRequester, modifier: Mod
         Icon(R.drawable.ic_search, null, Modifier.size(15.dp), tint = if (focused) c.background else c.textSecondary)
         Text(str(R.string.search), style = Vyrk.type.labelL, color = if (focused) c.background else c.textMuted, maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+    }
+}
+
+/** Small, persistent mode switch; focus alone never changes the catalogue. */
+@Composable
+private fun AnimeMenuSwitch(anime: Boolean, requester: FocusRequester, onClick: () -> Unit) {
+    val description = str(if (anime) R.string.switch_regular else R.string.switch_anime)
+    val c = Vyrk.colors
+    var focused by remember { mutableStateOf(false) }
+    Box(Modifier.size(36.dp).focusRequester(requester)
+        .onFocusChanged { focused = it.isFocused }.traceFocus("nav:anime")
+        .semantics { contentDescription = description; role = Role.Switch; selected = anime }
+        .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onClick(); true } else false }
+        .focusable()
+        .background(if (focused) c.text else if (anime) c.accent.copy(alpha = 0.2f) else c.raised.copy(alpha = 0.55f), CircleShape)
+        .border(1.dp, if (anime) c.accent else c.glassEdge, CircleShape), contentAlignment = Alignment.Center) {
+        Icon(R.drawable.ic_anime, null, Modifier.size(18.dp), tint = if (focused) c.background else if (anime) c.accent else c.textSecondary)
     }
 }
 

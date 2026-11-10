@@ -74,6 +74,10 @@
     <string name="died_on">Décédé(e) le %1$s</string>
     <string name="director">Réalisation</string>
     <string name="director_line">Réalisation : %1$s</string>
+    <string name="discover_catalog">Catalogue</string>
+    <string name="discover_genre">Genre</string>
+    <string name="discover_no_catalogs">Aucun catalogue correspondant. Ajoutez un module de catalogue dans les paramètres ou changez de type de contenu.</string>
+    <string name="discover_type">Type de contenu</string>
     <string name="display">Écran</string>
     <string name="dolby_vision_decoder">Décodeur Dolby Vision</string>
     <string name="done">Terminé</string>
@@ -297,6 +301,7 @@
     <string name="syncing">Synchronisation…</string>
     <string name="system_default">Langue du système</string>
     <string name="tab_anime">Anime</string>
+    <string name="tab_discover">Découvrir</string>
     <string name="tab_home">Accueil</string>
     <string name="tab_library">Bibliothèque</string>
     <string name="tab_live">Direct</string>

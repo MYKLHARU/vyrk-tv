@@ -78,6 +78,16 @@ class AnimeBrowseModelTest {
         assertFalse(row.hasMore)
     }
 
+    @Test fun discoverRegularFiltersActualTypeAndUsesLocalGenreWhenServerCannot() = runBlocking {
+        val client = AddonClient(http { """{"metas":[{"id":"tt1","type":"movie","genres":["Action"]},{"id":"tt2","type":"series","genres":["Action"]},{"id":"tt3","type":"movie","genres":["Drama"]}]}""" })
+        val ref = com.vyrk.core.catalog.CatalogRef(addon(), addon().manifest.catalogs.first(), 0)
+        val row = RowState("discover", RowKind.CATALOG, ref, "Discover", browseType = "movie", genre = "Action")
+        val model = BrowseModel(client, Tab.DISCOVER, this)
+        model.ensureLoaded(row); row.job!!.join()
+        assertEquals(listOf("tt1"), row.items.map { it.id })
+        assertEquals(3, row.fetchedCount)
+    }
+
     private fun http(reply: (String) -> String) = object : HttpTransport {
         override suspend fun get(url: String, headers: Map<String, String>, timeoutMs: Long) = HttpResult(200, reply(url))
         override suspend fun postJson(url: String, body: String, timeoutMs: Long) = HttpResult(200, "{}")

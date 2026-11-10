@@ -195,7 +195,7 @@ if [[ "$(focus_now)" == "$KEEP" ]]; then log "ok: Home kept the selected title a
 
 # ---------------------------------------------------------------- tour every tab
 until_focus KEYCODE_DPAD_UP '^tab:home$' 8
-for t in movies series anime library; do
+for t in movies series discover library; do
   until_focus KEYCODE_DPAD_RIGHT "^tab:$t\$" 3 && {
     sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"
     [[ "$(focus_now)" == 'browse:mode' ]] && key KEYCODE_DPAD_DOWN 1 "past mode switch"

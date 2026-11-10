@@ -15,7 +15,7 @@ val AppJson = Json {
 }
 
 /** Top-bar tabs. Add-on management lives in Settings › Add-ons, not here. */
-enum class Tab(val key: String) { HOME("home"), MOVIES("movies"), SERIES("series"), ANIME("anime"), LIVE("live"), LIBRARY("library") }
+enum class Tab(val key: String) { HOME("home"), MOVIES("movies"), SERIES("series"), DISCOVER("discover"), ANIME("anime"), LIVE("live"), LIBRARY("library") }
 fun visibleTab(current: Tab, visible: List<Tab>): Tab = current.takeIf { it in visible } ?: Tab.HOME
 
 enum class PreviewMode { OFF, MANUAL, AUTOMATIC }
