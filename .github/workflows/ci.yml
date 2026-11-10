@@ -161,8 +161,13 @@ jobs:
           target: android-tv
           arch: x86
           profile: tv_1080p
+          # Pin before the 37.2.x graphics cleanup crashes also reported by Chromium.
+          # https://chromium.googlesource.com/chromium/src/tools/android/+/53a24f44b2957a8937bb63f3d150081c73df0532
+          emulator-build: '15917651' # 37.1.11 stable
+          ram-size: 2048M
+          heap-size: 512M
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          emulator-options: -no-window -gpu swiftshader -feature -Vulkan -noaudio -no-boot-anim -no-snapshot -no-metrics
           script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/e2e ADDON_LOG=ci/out/e2e/addon.log bash ci/e2e.sh
       - uses: actions/upload-artifact@v5
         if: always()
@@ -220,8 +225,11 @@ jobs:
           target: android-tv
           arch: x86
           profile: tv_1080p
+          emulator-build: '15917651' # Match the emulator regression journey.
+          ram-size: 2048M
+          heap-size: 512M
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          emulator-options: -no-window -gpu swiftshader -feature -Vulkan -noaudio -no-boot-anim -no-snapshot -no-metrics
           script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/showcase bash ci/showcase.sh
       - name: Build README images
         run: |
