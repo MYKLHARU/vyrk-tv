@@ -15,6 +15,23 @@ import kotlin.test.*
 /** Positive controls for the audit platform boundaries. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuditControlsTest {
+    @Test fun animePreferencesAreSavedPerProfileAndOldProfilesDefaultToRegular() = runBlocking {
+        assertFalse(AppJson.decodeFromString(ProfileSettings.serializer(), "{}").animeMode)
+        val firstDir = Files.createTempDirectory("vyrk-anime-").toFile()
+        val secondDir = Files.createTempDirectory("vyrk-regular-").toFile()
+        val first = session(firstDir)
+        val second = session(secondDir)
+        try {
+            first.updateSettings { it.copy(animeMode = true, animeGenre = "Isekai") }
+            AtomicFiles.flush()
+            val saved = AppJson.decodeFromString(ProfileSettings.serializer(), File(firstDir, "settings.json").readText())
+            assertTrue(saved.animeMode)
+            assertEquals("Isekai", saved.animeGenre)
+            assertFalse(second.settings.value.animeMode)
+            first.updateSettings { it.copy(animeMode = false) }
+            assertEquals("Isekai", first.settings.value.animeGenre)
+        } finally { first.close(); second.close() }
+    }
     private val http = object : HttpTransport {
         override suspend fun get(url: String, headers: Map<String, String>, timeoutMs: Long) = HttpResult(200, "{}")
         override suspend fun postJson(url: String, body: String, timeoutMs: Long) = HttpResult(200, """{"result":{}}""")

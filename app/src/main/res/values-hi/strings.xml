@@ -16,6 +16,10 @@
     <string name="addons_pending_sync">इस टीवी पर सहेजा गया। खाते से सिंक होना बाकी है।</string>
     <string name="airs_on">%1$s को प्रसारित होगा</string>
     <string name="always_show_sources">स्रोत हमेशा दिखाएँ</string>
+    <string name="anime_all_genres">सभी शैलियाँ</string>
+    <string name="anime_load_more">और लोड करें</string>
+    <string name="anime_no_catalogs">यहाँ कोई एनीमे कैटलॉग नहीं है। सेटिंग में एनीमे कैटलॉग जोड़ें या चालू करें।</string>
+    <string name="anime_no_matches">इस पेज पर कोई मिलता-जुलता शीर्षक नहीं है। शैलियाँ ऐड-ऑन के टैग पर निर्भर करती हैं।</string>
     <string name="any">कोई भी</string>
     <string name="app_language">ऐप की भाषा</string>
     <string name="ask_still_watching">पूछें कि क्या मैं अब भी देख रहा हूँ</string>
@@ -284,6 +288,8 @@
     <string name="subtitle_mode">मोड</string>
     <string name="subtitle_size">आकार</string>
     <string name="subtitles">सबटाइटल</string>
+    <string name="switch_anime">एनीमे पर जाएँ</string>
+    <string name="switch_regular">सामान्य दृश्य पर लौटें</string>
     <string name="switch_stream">स्ट्रीम बदलें</string>
     <string name="sync_now">अभी सिंक करें</string>
     <string name="sync_style">सिंक और स्टाइल</string>

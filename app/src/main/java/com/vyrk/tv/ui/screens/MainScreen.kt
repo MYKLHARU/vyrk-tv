@@ -84,9 +84,10 @@ fun MainScreen(session: ProfileSession) {
     val addons by session.addons.collectAsState()
     val loaded by session.loaded.collectAsState()
 
-    val tabs = remember(addons, settings.hiddenTabs) {
+    val tabs = remember(addons, settings.hiddenTabs, settings.animeMode) {
         Tab.entries.filter { t ->
-            (t != Tab.LIVE || CatalogRules.hasLiveCatalogs(addons)) && (t == Tab.HOME || t.key !in settings.hiddenTabs)
+            (!settings.animeMode || t !in setOf(Tab.ANIME, Tab.LIVE)) &&
+                (t != Tab.LIVE || CatalogRules.hasLiveCatalogs(addons)) && (t == Tab.HOME || t.key !in settings.hiddenTabs)
         }
     }
     LaunchedEffect(tabs) {
@@ -97,6 +98,7 @@ fun MainScreen(session: ProfileSession) {
     val searchReq = remember { FocusRequester() }
     val settingsReq = remember { FocusRequester() }
     var navHasFocus by remember { mutableStateOf(false) }
+    var filtersHaveFocus by remember { mutableStateOf(false) }
 
     // Default tab once per session.
     LaunchedEffect(session.profile.id) {
@@ -114,12 +116,12 @@ fun MainScreen(session: ProfileSession) {
     }
 
     val rowStore = remember(session) { com.vyrk.tv.ui.browse.RowStore() }
-    val models = remember(session) { mutableMapOf<Tab, BrowseModel>() }
-    fun model(t: Tab) = models.getOrPut(t) { BrowseModel(session, graph.addonClient, t, session.scope, rowStore) }
+    val models = remember(session, settings.animeMode, settings.animeGenre) { mutableMapOf<Tab, BrowseModel>() }
+    fun model(t: Tab) = models.getOrPut(t) { BrowseModel(graph.addonClient, t, session.scope, rowStore, settings.animeMode, if (settings.animeMode) settings.animeGenre else null) }
 
     // Build every catalogue tab as soon as the add-ons are known and start its first rows,
     // the open tab first, so switching to Movies or Series finds them already loaded.
-    LaunchedEffect(addons, settings.hiddenRows, tabs) {
+    LaunchedEffect(addons, settings.hiddenRows, tabs, settings.animeMode, settings.animeGenre) {
         val list = session.effectiveAddons()
         (listOf(app.tab) + tabs).distinct()
             .filter { it == Tab.HOME || it == Tab.MOVIES || it == Tab.SERIES || it == Tab.ANIME || it == Tab.LIVE }
@@ -129,7 +131,7 @@ fun MainScreen(session: ProfileSession) {
 
     // Catalogue pages visited this session stay composed while hidden (not measured, drawn or
     // focusable), so coming back shows them as they were instead of rebuilding them.
-    val keptPages = remember(session) { mutableListOf<Tab>() }
+    val keptPages = remember(session, settings.animeMode, settings.animeGenre) { mutableListOf<Tab>() }
     // A kept page is shown in the same frame as the tab highlight (it costs a few milliseconds).
     // A page not built yet follows one frame later, so the highlight is never held back by
     // building it; a further press before then skips it (Home → Anime builds neither Movies nor
@@ -167,7 +169,7 @@ fun MainScreen(session: ProfileSession) {
         if (app.section == Section.SETTINGS) SettingsBackdrop(app.backdrop)
         else if (app.section != Section.TABS || shownTab == Tab.LIBRARY) com.vyrk.tv.ui.components.AmbientBackground()
         // Pages start under the bar; artwork may reach up behind it.
-        Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight)) {
+        Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight + if (app.section == Section.TABS) 48.dp else 0.dp)) {
             if (!loaded) return@Box
             when (app.section) {
                 Section.SEARCH -> SearchScreen(session)
@@ -178,9 +180,9 @@ fun MainScreen(session: ProfileSession) {
             if (onTabs && shownTab.isCatalogue() && shownTab !in keptPages) keptPages += shownTab
             keptPages.removeAll { it !in tabs }
             keptPages.forEach { t ->
-                androidx.compose.runtime.key(t) {
+                androidx.compose.runtime.key(session, t, settings.animeMode, settings.animeGenre) {
                     val visible = onTabs && shownTab == t
-                    Box(Modifier.fillMaxSize().keepAlive(visible)) { BrowsePage(session, model(t), t.key, onPlay, active = visible) }
+                    Box(Modifier.fillMaxSize().keepAlive(visible)) { BrowsePage(session, model(t), if (settings.animeMode) "anime:${settings.animeGenre}:${t.key}" else t.key, onPlay, active = visible) }
                 }
             }
         }
@@ -197,7 +199,7 @@ fun MainScreen(session: ProfileSession) {
         Row(
             Modifier.fillMaxWidth().height(Dimens.navHeight)
                 .padding(horizontal = Dimens.screenMargin)
-                .onFocusChanged { navHasFocus = it.hasFocus; app.navFocused = it.hasFocus }
+                .onFocusChanged { navHasFocus = it.hasFocus; app.navFocused = it.hasFocus || filtersHaveFocus }
                 .focusProperties {
                     onEnter = {
                         val target = when (app.section) {
@@ -233,6 +235,40 @@ fun MainScreen(session: ProfileSession) {
             NavGear(active = app.section == Section.SETTINGS, settingsReq) { app.section = Section.SETTINGS }
         }
 
+        if (app.section == Section.TABS) AnimeModeBar(session, settings.animeMode, settings.animeGenre,
+            Modifier.padding(top = Dimens.navHeight).onFocusChanged {
+                filtersHaveFocus = it.hasFocus; app.navFocused = it.hasFocus || navHasFocus
+            })
+    }
+}
+
+@Composable
+private fun AnimeModeBar(session: ProfileSession, anime: Boolean, genre: String?, modifier: Modifier) {
+    val app = LocalApp.current
+    Row(modifier.fillMaxWidth().height(48.dp).padding(horizontal = Dimens.screenMargin),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        com.vyrk.tv.ui.components.VyrkButton(
+            str(if (anime) R.string.switch_regular else R.string.switch_anime),
+            onClick = {
+                session.updateSettings { it.copy(animeMode = !it.animeMode) }
+                app.preview = null; app.backdrop = null; app.tab = Tab.HOME; app.focusTabsTick++
+            }, height = 32.dp, shape = Dimens.pillShape,
+            modifier = Modifier.traceFocus("browse:mode"),
+        )
+        if (anime && app.tab in setOf(Tab.HOME, Tab.MOVIES, Tab.SERIES)) androidx.compose.foundation.lazy.LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+        ) {
+            val options = listOf<String?>(null) + com.vyrk.core.catalog.AnimeBrowse.genres
+            items(options.size) { index ->
+                val value = options[index]
+                com.vyrk.tv.ui.components.ChoicePill(value ?: str(R.string.anime_all_genres), genre == value,
+                    onClick = {
+                        session.updateSettings { it.copy(animeGenre = value) }
+                        app.preview = null; app.backdrop = null
+                    }, trace = "browse:genre:${value ?: "all"}")
+            }
+        }
     }
 }
 

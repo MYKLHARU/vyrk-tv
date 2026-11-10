@@ -122,6 +122,25 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = unquote(self.path.split("?")[0])
+        if path == "/anime-mode/manifest.json":
+            return self._json({"id": "org.vyrk.animefixture", "name": "Anime mode fixture", "version": "1.0.0",
+                "types": ["movie", "series", "anime"], "resources": ["catalog"], "catalogs": [
+                    {"type": "movie", "id": "anime/films", "name": "Anime fixture films"},
+                    {"type": "series", "id": "anime/shows", "name": "Anime fixture shows",
+                     "extra": [{"name": "genre", "options": ["Action", "Comedy", "Science Fiction"]}]},
+                    {"type": "anime", "id": "anime/mixed", "name": "Anime fixture mixed"},
+                    {"type": "series", "id": "regular", "name": "Regular fixture shows"}]})
+        if path.startswith("/anime-mode/catalog/"):
+            film = {"id": "mal:90001", "type": "movie", "name": "Anime Fixture Film", "genres": ["Action"], "poster": f"{BASE}/artwork/logo.png"}
+            action = {"id": "mal:90002", "type": "series", "name": "Anime Fixture Action", "genres": ["Action"], "poster": f"{BASE}/artwork/logo.png"}
+            comedy = {"id": "mal:90003", "type": "series", "name": "Anime Fixture Comedy", "genres": ["Comedy"], "poster": f"{BASE}/artwork/logo.png"}
+            items = [film] if "/films" in path else [action, comedy]
+            if "/mixed" in path: items = [film, action, comedy]
+            if "/regular" in path: items = [{"id": "tt90004", "type": "series", "name": "Regular Fixture Show"}]
+            if "genre=" in path:
+                genre = path.split("genre=", 1)[1].removesuffix(".json").split("&")[0]
+                items = [m for m in items if genre in m.get("genres", [])]
+            return self._json({"metas": items})
         if path == "/manifest.json":
             return self._json(MANIFEST)
         if path == "/meta/series/mal:62516.json":

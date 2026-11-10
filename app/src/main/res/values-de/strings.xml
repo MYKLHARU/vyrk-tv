@@ -16,6 +16,10 @@
     <string name="addons_pending_sync">Auf diesem Fernseher gespeichert. Kontosynchronisierung ausstehend.</string>
     <string name="airs_on">Läuft am %1$s</string>
     <string name="always_show_sources">Quellen immer anzeigen</string>
+    <string name="anime_all_genres">Alle Genres</string>
+    <string name="anime_load_more">Mehr laden</string>
+    <string name="anime_no_catalogs">Hier gibt es keine Anime-Kataloge. Füge einen in den Einstellungen hinzu oder aktiviere ihn.</string>
+    <string name="anime_no_matches">Keine passenden Titel auf dieser Seite. Genres hängen von den Angaben des Add-ons ab.</string>
     <string name="any">Beliebig</string>
     <string name="app_language">App-Sprache</string>
     <string name="ask_still_watching">Fragen, ob ich noch schaue</string>
@@ -284,6 +288,8 @@
     <string name="subtitle_mode">Modus</string>
     <string name="subtitle_size">Größe</string>
     <string name="subtitles">Untertitel</string>
+    <string name="switch_anime">Zu Anime wechseln</string>
+    <string name="switch_regular">Zur normalen Ansicht</string>
     <string name="switch_stream">Stream wechseln</string>
     <string name="sync_now">Jetzt synchronisieren</string>
     <string name="sync_style">Synchronität &amp; Stil</string>

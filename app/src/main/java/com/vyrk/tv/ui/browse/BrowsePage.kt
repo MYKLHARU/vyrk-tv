@@ -103,28 +103,32 @@ fun BrowsePage(
     val cwMetas by remember(cwLibrary) {
         derivedStateOf { graph.metaCache.version; cwLibrary.count { graph.metaCache.peek(it.type, it.id) != null } }
     }
-    val cwItems = remember(cwLibrary, cwMetas) {
+    val cwItems = remember(cwLibrary, cwMetas, model) {
         cwLibrary.map { li ->
             val full = graph.metaCache.peek(li.type, li.id)
             MetaPreview(
                 id = li.id, type = li.type,
                 name = li.name.ifBlank { full?.name.orEmpty() },
                 poster = li.poster ?: full?.poster ?: com.vyrk.core.art.Artwork.metahubPoster(li.id),
-                background = full?.background, logo = full?.logo,
+                background = full?.background, logo = full?.logo, genres = full?.allGenres.orEmpty(),
             )
+        }.filter {
+            val full = graph.metaCache.peek(it.type, it.id)
+            !model.animeOnly || com.vyrk.core.catalog.AnimeBrowse.matches(it, genre = model.genre,
+                trustedCatalog = full?.malId != null || full?.kitsuId != null)
         }
     }
     // One at a time, so these never take the request slots the rows need.
-    LaunchedEffect(cwLibrary.filter { it.name.isBlank() || it.poster == null }.map { it.type to it.id }) {
+    LaunchedEffect(cwLibrary.filter { model.animeOnly || it.name.isBlank() || it.poster == null }.map { it.type to it.id }) {
         val addons = session.effectiveAddons()
-        cwLibrary.filter { it.name.isBlank() || it.poster == null }.take(24)
+        cwLibrary.filter { model.animeOnly || it.name.isBlank() || it.poster == null }.take(24)
             .forEach { li -> graph.metaCache.get(addons, li.type, li.id) }
     }
     val cwRow = remember { RowState(CW_ROW, RowKind.CONTINUE, null, "") }
     val cwTitle = com.vyrk.tv.ui.str(com.vyrk.tv.R.string.continue_watching)
     cwRow.items = cwItems; cwRow.loadedOnce = true; cwRow.title = cwTitle
 
-    val showTop10Card = isHome && !model.hasTop10Catalogs && !settings.top10CardDismissed && BuildConfig.TOP10_ADDON_URL.isNotBlank()
+    val showTop10Card = isHome && !model.animeOnly && !model.hasTop10Catalogs && !settings.top10CardDismissed && BuildConfig.TOP10_ADDON_URL.isNotBlank()
     val rows = buildList {
         if (isHome && cwItems.isNotEmpty()) add(cwRow)
         addAll(model.rows)
@@ -342,6 +346,10 @@ fun BrowsePage(
                         },
                     )
                 }
+                if (model.animeOnly && model.built && model.rows.isEmpty()) item(key = "anime-empty") {
+                    androidx.tv.material3.Text(com.vyrk.tv.ui.str(com.vyrk.tv.R.string.anime_no_catalogs),
+                        modifier = Modifier.padding(Dimens.screenMargin), color = com.vyrk.tv.ui.theme.Vyrk.colors.textSecondary)
+                }
                 if (showTop10Card) item(key = "top10card") {
                     Top10Card(
                         addReq = top10Req,
@@ -398,7 +406,7 @@ fun BrowsePage(
                         onEnsureLoaded = { model.ensureLoaded(row) },
                         onLoadMore = { model.loadMore(row) },
                         onRetry = { model.retry(row) },
-                        onSeeAll = { row.ref?.let { app.push(Overlay.SeeAll(row.title, it)) } },
+                        onSeeAll = { row.ref?.let { app.push(Overlay.SeeAll(row.title, it, row.animeOnly, row.browseType, row.genre)) } },
                         restoreIndex = restoreTarget?.takeIf { it.rowKey == row.key }?.let { t ->
                             val byId = row.items.indexOfFirst { it.id == t.itemId }
                             if (byId >= 0) byId else t.index.coerceAtMost((row.items.size - 1).coerceAtLeast(0))

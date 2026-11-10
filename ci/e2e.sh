@@ -165,13 +165,16 @@ key KEYCODE_BACK 1.5 "to the tab strip"
 expect '^tab:home$' "Back from a row goes to the tab strip"
 key KEYCODE_DPAD_RIGHT 1.5 "Movies"; key KEYCODE_DPAD_LEFT 1.5 "Home again"
 key KEYCODE_DPAD_DOWN 2.5 "back into Home"
+[[ "$(focus_now)" == 'browse:mode' ]] && key KEYCODE_DPAD_DOWN 1 "past mode switch"
 if [[ "$(focus_now)" == "$KEEP" ]]; then log "ok: Home kept the selected title across a tab switch ($KEEP)"; else fail "Home lost its place: expected '$KEEP', focus is '$(focus_now)'"; fi
 
 # ---------------------------------------------------------------- tour every tab
 until_focus KEYCODE_DPAD_UP '^tab:home$' 8
 for t in movies series anime library; do
   until_focus KEYCODE_DPAD_RIGHT "^tab:$t\$" 3 && {
-    sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"; probe "$t content"
+    sleep 3; shot "tab-$t"; key KEYCODE_DPAD_DOWN 2 "into $t"
+    [[ "$(focus_now)" == 'browse:mode' ]] && key KEYCODE_DPAD_DOWN 1 "past mode switch"
+    probe "$t content"
     # The featured row is there on the first visit, without scrolling or a second visit.
     [[ $t == movies || $t == series ]] && expect '^hero:watch$' "$t opens with its featured row"
     until_focus KEYCODE_DPAD_UP "^tab:$t\$" 6
@@ -346,6 +349,10 @@ PY
 then log "ok: delayed AIO season metadata renders its inherited logo in the normal info page"
 else fail "AIO season logo failed in normal info page"; fi
 key KEYCODE_BACK 1 "close AIO fixture"
+
+if ! python ci/anime_mode_probe.py --adb "$ADB" --package "$PKG" --out "$OUT/anime-mode"; then
+  fail "anime mode normal-app journey failed"
+fi
 
 # ---------------------------------------------------------------- results
 "$ADB" logcat -d > "$OUT/logcat.txt" || true

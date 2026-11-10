@@ -28,7 +28,8 @@ sealed interface Overlay {
     data class InstallConfirm(val descriptor: Descriptor?, val input: String, val external: Boolean, val error: String? = null) : Overlay
     data class AddonQr(val descriptor: Descriptor) : Overlay
     data class Message(val title: String, val body: String) : Overlay
-    data class SeeAll(val title: String, val ref: com.vyrk.core.catalog.CatalogRef) : Overlay
+    data class SeeAll(val title: String, val ref: com.vyrk.core.catalog.CatalogRef,
+        val animeOnly: Boolean = false, val browseType: String? = null, val genre: String? = null) : Overlay
     data class Person(val id: Long, val name: String) : Overlay
     /** The avatar's menu in the top bar: switch profile, Settings. */
 }

@@ -16,6 +16,10 @@
     <string name="addons_pending_sync">Salvato su questa TV. Sincronizzazione con l’account in attesa.</string>
     <string name="airs_on">In onda il %1$s</string>
     <string name="always_show_sources">Mostra sempre le fonti</string>
+    <string name="anime_all_genres">Tutti i generi</string>
+    <string name="anime_load_more">Carica altro</string>
+    <string name="anime_no_catalogs">Nessun catalogo anime qui. Aggiungine o attivane uno nelle Impostazioni.</string>
+    <string name="anime_no_matches">Nessun titolo corrispondente in questa pagina. I generi dipendono dalle etichette del componente aggiuntivo.</string>
     <string name="any">Qualsiasi</string>
     <string name="app_language">Lingua dell\'app</string>
     <string name="ask_still_watching">Chiedi se sto ancora guardando</string>
@@ -284,6 +288,8 @@
     <string name="subtitle_mode">Modalità</string>
     <string name="subtitle_size">Dimensione</string>
     <string name="subtitles">Sottotitoli</string>
+    <string name="switch_anime">Passa agli anime</string>
+    <string name="switch_regular">Torna alla vista normale</string>
     <string name="switch_stream">Cambia stream</string>
     <string name="sync_now">Sincronizza ora</string>
     <string name="sync_style">Sincronia e stile</string>

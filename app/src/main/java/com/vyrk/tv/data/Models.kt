@@ -38,6 +38,8 @@ data class Profile(
 @Serializable
 data class ProfileSettings(
     val defaultTab: String = "home",
+    val animeMode: Boolean = false,
+    val animeGenre: String? = null,
     val hiddenTabs: Set<String> = emptySet(),
     val heroEnabled: Boolean = true,
     val heroRotation: Boolean = true,

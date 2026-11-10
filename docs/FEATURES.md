@@ -1,5 +1,13 @@
 # VYRK feature matrix
 
+## Anime browsing (v0.1.22)
+
+- Switch to Anime / Switch to Regular below the tab bar, saved per profile.
+- Anime Home, Movies and Series use anime catalogues; actual item types separate films and series, including mixed `anime` catalogues. Continue Watching uses known anime IDs, tags or explicit metadata mappings.
+- Sixteen genre chips with All genres. Requests use advertised genre options (including Sci-Fi/Science Fiction and Shojo/Shoujo, Shonen/Shounen aliases); other catalogues filter supplied title tags. Missing tags are not guessed.
+- See all retains the filter. Empty filtered pages can load more using raw provider offsets; repeated pages stop pagination. No anime catalogues produces an instruction to add or enable one.
+- Verification: core/model/profile tests and `ci/anime_mode_probe.py` drive the ordinary UI with TV remote keys, including all-genre-strip reachability, type separation, empty results, saved preferences and switching back. Physical Shield verification remains pending.
+
 One row per requirement. **Status**: Done (implemented and verified), Built (implemented, not
 verified end to end), Partial (some of it is missing), Not done.
 **Evidence**: `core` = unit test in `core/src/test`, `E2E` = `ci/e2e.sh` on the Android TV

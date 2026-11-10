@@ -305,8 +305,11 @@ fun BrowseRow(
                 Text(str(R.string.row_error), style = Vyrk.type.bodyM, color = c.textMuted)
                 VyrkButton(str(R.string.retry), onClick = onRetry, modifier = Modifier.traceFocus("row:${row.key}:retry"))
             }
-            row.items.isEmpty() && row.loadedOnce && !row.loading -> Box(Modifier.padding(start = Dimens.screenMargin).height(48.dp), contentAlignment = Alignment.CenterStart) {
-                Text(str(R.string.row_empty), style = Vyrk.type.bodyM, color = c.textMuted)
+            row.items.isEmpty() && row.loadedOnce && !row.loading -> Row(Modifier.padding(start = Dimens.screenMargin).height(48.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(str(if (row.animeOnly) R.string.anime_no_matches else R.string.row_empty), style = Vyrk.type.bodyM, color = c.textMuted)
+                if (row.hasMore) VyrkButton(str(R.string.anime_load_more), onClick = onLoadMore,
+                    modifier = Modifier.traceFocus("row:${row.key}:more"))
             }
             row.items.isEmpty() -> Row(Modifier.padding(start = Dimens.screenMargin), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 repeat(7) { Box(Modifier.size(posterWidth, height).clip(Dimens.posterShape).background(c.raised.copy(alpha = 0.6f))) }

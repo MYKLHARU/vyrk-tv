@@ -2,6 +2,12 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.22
+
+- Added a per-profile Switch to Anime / Switch to Regular control. Anime mode limits Home, Movies and Series to anime catalogues and separates films from series using each title's type.
+- Added all sixteen anime genre filters, including provider spelling aliases and metadata-tag fallback. Mode and genre are remembered per profile; anime Continue Watching and See all follow the filters.
+- Filtered pagination advances by the provider's raw page size and offers Load more on empty filtered pages. Added normal-app remote navigation, empty genre and restart coverage.
+
 ## v0.1.21
 
 - Fixed anime season logos from AIO Metadata, including Dan Da Dan Season 3's MAL entry. Prequel relations accept AIO's category format and validate canonical parent IDs using explicit MAL/Kitsu mappings.

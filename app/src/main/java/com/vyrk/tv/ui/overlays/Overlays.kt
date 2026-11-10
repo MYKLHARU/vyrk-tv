@@ -287,8 +287,8 @@ private fun SeeAll(o: Overlay.SeeAll) {
     val session = LocalSession.current ?: return
     val library by session.library.collectAsState()
     val state by session.state.collectAsState()
-    val model = remember { BrowseModel(session, graph.addonClient, Tab.HOME, session.scope) }
-    val row = remember { RowState(o.ref.key + "all", RowKind.CATALOG, o.ref, o.title) }
+    val model = remember { BrowseModel(graph.addonClient, Tab.HOME, session.scope) }
+    val row = remember { RowState(o.ref.key + "all", RowKind.CATALOG, o.ref, o.title, o.animeOnly, o.browseType, o.genre) }
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { model.ensureLoaded(row) }
     LaunchedEffect(row.items.isNotEmpty()) { if (row.items.isNotEmpty()) runCatching { first.requestFocus() } }
@@ -296,6 +296,11 @@ private fun SeeAll(o: Overlay.SeeAll) {
     Column(Modifier.fillMaxSize().background(c.background).padding(horizontal = 48.dp, vertical = 30.dp)) {
         Text(o.title, style = Vyrk.type.headlineL, color = c.text)
         Spacer(Modifier.height(16.dp))
+        if (row.items.isEmpty() && row.loadedOnce && !row.loading) {
+            Text(str(if (o.animeOnly) R.string.anime_no_matches else R.string.row_empty), color = c.textMuted)
+            if (row.error != null) VyrkButton(str(R.string.retry), onClick = { model.retry(row) })
+            else if (row.hasMore) VyrkButton(str(R.string.anime_load_more), onClick = { model.loadMore(row) })
+        }
         LazyVerticalGrid(GridCells.Adaptive(130.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             itemsIndexed(row.items, key = { _, m -> m.type + m.id }) { i, m ->
                 if (i >= row.items.size - 8) LaunchedEffect(row.items.size) { model.loadMore(row) }

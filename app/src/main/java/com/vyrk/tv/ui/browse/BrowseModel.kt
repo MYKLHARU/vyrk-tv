@@ -9,6 +9,7 @@ import com.vyrk.core.addon.AddonResult
 import com.vyrk.core.addon.Descriptor
 import com.vyrk.core.addon.MetaItem
 import com.vyrk.core.addon.MetaPreview
+import com.vyrk.core.catalog.AnimeBrowse
 import com.vyrk.core.catalog.CatalogRef
 import com.vyrk.core.catalog.CatalogRules
 import com.vyrk.tv.data.ProfileSession
@@ -20,7 +21,11 @@ import kotlinx.coroutines.launch
 enum class RowKind { CONTINUE, TOP10, CATALOG }
 
 @Stable
-class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initialTitle: String) {
+class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initialTitle: String,
+    val animeOnly: Boolean = false, val browseType: String? = null, val genre: String? = null,
+) {
+    internal var fetchedCount = 0
+    internal var lastPageIds: List<String> = emptyList()
     var title by mutableStateOf(initialTitle)
     var items by mutableStateOf<List<MetaPreview>>(emptyList())
     var loading by mutableStateOf(false)
@@ -37,21 +42,22 @@ class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initial
  */
 class RowStore {
     private val rows = HashMap<String, RowState>()
-    fun row(ref: CatalogRef, kind: RowKind): RowState {
-        val key = ref.key + kind
+    fun row(ref: CatalogRef, kind: RowKind, animeOnly: Boolean = false, browseType: String? = null, genre: String? = null): RowState {
+        val key = ref.key + kind + if (animeOnly) ":anime:$browseType:$genre" else ""
         rows[key]?.takeIf { it.ref?.addon?.transportUrl == ref.addon.transportUrl }?.let { return it }
         val title = if (kind == RowKind.TOP10) CatalogRules.top10Title(ref) ?: CatalogRules.rowTitle(ref) else CatalogRules.rowTitle(ref)
-        return RowState(key, kind, ref, title).also { rows[key] = it }
+        return RowState(key, kind, ref, title, animeOnly, browseType, genre).also { rows[key] = it }
     }
 }
 
 /** Catalogue rows for one tab, loaded lazily and paged with the `skip` extra. */
 class BrowseModel(
-    private val session: ProfileSession,
     private val client: AddonClient,
     val tab: Tab,
     private val scope: CoroutineScope,
     private val store: RowStore = RowStore(),
+    val animeOnly: Boolean = false,
+    val genre: String? = null,
 ) {
     // Page state kept with the model, so leaving a tab and coming back finds it as it was:
     // scroll position, each row's scroll, the selected title under the header.
@@ -91,12 +97,18 @@ class BrowseModel(
         val input = addons to hiddenRows
         if (built && input == builtFrom) return
         builtFrom = input
-        val (top, rest) = CatalogRules.homeRows(addons)
+        val (allTop, allRest) = CatalogRules.homeRows(addons)
+        val requiredGenre = if (animeOnly && genre != null) addons.flatMapIndexed { i, d ->
+            d.manifest.catalogs.filter { it.requiredExtras.isNotEmpty() && it.requiredExtras.all { e -> e == "genre" } }
+                .map { CatalogRef(d, it, i) }.filter { AnimeBrowse.providerGenre(it, genre) != null }
+        } else emptyList()
+        val top = allTop.filter { !animeOnly || CatalogRules.isAnimeCatalog(it) }
+        val rest = (allRest + requiredGenre).filter { !animeOnly || CatalogRules.isAnimeCatalog(it) }
         hasTop10Catalogs = top.isNotEmpty()
         val catalogs: List<Pair<CatalogRef, RowKind>> = when (tab) {
             Tab.HOME -> top.map { it to RowKind.TOP10 } + rest.filter { it.catalog.type != "tv" && it.catalog.type != "channel" }.map { it to RowKind.CATALOG }
-            Tab.MOVIES -> (top + rest).filter { it.catalog.type == "movie" }.map { it to RowKind.CATALOG }
-            Tab.SERIES -> (top + rest).filter { it.catalog.type == "series" }.map { it to RowKind.CATALOG }
+            Tab.MOVIES -> (top + rest).filter { it.catalog.type == "movie" || animeOnly && it.catalog.type == "anime" }.map { it to RowKind.CATALOG }
+            Tab.SERIES -> (top + rest).filter { it.catalog.type == "series" || animeOnly && it.catalog.type == "anime" }.map { it to RowKind.CATALOG }
             Tab.ANIME -> (top + rest).filter { CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.CATALOG }
             Tab.LIVE -> rest.filter { it.catalog.type == "tv" || it.catalog.type == "channel" }.map { it to RowKind.CATALOG }
             else -> emptyList()
@@ -105,7 +117,7 @@ class BrowseModel(
         val sig = visible.joinToString("|") { it.first.key + it.second } + "#" + addons.joinToString { it.transportUrl.hashCode().toString() }
         if (sig == signature) { built = true; return }
         signature = sig
-        rows = visible.map { (ref, kind) -> store.row(ref, kind) }
+        rows = visible.map { (ref, kind) -> store.row(ref, kind, animeOnly, when (tab) { Tab.MOVIES -> "movie"; Tab.SERIES -> "series"; else -> null }, genre) }
         built = true
     }
 
@@ -136,14 +148,24 @@ class BrowseModel(
         row.loading = true
         row.error = null
         row.job = scope.launch {
-            val skip = if (reset) 0 else row.items.size
-            val extra = if (skip > 0) listOf("skip" to skip.toString()) else emptyList()
+            val skip = if (reset) 0 else row.fetchedCount
+            val serverGenre = AnimeBrowse.providerGenre(ref, row.genre)
+            val extra = buildList {
+                if (skip > 0) add("skip" to skip.toString())
+                serverGenre?.let { add("genre" to it) }
+            }
             when (val r = client.catalog(ref.addon, ref.catalog.type, ref.catalog.id, extra)) {
                 is AddonResult.Ok -> {
-                    val incoming = r.value.metas
-                    val merged = if (reset) incoming else (row.items + incoming).distinctBy { it.type + ":" + it.id }
+                    val raw = r.value.metas
+                    val ids = raw.map { it.type + ":" + it.id }
+                    val repeatedPage = !reset && ids == row.lastPageIds
+                    row.lastPageIds = ids
+                    row.fetchedCount = skip + raw.size
+                    val incoming = raw.filter { !row.animeOnly || AnimeBrowse.matches(it, row.browseType, row.genre,
+                        trustedCatalog = CatalogRules.isAnimeCatalog(ref), serverFiltered = serverGenre != null) }
+                    val merged = (if (reset) incoming else row.items + incoming).distinctBy { it.type + ":" + it.id }
                     row.items = if (row.kind == RowKind.TOP10) merged.take(CatalogRules.TOP_N) else merged
-                    row.hasMore = row.kind != RowKind.TOP10 && incoming.isNotEmpty() && ref.catalog.supportsExtra("skip") && merged.size > (if (reset) 0 else skip)
+                    row.hasMore = row.kind != RowKind.TOP10 && raw.isNotEmpty() && !repeatedPage && ref.catalog.supportsExtra("skip")
                 }
                 is AddonResult.Failed -> row.error = r.reason
             }
