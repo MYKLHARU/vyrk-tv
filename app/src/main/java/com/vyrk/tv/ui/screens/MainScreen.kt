@@ -99,10 +99,8 @@ fun MainScreen(session: ProfileSession) {
     val searchReq = remember { FocusRequester() }
     val settingsReq = remember { FocusRequester() }
     val animeReq = remember { FocusRequester() }
-    val genreBar = settings.animeMode && app.section == Section.TABS && app.tab in setOf(Tab.HOME, Tab.MOVIES, Tab.SERIES)
     var discoverVisited by remember(session) { mutableStateOf(false) }
     var navHasFocus by remember { mutableStateOf(false) }
-    var filtersHaveFocus by remember { mutableStateOf(false) }
 
     // Default tab once per session.
     LaunchedEffect(session.profile.id) {
@@ -121,7 +119,7 @@ fun MainScreen(session: ProfileSession) {
 
     val rowStore = remember(session) { com.vyrk.tv.ui.browse.RowStore() }
     val models = remember(session, settings.animeMode, settings.animeGenre) { mutableMapOf<Tab, BrowseModel>() }
-    fun model(t: Tab) = models.getOrPut(t) { BrowseModel(graph.addonClient, t, session.scope, rowStore, settings.animeMode, if (settings.animeMode) settings.animeGenre else null) }
+    fun model(t: Tab) = models.getOrPut(t) { BrowseModel(graph.addonClient, t, session.scope, rowStore, settings.animeMode, null) }
 
     // Build every catalogue tab as soon as the add-ons are known and start its first rows,
     // the open tab first, so switching to Movies or Series finds them already loaded.
@@ -173,7 +171,7 @@ fun MainScreen(session: ProfileSession) {
         if (app.section == Section.SETTINGS) SettingsBackdrop(app.backdrop)
         else if (app.section != Section.TABS || shownTab in setOf(Tab.LIBRARY, Tab.DISCOVER)) com.vyrk.tv.ui.components.AmbientBackground()
         // Pages start under the bar; artwork may reach up behind it.
-        Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight + if (genreBar) 48.dp else 0.dp)) {
+        Box(Modifier.fillMaxSize().padding(top = Dimens.navHeight)) {
             if (!loaded) return@Box
             when (app.section) {
                 Section.SEARCH -> SearchScreen(session)
@@ -205,7 +203,7 @@ fun MainScreen(session: ProfileSession) {
         Row(
             Modifier.fillMaxWidth().height(Dimens.navHeight)
                 .padding(horizontal = Dimens.screenMargin)
-                .onFocusChanged { navHasFocus = it.hasFocus; app.navFocused = it.hasFocus || filtersHaveFocus }
+                .onFocusChanged { navHasFocus = it.hasFocus; app.navFocused = it.hasFocus }
                 .focusProperties {
                     onEnter = {
                         val target = when (app.section) {
@@ -248,35 +246,6 @@ fun MainScreen(session: ProfileSession) {
             NavGear(active = app.section == Section.SETTINGS, settingsReq) { app.section = Section.SETTINGS }
         }
 
-        if (genreBar) AnimeModeBar(session, settings.animeMode, settings.animeGenre, tabReqs.getValue(app.tab),
-            Modifier.padding(top = Dimens.navHeight).onFocusChanged {
-                filtersHaveFocus = it.hasFocus; app.navFocused = it.hasFocus || navHasFocus
-            })
-    }
-}
-
-@Composable
-private fun AnimeModeBar(session: ProfileSession, anime: Boolean, genre: String?, navRequester: FocusRequester, modifier: Modifier) {
-    val app = LocalApp.current
-    Row(modifier.fillMaxWidth().height(48.dp).padding(horizontal = Dimens.screenMargin)
-        .focusProperties { onExit = {
-            if (requestedFocusDirection == androidx.compose.ui.focus.FocusDirection.Up) runCatching { navRequester.requestFocus() }
-        } }.focusGroup(),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (anime && app.tab in setOf(Tab.HOME, Tab.MOVIES, Tab.SERIES)) androidx.compose.foundation.lazy.LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
-        ) {
-            val options = listOf<String?>(null) + com.vyrk.core.catalog.AnimeBrowse.genres
-            items(options.size) { index ->
-                val value = options[index]
-                com.vyrk.tv.ui.components.ChoicePill(value ?: str(R.string.anime_all_genres), genre == value,
-                    onClick = {
-                        session.updateSettings { it.copy(animeGenre = value) }
-                        app.preview = null; app.backdrop = null
-                    }, trace = "browse:genre:${value ?: "all"}")
-            }
-        }
     }
 }
 

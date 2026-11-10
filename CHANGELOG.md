@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Removed the genre bar under the top menu in Anime mode. Anime pages show every anime title; Discover still filters by genre.
+
 ## v0.1.23
 
 - Moved Anime mode into a compact top-menu switch and removed the redundant standalone Anime tab. Regular browsing uses the full page height again.

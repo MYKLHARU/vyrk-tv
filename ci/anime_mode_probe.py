@@ -110,13 +110,12 @@ assert 'Anime Fixture Film' in text and 'Anime Fixture Action' not in text and '
 tab(2)
 text=capture('anime-series')
 assert 'Anime Fixture Film' not in text and 'Anime Fixture Action' in text
-click('Action')
-time.sleep(2)
-text=capture('anime-action')
-assert 'Anime Fixture Action' in text and 'Anime Fixture Comedy' not in text
+assert 'browse:genre' not in adb('logcat', '-d', '-s', 'VyrkFocus')
 tab(1)
-key('DPAD_DOWN'); wait_focus(r'browse:(mode|genre:)',5)
-key('DPAD_DOWN'); wait_focus('poster:',5)
+for _ in range(4):
+    if 'poster:' in focus(): break
+    key('DPAD_DOWN')
+wait_focus('poster:',5)
 key('DPAD_RIGHT'); wait_focus(r'row:.*:more',5)
 key('DPAD_CENTER',2)
 text=capture('anime-sparse-page')
@@ -129,35 +128,15 @@ text=capture('anime-see-all-page')
 assert 'Anime Fixture Next Film' in text and 'Anime Fixture Drama Film' not in text
 key('BACK')
 key('BACK')
-tab(2)
-click('Action')
-# Genre chips remain focused while data refreshes. Select Comedy using the TV remote.
-wait_focus('browse:genre:Action',5)
-key('DPAD_RIGHT'); wait_focus('browse:genre:Adventure',5)
-key('DPAD_RIGHT'); wait_focus('browse:genre:Comedy',5)
-key('DPAD_CENTER',2)
-text=capture('anime-comedy')
-assert 'Anime Fixture Comedy' in text and 'Anime Fixture Action' not in text
-for _ in range(13): key('DPAD_RIGHT', .2)
-wait_focus('browse:genre:Thriller',5)
-key('DPAD_CENTER',2)
-text=capture('anime-empty-genre')
-assert 'No matching titles' in text and 'Anime Fixture Comedy' not in text
-for _ in range(13): key('DPAD_LEFT', .2)
-wait_focus('browse:genre:Comedy',5)
-key('DPAD_CENTER',2)
 adb('shell','am','force-stop',a.package)
 adb('shell','am','start','-n',a.package+'/com.vyrk.tv.MainActivity')
 time.sleep(5)
 text=capture('anime-reopened')
-assert 'Switch to Regular' in text and 'Anime Fixture Action' not in text
-tab(2)
-text=capture('anime-saved-genre')
-assert 'Anime Fixture Comedy' in text and 'Anime Fixture Action' not in text
+assert 'Switch to Regular' in text
 click('Switch to Regular')
 time.sleep(2)
 assert 'Switch to Anime' in capture('regular-restored')
-# The added bar must preserve normal-page focus memory and tab navigation too.
+# Normal pages keep their focus memory and tab navigation.
 tab(0); key('DPAD_DOWN')
 for _ in range(5):
     if 'poster:' in focus(): break
@@ -212,6 +191,6 @@ tab(3); key('DPAD_DOWN'); key('DPAD_RIGHT'); key('DPAD_RIGHT'); key('DPAD_CENTER
 wait_focus('discover:option:',5); key('BACK'); wait_focus('discover:genre',5)
 click('Switch to Regular')
 (a.out/'results.json').write_text(json.dumps({'passed':True,'checks':['anime home','movie/series separation',
-    'genre filtering','remote genre navigation','saved mode and genre','regular view restored',
+    'no genre bar','saved mode','regular view restored',
     'normal poster focus restored','single-key tab navigation','Discover type and catalogue','Discover genres','selector cancellation']},indent=2))
 print('PASS: normal anime-mode UI and profile persistence')
