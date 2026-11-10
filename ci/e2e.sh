@@ -144,9 +144,16 @@ fi
 
 key KEYCODE_DPAD_DOWN 1.5 "show controls"
 shot player-controls
+# The slow software decoder can raise the stall prompt again at any point; it owns the remote, so
+# CC would not reach the player while it is up.
+dismiss_stall_prompt
 key KEYCODE_CAPTIONS 2 "CC opens Audio & subtitles"
 # The CI emulator can be slow to give the panel window focus: wait, and press CC once more if it never opened.
-for _ in 1 2 3 4 5; do [[ "$(focus_now)" =~ ^panel: ]] && break; probe "panel" >/dev/null 2>&1 || true; sleep 1; done
+for _ in 1 2 3 4 5; do
+  [[ "$(focus_now)" =~ ^panel: ]] && break
+  if [[ "$(focus_now)" == prompt:yes ]]; then dismiss_stall_prompt; key KEYCODE_CAPTIONS 2 "CC after the stall prompt"; continue; fi
+  probe "panel" >/dev/null 2>&1 || true; sleep 1
+done
 [[ "$(focus_now)" =~ ^panel: ]] || key KEYCODE_CAPTIONS 3 "CC again"
 expect '^panel:' "Audio & subtitles panel"
 shot audio-subtitles
