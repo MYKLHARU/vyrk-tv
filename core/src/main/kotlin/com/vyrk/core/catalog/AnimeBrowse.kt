@@ -26,7 +26,10 @@ object AnimeBrowse {
 
     fun matches(meta: MetaPreview, type: String? = null, genre: String? = null,
                 trustedCatalog: Boolean = false, serverFiltered: Boolean = false): Boolean =
-        (trustedCatalog || CatalogRules.isAnime(meta) || meta.genres.any { it.equals("Anime", true) }) &&
+        (trustedCatalog || CatalogRules.isAnime(meta) || tags(meta).any { it.equals("Anime", true) }) &&
             (type == null || meta.type == type || type == "series" && meta.type == "anime") &&
-            (serverFiltered || matchesGenre(meta.genres, genre))
+            (serverFiltered || matchesGenre(tags(meta), genre))
+
+    private fun tags(meta: MetaPreview): List<String> = meta.genres.ifEmpty { meta.genre }
+        .ifEmpty { meta.links.filter { it.category.equals("Genres", true) }.map { it.name } }
 }

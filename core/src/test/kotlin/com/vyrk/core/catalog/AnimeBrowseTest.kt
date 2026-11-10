@@ -43,5 +43,7 @@ class AnimeBrowseTest {
         assertTrue(AnimeBrowse.matches(item, genre = "Comedy", serverFiltered = true))
         assertTrue(AnimeBrowse.matchesGenre(listOf("Slice-of-Life"), "Slice of Life"))
         assertFalse(AnimeBrowse.matchesGenre(listOf("Supernatural"), "Thriller"))
+        assertTrue(AnimeBrowse.matches(MetaPreview("mal:2", "series", genre = listOf("Action")), genre = "Action"))
+        assertTrue(AnimeBrowse.matches(MetaPreview("mal:3", "series", links = listOf(Link("Shounen", "Genres"))), genre = "Shonen"))
     }
 }
