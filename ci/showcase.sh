@@ -22,6 +22,7 @@ for _ in $(seq 1 60); do [[ "$(adbs getprop sys.boot_completed)" == 1 ]] && brea
 for _ in $(seq 1 30); do adbs pm path android >/dev/null 2>&1 && break; sleep 2; done
 if [[ -n "$APK" ]]; then "$ADB" uninstall "$PKG" >/dev/null 2>&1 || true; "$ADB" install -r "$APK"; fi
 adbs pm clear "$PKG" >/dev/null || true
+enable_traces
 "$ADB" logcat -c
 adbs am start -n "$PKG/.MainActivity" >/dev/null
 sleep 9

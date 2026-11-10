@@ -22,6 +22,9 @@ a.out.mkdir(parents=True, exist_ok=True)
 def adb(*args):
     return subprocess.check_output([a.adb, *args], text=True, encoding='utf-8', errors='replace', timeout=45)
 
+# VYRK's focus trace is off unless switched on.
+adb('shell', 'setprop', 'log.tag.VyrkFocus', 'DEBUG')
+
 def record():
     lines=adb('logcat', '-d', '-s', 'VyrkFocus').splitlines()
     return lines[-1] if lines else ''

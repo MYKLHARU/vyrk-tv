@@ -8,6 +8,8 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - Added Discover: a poster grid with Movies/Series, installed catalogue and genre selectors, filtered pagination, retry and empty results. Discover follows Anime mode.
 - Removed Live from Settings' Hidden tabs controls and added Discover to the default/hidden tab choices.
 - Fixed remote arrows and OK in playback recovery and Still watching prompts so they operate the prompt instead of seeking beneath it.
+- Add-ons that use plain http on a public server now show a warning on the install screen and in Settings › Add-ons: anyone on the network can read their address, including a sign-in inside it. Add-ons on your home network are not flagged.
+- Release builds no longer write a log line for every remote key press and playback event. The test journeys switch these traces on.
 
 ## v0.1.22
 

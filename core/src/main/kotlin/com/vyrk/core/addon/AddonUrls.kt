@@ -92,6 +92,30 @@ object AddonUrls {
         return s
     }
 
+    /**
+     * True for a plain-http address on a host outside the local network: anyone along the way can
+     * read it, including a sign-in carried in its path. Addresses on the home network are fine.
+     */
+    fun isUnencryptedPublic(url: String): Boolean {
+        val uri = runCatching { java.net.URI(url.trim()) }.getOrNull() ?: return false
+        if (!uri.scheme.equals("http", ignoreCase = true)) return false
+        val host = uri.host?.lowercase()?.removePrefix("[")?.removeSuffix("]") ?: return false
+        return !isLocalHost(host)
+    }
+
+    private fun isLocalHost(host: String): Boolean {
+        if (host == "localhost" || listOf(".localhost", ".local", ".lan", ".home.arpa", ".internal").any { host.endsWith(it) }) return true
+        if (':' in host) return host == "::1" || host.startsWith("fe80:") || host.startsWith("fc") || host.startsWith("fd")
+        val parts = host.split('.')
+        val v4 = parts.mapNotNull { it.toIntOrNull()?.takeIf { n -> n in 0..255 } }
+        if (parts.size == 4 && v4.size == 4) {
+            val (a, b) = v4
+            return a == 10 || a == 127 || (a == 192 && b == 168) || (a == 172 && b in 16..31) || (a == 169 && b == 254) || (a == 100 && b in 64..127)
+        }
+        // A single-label name (such as "nas") only resolves on the local network.
+        return '.' !in host
+    }
+
     fun percentDecode(s: String): String {
         val out = java.io.ByteArrayOutputStream()
         var i = 0

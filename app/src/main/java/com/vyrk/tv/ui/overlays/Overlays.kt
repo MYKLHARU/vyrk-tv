@@ -229,6 +229,7 @@ private fun InstallConfirm(o: Overlay.InstallConfirm) {
                 Spacer(Modifier.height(8.dp))
                 Text(Redact.url(d.transportUrl), style = Vyrk.type.labelM, color = Vyrk.colors.textMuted)
                 if (needsServer) Text(str(R.string.needs_streaming_server), style = Vyrk.type.bodyS, color = Vyrk.colors.warning)
+                if (com.vyrk.core.addon.AddonUrls.isUnencryptedPublic(d.transportUrl)) Text(str(R.string.addon_not_encrypted), style = Vyrk.type.bodyS, color = Vyrk.colors.warning)
             }
         }
         Spacer(Modifier.height(18.dp))

@@ -47,7 +47,7 @@ You need an Android TV emulator (or device) visible to `adb`, Python 3, and bash
    ```
    Look at every image before committing it.
 
-The journeys use remote keys only and log the focused element after every key (`VyrkFocus` in logcat). If you add a focusable element, give it a `traceFocus("…")` label.
+The journeys use remote keys only and log the focused element after every key (`VyrkFocus` in logcat, with playback events as `VyrkEvent`). Both are off in normal use; the scripts switch them on with `adb shell setprop log.tag.VyrkFocus DEBUG` and `adb shell setprop log.tag.VyrkEvent DEBUG`. If you add a focusable element, give it a `traceFocus("…")` label.
 
 ## Focused playback and artwork checks
 

@@ -15,6 +15,22 @@ import kotlin.test.assertTrue
 class AddonProtocolTest {
 
     @Test
+    fun flagsPlainHttpOnlyOnPublicHosts() {
+        assertTrue(AddonUrls.isUnencryptedPublic("http://addon.example.com/abc123/manifest.json"))
+        assertTrue(AddonUrls.isUnencryptedPublic("HTTP://8.8.8.8:7000/manifest.json"))
+        assertTrue(AddonUrls.isUnencryptedPublic("http://172.32.0.1/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("https://addon.example.com/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("http://10.0.2.2:7000/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("http://192.168.1.20:11470/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("http://172.20.0.5/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("http://localhost:7000/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("http://[::1]:7000/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("http://nas.local/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("http://nas/manifest.json"))
+        assertFalse(AddonUrls.isUnencryptedPublic("not a url"))
+    }
+
+    @Test
     fun encodesIdsLikeEncodeUriComponent() {
         assertEquals("kitsu%3A1376", AddonUrls.encodeComponent("kitsu:1376"))
         assertEquals("tt0386676%3A5%3A1", AddonUrls.encodeComponent("tt0386676:5:1"))

@@ -11,6 +11,7 @@
     <string name="accent_teal">Turquesa</string>
     <string name="accent_violet">Violeta</string>
     <string name="add_to_library">Adicionar à biblioteca</string>
+    <string name="addon_not_encrypted">Usa http, não https: outras pessoas na rede podem ler este endereço, incluindo qualquer login contido nele.</string>
     <string name="addon_refreshed">Complemento atualizado</string>
     <string name="addon_url">URL do complemento</string>
     <string name="addons_pending_sync">Salvo nesta TV. Sincronização da conta pendente.</string>

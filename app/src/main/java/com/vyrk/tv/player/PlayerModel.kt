@@ -261,7 +261,7 @@ class PlayerModel(
         firstFrame = false
         playingVideoId = video?.id ?: request.videoId ?: request.meta.id
         Diagnostics.log("player", "candidate ${index + 1}/${candidates.size} from ${r.candidate.addonId}")
-        android.util.Log.i("VyrkEvent", "play_start $playingVideoId $startMs")
+        vyrkEvent("play_start $playingVideoId $startMs")
         engine.prepare(r.candidate.stream, startMs, preserveAudio = audioOverride != null)
         resetProgressClock()
         scope.launch { loadSubtitles(playingVideoId!!, r, generation) }
@@ -312,7 +312,7 @@ class PlayerModel(
         skipOffer = SkipOffer(found)
         rebuildMarkers()
         Diagnostics.log("player", "introdb: ${found.size} segment(s)")
-        android.util.Log.i("VyrkEvent", "introdb_segments ${found.size}")
+        vyrkEvent("introdb_segments ${found.size}")
     }
 
     /** Matroska chapters from the playing file, read with HTTP range requests. */
@@ -409,7 +409,7 @@ class PlayerModel(
         recoveryAudio = next.id
         engine.select(C.TRACK_TYPE_AUDIO, next.id)
         Diagnostics.log("player", "audio track failed; switched to ${next.language ?: "?"} ${next.codec ?: ""}")
-        android.util.Log.i("VyrkEvent", "audio_switched")
+        vyrkEvent("audio_switched")
         engine.player.seekTo(pos)
         engine.player.prepare()
         engine.player.playWhenReady = true
@@ -749,7 +749,7 @@ class PlayerModel(
                         skipSegment = seg; skipNow()
                         showNotice(s(if (seg.kind == SegmentKind.RECAP) com.vyrk.tv.R.string.skipped_recap else com.vyrk.tv.R.string.skipped_intro))
                     }
-                    seg != skipSegment -> { skipSegment = seg; skipShownAt = clock; android.util.Log.i("VyrkEvent", "skip_offered ${seg.kind}") }
+                    seg != skipSegment -> { skipSegment = seg; skipShownAt = clock; vyrkEvent("skip_offered ${seg.kind}") }
                     clock - skipShownAt > 10_000 -> { skipOffer.dismiss(seg); skipSegment = null } // shown 10 s and left alone
                 }
             }
@@ -764,7 +764,7 @@ class PlayerModel(
                 val credits = skipOffer.creditsStartMs
                 val near = episodeGuard.upNextDue(position, duration, credits)
                 if (!near) { upNext = false; upNextCountdown = 10 }
-                if (near && !upNext && playing) { upNext = true; upNextCountdown = 10; android.util.Log.i("VyrkEvent", "upnext_offered ${video?.id}") }
+                if (near && !upNext && playing) { upNext = true; upNextCountdown = 10; vyrkEvent("upnext_offered ${video?.id}") }
                 if (upNext && playing && panel == Panel.NONE && !scrubber.active && n % 2 == 0) { upNextCountdown--; if (upNextCountdown <= 0) playNext(auto = true) }
             } else upNext = false
         }
@@ -774,4 +774,9 @@ class PlayerModel(
         saveProgress(final = engine.player.duration > 0 && engine.player.currentPosition > engine.player.duration * LibraryRules.CREDITS_THRESHOLD_COEF)
         session.pushNow()
     }
+}
+
+/** Playback events for the test journeys, off unless switched on with `adb shell setprop log.tag.VyrkEvent DEBUG`. */
+private fun vyrkEvent(message: String) {
+    if (android.util.Log.isLoggable("VyrkEvent", android.util.Log.DEBUG)) android.util.Log.i("VyrkEvent", message)
 }

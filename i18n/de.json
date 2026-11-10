@@ -156,6 +156,7 @@
     "move_down":  "Nach unten",
     "move_up":  "Nach oben",
     "needs_streaming_server":  "Braucht Stremios lokalen Streaming-Server, den VYRK nicht enthält. Es wird übersprungen.",
+    "addon_not_encrypted":  "Nutzt http statt https: Andere im Netzwerk können diese Adresse mitlesen, einschließlich darin enthaltener Anmeldedaten.",
     "next":  "Weiter",
     "next_episode":  "Nächste Folge",
     "no_account":  "Nicht angemeldet. Deine Mediathek wird auf diesem Fernseher gespeichert.",

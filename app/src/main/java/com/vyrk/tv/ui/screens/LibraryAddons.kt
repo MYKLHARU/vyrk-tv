@@ -197,6 +197,7 @@ fun AddonCard(session: ProfileSession, d: com.vyrk.core.addon.Descriptor, index:
             m.types.forEach { Tag(it, background = c.accent.copy(alpha = 0.18f), color = c.accent) }
         }
         if (skipped) Text(str(R.string.needs_streaming_server), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
+        if (com.vyrk.core.addon.AddonUrls.isUnencryptedPublic(d.transportUrl)) Text(str(R.string.addon_not_encrypted), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
         Spacer(Modifier.height(8.dp))
         WrapRow(spacing = 6.dp) {
             if (index > 0) VyrkButton(str(R.string.move_up), icon = R.drawable.ic_up, onClick = { scope.launch { session.move(m.id, -1) } }, modifier = Modifier.traceFocus("addon:$index:up"))
