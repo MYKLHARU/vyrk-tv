@@ -293,8 +293,6 @@
     <string name="subtitle_mode">Modus</string>
     <string name="subtitle_size">Größe</string>
     <string name="subtitles">Untertitel</string>
-    <string name="switch_anime">Zu Anime wechseln</string>
-    <string name="switch_regular">Zur normalen Ansicht</string>
     <string name="switch_stream">Stream wechseln</string>
     <string name="sync_now">Jetzt synchronisieren</string>
     <string name="sync_style">Synchronität &amp; Stil</string>

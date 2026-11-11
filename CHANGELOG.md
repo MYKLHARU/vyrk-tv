@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Anime is back as its own tab in the top menu, and the Anime switch is gone. Home, Movies and Series always show everything, and Discover lists every catalogue. Anime can be hidden or made the default tab in Settings.
+
 ## v0.1.24
 
 - Removed the genre bar under the top menu in Anime mode. Anime pages show every anime title; Discover still filters by genre.

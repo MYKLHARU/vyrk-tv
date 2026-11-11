@@ -293,8 +293,6 @@
     <string name="subtitle_mode">Mode</string>
     <string name="subtitle_size">Taille</string>
     <string name="subtitles">Sous-titres</string>
-    <string name="switch_anime">Passer aux animés</string>
-    <string name="switch_regular">Revenir au mode normal</string>
     <string name="switch_stream">Changer de flux</string>
     <string name="sync_now">Synchroniser</string>
     <string name="sync_style">Synchro et style</string>

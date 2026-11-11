@@ -293,8 +293,6 @@
     <string name="subtitle_mode">मोड</string>
     <string name="subtitle_size">आकार</string>
     <string name="subtitles">सबटाइटल</string>
-    <string name="switch_anime">एनीमे पर जाएँ</string>
-    <string name="switch_regular">सामान्य दृश्य पर लौटें</string>
     <string name="switch_stream">स्ट्रीम बदलें</string>
     <string name="sync_now">अभी सिंक करें</string>
     <string name="sync_style">सिंक और स्टाइल</string>

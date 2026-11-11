@@ -99,41 +99,13 @@ if a.fresh:
 adb('shell','am','start','-a','android.intent.action.VIEW','-d',
     "'vyrk://install?url="+quote(a.addon,safe='')+"'",'-p',a.package)
 wait_focus('install:confirm'); key('DPAD_CENTER',3)
-click('Switch to Anime')
+# Anime is a tab of its own; there is no mode switch.
+text=capture('home')
+assert 'Switch to' not in text and 'nav:anime' not in adb('logcat', '-d', '-s', 'VyrkFocus')
+tab(4); wait_focus('tab:anime',5)
 time.sleep(3)
-text=capture('anime-home')
-assert 'Switch to Regular' in text and 'Anime Fixture' in text
-assert 'Regular Fixture Show' not in text
-tab(1)
-text=capture('anime-movies')
-assert 'Anime Fixture Film' in text and 'Anime Fixture Action' not in text and 'Anime Fixture Comedy' not in text
-tab(2)
-text=capture('anime-series')
-assert 'Anime Fixture Film' not in text and 'Anime Fixture Action' in text
-assert 'browse:genre' not in adb('logcat', '-d', '-s', 'VyrkFocus')
-tab(1)
-for _ in range(4):
-    if 'poster:' in focus(): break
-    key('DPAD_DOWN')
-wait_focus('poster:',5)
-# Load more (or See all at the end) sits after the posters; Load more brings in every film page.
-for _ in range(3):
-    for _ in range(6):
-        if re.search(r'row:.*:(more|see_all)', focus()): break
-        key('DPAD_RIGHT')
-    wait_focus(r'row:.*:(more|see_all)',5)
-    text=capture('anime-load-more')
-    if 'Anime Fixture Next Film' in text: break
-    key('DPAD_CENTER',2)
-assert 'Anime Fixture Drama Film' in text and 'Anime Fixture Next Film' in text
-adb('shell','am','force-stop',a.package)
-adb('shell','am','start','-n',a.package+'/com.vyrk.tv.MainActivity')
-time.sleep(5)
-text=capture('anime-reopened')
-assert 'Switch to Regular' in text
-click('Switch to Regular')
-time.sleep(2)
-assert 'Switch to Anime' in capture('regular-restored')
+text=capture('anime-tab')
+assert 'Anime Fixture' in text
 # Normal pages keep their focus memory and tab navigation.
 tab(0); key('DPAD_DOWN')
 for _ in range(5):
@@ -153,8 +125,7 @@ capture('regular-focus-restored')
 tab(0)
 key('DPAD_RIGHT'); wait_focus('tab:movies',5)
 key('DPAD_RIGHT'); wait_focus('tab:series',5)
-# Discover has its own type/catalogue/genre selectors and follows Anime mode.
-click('Switch to Anime')
+# Discover has its own type/catalogue/genre selectors.
 tab(3); key('DPAD_DOWN'); wait_focus('discover:type',10)
 
 def discover_pick(which, target):
@@ -187,8 +158,5 @@ assert 'Anime Fixture Comedy' in text and 'Anime Fixture Action' not in text
 # Back cancels a selector, retains the chosen genre, and returns to its button.
 tab(3); key('DPAD_DOWN'); key('DPAD_RIGHT'); key('DPAD_RIGHT'); key('DPAD_CENTER')
 wait_focus('discover:option:',5); key('BACK'); wait_focus('discover:genre',5)
-click('Switch to Regular')
-(a.out/'results.json').write_text(json.dumps({'passed':True,'checks':['anime home','movie/series separation',
-    'no genre bar','saved mode','regular view restored',
-    'normal poster focus restored','single-key tab navigation','Discover type and catalogue','Discover genres','selector cancellation']},indent=2))
-print('PASS: normal anime-mode UI and profile persistence')
+(a.out/'results.json').write_text(json.dumps({'passed':True,'checks':['anime tab','no mode switch','normal poster focus restored','single-key tab navigation','Discover type and catalogue','Discover genres','selector cancellation']},indent=2))
+print('PASS: Anime tab, focus memory and Discover')

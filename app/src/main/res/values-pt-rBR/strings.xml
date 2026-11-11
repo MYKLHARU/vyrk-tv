@@ -293,8 +293,6 @@
     <string name="subtitle_mode">Modo</string>
     <string name="subtitle_size">Tamanho</string>
     <string name="subtitles">Legendas</string>
-    <string name="switch_anime">Mudar para anime</string>
-    <string name="switch_regular">Voltar ao modo normal</string>
     <string name="switch_stream">Trocar stream</string>
     <string name="sync_now">Sincronizar agora</string>
     <string name="sync_style">Sincronia e estilo</string>

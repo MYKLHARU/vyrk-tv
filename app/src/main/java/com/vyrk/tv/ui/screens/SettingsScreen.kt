@@ -326,10 +326,10 @@ private fun GroupContent(session: ProfileSession, group: Group) {
     Column {
         when (group) {
             Group.PROFILE -> {
-                val defaultTabs = listOf(Tab.HOME, Tab.MOVIES, Tab.SERIES, Tab.DISCOVER, Tab.LIBRARY)
+                val defaultTabs = listOf(Tab.HOME, Tab.MOVIES, Tab.SERIES, Tab.DISCOVER, Tab.ANIME, Tab.LIBRARY)
                 Choice(str(R.string.default_tab), defaultTabs.map { it.key to tabLabel(it) }, s.defaultTab, "set:default_tab", str(R.string.default_tab_desc), R.drawable.ic_home, defaultTabs.map { tabIcon(it) }) { v -> upd { it.copy(defaultTab = v) } }
                 SettingRow(str(R.string.hidden_tabs), str(R.string.hidden_tabs_desc), Modifier.leftToSidebar(), icon = R.drawable.ic_eye_off) {
-                    listOf(Tab.MOVIES, Tab.SERIES, Tab.DISCOVER, Tab.LIBRARY).forEach { t ->
+                    listOf(Tab.MOVIES, Tab.SERIES, Tab.DISCOVER, Tab.ANIME, Tab.LIBRARY).forEach { t ->
                         CheckChip(tabLabel(t), t.key in s.hiddenTabs, { upd { it.copy(hiddenTabs = if (t.key in it.hiddenTabs) it.hiddenTabs - t.key else it.hiddenTabs + t.key) } }, "set:hide_tab:${t.key}")
                     }
                 }

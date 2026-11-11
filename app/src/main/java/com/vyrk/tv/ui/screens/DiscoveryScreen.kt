@@ -44,16 +44,16 @@ fun DiscoveryScreen(session: ProfileSession) {
     val library by session.library.collectAsState()
     val state by session.state.collectAsState()
     var type by remember(session) { mutableStateOf("movie") }
-    var catalogKey by remember(session, settings.animeMode) { mutableStateOf<String?>(null) }
-    var selectedGenre by remember(session, settings.animeMode) { mutableStateOf<String?>(null) }
-    val catalogs = remember(addons, settings.hiddenRows, type, settings.animeMode) {
-        DiscoveryRules.catalogs(session.effectiveAddons(), type, settings.animeMode, settings.hiddenRows)
+    var catalogKey by remember(session, false) { mutableStateOf<String?>(null) }
+    var selectedGenre by remember(session, false) { mutableStateOf<String?>(null) }
+    val catalogs = remember(addons, settings.hiddenRows, type, false) {
+        DiscoveryRules.catalogs(session.effectiveAddons(), type, false, settings.hiddenRows)
     }
     val ref = catalogs.firstOrNull { it.key == catalogKey } ?: catalogs.firstOrNull()
-    val genre = ref?.let { DiscoveryRules.genre(it, settings.animeMode, selectedGenre) }
+    val genre = ref?.let { DiscoveryRules.genre(it, false, selectedGenre) }
     val model = remember(session) { BrowseModel(graph.addonClient, Tab.DISCOVER, session.scope) }
-    val row = remember(ref, settings.animeMode, type, genre) { ref?.let {
-        RowState("discover:${it.key}:$type:$genre", RowKind.CATALOG, it, it.name, settings.animeMode, type, genre)
+    val row = remember(ref, false, type, genre) { ref?.let {
+        RowState("discover:${it.key}:$type:$genre", RowKind.CATALOG, it, it.name, false, type, genre)
     } }
     DisposableEffect(row) { row?.let(model::ensureLoaded); onDispose { row?.job?.cancel() } }
     val controls = remember { List(3) { FocusRequester() } }
@@ -75,7 +75,7 @@ fun DiscoveryScreen(session: ProfileSession) {
             VyrkButton((ref?.name ?: str(R.string.discover_catalog)) + " ▾", { menu = 1 },
                 enabled = catalogs.isNotEmpty(), modifier = Modifier.widthIn(max = 380.dp).focusRequester(controls[1]).traceFocus("discover:catalog"))
             VyrkButton((genre ?: str(R.string.anime_all_genres)) + " ▾", { menu = 2 },
-                enabled = ref?.let { DiscoveryRules.genres(it, settings.animeMode).isNotEmpty() } == true,
+                enabled = ref?.let { DiscoveryRules.genres(it, false).isNotEmpty() } == true,
                 modifier = Modifier.focusRequester(controls[2]).traceFocus("discover:genre"))
         }
         Spacer(Modifier.height(8.dp))
@@ -115,7 +115,7 @@ fun DiscoveryScreen(session: ProfileSession) {
             1 -> catalogs.map { it.key to "${it.name} · ${it.addon.manifest.name}" }
             else -> ref?.let { r ->
                 (if (r.catalog.requiresExtra("genre")) emptyList() else listOf(null to str(R.string.anime_all_genres))) +
-                    DiscoveryRules.genres(r, settings.animeMode).map { it to it }
+                    DiscoveryRules.genres(r, false).map { it to it }
             }.orEmpty()
         }
         val selected = when (which) { 0 -> type; 1 -> ref?.key; else -> genre }

@@ -293,8 +293,6 @@
     <string name="subtitle_mode">Mode</string>
     <string name="subtitle_size">Size</string>
     <string name="subtitles">Subtitles</string>
-    <string name="switch_anime">Switch to Anime</string>
-    <string name="switch_regular">Switch to Regular</string>
     <string name="switch_stream">Switch stream</string>
     <string name="sync_now">Sync now</string>
     <string name="sync_style">Sync &amp; Style</string>

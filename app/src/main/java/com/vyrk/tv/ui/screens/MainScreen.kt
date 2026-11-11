@@ -85,10 +85,9 @@ fun MainScreen(session: ProfileSession) {
     val addons by session.addons.collectAsState()
     val loaded by session.loaded.collectAsState()
 
-    val tabs = remember(addons, settings.hiddenTabs, settings.animeMode) {
+    val tabs = remember(addons, settings.hiddenTabs, false) {
         Tab.entries.filter { t ->
-            t != Tab.ANIME && (!settings.animeMode || t != Tab.LIVE) &&
-                (t != Tab.LIVE || CatalogRules.hasLiveCatalogs(addons)) && (t == Tab.HOME || t.key !in settings.hiddenTabs)
+                            (t != Tab.LIVE || CatalogRules.hasLiveCatalogs(addons)) && (t == Tab.HOME || t.key !in settings.hiddenTabs)
         }
     }
     LaunchedEffect(tabs) {
@@ -98,7 +97,6 @@ fun MainScreen(session: ProfileSession) {
     val tabReqs = remember { Tab.entries.associateWith { FocusRequester() } }
     val searchReq = remember { FocusRequester() }
     val settingsReq = remember { FocusRequester() }
-    val animeReq = remember { FocusRequester() }
     var discoverVisited by remember(session) { mutableStateOf(false) }
     var navHasFocus by remember { mutableStateOf(false) }
 
@@ -118,12 +116,12 @@ fun MainScreen(session: ProfileSession) {
     }
 
     val rowStore = remember(session) { com.vyrk.tv.ui.browse.RowStore() }
-    val models = remember(session, settings.animeMode, settings.animeGenre) { mutableMapOf<Tab, BrowseModel>() }
-    fun model(t: Tab) = models.getOrPut(t) { BrowseModel(graph.addonClient, t, session.scope, rowStore, settings.animeMode, null) }
+    val models = remember(session, false, settings.animeGenre) { mutableMapOf<Tab, BrowseModel>() }
+    fun model(t: Tab) = models.getOrPut(t) { BrowseModel(graph.addonClient, t, session.scope, rowStore, false, null) }
 
     // Build every catalogue tab as soon as the add-ons are known and start its first rows,
     // the open tab first, so switching to Movies or Series finds them already loaded.
-    LaunchedEffect(addons, settings.hiddenRows, tabs, settings.animeMode, settings.animeGenre) {
+    LaunchedEffect(addons, settings.hiddenRows, tabs, false, settings.animeGenre) {
         val list = session.effectiveAddons()
         (listOf(app.tab) + tabs).distinct()
             .filter { it == Tab.HOME || it == Tab.MOVIES || it == Tab.SERIES || it == Tab.ANIME || it == Tab.LIVE }
@@ -133,7 +131,7 @@ fun MainScreen(session: ProfileSession) {
 
     // Catalogue pages visited this session stay composed while hidden (not measured, drawn or
     // focusable), so coming back shows them as they were instead of rebuilding them.
-    val keptPages = remember(session, settings.animeMode, settings.animeGenre) { mutableListOf<Tab>() }
+    val keptPages = remember(session, false, settings.animeGenre) { mutableListOf<Tab>() }
     // A kept page is shown in the same frame as the tab highlight (it costs a few milliseconds).
     // A page not built yet follows one frame later, so the highlight is never held back by
     // building it; a further press before then skips it (Home → Anime builds neither Movies nor
@@ -184,9 +182,9 @@ fun MainScreen(session: ProfileSession) {
             if (onTabs && shownTab.isCatalogue() && shownTab !in keptPages) keptPages += shownTab
             keptPages.removeAll { it !in tabs }
             keptPages.forEach { t ->
-                androidx.compose.runtime.key(session, t, settings.animeMode, settings.animeGenre) {
+                androidx.compose.runtime.key(session, t, false, settings.animeGenre) {
                     val visible = onTabs && shownTab == t
-                    Box(Modifier.fillMaxSize().keepAlive(visible)) { BrowsePage(session, model(t), if (settings.animeMode) "anime:${settings.animeGenre}:${t.key}" else t.key, onPlay, active = visible) }
+                    Box(Modifier.fillMaxSize().keepAlive(visible)) { BrowsePage(session, model(t), t.key, onPlay, active = visible) }
                 }
             }
         }
@@ -235,14 +233,6 @@ fun MainScreen(session: ProfileSession) {
                 SearchPill(app.section == Section.SEARCH, searchReq, Modifier.widthIn(max = 188.dp).fillMaxWidth()) { app.section = Section.SEARCH }
             }
             Spacer(Modifier.width(10.dp))
-            AnimeMenuSwitch(settings.animeMode, animeReq) {
-                session.updateSettings { it.copy(animeMode = !it.animeMode) }
-                app.preview = null; app.backdrop = null
-                app.section = Section.TABS
-                if (app.tab !in setOf(Tab.HOME, Tab.MOVIES, Tab.SERIES, Tab.DISCOVER)) app.tab = Tab.HOME
-            }
-            Spacer(Modifier.width(8.dp))
-            // Settings remains accessible alongside the mode switch.
             NavGear(active = app.section == Section.SETTINGS, settingsReq) { app.section = Section.SETTINGS }
         }
 
@@ -327,23 +317,6 @@ private fun SearchPill(active: Boolean, requester: FocusRequester, modifier: Mod
         Icon(R.drawable.ic_search, null, Modifier.size(15.dp), tint = if (focused) c.background else c.textSecondary)
         Text(str(R.string.search), style = Vyrk.type.labelL, color = if (focused) c.background else c.textMuted, maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-    }
-}
-
-/** Small, persistent mode switch; focus alone never changes the catalogue. */
-@Composable
-private fun AnimeMenuSwitch(anime: Boolean, requester: FocusRequester, onClick: () -> Unit) {
-    val description = str(if (anime) R.string.switch_regular else R.string.switch_anime)
-    val c = Vyrk.colors
-    var focused by remember { mutableStateOf(false) }
-    Box(Modifier.size(36.dp).focusRequester(requester)
-        .onFocusChanged { focused = it.isFocused }.traceFocus("nav:anime")
-        .semantics { contentDescription = description; role = Role.Switch; selected = anime }
-        .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onClick(); true } else false }
-        .focusable()
-        .background(if (focused) c.text else if (anime) c.accent.copy(alpha = 0.2f) else c.raised.copy(alpha = 0.55f), CircleShape)
-        .border(1.dp, if (anime) c.accent else c.glassEdge, CircleShape), contentAlignment = Alignment.Center) {
-        Icon(R.drawable.ic_anime, null, Modifier.size(18.dp), tint = if (focused) c.background else if (anime) c.accent else c.textSecondary)
     }
 }
 
