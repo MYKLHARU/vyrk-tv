@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.26
+
+- New Norse look: deep obsidian surfaces with a frost-cyan accent (now the default Frost colour) and antique-gold detail for the brand and ornaments.
+- The VYRK wordmark is a gold V with the name in spaced serif capitals; titles without a logo, the Info page and Settings page titles use a cinematic serif.
+- A faint aurora and a distant mountain ridge behind pages; a small gold rune ahead of each row heading and rune-cut dividers on the Info page and in Settings.
+- Top-menu tabs are frosted with a lit edge instead of a solid fill; IMDb ratings sit on a gold tag; the hero no longer tints artwork green.
+
 ## v0.1.25
 
 - Anime is back as its own tab in the top menu, and the Anime switch is gone. Home, Movies and Series always show everything, and Discover lists every catalogue. Anime can be hidden or made the default tab in Settings.
