@@ -221,14 +221,14 @@ fun typeLabel(meta: MetaPreview): String = when (meta.type) {
     else -> meta.type.replaceFirstChar { it.uppercase() }
 }
 
-/** Kicker over a title: a gold rune, its type in spaced capitals and a short fading rule. */
+/** Kicker over a title: a gold rune, [label] (the open page) or else its type in spaced capitals, and a short fading rule. */
 @Composable
-fun TitleEyebrow(meta: MetaPreview) {
+fun TitleEyebrow(meta: MetaPreview, label: String? = null) {
     val c = Vyrk.colors
     Row(Modifier.height(16.dp), verticalAlignment = Alignment.CenterVertically) {
         com.vyrk.tv.ui.components.RuneGlyph(10.dp, color = c.gold)
         Box(Modifier.width(8.dp))
-        Text(typeLabel(meta).uppercase(), style = Vyrk.type.eyebrow, color = c.gold, maxLines = 1)
+        Text((label ?: typeLabel(meta)).uppercase(), style = Vyrk.type.eyebrow, color = c.gold, maxLines = 1)
         Box(Modifier.padding(start = 10.dp).width(56.dp).height(1.dp).background(Brush.horizontalGradient(listOf(c.gold.copy(alpha = 0.6f), Color.Transparent))))
     }
 }
@@ -306,6 +306,7 @@ fun Hero(
     onPrev: () -> Unit,
     onNext: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
+    pageLabel: String? = null,
 ) {
     val meta = items.getOrNull(index) ?: return
     val c = Vyrk.colors
@@ -326,7 +327,7 @@ fun Hero(
             Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            TitleEyebrow(meta)
+            TitleEyebrow(meta, pageLabel)
             Box(Modifier.height(8.dp))
             HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.cinematicL, Modifier.weight(1f), loading = art.logosLoading)
             Box(Modifier.height(12.dp))
@@ -395,7 +396,7 @@ private fun HeroArrow(icon: Int, lit: Boolean, modifier: Modifier = Modifier) {
 
 /** Header shown while a poster has focus: artwork, logo and facts for that title. */
 @Composable
-fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, height: Dp, trailerPlaying: Boolean) {
+fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, height: Dp, trailerPlaying: Boolean, pageLabel: String? = null) {
     val c = Vyrk.colors
     Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(height)) {
         Column(
@@ -404,7 +405,7 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
         ) {
             // Logo: everything the fixed-height lines below leave, so short or square logos still read
             // from the sofa and the text never shifts as a title's details load.
-            TitleEyebrow(meta)
+            TitleEyebrow(meta, pageLabel)
             Box(Modifier.height(6.dp))
             HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.cinematicM, Modifier.weight(1f), loading = art.logosLoading)
             Box(Modifier.height(10.dp))

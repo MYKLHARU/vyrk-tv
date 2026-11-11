@@ -185,7 +185,7 @@ fun MainScreen(session: ProfileSession) {
             keptPages.forEach { t ->
                 androidx.compose.runtime.key(session, t, false, settings.animeGenre) {
                     val visible = onTabs && shownTab == t
-                    Box(Modifier.fillMaxSize().keepAlive(visible)) { BrowsePage(session, model(t), t.key, onPlay, active = visible) }
+                    Box(Modifier.fillMaxSize().keepAlive(visible)) { BrowsePage(session, model(t), t.key, onPlay, active = visible, pageLabel = tabLabel(t)) }
                 }
             }
         }

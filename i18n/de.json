@@ -290,6 +290,8 @@
     "source_failed_title":  "Diese Quelle lief nicht",
     "source_preset":  "Quellenwahl",
     "sources":  "Quellen",
+    "episodes":  "Folgen",
+    "details":  "Details",
     "sources_addons_failed":  "Deine Add-ons haben nicht geantwortet. Versuche Aktualisieren.",
     "sources_available":  "%1$d Quellen verfügbar",
     "sources_on_info":  "Quellen auf der Infoseite anzeigen",

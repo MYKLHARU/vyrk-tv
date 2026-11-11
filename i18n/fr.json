@@ -290,6 +290,8 @@
     "source_failed_title":  "Cette source n'a pas été lue",
     "source_preset":  "Choix de la source",
     "sources":  "Sources",
+    "episodes":  "Épisodes",
+    "details":  "Détails",
     "sources_addons_failed":  "Vos modules n'ont pas répondu. Essayez Actualiser.",
     "sources_available":  "%1$d sources disponibles",
     "sources_on_info":  "Afficher les sources sur la page d'infos",

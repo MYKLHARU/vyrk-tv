@@ -71,6 +71,7 @@
     <string name="default_tab">Default tab</string>
     <string name="default_tab_desc">The tab VYRK opens on</string>
     <string name="delay_addon_only">The delay applies to add-on subtitles.</string>
+    <string name="details">Details</string>
     <string name="diagnostics_copied">Diagnostics copied</string>
     <string name="died_on">Died %1$s</string>
     <string name="director">Director</string>
@@ -85,6 +86,7 @@
     <string name="download_install">Download and install</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Ends at %1$s</string>
+    <string name="episodes">Episodes</string>
     <string name="excl_codec">this TV can\'t decode the video format</string>
     <string name="excl_decoder">higher resolution than this TV\'s decoder</string>
     <string name="excl_dolby_vision">Dolby Vision only, which this TV can\'t decode</string>
@@ -274,6 +276,7 @@
     <string name="source_failed_body">The source you picked didn\'t play.</string>
     <string name="source_failed_title">This source didn\'t play</string>
     <string name="source_preset">Source choice</string>
+    <string name="sources">Sources</string>
     <string name="sources_addons_failed">Your add-ons didn\'t answer. Try Refresh.</string>
     <string name="sources_available">%1$d sources available</string>
     <string name="sources_on_info">Show sources on the info page</string>

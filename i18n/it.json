@@ -290,6 +290,8 @@
     "source_failed_title":  "Questa fonte non è partita",
     "source_preset":  "Scelta della fonte",
     "sources":  "Fonti",
+    "episodes":  "Episodi",
+    "details":  "Dettagli",
     "sources_addons_failed":  "I tuoi componenti non hanno risposto. Prova Aggiorna.",
     "sources_available":  "%1$d fonti disponibili",
     "sources_on_info":  "Mostra le fonti nella pagina informazioni",

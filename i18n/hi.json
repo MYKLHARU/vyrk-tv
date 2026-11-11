@@ -290,6 +290,8 @@
     "source_failed_title":  "यह स्रोत नहीं चला",
     "source_preset":  "स्रोत चुनाव",
     "sources":  "स्रोत",
+    "episodes":  "एपिसोड",
+    "details":  "विवरण",
     "sources_addons_failed":  "आपके ऐड-ऑन ने जवाब नहीं दिया। रीफ़्रेश आज़माएँ।",
     "sources_available":  "%1$d स्रोत उपलब्ध",
     "sources_on_info":  "जानकारी पेज पर स्रोत दिखाएँ",

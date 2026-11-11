@@ -290,6 +290,8 @@
     "source_failed_title":  "Esta fuente no se reprodujo",
     "source_preset":  "Elección de fuente",
     "sources":  "Fuentes",
+    "episodes":  "Episodios",
+    "details":  "Detalles",
     "sources_addons_failed":  "Tus complementos no respondieron. Prueba Actualizar.",
     "sources_available":  "%1$d fuentes disponibles",
     "sources_on_info":  "Mostrar fuentes en la página de información",

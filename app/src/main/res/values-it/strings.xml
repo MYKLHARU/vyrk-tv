@@ -71,6 +71,7 @@
     <string name="default_tab">Scheda iniziale</string>
     <string name="default_tab_desc">La scheda con cui si apre VYRK</string>
     <string name="delay_addon_only">Il ritardo vale per i sottotitoli dei componenti.</string>
+    <string name="details">Dettagli</string>
     <string name="diagnostics_copied">Diagnostica copiata</string>
     <string name="died_on">Morto il %1$s</string>
     <string name="director">Regia</string>
@@ -85,6 +86,7 @@
     <string name="download_install">Scarica e installa</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Finisce alle %1$s</string>
+    <string name="episodes">Episodi</string>
     <string name="excl_codec">questo televisore non decodifica il formato video</string>
     <string name="excl_decoder">risoluzione superiore al decoder del televisore</string>
     <string name="excl_dolby_vision">solo Dolby Vision, che questo televisore non decodifica</string>
@@ -274,6 +276,7 @@
     <string name="source_failed_body">La fonte che hai scelto non è partita.</string>
     <string name="source_failed_title">Questa fonte non è partita</string>
     <string name="source_preset">Scelta della fonte</string>
+    <string name="sources">Fonti</string>
     <string name="sources_addons_failed">I tuoi componenti non hanno risposto. Prova Aggiorna.</string>
     <string name="sources_available">%1$d fonti disponibili</string>
     <string name="sources_on_info">Mostra le fonti nella pagina informazioni</string>

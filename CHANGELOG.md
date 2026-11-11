@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.29
+
+- Movie and series pages now fit on one screen: the title, facts, synopsis, people and buttons on the left, and a panel on the right with Episodes (series) or Sources (films) and a Details tab with the full synopsis, Mark watched, credits and cast. More (or "+N more") opens Details; Back from the panel returns to Play.
+- The kicker over the featured title now names the open page (Home, Movies, Series, Anime and so on) instead of the title's type.
+
 ## v0.1.28
 
 - Movie and series pages redesigned to match Home: a gold kicker over the title, two genres and the season count in the facts, a glowing Play / Resume button that names the episode it resumes, and a progress line when you are part-way through.

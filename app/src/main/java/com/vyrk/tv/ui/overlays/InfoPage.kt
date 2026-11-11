@@ -113,17 +113,17 @@ private sealed interface SourcesState {
     data class Ready(val ranked: List<Ranked>, val failedAddons: Int, val addonCount: Int) : SourcesState
 }
 
-private val LOGO_W = 400.dp
-private val LOGO_H = 120.dp
-private val PAGE_TEXT_W = 540.dp
+private val LOGO_W = 380.dp
+private val LOGO_H = 100.dp
+private val PAGE_TEXT_W = 456.dp
 private val CHIP_H = 34.dp
 private val ACTION_H = 46.dp
 
 /**
- * The title page, full screen. Page one is the title over its own artwork: logo, facts, synopsis,
- * people and Play / Trailer / library / more. Down (or the more button) slides up page two:
- * episodes for a series or sources for a film, beside the details, credits and cast. Back on page
- * two returns to page one; Back on page one closes the page.
+ * The title page, all on one screen. On the left, over the title's own artwork: logo, facts,
+ * synopsis, people and Play / Trailer / library / more. On the right, a panel with tabs: episodes
+ * for a series or sources for a film, then the details, credits and cast (the more button opens
+ * them). Back in the panel returns to Play; Back on Play closes the page.
  */
 @Composable
 fun InfoPage(o: Overlay.Info) {
@@ -152,7 +152,12 @@ fun InfoPage(o: Overlay.Info) {
     val sourcesReq = remember { FocusRequester() }
     val detailsReq = remember { FocusRequester() }
     val showSourcesPanel = settings.sourcesOnInfoPage || o.showSources
-    var page by remember { mutableIntStateOf(0) }
+    // The panel beside the title: episodes for a series or sources for a film, then the details.
+    val tabs = buildList { if (isSeries) add(PanelTab.EPISODES) else if (showSourcesPanel) add(PanelTab.SOURCES); add(PanelTab.DETAILS) }
+    var tab by remember(meta.id) { mutableStateOf<PanelTab?>(null) }
+    val shownTab = tab?.takeIf { it in tabs } ?: tabs.first()
+    var panelFocused by remember { mutableStateOf(false) }
+    val tabReq = remember { FocusRequester() }
 
     fun loadSources() {
         val vid = meta.behaviorHints.defaultVideoId ?: meta.id
@@ -173,113 +178,102 @@ fun InfoPage(o: Overlay.Info) {
             sources = SourcesState.Ready(StreamRanker.rank(cands, graph.device.caps(graph.deviceSettings.value.measuredBps), prefs), results.count { it.second is AddonResult.Failed }, results.size)
         }
     }
-    fun toDetails() {
-        if (!isSeries && showSourcesPanel && sources is SourcesState.Idle) loadSources()
-        runCatching { detailsReq.requestFocus() }
-    }
+    // Focus moves once the tab's content has been laid out.
+    fun focusSoon(req: FocusRequester) = scope.launch { repeat(2) { androidx.compose.runtime.withFrameNanos { } }; runCatching { req.requestFocus() } }
+    fun toDetails() { tab = PanelTab.DETAILS; focusSoon(detailsReq) }
     LaunchedEffect(meta.id) {
         if (!isSeries && settings.loadSourcesOnOpen && showSourcesPanel) loadSources()
-        if (o.showSources) { delay(80); toDetails() } else runCatching { playReq.requestFocus() }
+        if (o.showSources) {
+            delay(80)
+            if (!isSeries && sources is SourcesState.Idle) loadSources()
+            focusSoon(tabReq)
+        } else runCatching { playReq.requestFocus() }
     }
 
-    // Back on page two returns to page one. Back reaches dialogs through the back dispatcher on
+    // Back in the panel returns to Play. Back reaches dialogs through the back dispatcher on
     // Android 13+, not as a key event, so this has to be a BackHandler (it runs before the
     // window's own Back, which closes the page).
-    androidx.activity.compose.BackHandler(enabled = page == 1) { runCatching { playReq.requestFocus() } }
+    androidx.activity.compose.BackHandler(enabled = panelFocused) { runCatching { playReq.requestFocus() } }
 
     val c = Vyrk.colors
     val art = rememberTitleArt(meta, full, metadataLoading = details.loading)
     val name = full?.name?.takeIf { it.isNotBlank() } ?: meta.name
     val synopsis = full?.description ?: meta.description ?: ""
-    BoxWithConstraints(Modifier.fillMaxSize().background(c.shade)) {
-        val pageH = maxHeight
-        val offset by animateDpAsState(if (page == 1) -pageH else 0.dp, if (settings.reduceMotion) snap() else tween(320), label = "info-page")
+    Box(Modifier.fillMaxSize().background(c.shade)) {
         androidx.compose.runtime.key(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id)) { TitleBackdrop(art.backdrops) }
-        // Page two darkens the artwork as it slides up over it.
-        val dim = if (pageH.value > 0f) (-offset.value / pageH.value).coerceIn(0f, 1f) else 0f
-        if (dim > 0f) Box(Modifier.fillMaxSize().background(c.shade.copy(alpha = 0.86f * dim)))
-        Box(Modifier.fillMaxSize().clipToBounds()) {
-            Column(Modifier.fillMaxWidth().offset(y = offset).wrapContentHeight(Alignment.Top, unbounded = true).height(pageH * 2)) {
-                // ---- Page one: the title, full screen ----
-                Box(Modifier.fillMaxWidth().height(pageH).onFocusChanged { if (it.hasFocus) page = 0 }) {
-                    Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 44.dp).width(PAGE_TEXT_W)) {
-                        // Fixed slots throughout, so nothing moves while the details and cast load.
-                        com.vyrk.tv.ui.browse.TitleEyebrow(meta)
-                        Spacer(Modifier.height(10.dp))
-                        Box(Modifier.width(LOGO_W).height(LOGO_H), contentAlignment = Alignment.BottomStart) {
-                            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), name, art.logos, LOGO_W, LOGO_H, Vyrk.type.cinematicL, Modifier.fillMaxHeight(), loading = art.logosLoading)
-                        }
-                        Spacer(Modifier.height(18.dp))
-                        TitleFacts(meta, full)
-                        Spacer(Modifier.height(12.dp))
-                        Text(synopsis, style = Vyrk.type.bodyL, color = c.text.copy(alpha = 0.92f), minLines = 3, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                        Spacer(Modifier.height(16.dp))
-                        PeopleChips(tmdbCredits, full, onMore = { toDetails() })
-                        Spacer(Modifier.height(18.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            val inCw = item?.isInContinueWatching == true
-                            // The flagship action, as on Home: a glowing pill; a series names the episode it resumes.
-                            val resumeEp = if (inCw && isSeries) episodeLabel(item?.state?.videoId) else null
-                            VyrkButton(str(if (inCw) R.string.resume else R.string.play) + (resumeEp?.let { "  ·  $it" } ?: ""), icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
-                                height = ACTION_H + 2.dp, horizontalPadding = 28.dp, glow = true, shape = Dimens.pillShape,
-                                modifier = Modifier.focusRequester(playReq).traceFocus("info:play"), onClick = {
-                                    val ranked = (sources as? SourcesState.Ready)?.ranked
-                                    app.overlays.remove(o); o.origin?.let { app.restore = it }
-                                    Playback.start(activity, graph, session, meta, ranked = if (isSeries) null else ranked, origin = o.origin)
-                                })
-                            VyrkButton(str(R.string.trailer), icon = R.drawable.ic_trailer, height = ACTION_H, horizontalPadding = 22.dp, style = ButtonStyle.OUTLINE, shape = Dimens.pillShape,
-                                modifier = Modifier.traceFocus("info:trailer"), onClick = { closeOverlay(app, o); app.preview = meta })
-                            val inLib = item?.inLibrary == true
-                            VyrkIconButton(if (inLib) R.drawable.ic_check else R.drawable.ic_plus, str(if (inLib) R.string.in_library else R.string.add_to_library),
-                                onClick = { if (inLib) session.removeFromLibrary(meta.id) else session.addToLibrary(meta) },
-                                size = ACTION_H, modifier = Modifier.traceFocus("info:library"))
-                            VyrkIconButton(R.drawable.ic_info, str(R.string.more), onClick = { toDetails() }, size = ACTION_H, modifier = Modifier.traceFocus("info:more"))
-                        }
-                        if (item?.isInContinueWatching == true && item.progress > 0f) {
-                            Spacer(Modifier.height(14.dp))
-                            ResumeLine(item)
+        // Clear of the clock in the top corner.
+        Row(Modifier.fillMaxSize().padding(start = Dimens.screenMargin, end = Dimens.screenMargin, top = 60.dp, bottom = 24.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            // ---- The title ----
+            Column(Modifier.width(PAGE_TEXT_W).fillMaxHeight().focusGroup(), verticalArrangement = Arrangement.Bottom) {
+                // Fixed slots throughout, so nothing moves while the details and cast load.
+                com.vyrk.tv.ui.browse.TitleEyebrow(meta)
+                Spacer(Modifier.height(8.dp))
+                Box(Modifier.width(LOGO_W).height(LOGO_H), contentAlignment = Alignment.BottomStart) {
+                    HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), name, art.logos, LOGO_W, LOGO_H, Vyrk.type.cinematicL, Modifier.fillMaxHeight(), loading = art.logosLoading)
+                }
+                Spacer(Modifier.height(14.dp))
+                TitleFacts(meta, full)
+                Spacer(Modifier.height(10.dp))
+                Text(synopsis, style = Vyrk.type.bodyL, color = c.text.copy(alpha = 0.92f), minLines = 3, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(14.dp))
+                PeopleChips(tmdbCredits, full, onMore = { toDetails() })
+                Spacer(Modifier.height(16.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val inCw = item?.isInContinueWatching == true
+                    // The flagship action, as on Home: a glowing pill; a series names the episode it resumes.
+                    val resumeEp = if (inCw && isSeries) episodeLabel(item?.state?.videoId) else null
+                    VyrkButton(str(if (inCw) R.string.resume else R.string.play) + (resumeEp?.let { "  ·  $it" } ?: ""), icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
+                        height = ACTION_H + 2.dp, horizontalPadding = 24.dp, glow = true, shape = Dimens.pillShape,
+                        modifier = Modifier.focusRequester(playReq).traceFocus("info:play"), onClick = {
+                            val ranked = (sources as? SourcesState.Ready)?.ranked
+                            app.overlays.remove(o); o.origin?.let { app.restore = it }
+                            Playback.start(activity, graph, session, meta, ranked = if (isSeries) null else ranked, origin = o.origin)
+                        })
+                    VyrkButton(str(R.string.trailer), icon = R.drawable.ic_trailer, height = ACTION_H, horizontalPadding = 18.dp, style = ButtonStyle.OUTLINE, shape = Dimens.pillShape,
+                        modifier = Modifier.traceFocus("info:trailer"), onClick = { closeOverlay(app, o); app.preview = meta })
+                    val inLib = item?.inLibrary == true
+                    VyrkIconButton(if (inLib) R.drawable.ic_check else R.drawable.ic_plus, str(if (inLib) R.string.in_library else R.string.add_to_library),
+                        onClick = { if (inLib) session.removeFromLibrary(meta.id) else session.addToLibrary(meta) },
+                        size = ACTION_H, modifier = Modifier.traceFocus("info:library"))
+                    VyrkIconButton(R.drawable.ic_info, str(R.string.more), onClick = { toDetails() }, size = ACTION_H,
+                        // Right goes on into the panel, not up to the people above.
+                        modifier = Modifier.focusProperties { right = if (tabs.size > 1) tabReq else detailsReq }.traceFocus("info:more"))
+                }
+                if (item?.isInContinueWatching == true && item.progress > 0f) {
+                    Spacer(Modifier.height(12.dp))
+                    ResumeLine(item)
+                }
+            }
+            // ---- The panel: episodes or sources, and the details ----
+            Column(
+                Modifier.weight(1f).fillMaxHeight()
+                    .onFocusChanged {
+                        panelFocused = it.hasFocus
+                        if (it.hasFocus && !isSeries && showSourcesPanel && sources is SourcesState.Idle) loadSources()
+                    }
+                    .focusGroup()
+                    .glassPanel(RoundedCornerShape(20.dp)).padding(start = 14.dp, end = 14.dp, top = 12.dp),
+            ) {
+                if (tabs.size > 1) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(horizontal = 2.dp)) {
+                        tabs.forEach { t ->
+                            SeasonTab(str(t.label), selected = t == shownTab, onClick = { tab = t }, trace = "info:tab:${t.name.lowercase()}",
+                                modifier = if (t == shownTab) Modifier.focusRequester(tabReq) else Modifier)
                         }
                     }
+                    com.vyrk.tv.ui.components.RuneDivider(Modifier.padding(top = 8.dp, bottom = 10.dp).fillMaxWidth(), centered = false)
                 }
-                // ---- Page two: episodes or sources beside the details, credits and cast ----
-                Box(
-                    Modifier.fillMaxWidth().height(pageH)
-                        .onFocusChanged {
-                            if (it.hasFocus) {
-                                page = 1
-                                if (!isSeries && showSourcesPanel && sources is SourcesState.Idle) loadSources()
-                            }
-                        }
-                        .focusGroup(),
-                ) {
-                    // Clear of the clock in the top corner.
-                    Row(Modifier.fillMaxSize().padding(start = Dimens.screenMargin, end = Dimens.screenMargin, top = 64.dp, bottom = 18.dp), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
-                        val details: @Composable (Modifier) -> Unit = { m ->
-                            Column(m.fillMaxHeight().verticalScroll(rememberScrollState())) {
-                                TitleDetails(name, synopsis, full, item, tmdbCredits, detailsReq, onWatched = { session.markWatched(meta, item?.watched != true) })
-                            }
-                        }
-                        when {
-                            isSeries -> {
-                                Column(Modifier.weight(0.58f).fillMaxHeight().glassPanel(RoundedCornerShape(20.dp)).padding(start = 14.dp, end = 14.dp, top = 14.dp)) {
-                                    SeasonGuide(full, item, sstate.newEpisodes[meta.id].orEmpty(), settings.blurUnwatched, onPlay = { v ->
-                                        app.overlays.remove(o); o.origin?.let { app.restore = it }
-                                        Playback.start(activity, graph, session, meta, videoId = v.id, origin = o.origin)
-                                    }, onMark = { videos, watched -> full?.let { session.markVideos(it, videos, watched) } })
-                                }
-                                details(Modifier.weight(0.42f))
-                            }
-                            showSourcesPanel -> {
-                                details(Modifier.weight(0.48f))
-                                Column(Modifier.weight(0.52f).fillMaxHeight().glassPanel(RoundedCornerShape(20.dp)).padding(start = 16.dp, end = 16.dp, top = 14.dp)) {
-                                    SourcesPane(sources, sourcesReq, onRefresh = { loadSources() }, onPick = { r ->
-                                        app.overlays.remove(o); o.origin?.let { app.restore = it }
-                                        Playback.start(activity, graph, session, meta, picked = r, ranked = (sources as? SourcesState.Ready)?.ranked, origin = o.origin)
-                                    })
-                                }
-                            }
-                            else -> details(Modifier.weight(1f))
-                        }
+                when (shownTab) {
+                    PanelTab.EPISODES -> SeasonGuide(full, item, sstate.newEpisodes[meta.id].orEmpty(), settings.blurUnwatched, onPlay = { v ->
+                        app.overlays.remove(o); o.origin?.let { app.restore = it }
+                        Playback.start(activity, graph, session, meta, videoId = v.id, origin = o.origin)
+                    }, onMark = { videos, watched -> full?.let { session.markVideos(it, videos, watched) } })
+                    PanelTab.SOURCES -> SourcesPane(sources, sourcesReq, onRefresh = { loadSources() }, onPick = { r ->
+                        app.overlays.remove(o); o.origin?.let { app.restore = it }
+                        Playback.start(activity, graph, session, meta, picked = r, ranked = (sources as? SourcesState.Ready)?.ranked, origin = o.origin)
+                    })
+                    PanelTab.DETAILS -> Column(Modifier.fillMaxHeight().verticalScroll(rememberScrollState()).padding(start = 2.dp, end = 2.dp, bottom = 16.dp)) {
+                        TitleDetails(synopsis, full, item, tmdbCredits, detailsReq, onWatched = { session.markWatched(meta, item?.watched != true) })
                     }
                 }
             }
@@ -287,6 +281,9 @@ fun InfoPage(o: Overlay.Info) {
         Clock(Modifier.align(Alignment.TopEnd).padding(top = 24.dp, end = Dimens.screenMargin))
     }
 }
+
+/** The tabs of the title page's panel. */
+private enum class PanelTab(val label: Int) { EPISODES(R.string.episodes), SOURCES(R.string.sources), DETAILS(R.string.details) }
 
 /**
  * The title's own artwork across the whole screen: dark on the left under the text and along the
@@ -344,7 +341,7 @@ private fun TitleFacts(meta: MetaPreview, full: MetaItem?) {
 
 private data class PersonRef(val name: String, val photo: String?, val personId: Long?)
 
-private val PEOPLE_ROW_W = 640.dp
+private val PEOPLE_ROW_W = PAGE_TEXT_W
 private val PEOPLE_GAP = 10.dp
 
 /**
@@ -416,14 +413,11 @@ private fun PersonChip(name: String, photo: String?, trace: String, showPhoto: B
     }
 }
 
-/** Page two's details column: name, full synopsis, Mark watched, credits and the whole cast. */
+/** The panel's details: full synopsis, Mark watched, credits and the whole cast. */
 @Composable
-private fun TitleDetails(name: String, synopsis: String, full: MetaItem?, item: LibraryItem?, credits: Credits?, firstReq: FocusRequester, onWatched: () -> Unit) {
+private fun TitleDetails(synopsis: String, full: MetaItem?, item: LibraryItem?, credits: Credits?, firstReq: FocusRequester, onWatched: () -> Unit) {
     val app = LocalApp.current
     val c = Vyrk.colors
-    Text(name, style = Vyrk.type.cinematicS, color = c.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
-    com.vyrk.tv.ui.components.RuneDivider(Modifier.padding(top = 6.dp).width(220.dp), centered = false)
-    Spacer(Modifier.height(10.dp))
     if (synopsis.isNotBlank()) Text(synopsis, style = Vyrk.type.bodyL, color = c.text.copy(alpha = 0.86f), maxLines = 10, overflow = TextOverflow.Ellipsis)
     Spacer(Modifier.height(12.dp))
     WrapRow {
@@ -669,7 +663,7 @@ private fun EpisodeCard(
         glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.30f), 10.dp)),
     ) {
         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(176.dp, 99.dp).clip(RoundedCornerShape(9.dp)).background(Brush.linearGradient(listOf(c.steel, c.panel)))) {
+            Box(Modifier.size(144.dp, 81.dp).clip(RoundedCornerShape(9.dp)).background(Brush.linearGradient(listOf(c.steel, c.panel)))) {
                 Text("E${v.episode ?: ""}", style = Vyrk.type.cinematicM, color = c.gold.copy(alpha = 0.55f), modifier = Modifier.align(Alignment.Center))
                 if (v.thumbnail != null) AsyncImage(v.thumbnail, null, contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize().then(if (blur && Build.VERSION.SDK_INT >= 31) Modifier.blur(10.dp) else Modifier))

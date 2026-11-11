@@ -71,6 +71,7 @@
     <string name="default_tab">Start-Tab</string>
     <string name="default_tab_desc">Der Tab, mit dem VYRK startet</string>
     <string name="delay_addon_only">Die Verzögerung gilt für Add-on-Untertitel.</string>
+    <string name="details">Details</string>
     <string name="diagnostics_copied">Diagnose kopiert</string>
     <string name="died_on">Gestorben %1$s</string>
     <string name="director">Regie</string>
@@ -85,6 +86,7 @@
     <string name="download_install">Herunterladen und installieren</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Endet um %1$s</string>
+    <string name="episodes">Folgen</string>
     <string name="excl_codec">dieser Fernseher kann das Videoformat nicht dekodieren</string>
     <string name="excl_decoder">höhere Auflösung als der Decoder des Fernsehers</string>
     <string name="excl_dolby_vision">nur Dolby Vision, das dieser Fernseher nicht dekodiert</string>
@@ -274,6 +276,7 @@
     <string name="source_failed_body">Die ausgewählte Quelle lief nicht.</string>
     <string name="source_failed_title">Diese Quelle lief nicht</string>
     <string name="source_preset">Quellenwahl</string>
+    <string name="sources">Quellen</string>
     <string name="sources_addons_failed">Deine Add-ons haben nicht geantwortet. Versuche Aktualisieren.</string>
     <string name="sources_available">%1$d Quellen verfügbar</string>
     <string name="sources_on_info">Quellen auf der Infoseite anzeigen</string>

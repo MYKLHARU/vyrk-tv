@@ -72,6 +72,8 @@ fun BrowsePage(
     onPlay: (MetaPreview, Origin?) -> Unit,
     /** False while the page is kept alive but hidden behind another tab. */
     active: Boolean = true,
+    /** The open tab's name, shown over the hero and the title header. */
+    pageLabel: String? = null,
 ) {
     val app = LocalApp.current
     val graph = LocalGraph.current
@@ -335,7 +337,7 @@ fun BrowsePage(
                     Hero(
                         items = heroItems, index = heroIndex.coerceAtMost(heroItems.lastIndex), full = heroFull, art = heroArt, height = heroH,
                         hasProgress = heroMeta?.let { library[it.id]?.isInContinueWatching } == true,
-                        watchReq = watchReq,
+                        watchReq = watchReq, pageLabel = pageLabel,
                         onWatch = { heroMeta?.let { onPlay(it, null) } },
                         // Hold OK or Menu: the title menu, as on posters (remove from Continue Watching, details, library).
                         onMenu = { heroMeta?.let { app.push(Overlay.ItemMenu(it, null)) } },
@@ -428,7 +430,7 @@ fun BrowsePage(
         val fp = focusedPoster
         if (fp != null && headerShown) {
             Box(Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(headerH + Dimens.navHeight)) {
-                TitleHeader(fp, headerFull, headerArt, headerH, trailerPlaying = false)
+                TitleHeader(fp, headerFull, headerArt, headerH, trailerPlaying = false, pageLabel = pageLabel)
                 if (settings.previews == PreviewMode.AUTOMATIC && app.overlays.isEmpty()) {
                     HeaderTrailer(meta = fp, full = headerFull, sound = settings.previewSound, modifier = Modifier.padding(end = Dimens.screenMargin, top = Dimens.navHeight + 12.dp))
                 }

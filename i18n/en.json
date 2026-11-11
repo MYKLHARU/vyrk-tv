@@ -290,6 +290,8 @@
     "source_failed_title":  "This source didn't play",
     "source_preset":  "Source choice",
     "sources":  "Sources",
+    "episodes":  "Episodes",
+    "details":  "Details",
     "sources_addons_failed":  "Your add-ons didn't answer. Try Refresh.",
     "sources_available":  "%1$d sources available",
     "sources_on_info":  "Show sources on the info page",

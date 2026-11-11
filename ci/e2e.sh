@@ -286,13 +286,13 @@ sleep 7
 probe "series info"
 expect '^info:play$' "vyrk://open opens the series info page"
 shot info-series
-# The title page is two pages: the more button (or Down) slides up episodes and details; Back returns.
+# The title page is one screen: the more button opens the Details tab in the panel; Back returns to Play.
 until_focus KEYCODE_DPAD_RIGHT '^info:more$' 4
-key KEYCODE_DPAD_CENTER 1.6 "page two"
-expect '^info:watched$' "more opens page two"
+key KEYCODE_DPAD_CENTER 1.6 "details tab"
+expect '^info:watched$' "more opens the details tab"
 shot info-series-page-two
-key KEYCODE_BACK 1.6 "back to page one"
-expect '^info:play$' "Back on page two returns to Play"
+key KEYCODE_BACK 1.6 "back to Play"
+expect '^info:play$' "Back in the panel returns to Play"
 adb_run shell input keyevent KEYCODE_DPAD_CENTER
 wait_focus '^(player|prompt):' 40
 sleep 12
