@@ -123,7 +123,8 @@ private val ACTION_H = 46.dp
  * The title page, all on one screen. On the left, over the title's own artwork: logo, facts,
  * synopsis, people and Play / Trailer / library / watched / info. The info button opens and closes
  * a panel on the right with tabs: episodes for a series or sources for a film, then the details,
- * credits and cast. Back with the panel open closes it; Back again closes the page.
+ * credits and cast. Back with the panel open closes it; Back again closes the page. The page stays
+ * open under the player, so leaving the player comes back here.
  */
 @Composable
 fun InfoPage(o: Overlay.Info) {
@@ -227,7 +228,6 @@ fun InfoPage(o: Overlay.Info) {
                         height = ACTION_H + 2.dp, horizontalPadding = 24.dp, glow = true, shape = Dimens.pillShape,
                         modifier = Modifier.focusRequester(playReq).traceFocus("info:play"), onClick = {
                             val ranked = (sources as? SourcesState.Ready)?.ranked
-                            app.overlays.remove(o); o.origin?.let { app.restore = it }
                             Playback.start(activity, graph, session, meta, ranked = if (isSeries) null else ranked, origin = o.origin)
                         })
                     VyrkButton(str(R.string.trailer), icon = R.drawable.ic_trailer, height = ACTION_H, horizontalPadding = 18.dp, style = ButtonStyle.OUTLINE, shape = Dimens.pillShape,
@@ -269,11 +269,9 @@ fun InfoPage(o: Overlay.Info) {
                 }
                 when (shownTab) {
                     PanelTab.EPISODES -> SeasonGuide(full, item, sstate.newEpisodes[meta.id].orEmpty(), settings.blurUnwatched, onPlay = { v ->
-                        app.overlays.remove(o); o.origin?.let { app.restore = it }
                         Playback.start(activity, graph, session, meta, videoId = v.id, origin = o.origin)
                     }, onMark = { videos, watched -> full?.let { session.markVideos(it, videos, watched) } })
                     PanelTab.SOURCES -> SourcesPane(sources, sourcesReq, onRefresh = { loadSources() }, onPick = { r ->
-                        app.overlays.remove(o); o.origin?.let { app.restore = it }
                         Playback.start(activity, graph, session, meta, picked = r, ranked = (sources as? SourcesState.Ready)?.ranked, origin = o.origin)
                     })
                     PanelTab.DETAILS -> Column(Modifier.fillMaxHeight().verticalScroll(rememberScrollState()).padding(start = 2.dp, end = 2.dp, bottom = 16.dp)) {

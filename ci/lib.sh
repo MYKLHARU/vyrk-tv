@@ -136,4 +136,8 @@ back_from_player() {
     i=$((i + 1))
   done
   sleep 2
+  # Playback started from a title page comes back to it ($1 = expect_title asserts that);
+  # close it so the journey carries on from the page beneath.
+  [[ ${1:-} == expect_title ]] && expect '^info:' "leaving the player returns to the title page"
+  if [[ "$(focus_now)" =~ ^info: ]]; then key KEYCODE_BACK 1.5 "close the title page"; fi
 }

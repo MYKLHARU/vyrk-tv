@@ -165,7 +165,7 @@ expect '^panel:' "Audio & subtitles panel"
 shot audio-subtitles
 key KEYCODE_BACK 1.2 "close panel"
 expect '^player:' "Back closes the panel and stays in the player"
-back_from_player
+back_from_player expect_title
 probe "home after playback"
 shot home-after-playback
 

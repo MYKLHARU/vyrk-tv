@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.31
+
+- Fix: leaving the player after starting a movie or episode from its page could close the app. The title page now stays open under the player, so Back returns to it, and Back again returns to the poster you came from.
+- The app icon and TV banner have transparent backgrounds and use the gold V of the in-app logo.
+
 ## v0.1.30
 
 - Movie and series pages: a Watched button beside + (gold when the title is marked watched; press again to mark it unwatched).
