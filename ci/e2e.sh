@@ -77,26 +77,6 @@ expect '^top10card:not_now$' "Not now"
 key KEYCODE_DPAD_CENTER 1.5 "dismiss card"
 expect '^hero:watch$' "focus returns to hero after Not now"
 
-# ---------------------------------------------------------------- hold OK on the hero: title menu
-longpress KEYCODE_DPAD_CENTER 2
-expect '^menu:play$' "hold OK on Watch now opens the title menu"
-shot hero-menu
-key KEYCODE_BACK 1.5 "close the menu"
-expect '^hero:watch$' "Back closes the menu and returns to Watch now"
-
-# ---------------------------------------------------------------- a row, preview card, info page
-key KEYCODE_DPAD_DOWN 2 "into first row"
-expect '^poster:.*#0$' "first title of a row"
-shot row-title-header
-key KEYCODE_MEDIA_PLAY_PAUSE 4 "preview card"
-shot preview-card
-expect '^poster:' "preview never takes focus"
-key KEYCODE_BACK 1.2 "close preview"
-expect '^poster:' "focus stays on poster after closing preview"
-key KEYCODE_DPAD_CENTER 5 "open info page"
-expect '^info:play$' "info page opens with Play focused"
-shot info-page
-
 # Handle only the specific recovery prompt shown by the slow software decoder.
 # Exercise the real remote choice instead of letting a media shortcut bypass it.
 dismiss_stall_prompt() {
@@ -117,6 +97,31 @@ dismiss_stall_prompt() {
     fi
   fi
 }
+
+# CI runs the journey as two halves on separate emulators (E2E_PART=1 or 2); both share the
+# set-up above. Without E2E_PART the whole journey runs.
+PART=${E2E_PART:-all}
+if [[ $PART != 2 ]]; then
+
+# ---------------------------------------------------------------- hold OK on the hero: title menu
+longpress KEYCODE_DPAD_CENTER 2
+expect '^menu:play$' "hold OK on Watch now opens the title menu"
+shot hero-menu
+key KEYCODE_BACK 1.5 "close the menu"
+expect '^hero:watch$' "Back closes the menu and returns to Watch now"
+
+# ---------------------------------------------------------------- a row, preview card, info page
+key KEYCODE_DPAD_DOWN 2 "into first row"
+expect '^poster:.*#0$' "first title of a row"
+shot row-title-header
+key KEYCODE_MEDIA_PLAY_PAUSE 4 "preview card"
+shot preview-card
+expect '^poster:' "preview never takes focus"
+key KEYCODE_BACK 1.2 "close preview"
+expect '^poster:' "focus stays on poster after closing preview"
+key KEYCODE_DPAD_CENTER 5 "open info page"
+expect '^info:play$' "info page opens with Play focused"
+shot info-page
 
 # ---------------------------------------------------------------- play: broken 4K fails over
 ADDON_START=0
@@ -270,6 +275,10 @@ key KEYCODE_DPAD_LEFT 1.2; key KEYCODE_DPAD_LEFT 1.2; key KEYCODE_DPAD_LEFT 1.2
 expect '^settings:addons$' "Left from an add-on returns to the Add-ons group"
 key KEYCODE_BACK 1.5 "back to tabs"
 
+fi # end of part 1
+
+if [[ $PART != 1 ]]; then
+
 # ---------------------------------------------------------------- skip intro, timeline and chapters
 # Game of Thrones S1E1: IntroDB has its intro at 437-531 s (needs a sample of 10 minutes or more).
 adbs am start -a android.intent.action.VIEW -d "'vyrk://open?type=series&id=tt0944947'" "$PKG" >/dev/null
@@ -412,6 +421,8 @@ key KEYCODE_BACK 1 "close AIO fixture"
 if ! python ci/anime_mode_probe.py --adb "$ADB" --package "$PKG" --out "$OUT/anime-mode"; then
   fail "anime mode normal-app journey failed"
 fi
+
+fi # end of part 2
 
 # ---------------------------------------------------------------- results
 adb_run logcat -d > "$OUT/logcat.txt" || true

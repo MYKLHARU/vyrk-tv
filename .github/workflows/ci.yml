@@ -123,6 +123,11 @@ jobs:
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    # The journey runs as two halves on two emulators at once (see ci/e2e.sh).
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/download-artifact@v5
@@ -169,7 +174,7 @@ jobs:
           heap-size: 512M
           disable-animations: true
           emulator-options: -no-window -gpu swangle -noaudio -no-boot-anim -no-snapshot -no-metrics
-          script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/e2e ADDON_LOG=ci/out/e2e/addon.log bash ci/e2e.sh
+          script: E2E_PART=${{ matrix.part }} APK="$(ls dist/*-universal.apk)" OUT=ci/out/e2e ADDON_LOG=ci/out/e2e/addon.log bash ci/e2e.sh
       - name: Emulator host diagnostics
         if: failure()
         run: |
@@ -180,18 +185,32 @@ jobs:
       - uses: actions/upload-artifact@v5
         if: always()
         with:
-          name: e2e-results
+          name: e2e-results-${{ matrix.part }}
           path: ci/out/e2e/
+
+  # Both halves' screenshots, focus traces and logcats in one ci-screens pre-release.
+  e2e-screens:
+    needs: [build, e2e]
+    if: always() && github.event_name == 'push' && needs.e2e.result != 'skipped'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: e2e-results-*
+          path: results
       - name: Publish ci-screens pre-release
-        if: always() && github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           shopt -s nullglob
-          mkdir -p ci/out/e2e
-          (cd ci/out/e2e && zip -q -r ../e2e-results.zip . || true)
-          files=(ci/out/e2e/*.png ci/out/e2e/focus-trace.txt ci/out/e2e/logcat-app.txt ci/out/e2e/logcat.txt ci/out/e2e/addon.log ci/out/e2e-results.zip)
-          existing=(); for f in "${files[@]}"; do [[ -f "$f" ]] && existing+=("$f"); done
+          mkdir -p out
+          for d in results/e2e-results-*; do
+            p=${d##*-}
+            (cd "$d" && zip -q -r "$OLDPWD/out/e2e-results-part$p.zip" . || true)
+            for f in "$d"/*.png "$d"/focus-trace.txt "$d"/logcat-app.txt "$d"/logcat.txt "$d"/addon.log; do cp "$f" "out/part$p-$(basename "$f")"; done
+          done
+          existing=(out/*)
           recreate() { local tag=$1; shift; for i in 1 2 3 4 5; do gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true; gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" >/dev/null 2>&1 || true; sleep $((i * 4)); gh release create "$tag" "$@" && return 0; echo "create retry $i"; done; return 1; }
           recreate ci-screens --prerelease --target "$GITHUB_SHA" --title "Emulator journey (${{ needs.build.outputs.version }})" \
             --notes "Screenshots, per-key focus trace and logcat from ci/e2e.sh on an Android TV API 34 emulator (tv_1080p)."
