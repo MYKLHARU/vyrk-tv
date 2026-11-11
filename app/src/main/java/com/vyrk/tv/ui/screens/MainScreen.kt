@@ -215,7 +215,7 @@ fun MainScreen(session: ProfileSession) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Wordmark(20.dp)
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(20.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 tabs.forEach { t ->
                     NavTab(
@@ -269,10 +269,11 @@ private fun NavTab(label: String, icon: Int, active: Boolean, requester: FocusRe
     var focused by remember { mutableStateOf(false) }
     val c = Vyrk.colors
     val fill by androidx.compose.animation.animateColorAsState(
-        when { focused -> c.accent; active -> c.accent.copy(alpha = 0.16f); else -> Color.Transparent }, motionSpec(Motion.FAST), label = "tab-fill")
+        when { focused -> c.accent.copy(alpha = 0.30f); active -> c.accent.copy(alpha = 0.12f); else -> Color.Transparent }, motionSpec(Motion.FAST), label = "tab-fill")
     val edge by androidx.compose.animation.animateColorAsState(
-        when { focused -> c.accent; active -> c.accent.copy(alpha = 0.6f); else -> Color.Transparent }, motionSpec(Motion.FAST), label = "tab-edge")
-    val ink = when { focused -> c.onAccent; active -> c.text; else -> c.textSecondary }
+        when { focused -> c.accent; active -> c.accent.copy(alpha = 0.55f); else -> Color.Transparent }, motionSpec(Motion.FAST), label = "tab-edge")
+    // Frosted, not filled: the focused tab glows brighter and its edge is lit; the label stays white.
+    val ink = if (focused || active) c.text else c.textSecondary
     Row(
         Modifier
             .focusRequester(requester)
@@ -288,7 +289,7 @@ private fun NavTab(label: String, icon: Int, active: Boolean, requester: FocusRe
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
-        Icon(icon, null, Modifier.size(15.dp), tint = ink)
+        Icon(icon, null, Modifier.size(15.dp), tint = if (focused || active) c.accent else ink)
         Text(label, style = Vyrk.type.titleS, color = ink, maxLines = 1)
     }
 }

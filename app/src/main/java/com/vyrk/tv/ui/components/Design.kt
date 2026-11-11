@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -50,17 +51,69 @@ import com.vyrk.tv.ui.traceFocus
  * these instead of styling their own controls.
  */
 
-/** The page behind panels: deep navy with a soft violet glow low on the left and teal high on the right. */
+/**
+ * The page behind panels: deep obsidian under a faint aurora (green-teal ribbons high on the right,
+ * a cold fjord blue low on the left) and, very dim along the bottom, a distant ridge of mountains.
+ * Drawn once per size into cached brushes and paths; nothing animates.
+ */
 @Composable
 fun AmbientBackground(modifier: Modifier = Modifier) {
     val c = Vyrk.colors
     Box(
-        modifier.fillMaxSize().background(c.background).drawBehind {
-            drawRect(Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.24f), Color.Transparent), center = Offset(size.width * 0.04f, size.height * 1.02f), radius = size.width * 0.46f))
-            drawRect(Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.18f), Color.Transparent), center = Offset(size.width * 0.98f, size.height * 0.08f), radius = size.width * 0.52f))
-            drawRect(Brush.linearGradient(0f to Color.Transparent, 0.55f to c.ambientTeal.copy(alpha = 0.05f), 1f to Color.Transparent, start = Offset(size.width * 0.45f, 0f), end = Offset(size.width, size.height)))
+        modifier.fillMaxSize().background(c.background).drawWithCache {
+            val w = size.width; val h = size.height
+            val ridge = androidx.compose.ui.graphics.Path().apply {
+                moveTo(0f, h * 0.86f)
+                val peaks = floatArrayOf(0.06f, 0.80f, 0.13f, 0.84f, 0.22f, 0.74f, 0.30f, 0.82f, 0.41f, 0.77f, 0.50f, 0.85f, 0.61f, 0.72f, 0.70f, 0.81f, 0.79f, 0.75f, 0.88f, 0.83f, 0.95f, 0.78f, 1f, 0.82f)
+                for (i in peaks.indices step 2) lineTo(w * peaks[i], h * peaks[i + 1])
+                lineTo(w, h); lineTo(0f, h); close()
+            }
+            val auroraA = Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.20f), Color.Transparent), center = Offset(w * 0.78f, h * 0.02f), radius = w * 0.42f)
+            val auroraB = Brush.radialGradient(listOf(c.accent.copy(alpha = 0.10f), Color.Transparent), center = Offset(w * 0.55f, -h * 0.10f), radius = w * 0.36f)
+            val fjord = Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.26f), Color.Transparent), center = Offset(w * 0.04f, h * 1.02f), radius = w * 0.46f)
+            val ridgeFill = Brush.verticalGradient(listOf(c.steel.copy(alpha = 0.30f), c.background.copy(alpha = 0f)), startY = h * 0.72f, endY = h)
+            onDrawBehind {
+                drawRect(fjord); drawRect(auroraA); drawRect(auroraB)
+                drawPath(ridge, ridgeFill)
+            }
         },
     )
+}
+
+/**
+ * A rune-cut separator: a hairline that fades in from both ends to a small gold lozenge knot in the
+ * middle (or at the start with [centered] false). Decorative; not focusable.
+ */
+@Composable
+fun RuneDivider(modifier: Modifier = Modifier, centered: Boolean = true, color: Color = Vyrk.colors.gold) {
+    androidx.compose.foundation.Canvas(modifier.fillMaxWidth().height(9.dp)) {
+        val cy = size.height / 2f
+        val cx = if (centered) size.width / 2f else size.height * 0.9f
+        val r = size.height / 2f
+        val line = if (centered) Brush.horizontalGradient(0f to Color.Transparent, 0.5f to color.copy(alpha = 0.55f), 1f to Color.Transparent, startX = 0f, endX = size.width)
+            else Brush.horizontalGradient(0f to color.copy(alpha = 0.55f), 1f to Color.Transparent, startX = 0f, endX = size.width)
+        // The line stops short of the knot on both sides, so the knot reads on any surface.
+        val gap = r * 2.4f
+        if (centered) drawRect(line, topLeft = Offset(0f, cy - 0.5f), size = androidx.compose.ui.geometry.Size((cx - gap).coerceAtLeast(0f), 1f))
+        drawRect(line, topLeft = Offset(cx + gap, cy - 0.5f), size = androidx.compose.ui.geometry.Size((size.width - cx - gap).coerceAtLeast(0f), 1f))
+        // Two nested lozenges, like a knot boss.
+        fun lozenge(rr: Float) = androidx.compose.ui.graphics.Path().apply { moveTo(cx - rr * 1.6f, cy); lineTo(cx, cy - rr); lineTo(cx + rr * 1.6f, cy); lineTo(cx, cy + rr); close() }
+        drawPath(lozenge(r), color.copy(alpha = 0.9f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.2f))
+        drawPath(lozenge(r * 0.42f), color)
+    }
+}
+
+/** A small carved rune (Algiz, the elk-sedge of protection) in gold, ahead of section headings. */
+@Composable
+fun RuneGlyph(size: Dp, modifier: Modifier = Modifier, color: Color = Vyrk.colors.gold) {
+    androidx.compose.foundation.Canvas(modifier.size(size)) {
+        val w = this.size.width; val h = this.size.height
+        val stroke = w * 0.13f
+        val cap = androidx.compose.ui.graphics.StrokeCap.Round
+        drawLine(color, Offset(w / 2f, h * 0.08f), Offset(w / 2f, h * 0.94f), stroke, cap)
+        drawLine(color, Offset(w / 2f, h * 0.52f), Offset(w * 0.12f, h * 0.10f), stroke, cap)
+        drawLine(color, Offset(w / 2f, h * 0.52f), Offset(w * 0.88f, h * 0.10f), stroke, cap)
+    }
 }
 
 /**
@@ -93,11 +146,12 @@ fun Modifier.glassPanel(shape: Shape = Dimens.panelShape, elevation: Dp = 14.dp,
         .border(1.dp, c.glassEdge, shape)
 }
 
-/** Row heading with an optional chevron, like "Continue Watching ›". */
+/** Row heading with a gold rune ahead of it and an optional chevron, like "ᛉ Continue Watching ›". */
 @Composable
 fun SectionHeading(title: String, active: Boolean, modifier: Modifier = Modifier, chevron: Boolean = false) {
     val c = Vyrk.colors
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        RuneGlyph(11.dp, Modifier.padding(end = 8.dp), color = if (active) c.gold else c.gold.copy(alpha = 0.55f))
         Text(title, style = Vyrk.type.titleL, color = if (active) c.text else c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (chevron) Icon(R.drawable.ic_right, null, Modifier.padding(start = 4.dp).size(14.dp), tint = if (active) c.accent else c.textMuted)
     }

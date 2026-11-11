@@ -23,34 +23,40 @@ import com.vyrk.tv.R
  */
 @Immutable
 data class VyrkColors(
-    val background: Color = Color(0xFF070E17),
-    val panel: Color = Color(0xFF0F1A25),
-    val raised: Color = Color(0xFF172533),
+    val background: Color = Color(0xFF050A0E),
+    val panel: Color = Color(0xFF0B151C),
+    val raised: Color = Color(0xFF10212A),
     val border: Color = Color.White.copy(alpha = 0.20f),
     val divider: Color = Color.White.copy(alpha = 0.12f),
-    val text: Color = Color(0xFFF4F6FA),
-    val textSecondary: Color = Color(0xFFB4BAC4),
-    val textMuted: Color = Color(0xFF7E8590),
-    val accent: Color = Color(0xFFA9E1F3),
-    val onAccent: Color = Color(0xFF0B141D),
+    val text: Color = Color(0xFFF4F5F6),
+    val textSecondary: Color = Color(0xFF9FB1B9),
+    val textMuted: Color = Color(0xFF6E838E),
+    val accent: Color = Color(0xFF55DFFF),
+    val onAccent: Color = Color(0xFF031117),
     val success: Color = Color(0xFF7FD69A),
     val warning: Color = Color(0xFFFFC266),
     val danger: Color = Color(0xFFFF7A7A),
-    val scrim: Color = Color(0xFF07080B).copy(alpha = 0.80f),
+    val scrim: Color = Color(0xFF030608).copy(alpha = 0.82f),
     /** Black-navy fade over artwork (left and top of the hero); darker and less blue than [background]. */
-    val shade: Color = Color(0xFF04080D),
+    val shade: Color = Color(0xFF03070A),
     /** Translucent panel over blurred artwork (Settings); the artwork's colour shows through. */
-    val glass: Color = Color(0xFF0B1F2C).copy(alpha = 0.64f),
+    val glass: Color = Color(0xFF0A1820).copy(alpha = 0.70f),
     /** Hairline on [glass] panels so their edge reads over bright artwork. */
     val glassEdge: Color = Color.White.copy(alpha = 0.09f),
-    /** Ambient light behind panels: a cool teal from one side, a soft violet from the other. */
-    val ambientTeal: Color = Color(0xFF14B8C8),
-    val ambientViolet: Color = Color(0xFF6D4CFF),
+    /** Ambient light behind panels: aurora green-teal from one side, cold fjord blue from the other. */
+    val ambientTeal: Color = Color(0xFF1FD1B4),
+    val ambientViolet: Color = Color(0xFF1E5C8C),
+    /** Nordic steel: card and control surfaces between [raised] and the borders. */
+    val steel: Color = Color(0xFF1B313D),
+    /** Antique gold, for the VYRK brand, rune ornaments and section accents only, never for focus. */
+    val gold: Color = Color(0xFFD4A65A),
+    /** Soft frost, for secondary highlights on dark glass. */
+    val frostSoft: Color = Color(0xFFA9E1F3),
 )
 
 /** Accent choices offered in Settings. Frost is VYRK's own; the rest follow the spec. */
 enum class AccentChoice(val color: Color, val onColor: Color) {
-    FROST(Color(0xFF5AD8EE), Color(0xFF041219)),
+    FROST(Color(0xFF55DFFF), Color(0xFF031117)),
     BLUE(Color(0xFF6EA8FF), Color(0xFF0B1220)),
     TEAL(Color(0xFF7FD1C7), Color(0xFF0B1A18)),
     VIOLET(Color(0xFFB79CFF), Color(0xFF150F24)),
@@ -66,6 +72,12 @@ private fun jakarta(weight: Int) = Font(
 )
 
 val Jakarta = FontFamily(jakarta(400), jakarta(500), jakarta(600), jakarta(700), jakarta(800))
+
+/**
+ * Display serif for the wordmark and large cinematic headings (title fallbacks, page titles): the
+ * system serif, set in capitals with wide tracking for a carved, monumental feel. Never for body text.
+ */
+val NorseDisplay: FontFamily = FontFamily.Serif
 
 /** Small TV type on the 960×540 canvas. */
 @Immutable
@@ -85,6 +97,20 @@ data class VyrkType(
     val labelL: TextStyle = style(12.5, 600),
     val labelM: TextStyle = style(11, 600),
     val labelS: TextStyle = style(9.5, 600, 0.3),
+    /** Cinematic serif headings: title fallbacks on the hero and info page, Settings page titles. */
+    val cinematicL: TextStyle = serif(40, 600, 1.2),
+    val cinematicM: TextStyle = serif(26, 600, 0.8),
+    val cinematicS: TextStyle = serif(19, 600, 0.5),
+    /** Small spaced capitals over a section, like "S E T T I N G S". */
+    val eyebrow: TextStyle = style(9.5, 700, 3.4),
+)
+
+private fun serif(size: Number, weight: Int, spacing: Double) = TextStyle(
+    fontFamily = NorseDisplay,
+    fontWeight = FontWeight(weight),
+    fontSize = size.toFloat().sp,
+    letterSpacing = spacing.sp,
+    lineHeight = (size.toFloat() * 1.12f).sp,
 )
 
 private fun style(size: Number, weight: Int, spacing: Double = 0.0, lh: Double = 1.25) = TextStyle(

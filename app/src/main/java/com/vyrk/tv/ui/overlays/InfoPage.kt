@@ -202,7 +202,7 @@ fun InfoPage(o: Overlay.Info) {
                     Column(Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 44.dp).width(PAGE_TEXT_W)) {
                         // Fixed slots throughout, so nothing moves while the details and cast load.
                         Box(Modifier.width(LOGO_W).height(LOGO_H), contentAlignment = Alignment.BottomStart) {
-                            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), name, art.logos, LOGO_W, LOGO_H, Vyrk.type.displayL, Modifier.fillMaxHeight(), loading = art.logosLoading)
+                            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), name, art.logos, LOGO_W, LOGO_H, Vyrk.type.cinematicL, Modifier.fillMaxHeight(), loading = art.logosLoading)
                         }
                         Spacer(Modifier.height(18.dp))
                         TitleFacts(meta, full)
@@ -321,7 +321,7 @@ private fun TitleFacts(meta: MetaPreview, full: MetaItem?) {
             Text(p, style = Vyrk.type.titleM, color = c.textSecondary, maxLines = 1)
         }
         val rating = full?.imdbRating ?: meta.imdbRating
-        if (!rating.isNullOrBlank()) Tag("IMDb $rating", color = c.background, background = c.warning)
+        if (!rating.isNullOrBlank()) Tag("IMDb $rating", color = c.background, background = c.gold)
     }
 }
 
@@ -404,7 +404,8 @@ private fun PersonChip(name: String, photo: String?, trace: String, showPhoto: B
 private fun TitleDetails(name: String, synopsis: String, full: MetaItem?, item: LibraryItem?, credits: Credits?, firstReq: FocusRequester, onWatched: () -> Unit) {
     val app = LocalApp.current
     val c = Vyrk.colors
-    Text(name, style = Vyrk.type.headlineM, color = c.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    Text(name, style = Vyrk.type.cinematicS, color = c.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    com.vyrk.tv.ui.components.RuneDivider(Modifier.padding(top = 6.dp).width(220.dp), centered = false)
     Spacer(Modifier.height(8.dp))
     if (synopsis.isNotBlank()) Text(synopsis, style = Vyrk.type.bodyM, color = c.textSecondary, maxLines = 10, overflow = TextOverflow.Ellipsis)
     Spacer(Modifier.height(12.dp))
@@ -419,11 +420,11 @@ private fun TitleDetails(name: String, synopsis: String, full: MetaItem?, item: 
     val cast = full?.castNames.orEmpty()
     if (credits != null && (credits.cast.isNotEmpty() || credits.keyCrew.isNotEmpty())) {
         Spacer(Modifier.height(8.dp))
-        Text(str(R.string.cast_and_crew), style = Vyrk.type.labelL, color = c.textMuted)
+        com.vyrk.tv.ui.components.SectionHeading(str(R.string.cast_and_crew), active = true)
         CastCrewRow(credits.cast, credits.keyCrew)
     } else if (cast.isNotEmpty()) {
         Spacer(Modifier.height(8.dp))
-        Text(str(R.string.starring_label), style = Vyrk.type.labelL, color = c.textMuted)
+        com.vyrk.tv.ui.components.SectionHeading(str(R.string.starring_label), active = true)
         Spacer(Modifier.height(6.dp))
         WrapRow(spacing = 6.dp) {
             cast.take(20).forEach { person ->
@@ -446,7 +447,7 @@ private fun Clock(modifier: Modifier) {
 @Composable
 private fun Credit(label: String, value: String) {
     Row(Modifier.padding(vertical = 2.dp)) {
-        Text("$label  ", style = Vyrk.type.labelL, color = Vyrk.colors.textMuted)
+        Text(label.uppercase() + "   ", style = Vyrk.type.eyebrow.copy(letterSpacing = Vyrk.type.eyebrow.letterSpacing * 0.6f), color = Vyrk.colors.gold.copy(alpha = 0.85f), modifier = Modifier.padding(top = 1.dp))
         Text(value, style = Vyrk.type.bodyS, color = Vyrk.colors.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }

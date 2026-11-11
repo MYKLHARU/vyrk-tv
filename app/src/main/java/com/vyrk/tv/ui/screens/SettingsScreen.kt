@@ -117,10 +117,10 @@ fun SettingsScreen(session: ProfileSession) {
     val c = Vyrk.colors
     Row(Modifier.fillMaxSize().padding(horizontal = Dimens.screenMargin, vertical = 12.dp)) {
         Column(Modifier.width(208.dp).glassPanel(PANEL_SHAPE, aurora = com.vyrk.tv.ui.components.Aurora.BOTTOM_START).padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(Modifier.padding(start = 8.dp, top = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                com.vyrk.tv.ui.components.Icon(R.drawable.ic_cog, null, Modifier.size(18.dp), tint = c.text)
-                Spacer(Modifier.width(10.dp))
-                Text(str(R.string.settings), style = Vyrk.type.headlineS, color = c.text)
+            // "S E T T I N G S" in spaced capitals over a rune-cut line, as on a carved lintel.
+            Column(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(str(R.string.settings).uppercase(), style = Vyrk.type.eyebrow.copy(fontSize = Vyrk.type.eyebrow.fontSize * 1.15f), color = c.text, maxLines = 1)
+                com.vyrk.tv.ui.components.RuneDivider(Modifier.padding(top = 7.dp).width(150.dp))
             }
             Group.entries.forEach { g ->
                 SidebarEntry(g, selected = group == g, onClick = { group = g },
@@ -303,11 +303,11 @@ private fun GroupHeader(g: Group) {
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                Text(str(g.title), style = Vyrk.type.headlineS, color = c.text)
+                Text(str(g.title), style = Vyrk.type.cinematicS, color = c.text)
                 Text(str(g.subtitle), style = Vyrk.type.labelM, color = c.textMuted, maxLines = 1)
             }
         }
-        RowDivider()
+        com.vyrk.tv.ui.components.RuneDivider(Modifier.padding(bottom = 2.dp), centered = false)
     }
 }
 

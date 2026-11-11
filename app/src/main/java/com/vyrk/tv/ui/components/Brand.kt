@@ -25,7 +25,6 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
-import com.vyrk.tv.ui.theme.Jakarta
 import com.vyrk.tv.ui.theme.Vyrk
 
 /**
@@ -33,7 +32,7 @@ import com.vyrk.tv.ui.theme.Vyrk
  * Norse knotwork geometry. Original vector, drawn in code (same paths as res/drawable/ic_vyrk_mark.xml).
  */
 @Composable
-fun VyrkMark(size: Dp, accent: Color = Vyrk.colors.accent, modifier: Modifier = Modifier) {
+fun VyrkMark(size: Dp, accent: Color = Vyrk.colors.accent, modifier: Modifier = Modifier, highlight: Color = Color.White) {
     Canvas(modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
@@ -51,23 +50,28 @@ fun VyrkMark(size: Dp, accent: Color = Vyrk.colors.accent, modifier: Modifier = 
             lineTo(p(50f, 36f).x, p(50f, 36f).y); close()
         }
         drawPath(left, Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.75f)), p(8f, 14f), p(50f, 88f)))
-        drawPath(right, Brush.linearGradient(listOf(Color.White, accent), p(92f, 14f), p(60f, 60f)))
+        drawPath(right, Brush.linearGradient(listOf(highlight, accent), p(92f, 14f), p(60f, 60f)))
         drawPath(rune, accent.copy(alpha = 0.55f))
     }
 }
 
-/** Lower-case "vyrk" wordmark beside the angular V. */
+/**
+ * The VYRK wordmark: the angular V in antique gold, then the name in spaced serif capitals, like
+ * letters cut into stone. Gold is kept for the brand; focus and controls use the frost accent.
+ */
 @Composable
 fun Wordmark(height: Dp = 26.dp, modifier: Modifier = Modifier) {
-    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(height * 0.28f)) {
-        VyrkMark(height)
+    val c = Vyrk.colors
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(height * 0.34f)) {
+        VyrkMark(height, accent = c.gold, highlight = Color(0xFFF3DEB0))
         Text(
-            "vyrk",
-            color = Vyrk.colors.text,
-            fontFamily = Jakarta,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
-            fontSize = (height.value * 0.92f).sp,
-            letterSpacing = (height.value * 0.04f).sp,
+            "VYRK",
+            color = c.text,
+            fontFamily = com.vyrk.tv.ui.theme.NorseDisplay,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            fontSize = (height.value * 0.78f).sp,
+            letterSpacing = (height.value * 0.30f).sp,
+            maxLines = 1,
         )
     }
 }

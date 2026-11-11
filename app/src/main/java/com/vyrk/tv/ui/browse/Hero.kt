@@ -133,9 +133,9 @@ fun Wallpaper(titleKey: String, urls: List<String>, modifier: Modifier = Modifie
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
                 0f to shade.copy(alpha = 0.92f), 0.30f to shade.copy(alpha = 0.78f), 0.50f to shade.copy(alpha = 0.50f), 0.70f to shade.copy(alpha = 0.22f), 1f to shade.copy(alpha = 0.12f),
             )))
-            // A teal haze where the picture meets the text.
+            // A cold fjord-blue haze where the picture meets the text (aurora green tinted faces).
             Box(Modifier.fillMaxSize().drawBehind {
-                drawRect(Brush.radialGradient(listOf(c.ambientTeal.copy(alpha = 0.18f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.30f), radius = size.width * 0.40f))
+                drawRect(Brush.radialGradient(listOf(c.ambientViolet.copy(alpha = 0.16f), Color.Transparent), center = androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.30f), radius = size.width * 0.40f))
             })
         }
         // Under the bar.
@@ -204,7 +204,7 @@ fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, m
 fun TitleLogo(meta: MetaPreview, maxWidth: Dp, maxHeight: Dp) {
     val logo = meta.logo
     val text: @Composable () -> Unit = {
-        Text(meta.name, style = Vyrk.type.displayM, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = maxWidth))
+        Text(meta.name, style = Vyrk.type.cinematicM, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = maxWidth))
     }
     if (logo == null) text() else SubcomposeAsyncImage(
         model = logo, contentDescription = meta.name, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
@@ -232,7 +232,7 @@ fun MetaFacts(meta: MetaPreview, full: MetaItem?, reserve: Boolean = false) {
     Row(if (reserve) Modifier.height(FACTS_H) else Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(parts.joinToString("  ·  "), style = Vyrk.type.labelL, color = c.textSecondary, maxLines = 1)
         val rating = full?.imdbRating ?: meta.imdbRating
-        if (!rating.isNullOrBlank()) Tag("IMDb $rating", color = c.background, background = c.warning)
+        if (!rating.isNullOrBlank()) Tag("IMDb $rating", color = c.background, background = c.gold)
     }
     val genres = (full?.allGenres ?: meta.genres).take(4)
     if (reserve) {
@@ -306,7 +306,7 @@ fun Hero(
             Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
             verticalArrangement = Arrangement.Bottom,
         ) {
-            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayL, Modifier.weight(1f), loading = art.logosLoading)
+            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.cinematicL, Modifier.weight(1f), loading = art.logosLoading)
             Box(Modifier.height(12.dp))
             MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(10.dp))
@@ -379,7 +379,7 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
         ) {
             // Logo: everything the fixed-height lines below leave, so short or square logos still read
             // from the sofa and the text never shifts as a title's details load.
-            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.displayM, Modifier.weight(1f), loading = art.logosLoading)
+            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.cinematicM, Modifier.weight(1f), loading = art.logosLoading)
             Box(Modifier.height(10.dp))
             MetaFacts(meta, full, reserve = true)
             Box(Modifier.height(8.dp))
