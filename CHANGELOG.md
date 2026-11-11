@@ -2,6 +2,14 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.27
+
+- Home redesign: the featured title has a gold kicker, a larger Watch now / Resume button, and a hint that Menu (or holding OK) opens More info and Library. With a row focused, the hint line is now key caps: OK More info, Menu Options, Play/Pause Preview.
+- Continue Watching cards are larger, with the episode and time left easier to read, a slim progress bar and a small play button. The tick that used to appear on them is gone: it meant the title had been finished before, not that you had watched it now.
+- Top 10 numbers are smaller and gold, set behind the corner of each poster instead of standing full height beside it.
+- The top menu shows focus as a frosted cyan pill and the open tab with a gold mark, so the two are easy to tell apart.
+- A carved rune line down the left edge, gold rules after each row heading, and artwork that fades to dark before the rows.
+
 ## v0.1.26
 
 - New Norse look: deep obsidian surfaces with a frost-cyan accent (now the default Frost colour) and antique-gold detail for the brand and ornaments.
