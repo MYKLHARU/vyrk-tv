@@ -286,14 +286,13 @@ sleep 7
 probe "series info"
 expect '^info:play$' "vyrk://open opens the series info page"
 shot info-series
-# The title page is one screen: the info button opens the episodes panel; Back closes it and returns to Play.
+# A series opens with its episodes panel shown; Right from the info button enters it and Back returns to Play.
 until_focus KEYCODE_DPAD_RIGHT '^info:more$' 5
-key KEYCODE_DPAD_CENTER 1.6 "open the panel"
 key KEYCODE_DPAD_RIGHT 1.0 "into the panel"
-expect '^info:tab:episodes$' "info opens the episodes panel"
+expect '^info:tab:episodes$' "series open with the episodes panel"
 shot info-series-page-two
-key KEYCODE_BACK 1.6 "close the panel"
-expect '^info:play$' "Back closes the panel and returns to Play"
+key KEYCODE_BACK 1.6 "back to Play"
+expect '^info:play$' "Back in the panel returns to Play"
 adb_run shell input keyevent KEYCODE_DPAD_CENTER
 wait_focus '^(player|prompt):' 40
 sleep 12

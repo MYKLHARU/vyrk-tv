@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.33
+
+- Series pages open with the episode list shown; films still open with the panel closed (the info button opens it). On a series, Back from the episodes returns to Play, and Back again leaves the page.
+
 ## v0.1.32
 
 - Fix: leaving playback crashed the app on Android 11 and older (for example NVIDIA SHIELD). The player closed its secure stream connections on the main thread, which those versions forbid; they now close in the background.

@@ -157,8 +157,10 @@ fun InfoPage(o: Overlay.Info) {
     val tabs = buildList { if (isSeries) add(PanelTab.EPISODES) else if (showSourcesPanel) add(PanelTab.SOURCES); add(PanelTab.DETAILS) }
     var tab by remember(meta.id) { mutableStateOf<PanelTab?>(null) }
     val shownTab = tab?.takeIf { it in tabs } ?: tabs.first()
-    // The panel is closed until the info button (or "+N more") opens it.
-    var panelOpen by remember(meta.id) { mutableStateOf(o.showSources) }
+    // Series open with their episodes shown; films start with the panel closed.
+    val panelByDefault = o.showSources || meta.type == "series"
+    var panelOpen by remember(meta.id) { mutableStateOf(panelByDefault) }
+    var panelFocused by remember { mutableStateOf(false) }
     val tabReq = remember { FocusRequester() }
 
     fun loadSources() {
@@ -195,7 +197,11 @@ fun InfoPage(o: Overlay.Info) {
     // Back with the panel open closes it and returns to Play. Back reaches dialogs through the back
     // dispatcher on Android 13+, not as a key event, so this has to be a BackHandler (it runs
     // before the window's own Back, which closes the page).
-    androidx.activity.compose.BackHandler(enabled = panelOpen) { runCatching { playReq.requestFocus() }; panelOpen = false }
+    // In the panel, Back returns to Play; a panel the info button opened on a film also closes.
+    androidx.activity.compose.BackHandler(enabled = panelFocused || (panelOpen && !panelByDefault)) {
+        runCatching { playReq.requestFocus() }
+        if (!panelByDefault) panelOpen = false
+    }
 
     val c = Vyrk.colors
     val art = rememberTitleArt(meta, full, metadataLoading = details.loading)
@@ -253,6 +259,7 @@ fun InfoPage(o: Overlay.Info) {
             if (panelOpen) Column(
                 Modifier.weight(1f).fillMaxHeight()
                     .onFocusChanged {
+                        panelFocused = it.hasFocus
                         if (it.hasFocus && !isSeries && showSourcesPanel && sources is SourcesState.Idle) loadSources()
                     }
                     .focusGroup()
