@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.32
+
+- Fix: leaving playback crashed the app on Android 11 and older (for example NVIDIA SHIELD). The player closed its secure stream connections on the main thread, which those versions forbid; they now close in the background.
+
 ## v0.1.31
 
 - Fix: leaving the player after starting a movie or episode from its page could close the app. The title page now stays open under the player, so Back returns to it, and Back again returns to the poster you came from.

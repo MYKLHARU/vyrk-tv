@@ -157,8 +157,13 @@ class PlayerEngine(
 
     fun release() {
         player.release()
-        mediaHttp.dispatcher.cancelAll()
-        mediaHttp.connectionPool.evictAll()
-        mediaHttp.dispatcher.executorService.shutdown()
+        // Closing a TLS connection writes to the network, which Android 11 and older forbid on the
+        // main thread (NetworkOnMainThreadException crashed the app on leaving the player).
+        val http = mediaHttp
+        Thread({
+            runCatching { http.dispatcher.cancelAll() }
+            runCatching { http.connectionPool.evictAll() }
+            runCatching { http.dispatcher.executorService.shutdown() }
+        }, "vyrk-player-release").start()
     }
 }
