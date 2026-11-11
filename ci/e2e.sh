@@ -129,7 +129,7 @@ ADDON_START=0
 # The player is a new activity: wait for it to take focus rather than sampling at a fixed time.
 adb_run shell input keyevent KEYCODE_DPAD_CENTER
 echo "KEYCODE_DPAD_CENTER | (player starting) | $(window_now) | Play" >> "$TRACE"
-wait_focus '^player:' 30
+wait_focus '^(player|prompt):' 30  # the stall prompt is the player's own; it is dismissed below
 sleep 25
 shot player
 probe "player after decoder warmup"
@@ -294,7 +294,7 @@ shot info-series-page-two
 key KEYCODE_BACK 1.6 "back to page one"
 expect '^info:play$' "Back on page two returns to Play"
 adb_run shell input keyevent KEYCODE_DPAD_CENTER
-wait_focus '^player:' 40
+wait_focus '^(player|prompt):' 40
 sleep 12
 dismiss_stall_prompt
 for _ in $(seq 1 15); do adb_run shell input keyevent KEYCODE_MEDIA_FAST_FORWARD; sleep 0.4; done
@@ -330,7 +330,7 @@ open_fixture() {
   probe "fixture info"
   expect '^info:play$' "fixture opens on Play"
   key KEYCODE_DPAD_CENTER 4 "play fixture"
-  wait_focus '^player:' 40
+  wait_focus '^(player|prompt):' 40
   sleep 4
 }
 seek_to_sample_end() {
