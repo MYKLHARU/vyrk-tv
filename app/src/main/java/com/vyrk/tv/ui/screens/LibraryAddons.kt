@@ -1,5 +1,7 @@
 package com.vyrk.tv.ui.screens
 
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -140,7 +142,7 @@ fun AddonActions(session: ProfileSession, typing: String?, onTyping: (String?) -
     LaunchedEffect(typing == null) { if (typing == null && refocus) { refocus = false; runCatching { installReq.requestFocus() } } }
     if (typing == null) {
         WrapRow(spacing = 6.dp) {
-            VyrkButton(str(R.string.install_from_url), icon = R.drawable.ic_plus, style = ButtonStyle.PRIMARY, onClick = { refocus = true; onTyping("") },
+            VyrkButton(str(R.string.install_from_url), icon = R.drawable.ic_plus, style = ButtonStyle.PRIMARY, shape = Dimens.pillShape, glow = true, onClick = { refocus = true; onTyping("") },
                 modifier = Modifier.focusRequester(installReq).traceFocus("addons:install_url"))
             if (account is AccountState.Connected) VyrkButton(str(R.string.save_to_account), onClick = { scope.launch { if (session.saveAddonsToAccount()) app.showToast(savedMsg) } }, modifier = Modifier.traceFocus("addons:save"))
         }
@@ -148,7 +150,7 @@ fun AddonActions(session: ProfileSession, typing: String?, onTyping: (String?) -
             Text(str(R.string.addons_pending_sync), style = Vyrk.type.bodyS, color = c.textMuted)
         return
     }
-    Column(Modifier.fillMaxWidth().background(c.glass, RoundedCornerShape(16.dp)).padding(14.dp)) {
+    Column(Modifier.fillMaxWidth().background(c.panel.copy(alpha = 0.72f), RoundedCornerShape(16.dp)).border(1.dp, c.accent.copy(alpha = 0.35f), RoundedCornerShape(16.dp)).padding(16.dp)) {
         Text(str(R.string.addon_url), style = Vyrk.type.labelL, color = c.textMuted)
         Text(typing.ifEmpty { "https://…/manifest.json" }, style = Vyrk.type.titleM, color = if (typing.isEmpty()) c.textMuted else c.text, maxLines = 3)
         Spacer(Modifier.height(10.dp))
@@ -179,15 +181,32 @@ fun AddonCard(session: ProfileSession, d: com.vyrk.core.addon.Descriptor, index:
     val refreshedMsg = str(R.string.addon_refreshed)
     val m = d.manifest
     val skipped = CatalogRules.needsStreamingServer(d)
-    Column(Modifier.fillMaxWidth().background(c.glass, RoundedCornerShape(16.dp)).padding(14.dp)) {
+    // A management card on dark steel; its edge lights cyan while one of its actions has focus.
+    var within by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(16.dp)
+    Column(
+        Modifier.fillMaxWidth().onFocusChanged { within = it.hasFocus }
+            .background(if (within) c.raised.copy(alpha = 0.78f) else c.panel.copy(alpha = 0.66f), shape)
+            .border(1.dp, if (within) c.accent.copy(alpha = 0.42f) else c.text.copy(alpha = 0.07f), shape)
+            .padding(16.dp),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(40.dp).background(c.raised.copy(alpha = 0.7f), RoundedCornerShape(10.dp))) {
-                m.logo?.let { AsyncImage(it, null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(4.dp)) }
+            Box(
+                Modifier.size(48.dp).background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(c.steel, c.panel)), RoundedCornerShape(12.dp))
+                    .border(1.dp, c.gold.copy(alpha = 0.4f), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (m.logo == null) Text(m.name.take(1).uppercase(), style = Vyrk.type.cinematicS, color = c.gold.copy(alpha = 0.7f))
+                m.logo?.let { AsyncImage(it, null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(5.dp)) }
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text("${m.name}  ·  v${m.version}", style = Vyrk.type.titleM, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(Redact.url(d.transportUrl), style = Vyrk.type.labelS, color = c.textMuted)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(m.name, style = Vyrk.type.titleL, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    Tag("v${m.version}", color = c.gold, background = c.gold.copy(alpha = 0.14f))
+                    Text("#${index + 1}", style = Vyrk.type.labelM, color = c.textMuted)
+                }
+                Text(Redact.url(d.transportUrl), style = Vyrk.type.labelS, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         m.description?.let { Text(it, style = Vyrk.type.bodyS, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp)) }
@@ -198,13 +217,13 @@ fun AddonCard(session: ProfileSession, d: com.vyrk.core.addon.Descriptor, index:
         }
         if (skipped) Text(str(R.string.needs_streaming_server), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
         if (com.vyrk.core.addon.AddonUrls.isUnencryptedPublic(d.transportUrl)) Text(str(R.string.addon_not_encrypted), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
         WrapRow(spacing = 6.dp) {
-            if (index > 0) VyrkButton(str(R.string.move_up), icon = R.drawable.ic_up, onClick = { scope.launch { session.move(m.id, -1) } }, modifier = Modifier.traceFocus("addon:$index:up"))
-            if (index < lastIndex) VyrkButton(str(R.string.move_down), icon = R.drawable.ic_down, onClick = { scope.launch { session.move(m.id, 1) } }, modifier = Modifier.traceFocus("addon:$index:down"))
-            if (m.behaviorHints.configurable) VyrkButton(str(R.string.configure), icon = R.drawable.ic_qr, onClick = { app.push(Overlay.AddonQr(d)) }, modifier = Modifier.traceFocus("addon:$index:configure"))
-            VyrkButton(str(R.string.refresh), icon = R.drawable.ic_refresh, onClick = { scope.launch { if (session.refreshAddon(m.id)) app.showToast(refreshedMsg) } }, modifier = Modifier.traceFocus("addon:$index:refresh"))
-            if (!d.flags.protected) VyrkButton(str(R.string.remove), icon = R.drawable.ic_trash, onClick = { scope.launch { session.remove(m.id) } }, modifier = Modifier.traceFocus("addon:$index:remove"))
+            if (index > 0) VyrkButton(str(R.string.move_up), icon = R.drawable.ic_up, style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, onClick = { scope.launch { session.move(m.id, -1) } }, modifier = Modifier.traceFocus("addon:$index:up"))
+            if (index < lastIndex) VyrkButton(str(R.string.move_down), icon = R.drawable.ic_down, style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, onClick = { scope.launch { session.move(m.id, 1) } }, modifier = Modifier.traceFocus("addon:$index:down"))
+            if (m.behaviorHints.configurable) VyrkButton(str(R.string.configure), icon = R.drawable.ic_qr, style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, onClick = { app.push(Overlay.AddonQr(d)) }, modifier = Modifier.traceFocus("addon:$index:configure"))
+            VyrkButton(str(R.string.refresh), icon = R.drawable.ic_refresh, style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, onClick = { scope.launch { if (session.refreshAddon(m.id)) app.showToast(refreshedMsg) } }, modifier = Modifier.traceFocus("addon:$index:refresh"))
+            if (!d.flags.protected) VyrkButton(str(R.string.remove), icon = R.drawable.ic_trash, style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, onClick = { scope.launch { session.remove(m.id) } }, modifier = Modifier.traceFocus("addon:$index:remove"))
         }
     }
 }

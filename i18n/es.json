@@ -373,5 +373,6 @@
     "discover_genre": "Género",
     "discover_no_catalogs": "No hay catálogos compatibles. Añade un complemento de catálogo en Ajustes o cambia el tipo de contenido.",
     "options": "Opciones",
-    "seasons_count": "%1$d temporadas"
+    "seasons_count": "%1$d temporadas",
+    "subtitle_preview": "Así se verán los subtítulos."
 }

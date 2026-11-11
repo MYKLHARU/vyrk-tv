@@ -293,6 +293,7 @@
     <string name="subtitle_delay">Ritardo sottotitoli: %1$s s</string>
     <string name="subtitle_languages">Lingue dei sottotitoli</string>
     <string name="subtitle_mode">Modalità</string>
+    <string name="subtitle_preview">I sottotitoli appariranno così.</string>
     <string name="subtitle_size">Dimensione</string>
     <string name="subtitles">Sottotitoli</string>
     <string name="switch_stream">Cambia stream</string>

@@ -2,6 +2,15 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.28
+
+- Movie and series pages redesigned to match Home: a gold kicker over the title, two genres and the season count in the facts, a glowing Play / Resume button that names the episode it resumes, and a progress line when you are part-way through.
+- Page two: the full synopsis in larger type, cast as portrait cards with their character (gold initials when there is no photo), key crew as separate chips, and sources on frosted glass with a quality block (gold from 4K) and the recommended source lit.
+- Series: season tabs where the open season and the focused one look different (Up from the episodes returns to the open season), and larger episode cards with the still, progress, a watched mark, air date, runtime and synopsis. The next episode to watch is tagged and scrolled into view.
+- Settings redesigned: a carved category column, a large heading per category, each setting on its own tile that lights while you are in it, real on/off switches, and choices where the selection and the remote focus look different.
+- Settings › Subtitles shows a live preview drawn exactly as the player draws subtitles. Picture & sound shows what this TV can play as a panel. Add-ons are management cards with the version and position; About has the VYRK crest.
+- Fix: switching settings categories no longer opens the next one part-way down.
+
 ## v0.1.27
 
 - Home redesign: the featured title has a gold kicker, a larger Watch now / Resume button, and a hint that Menu (or holding OK) opens More info and Library. With a row focused, the hint line is now key caps: OK More info, Menu Options, Play/Pause Preview.

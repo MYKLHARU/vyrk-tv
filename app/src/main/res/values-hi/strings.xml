@@ -293,6 +293,7 @@
     <string name="subtitle_delay">सबटाइटल देरी: %1$s सेकंड</string>
     <string name="subtitle_languages">सबटाइटल भाषाएँ</string>
     <string name="subtitle_mode">मोड</string>
+    <string name="subtitle_preview">उपशीर्षक ऐसे दिखेंगे।</string>
     <string name="subtitle_size">आकार</string>
     <string name="subtitles">सबटाइटल</string>
     <string name="switch_stream">स्ट्रीम बदलें</string>

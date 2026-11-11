@@ -293,6 +293,7 @@
     <string name="subtitle_delay">Décalage des sous-titres : %1$s s</string>
     <string name="subtitle_languages">Langues des sous-titres</string>
     <string name="subtitle_mode">Mode</string>
+    <string name="subtitle_preview">Les sous-titres ressembleront à ceci.</string>
     <string name="subtitle_size">Taille</string>
     <string name="subtitles">Sous-titres</string>
     <string name="switch_stream">Changer de flux</string>

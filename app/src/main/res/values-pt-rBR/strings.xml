@@ -293,6 +293,7 @@
     <string name="subtitle_delay">Atraso da legenda: %1$s s</string>
     <string name="subtitle_languages">Idiomas da legenda</string>
     <string name="subtitle_mode">Modo</string>
+    <string name="subtitle_preview">As legendas ficarão assim.</string>
     <string name="subtitle_size">Tamanho</string>
     <string name="subtitles">Legendas</string>
     <string name="switch_stream">Trocar stream</string>

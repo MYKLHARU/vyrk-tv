@@ -373,5 +373,6 @@
     "discover_genre": "Genre",
     "discover_no_catalogs": "Keine passenden Kataloge. Füge in den Einstellungen ein Katalog-Add-on hinzu oder ändere den Inhaltstyp.",
     "options": "Optionen",
-    "seasons_count": "%1$d Staffeln"
+    "seasons_count": "%1$d Staffeln",
+    "subtitle_preview": "So sehen die Untertitel aus."
 }

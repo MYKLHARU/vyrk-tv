@@ -297,9 +297,14 @@ fun PlayerScreen(m: PlayerModel, onExit: () -> Unit) {
 /** Subtitle colour, background and size from profile settings. */
 fun PlayerModel.engineSubtitleStyle(): Triple<Color, Color, Float> {
     val s = VyrkApp.graphOrNull()?.session?.value?.settings?.value
-    val fg = when (s?.subtitleColor) { "YELLOW" -> Color(0xFFFFE066); "CYAN" -> Color(0xFFA9E1F3); else -> Color.White }
-    val bg = when (s?.subtitleBackground) { "BOX" -> Color.Black.copy(alpha = 0.75f); "NONE" -> Color.Transparent; else -> Color.Black.copy(alpha = 0.30f) }
-    return Triple(fg, bg, (s?.subtitleSize ?: 100) / 100f)
+    return subtitleStyleOf(s?.subtitleColor, s?.subtitleBackground, s?.subtitleSize)
+}
+
+/** The subtitle style for these settings; the player and the Settings preview both draw with it. */
+fun subtitleStyleOf(color: String?, background: String?, size: Int?): Triple<Color, Color, Float> {
+    val fg = when (color) { "YELLOW" -> Color(0xFFFFE066); "CYAN" -> Color(0xFFA9E1F3); else -> Color.White }
+    val bg = when (background) { "BOX" -> Color.Black.copy(alpha = 0.75f); "NONE" -> Color.Transparent; else -> Color.Black.copy(alpha = 0.30f) }
+    return Triple(fg, bg, (size ?: 100) / 100f)
 }
 
 @Composable

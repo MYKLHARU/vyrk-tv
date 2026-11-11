@@ -373,5 +373,6 @@
     "discover_genre": "Genre",
     "discover_no_catalogs": "Aucun catalogue correspondant. Ajoutez un module de catalogue dans les paramètres ou changez de type de contenu.",
     "options": "Options",
-    "seasons_count": "%1$d saisons"
+    "seasons_count": "%1$d saisons",
+    "subtitle_preview": "Les sous-titres ressembleront à ceci."
 }

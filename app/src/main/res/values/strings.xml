@@ -293,6 +293,7 @@
     <string name="subtitle_delay">Subtitle delay: %1$s s</string>
     <string name="subtitle_languages">Subtitle languages</string>
     <string name="subtitle_mode">Mode</string>
+    <string name="subtitle_preview">Subtitles will look like this.</string>
     <string name="subtitle_size">Size</string>
     <string name="subtitles">Subtitles</string>
     <string name="switch_stream">Switch stream</string>

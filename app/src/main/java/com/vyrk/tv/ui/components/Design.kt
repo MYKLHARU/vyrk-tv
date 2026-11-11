@@ -1,5 +1,10 @@
 package com.vyrk.tv.ui.components
 
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.getValue
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -228,10 +233,10 @@ fun RunePillar(modifier: Modifier = Modifier) {
 }
 
 /**
- * A set of options; the chosen one is filled with the accent and ticked. Two options (On / Off)
- * are one joined pill; three or more are separate outlined pills ([ChoicePill]), as in the
- * reference layout. Each option is focusable on its own and keeps the trace name the journeys
- * look for.
+ * A set of options. Two options are one joined track; three or more are separate pills that wrap.
+ * The chosen option is filled with the accent and ticked; remote focus is a white ring with a soft
+ * lift, so the choice and the focus never look alike. Each option keeps the trace name the
+ * journeys look for.
  */
 @Composable
 fun SegmentedControl(
@@ -246,8 +251,8 @@ fun SegmentedControl(
     val c = Vyrk.colors
     Row(
         if (separated) modifier
-        else modifier.background(c.raised.copy(alpha = 0.55f), Dimens.pillShape).border(1.dp, c.glassEdge, Dimens.pillShape).padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(if (separated) 8.dp else 2.dp),
+        else modifier.background(c.shade.copy(alpha = 0.55f), Dimens.pillShape).border(1.dp, c.text.copy(alpha = 0.10f), Dimens.pillShape).padding(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (separated) 8.dp else 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         labels.forEachIndexed { i, label ->
@@ -256,7 +261,7 @@ fun SegmentedControl(
     }
 }
 
-/** One option of a single choice, as a separate outlined pill; filled with the accent and ticked when chosen. */
+/** One option of a single choice, as a separate pill; filled with the accent and ticked when chosen. */
 @Composable
 fun ChoicePill(label: String, selected: Boolean, onClick: () -> Unit, trace: String, @DrawableRes icon: Int? = null) =
     OptionPill(label, selected, onClick, trace, icon, separated = true)
@@ -266,22 +271,22 @@ private fun OptionPill(label: String, on: Boolean, onClick: () -> Unit, trace: S
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
-        modifier = Modifier.height(if (separated) 32.dp else 30.dp).traceFocus(trace),
+        modifier = Modifier.height(if (separated) 34.dp else 30.dp).traceFocus(trace),
         shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = when { on -> c.accent; separated -> c.raised.copy(alpha = 0.55f); else -> Color.Transparent },
+            containerColor = when { on -> c.accent; separated -> c.steel.copy(alpha = 0.55f); else -> Color.Transparent },
             contentColor = if (on) c.onAccent else c.textSecondary,
-            focusedContainerColor = if (on) c.accent else c.text, focusedContentColor = if (on) c.onAccent else c.background,
+            focusedContainerColor = if (on) c.accent else c.text.copy(alpha = 0.16f), focusedContentColor = if (on) c.onAccent else c.text,
             pressedContainerColor = c.accent, pressedContentColor = c.onAccent,
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
         border = ClickableSurfaceDefaults.border(
-            border = if (separated && !on) Border(BorderStroke(1.dp, c.glassEdge)) else Border.None,
+            border = if (separated && !on) Border(BorderStroke(1.dp, c.text.copy(alpha = 0.10f))) else Border.None,
             focusedBorder = Border(BorderStroke(2.dp, c.text)),
         ),
-        glow = ClickableSurfaceDefaults.glow(glow = if (on) Glow(c.accent.copy(alpha = 0.45f), 6.dp) else Glow.None, focusedGlow = focusGlow()),
+        glow = ClickableSurfaceDefaults.glow(glow = if (on) Glow(c.accent.copy(alpha = 0.40f), 6.dp) else Glow.None, focusedGlow = Glow(c.accent.copy(alpha = 0.35f), 10.dp)),
     ) {
-        Row(Modifier.padding(horizontal = 13.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.padding(horizontal = 14.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (on) Icon(R.drawable.ic_check, null, Modifier.size(12.dp), tint = LocalContentColor.current)
             icon?.let { Icon(it, null, Modifier.size(14.dp), tint = LocalContentColor.current) }
             Text(label, style = Vyrk.type.labelL, maxLines = 1, softWrap = false)
@@ -289,34 +294,62 @@ private fun OptionPill(label: String, on: Boolean, onClick: () -> Unit, trace: S
     }
 }
 
-/** On / Off as a two-part segmented control. */
+/**
+ * On / Off as a switch: OK flips it. The track fills with the accent when on and the thumb slides
+ * across (snapping with Reduce motion); remote focus rings it in white. The state is also written
+ * beside it and read out for accessibility.
+ */
 @Composable
-fun OnOffControl(value: Boolean, trace: String, onLabel: String, offLabel: String, onChange: (Boolean) -> Unit) =
-    SegmentedControl(listOf(onLabel, offLabel), if (value) 0 else 1, listOf("$trace:on", "$trace:off"), { onChange(it == 0) })
+fun OnOffControl(value: Boolean, trace: String, onLabel: String, offLabel: String, onChange: (Boolean) -> Unit) {
+    val c = Vyrk.colors
+    val thumbX by androidx.compose.animation.core.animateDpAsState(if (value) 22.dp else 3.dp, com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.FAST), label = "switch-thumb")
+    val track by androidx.compose.animation.animateColorAsState(if (value) c.accent else c.steel, com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.FAST), label = "switch-track")
+    val state = if (value) onLabel else offLabel
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Surface(
+            onClick = { onChange(!value) },
+            modifier = Modifier.size(46.dp, 26.dp).traceFocus("$trace:switch")
+                .semantics { role = androidx.compose.ui.semantics.Role.Switch; stateDescription = state },
+            shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
+            colors = ClickableSurfaceDefaults.colors(containerColor = track, focusedContainerColor = track, pressedContainerColor = track),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
+            border = ClickableSurfaceDefaults.border(
+                border = if (value) Border.None else Border(BorderStroke(1.dp, c.text.copy(alpha = 0.18f))),
+                focusedBorder = Border(BorderStroke(2.dp, c.text)),
+            ),
+            glow = ClickableSurfaceDefaults.glow(glow = if (value) Glow(c.accent.copy(alpha = 0.40f), 8.dp) else Glow.None, focusedGlow = Glow(c.accent.copy(alpha = 0.40f), 12.dp)),
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                Box(Modifier.align(Alignment.CenterStart).offset(x = thumbX).size(20.dp).shadow(3.dp, CircleShape).background(if (value) Color.White else c.textSecondary, CircleShape))
+            }
+        }
+        Text(state, style = Vyrk.type.labelL, color = if (value) c.accent else c.textMuted, maxLines = 1, modifier = Modifier.defaultMinSize(minWidth = 28.dp))
+    }
+}
 
-/** A chip with a checkbox, for choices that can be combined (hidden tabs). */
+/** A chip with a checkbox, for choices that can be combined (hidden tabs, languages). */
 @Composable
 fun CheckChip(label: String, checked: Boolean, onClick: () -> Unit, trace: String, modifier: Modifier = Modifier) {
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
-        modifier = modifier.height(32.dp).traceFocus(trace),
+        modifier = modifier.height(34.dp).traceFocus(trace),
         shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = if (checked) c.accent.copy(alpha = 0.14f) else c.raised.copy(alpha = 0.55f), contentColor = if (checked) c.text else c.textSecondary,
-            focusedContainerColor = c.text, focusedContentColor = c.background,
+            containerColor = if (checked) c.accent.copy(alpha = 0.16f) else c.steel.copy(alpha = 0.55f), contentColor = if (checked) c.text else c.textSecondary,
+            focusedContainerColor = if (checked) c.accent.copy(alpha = 0.26f) else c.text.copy(alpha = 0.16f), focusedContentColor = c.text,
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
         border = ClickableSurfaceDefaults.border(
-            border = Border(BorderStroke(1.dp, if (checked) c.accent.copy(alpha = 0.7f) else c.glassEdge)),
-            focusedBorder = Border.None,
+            border = Border(BorderStroke(1.dp, if (checked) c.accent.copy(alpha = 0.7f) else c.text.copy(alpha = 0.10f))),
+            focusedBorder = Border(BorderStroke(2.dp, c.text)),
         ),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(c.accent.copy(alpha = 0.35f), 10.dp)),
     ) {
         Row(Modifier.padding(horizontal = 12.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val box = RoundedCornerShape(4.dp)
             Box(
-                Modifier.size(14.dp)
+                Modifier.size(15.dp)
                     .background(if (checked) c.accent else Color.Transparent, box)
                     .border(1.5.dp, if (checked) c.accent else LocalContentColor.current.copy(alpha = 0.6f), box),
                 contentAlignment = Alignment.Center,
@@ -326,36 +359,39 @@ fun CheckChip(label: String, checked: Boolean, onClick: () -> Unit, trace: Strin
     }
 }
 
-/** A round colour swatch with its name underneath; the chosen one is ticked and ringed. */
+/**
+ * A round colour swatch with its name underneath. The chosen one sits inside a ring of its own
+ * colour and is ticked; remote focus enlarges it and rings it in white.
+ */
 @Composable
 fun ColorSwatch(color: Color, onColor: Color, label: String, selected: Boolean, onClick: () -> Unit, trace: String) {
     val c = Vyrk.colors
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(
-            onClick = onClick,
-            modifier = Modifier.size(24.dp).traceFocus(trace),
-            shape = ClickableSurfaceDefaults.shape(CircleShape),
-            colors = ClickableSurfaceDefaults.colors(containerColor = color, focusedContainerColor = color, pressedContainerColor = color),
-            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.22f),
-            border = ClickableSurfaceDefaults.border(
-                border = if (selected) Border(BorderStroke(2.dp, c.text.copy(alpha = 0.9f))) else Border.None,
-                focusedBorder = Border(BorderStroke(2.dp, c.text)),
-            ),
-            glow = ClickableSurfaceDefaults.glow(glow = if (selected) Glow(color.copy(alpha = 0.55f), 8.dp) else Glow.None, focusedGlow = Glow(color.copy(alpha = 0.7f), 12.dp)),
-        ) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (selected) Icon(R.drawable.ic_check, null, Modifier.size(13.dp), tint = onColor)
+        Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+            if (selected) Box(Modifier.matchParentSize().border(2.dp, color, CircleShape))
+            Surface(
+                onClick = onClick,
+                modifier = Modifier.size(28.dp).traceFocus(trace),
+                shape = ClickableSurfaceDefaults.shape(CircleShape),
+                colors = ClickableSurfaceDefaults.colors(containerColor = color, focusedContainerColor = color, pressedContainerColor = color),
+                scale = ClickableSurfaceDefaults.scale(focusedScale = 1.22f),
+                border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border(BorderStroke(2.dp, c.text))),
+                glow = ClickableSurfaceDefaults.glow(glow = if (selected) Glow(color.copy(alpha = 0.55f), 8.dp) else Glow.None, focusedGlow = Glow(color.copy(alpha = 0.7f), 12.dp)),
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (selected) Icon(R.drawable.ic_check, null, Modifier.size(14.dp), tint = onColor)
+                }
             }
         }
-        Text(label, style = Vyrk.type.labelS, color = if (selected) c.text else c.textMuted, maxLines = 1, modifier = Modifier.padding(top = 5.dp))
+        Text(label, style = Vyrk.type.labelS, color = if (selected) c.text else c.textMuted, maxLines = 1, modifier = Modifier.padding(top = 2.dp))
     }
 }
 
 /** Share of a full-width setting row taken by its name and description; controls start after it. */
-private const val LABEL_COLUMN = 0.38f
+private const val LABEL_COLUMN = 0.40f
 
 /**
- * One setting: icon, name and a short description, then its controls. In a full-width row
+ * One setting: icon badge, name and a short description, then its controls. In a full-width row
  * ([split]) every row's controls start at the same column and wrap within it, so a page reads
  * as two aligned columns. In half of a two-column row, controls sit at the right of their half.
  */
@@ -369,15 +405,18 @@ fun SettingRow(
     controls: @Composable RowScope.() -> Unit,
 ) {
     val c = Vyrk.colors
-    Row(modifier.fillMaxWidth().padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Row(
             (if (split) Modifier.fillMaxWidth(LABEL_COLUMN) else Modifier.weight(1f)).padding(end = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (icon != null) Icon(icon, null, Modifier.padding(end = 12.dp).size(18.dp), tint = c.textSecondary)
+            if (icon != null) Box(
+                Modifier.padding(end = 12.dp).size(30.dp).background(c.shade.copy(alpha = 0.45f), RoundedCornerShape(9.dp)).border(1.dp, c.text.copy(alpha = 0.08f), RoundedCornerShape(9.dp)),
+                contentAlignment = Alignment.Center,
+            ) { Icon(icon, null, Modifier.size(16.dp), tint = c.frostSoft) }
             Column {
-                Text(title, style = Vyrk.type.titleS, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (!description.isNullOrBlank()) Text(description, style = Vyrk.type.labelS, color = c.textMuted, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 1.dp))
+                Text(title, style = Vyrk.type.titleM, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (!description.isNullOrBlank()) Text(description, style = Vyrk.type.labelM.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Normal), color = c.textMuted, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
             }
         }
         if (split) androidx.compose.foundation.layout.FlowRow(
