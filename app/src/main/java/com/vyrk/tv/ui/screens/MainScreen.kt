@@ -33,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
@@ -214,9 +215,10 @@ fun MainScreen(session: ProfileSession) {
                 .focusGroup(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Wordmark(20.dp)
-            Spacer(Modifier.width(20.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Wordmark(22.dp)
+            // A fine gold upright between the brand and the tabs, like a carved post.
+            Box(Modifier.padding(horizontal = 18.dp).width(1.dp).height(22.dp).background(Brush.verticalGradient(listOf(Color.Transparent, Vyrk.colors.gold.copy(alpha = 0.55f), Color.Transparent))))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 tabs.forEach { t ->
                     NavTab(
                         label = tabLabel(t),
@@ -269,11 +271,16 @@ private fun NavTab(label: String, icon: Int, active: Boolean, requester: FocusRe
     var focused by remember { mutableStateOf(false) }
     val c = Vyrk.colors
     val fill by androidx.compose.animation.animateColorAsState(
-        when { focused -> c.accent.copy(alpha = 0.30f); active -> c.accent.copy(alpha = 0.12f); else -> Color.Transparent }, motionSpec(Motion.FAST), label = "tab-fill")
+        if (focused) c.accent.copy(alpha = 0.24f) else Color.Transparent, motionSpec(Motion.FAST), label = "tab-fill")
     val edge by androidx.compose.animation.animateColorAsState(
-        when { focused -> c.accent; active -> c.accent.copy(alpha = 0.55f); else -> Color.Transparent }, motionSpec(Motion.FAST), label = "tab-edge")
-    // Frosted, not filled: the focused tab glows brighter and its edge is lit; the label stays white.
+        if (focused) c.accent else Color.Transparent, motionSpec(Motion.FAST), label = "tab-edge")
+    // Two different marks: remote focus is a frosted cyan pill with a lit edge; the open tab is a
+    // gold rune knot under its label (and a gold icon), so the two never read as the same thing.
     val ink = if (focused || active) c.text else c.textSecondary
+    val mark by androidx.compose.animation.core.animateFloatAsState(if (active) 1f else 0f, motionSpec(Motion.STANDARD), label = "tab-mark")
+    androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    // Same space above as the mark takes below, so the label stays level with Search and Settings.
+    Box(Modifier.height(8.dp))
     Row(
         Modifier
             .focusRequester(requester)
@@ -282,15 +289,24 @@ private fun NavTab(label: String, icon: Int, active: Boolean, requester: FocusRe
             .semantics { role = Role.Tab; contentDescription = label }
             .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onSelect(); true } else false }
             .focusable()
-            .then(if (active || focused) Modifier.shadow(if (focused) 16.dp else 10.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
+            .then(if (focused) Modifier.shadow(14.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
             .background(fill, Dimens.pillShape)
             .border(1.dp, edge, Dimens.pillShape)
             .padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
-        Icon(icon, null, Modifier.size(15.dp), tint = if (focused || active) c.accent else ink)
+        Icon(icon, null, Modifier.size(15.dp), tint = when { focused -> c.accent; active -> c.gold; else -> ink })
         Text(label, style = Vyrk.type.titleS, color = ink, maxLines = 1)
+    }
+    val gold = c.gold
+    androidx.compose.foundation.Canvas(Modifier.padding(top = 3.dp).size(34.dp, 5.dp).then(Modifier.graphicsLayer { alpha = mark })) {
+        val cy = size.height / 2f
+        val cx = size.width / 2f
+        drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.5f to gold, 1f to Color.Transparent, startX = 0f, endX = size.width),
+            topLeft = androidx.compose.ui.geometry.Offset(0f, cy - 0.5f), size = androidx.compose.ui.geometry.Size(size.width, 1f))
+        drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(cx - 5f, cy); lineTo(cx, cy - size.height / 2f); lineTo(cx + 5f, cy); lineTo(cx, cy + size.height / 2f); close() }, gold)
+    }
     }
 }
 

@@ -120,8 +120,9 @@ fun Wallpaper(titleKey: String, urls: List<String>, modifier: Modifier = Modifie
                 .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
                 .drawWithContent {
                     drawContent()
-                    // Fully there down to about half way, then melting into the background below.
-                    drawRect(Brush.verticalGradient(0f to Color.Black, 0.50f to Color.Black, 0.68f to Color.Black.copy(alpha = 0.62f), 0.86f to Color.Black.copy(alpha = 0.16f), 1f to Color.Transparent), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
+                    // Fully there down to the title's actions, then melting into obsidian, so the rows sit
+                    // on the app's own dark ground instead of over busy artwork.
+                    drawRect(Brush.verticalGradient(0f to Color.Black, 0.46f to Color.Black, 0.60f to Color.Black.copy(alpha = 0.50f), 0.74f to Color.Black.copy(alpha = 0.14f), 0.88f to Color.Transparent), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
                 },
         ) {
             androidx.compose.runtime.key(titleKey) {
@@ -213,6 +214,25 @@ fun TitleLogo(meta: MetaPreview, maxWidth: Dp, maxHeight: Dp) {
     )
 }
 
+/** "Movie", "Series", "Live" or the add-on's own type. */
+@Composable
+fun typeLabel(meta: MetaPreview): String = when (meta.type) {
+    "movie" -> str(R.string.type_movie); "series" -> str(R.string.type_series); "tv" -> str(R.string.type_live)
+    else -> meta.type.replaceFirstChar { it.uppercase() }
+}
+
+/** Kicker over a title: a gold rune, its type in spaced capitals and a short fading rule. */
+@Composable
+private fun TitleEyebrow(meta: MetaPreview) {
+    val c = Vyrk.colors
+    Row(Modifier.height(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        com.vyrk.tv.ui.components.RuneGlyph(10.dp, color = c.gold)
+        Box(Modifier.width(8.dp))
+        Text(typeLabel(meta).uppercase(), style = Vyrk.type.eyebrow, color = c.gold, maxLines = 1)
+        Box(Modifier.padding(start = 10.dp).width(56.dp).height(1.dp).background(Brush.horizontalGradient(listOf(c.gold.copy(alpha = 0.6f), Color.Transparent))))
+    }
+}
+
 /** Height of the facts line and of the genre line when they are [reserve]d. */
 private val FACTS_H = 24.dp
 
@@ -226,7 +246,7 @@ fun MetaFacts(meta: MetaPreview, full: MetaItem?, reserve: Boolean = false) {
     val c = Vyrk.colors
     val parts = listOfNotNull(
         (full?.releaseInfo ?: meta.releaseInfo)?.takeIf { it.isNotBlank() },
-        when (meta.type) { "movie" -> str(R.string.type_movie); "series" -> str(R.string.type_series); "tv" -> str(R.string.type_live); else -> meta.type.replaceFirstChar { it.uppercase() } },
+        typeLabel(meta),
         com.vyrk.core.addon.RuntimeText.format(full?.runtime ?: meta.runtime),
     )
     Row(if (reserve) Modifier.height(FACTS_H) else Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -306,6 +326,8 @@ fun Hero(
             Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
             verticalArrangement = Arrangement.Bottom,
         ) {
+            TitleEyebrow(meta)
+            Box(Modifier.height(8.dp))
             HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), full?.name?.takeIf { it.isNotBlank() } ?: meta.name, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.cinematicL, Modifier.weight(1f), loading = art.logosLoading)
             Box(Modifier.height(12.dp))
             MetaFacts(meta, full, reserve = true)
@@ -314,11 +336,11 @@ fun Hero(
             Box(Modifier.height(8.dp))
             Column(Modifier.widthIn(max = HERO_TEXT_W), verticalArrangement = Arrangement.spacedBy(2.dp)) { CreditLines(full, meta, reserve = true, icons = true) }
             Box(Modifier.height(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 VyrkButton(
                     if (hasProgress) str(R.string.resume) else str(R.string.watch_now),
                     onClick = onWatch, onLongClick = onMenu, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
-                    height = 42.dp, horizontalPadding = 22.dp, glow = true, shape = Dimens.pillShape,
+                    height = 46.dp, horizontalPadding = 30.dp, glow = true, shape = Dimens.pillShape,
                     modifier = Modifier.focusRequester(watchReq).traceFocus("hero:watch")
                         // Left and Right on Watch now move through the carousel; no need to reach the arrows.
                         // A held key doesn't race through the titles (repeats are ignored).
@@ -332,6 +354,9 @@ fun Hero(
                             }
                         },
                 )
+                // Left and Right on Watch now turn the carousel, so More info and the library are not
+                // separate buttons: Hold OK or Menu opens the title menu that has both.
+                com.vyrk.tv.ui.components.KeyHint("☰", str(R.string.more_info) + "  ·  " + str(R.string.tab_library))
             }
         }
         // Carousel: an arrow at each side of the hero (shown, not focused: Left and Right on Watch now
@@ -379,6 +404,8 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
         ) {
             // Logo: everything the fixed-height lines below leave, so short or square logos still read
             // from the sofa and the text never shifts as a title's details load.
+            TitleEyebrow(meta)
+            Box(Modifier.height(6.dp))
             HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name.ifBlank { full?.name.orEmpty() }, art.logos, HERO_LOGO_W, HERO_LOGO_H, Vyrk.type.cinematicM, Modifier.weight(1f), loading = art.logosLoading)
             Box(Modifier.height(10.dp))
             MetaFacts(meta, full, reserve = true)
@@ -386,8 +413,13 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
             Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyS, color = c.textSecondary, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Box(Modifier.height(4.dp))
             CreditLines(full, meta, reserve = true, icons = true)
-            Box(Modifier.height(6.dp))
-            Text(str(R.string.header_hint), style = Vyrk.type.labelS, color = c.textMuted)
+            Box(Modifier.height(10.dp))
+            // What the remote does here, as key caps; OK is the call to action.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                com.vyrk.tv.ui.components.KeyHint("OK", str(R.string.more_info), primary = true)
+                com.vyrk.tv.ui.components.KeyHint("☰", str(R.string.options))
+                com.vyrk.tv.ui.components.KeyHint("⏯", str(R.string.preview))
+            }
         }
     }
 }

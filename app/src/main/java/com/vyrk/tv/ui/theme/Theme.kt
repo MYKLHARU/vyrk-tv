@@ -147,8 +147,8 @@ object Dimens {
     val space5 = 24.dp
     /** Continue Watching cards are landscape: this wide, 16:9. */
     /** Continue Watching cards: wide and cinematic (about 2.2 : 1), like the reference layout. */
-    val landscapeCardWidth = 184.dp
-    val landscapeCardHeight = 84.dp
+    val landscapeCardWidth = 236.dp
+    val landscapeCardHeight = 118.dp
 }
 
 /** Animation durations (ms). Animations use [motionSpec] and card zoom uses [focusZoom], which honour Reduce motion. */

@@ -371,5 +371,6 @@
     "discover_type": "Tipo di contenuto",
     "discover_catalog": "Catalogo",
     "discover_genre": "Genere",
-    "discover_no_catalogs": "Nessun catalogo corrispondente. Aggiungi un componente catalogo nelle Impostazioni o cambia il tipo di contenuto."
+    "discover_no_catalogs": "Nessun catalogo corrispondente. Aggiungi un componente catalogo nelle Impostazioni o cambia il tipo di contenuto.",
+    "options": "Opzioni"
 }

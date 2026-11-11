@@ -171,6 +171,7 @@
     <string name="off">Off</string>
     <string name="ok">OK</string>
     <string name="on">On</string>
+    <string name="options">Options</string>
     <string name="original_language">Original-language audio</string>
     <string name="other_sources">Other sources</string>
     <string name="pairing_error">Couldn\'t reach the Stremio account service.</string>

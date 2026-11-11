@@ -316,6 +316,8 @@ fun BrowsePage(
                 .wrapContentHeight(androidx.compose.ui.Alignment.Top, unbounded = true).height(screenH),
         )
         val headerBottomPx = with(density) { headerH.toPx() }
+        // The carved rune pillar down the left edge, over the artwork and under everything else.
+        if (active) com.vyrk.tv.ui.components.RunePillar(Modifier.offset(x = 17.dp).padding(top = 8.dp, bottom = 20.dp))
 
         CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
             LazyColumn(

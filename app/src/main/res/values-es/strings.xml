@@ -171,6 +171,7 @@
     <string name="off">No</string>
     <string name="ok">Aceptar</string>
     <string name="on">Sí</string>
+    <string name="options">Opciones</string>
     <string name="original_language">Audio en idioma original</string>
     <string name="other_sources">Otras fuentes</string>
     <string name="pairing_error">No se pudo conectar con el servicio de cuentas de Stremio.</string>

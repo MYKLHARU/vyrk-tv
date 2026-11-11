@@ -171,6 +171,7 @@
     <string name="off">Désactivé</string>
     <string name="ok">OK</string>
     <string name="on">Activé</string>
+    <string name="options">Options</string>
     <string name="original_language">Audio en version originale</string>
     <string name="other_sources">Autres sources</string>
     <string name="pairing_error">Impossible de joindre le service de comptes Stremio.</string>

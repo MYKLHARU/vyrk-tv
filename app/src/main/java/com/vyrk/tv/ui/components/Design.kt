@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -146,14 +147,83 @@ fun Modifier.glassPanel(shape: Shape = Dimens.panelShape, elevation: Dp = 14.dp,
         .border(1.dp, c.glassEdge, shape)
 }
 
-/** Row heading with a gold rune ahead of it and an optional chevron, like "ᛉ Continue Watching ›". */
+/**
+ * Row heading with a gold rune ahead of it and an optional chevron, like "ᛉ Continue Watching ›".
+ * With [rule], a carved hairline runs on from the title across the row and fades out, so
+ * sections are set apart without boxes.
+ */
 @Composable
-fun SectionHeading(title: String, active: Boolean, modifier: Modifier = Modifier, chevron: Boolean = false) {
+fun SectionHeading(title: String, active: Boolean, modifier: Modifier = Modifier, chevron: Boolean = false, rule: Boolean = false) {
     val c = Vyrk.colors
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+    Row(if (rule) modifier.fillMaxWidth() else modifier, verticalAlignment = Alignment.CenterVertically) {
         RuneGlyph(11.dp, Modifier.padding(end = 8.dp), color = if (active) c.gold else c.gold.copy(alpha = 0.55f))
-        Text(title, style = Vyrk.type.titleL, color = if (active) c.text else c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(title, style = Vyrk.type.titleL, color = if (active) c.text else c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = if (rule) Modifier.weight(1f, fill = false) else Modifier)
         if (chevron) Icon(R.drawable.ic_right, null, Modifier.padding(start = 4.dp).size(14.dp), tint = if (active) c.accent else c.textMuted)
+        if (rule) Box(
+            Modifier.padding(start = 14.dp).weight(1f).height(1.dp)
+                .background(Brush.horizontalGradient(listOf(c.gold.copy(alpha = if (active) 0.45f else 0.24f), c.steel.copy(alpha = 0.35f), Color.Transparent))),
+        )
+    }
+}
+
+/**
+ * A remote key and what it does, like [OK] Resume or [☰] More info: the hero and title header
+ * name their actions this way instead of adding buttons that would change where the arrows go.
+ * [primary] fills the hint with the accent, as the screen's main call to action.
+ */
+@Composable
+fun KeyHint(key: String, label: String, modifier: Modifier = Modifier, primary: Boolean = false, @DrawableRes icon: Int? = null) {
+    val c = Vyrk.colors
+    val ink = if (primary) c.onAccent else c.text
+    Row(
+        modifier.height(26.dp)
+            .then(if (primary) Modifier.shadow(10.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent).background(c.accent, Dimens.pillShape)
+                else Modifier.background(c.shade.copy(alpha = 0.45f), Dimens.pillShape).border(1.dp, c.text.copy(alpha = 0.16f), Dimens.pillShape))
+            .padding(start = 4.dp, end = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        Box(
+            Modifier.height(18.dp).defaultMinSize(minWidth = 22.dp)
+                .border(1.dp, ink.copy(alpha = if (primary) 0.55f else 0.38f), RoundedCornerShape(9.dp)).padding(horizontal = 5.dp),
+            contentAlignment = Alignment.Center,
+        ) { Text(key, style = Vyrk.type.labelS, color = ink, maxLines = 1) }
+        if (icon != null) Icon(icon, null, Modifier.size(10.dp), tint = ink)
+        Text(label, style = Vyrk.type.labelL, color = ink, maxLines = 1, softWrap = false)
+    }
+}
+
+/**
+ * A carved rune pillar down the left edge of the catalogue pages: a fine gold line with knot
+ * bosses and rune marks cut into it, fading in and out. Drawn once; never focusable.
+ */
+@Composable
+fun RunePillar(modifier: Modifier = Modifier) {
+    val gold = Vyrk.colors.gold
+    androidx.compose.foundation.Canvas(modifier.width(14.dp).fillMaxHeight()) {
+        val cx = size.width / 2f
+        val h = size.height
+        val line = Brush.verticalGradient(0f to Color.Transparent, 0.12f to gold.copy(alpha = 0.30f), 0.88f to gold.copy(alpha = 0.30f), 1f to Color.Transparent, startY = 0f, endY = h)
+        drawRect(line, topLeft = Offset(cx - 0.5f, 0f), size = androidx.compose.ui.geometry.Size(1f, h))
+        val r = size.width * 0.32f
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(1.1f)
+        for (k in 1..5) {
+            val y = h * k / 6f
+            val a = if (k == 1 || k == 5) 0.30f else 0.48f
+            val lozenge = androidx.compose.ui.graphics.Path().apply { moveTo(cx, y - r * 1.5f); lineTo(cx + r, y); lineTo(cx, y + r * 1.5f); lineTo(cx - r, y); close() }
+            drawPath(lozenge, Color(0xFF050A0E))
+            drawPath(lozenge, gold.copy(alpha = a), style = stroke)
+            drawCircle(gold.copy(alpha = a), radius = 1.4f, center = Offset(cx, y))
+            // A rune notch between bosses: Algiz and its mirror, alternating.
+            val ny = y + h / 12f
+            if (k < 5) {
+                val up = k % 2 == 0
+                val dy = if (up) -r else r
+                drawLine(gold.copy(alpha = a * 0.8f), Offset(cx, ny), Offset(cx - r, ny + dy), 1.1f)
+                drawLine(gold.copy(alpha = a * 0.8f), Offset(cx, ny), Offset(cx + r, ny + dy), 1.1f)
+            }
+        }
     }
 }
 

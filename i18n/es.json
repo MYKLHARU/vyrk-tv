@@ -371,5 +371,6 @@
     "discover_type": "Tipo de contenido",
     "discover_catalog": "Catálogo",
     "discover_genre": "Género",
-    "discover_no_catalogs": "No hay catálogos compatibles. Añade un complemento de catálogo en Ajustes o cambia el tipo de contenido."
+    "discover_no_catalogs": "No hay catálogos compatibles. Añade un complemento de catálogo en Ajustes o cambia el tipo de contenido.",
+    "options": "Opciones"
 }

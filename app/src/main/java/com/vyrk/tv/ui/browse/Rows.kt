@@ -222,19 +222,20 @@ private fun rankPath(rank: Int): androidx.compose.ui.graphics.Path = rankPaths.g
 }
 
 /**
- * Top 10 rank: the user's number artwork as tall as the poster beside it, in a box 85 : 148 of
- * that height; a wide digit runs to the box's edge and is cut off there.
+ * Top 10 rank: the user's number artwork in antique gold, in a box 85 : 148 of [height]; a wide
+ * digit runs to the box's edge and is cut off there. The row sets it behind the poster's corner.
  */
 @Composable
 fun RankNumber(rank: Int, height: Dp) {
     val glyph = RANK_GLYPHS[rank]
     val path = remember(rank) { rankPath(rank) }
+    val gold = Vyrk.colors.gold
     // The fade to clear on the right, as in the artwork (10 has its own stops).
     val fade = if (glyph != null) arrayOf(0f to Color.White, 0.53f to Color.White, 0.69f to Color.White.copy(alpha = 0.69f), 0.86f to Color.White.copy(alpha = 0.2f), 1f to Color.Transparent)
         else arrayOf(0f to Color.White, 0.50f to Color.White, 0.68f to Color.White.copy(alpha = 0.78f), 0.86f to Color.White.copy(alpha = 0.2f), 1f to Color.Transparent)
     androidx.compose.foundation.Canvas(
         Modifier.size(height * (RANK_VIEW_W / RANK_VIEW_H), height)
-            .graphicsLayer { alpha = glyph?.opacity ?: 0.31f; compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen },
+            .graphicsLayer { alpha = 0.92f; compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen },
     ) {
         val k = size.height / RANK_VIEW_H
         clipRect {
@@ -253,6 +254,8 @@ fun RankNumber(rank: Int, height: Dp) {
                     drawOval(ink, topLeft = androidx.compose.ui.geometry.Offset(95f - 19f, 77f - 46f), size = androidx.compose.ui.geometry.Size(38f, 92f), style = ten)
                 }
             }
+            // Antique gold, bright at the top and dimming downwards, like light on carved metal.
+            drawRect(Brush.verticalGradient(0f to Color(0xFFF3DEB0), 0.45f to gold, 1f to gold.copy(alpha = 0.35f), startY = 0f, endY = size.height), blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn)
             drawRect(Brush.horizontalGradient(*fade, startX = 0f, endX = size.width), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
         }
     }
@@ -305,7 +308,7 @@ fun BrowseRow(
 
     Column(Modifier.fillMaxWidth()) {
         val landscape = row.kind == RowKind.CONTINUE
-        com.vyrk.tv.ui.components.SectionHeading(row.title, active = hasFocus, chevron = landscape, modifier = Modifier.padding(start = Dimens.screenMargin, bottom = 8.dp))
+        com.vyrk.tv.ui.components.SectionHeading(row.title, active = hasFocus, chevron = landscape, rule = true, modifier = Modifier.padding(start = Dimens.screenMargin, end = Dimens.screenMargin, bottom = 10.dp))
         // Continue Watching is landscape (16:9 backdrops); other rows are posters.
         val height = if (landscape) Dimens.landscapeCardHeight else posterWidth * 1.5f
         when {
@@ -326,7 +329,7 @@ fun BrowseRow(
                 LazyRow(
                     state = listState,
                     contentPadding = PaddingValues(horizontal = Dimens.screenMargin),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(if (landscape) 18.dp else 14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(height + 12.dp)
@@ -360,13 +363,18 @@ fun BrowseRow(
                             onLongClick = { callbacks.onLongClick(meta, i) },
                             onPlayPause = { callbacks.onPlayPause(meta, i) },
                             traceLabel = "poster:${row.key}#$i",
-                        ) else Row(verticalAlignment = Alignment.Bottom) {
-                            if (top10) RankNumber(i + 1, height)
+                        ) else Box(contentAlignment = Alignment.BottomStart) {
+                            // Top 10: a rank a little over half the poster's height, tucked behind its
+                            // lower-left corner, so the number frames the artwork instead of outweighing it.
+                            val rankH = height * 0.60f
+                            val rankW = rankH * (RANK_VIEW_W / RANK_VIEW_H)
+                            if (top10) RankNumber(i + 1, rankH)
                             Poster(
                                 meta = meta,
                                 width = posterWidth,
                                 state = posterState(library[meta.id], newEpisodes[meta.id].orEmpty()),
-                                modifier = req.onFocusChanged { if (it.isFocused) callbacks.onFocused(meta, i) },
+                                modifier = (if (top10) Modifier.padding(start = rankW * 0.86f) else Modifier)
+                                    .then(req).onFocusChanged { if (it.isFocused) callbacks.onFocused(meta, i) },
                                 onClick = { callbacks.onClick(meta, i) },
                                 onLongClick = { callbacks.onLongClick(meta, i) },
                                 onPlayPause = { callbacks.onPlayPause(meta, i) },
@@ -405,7 +413,7 @@ private fun continueLabel(item: LibraryItem?): String? {
 
 /**
  * Continue Watching card, landscape: the title's backdrop with its logo, a play button, a slim
- * accent progress bar and what's left (episode and time). Watched titles carry a tick. Same keys
+ * accent progress bar and what's left (episode and time). Same keys
  * and focus behaviour as a poster (Menu opens the item menu, Play/Pause plays).
  */
 @Composable
@@ -443,12 +451,13 @@ fun ContinueCard(
             },
         shape = ClickableSurfaceDefaults.shape(Dimens.posterShape),
         colors = ClickableSurfaceDefaults.colors(containerColor = c.raised, focusedContainerColor = c.raised),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.07f)),
+        // Restrained: a slight lift, a cyan edge and a soft halo; neighbours never get covered.
+        scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.04f)),
         border = ClickableSurfaceDefaults.border(
-            border = Border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.07f))),
-            focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent.copy(alpha = 0.85f))),
+            border = Border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))),
+            focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent.copy(alpha = 0.9f))),
         ),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.35f), 10.dp)),
     ) {
         Box(Modifier.fillMaxSize()) {
             // The title's backdrop, then Cinemeta's, then its poster; never blank.
@@ -459,32 +468,26 @@ fun ContinueCard(
             val url = candidates.getOrNull(attempt)
             if (url != null) AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
             else Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(c.raised, c.panel))))
-            // Dark from the left under the logo, and from the bottom under the controls.
-            Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.62f to Color.Transparent)))
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.42f to Color.Transparent, 1f to c.shade.copy(alpha = if (focused) 0.75f else 0.88f))))
-            Box(Modifier.align(Alignment.TopStart).padding(start = 10.dp, top = 9.dp).width(width * 0.52f).height(height * 0.46f), contentAlignment = Alignment.BottomStart) {
+            // Dark from the left under the logo, and from the bottom under the episode line.
+            Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.72f), 0.58f to Color.Transparent)))
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.38f to Color.Transparent, 1f to c.shade.copy(alpha = if (focused) 0.82f else 0.92f))))
+            Box(Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 11.dp).width(width * 0.5f).height(height * 0.40f), contentAlignment = Alignment.BottomStart) {
                 val logos = remember(meta.type, meta.id, meta.logo, meta.imdbId) { com.vyrk.core.art.Artwork.logos(meta, null, null) }
-                HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.52f, height * 0.46f, Vyrk.type.titleS, Modifier.fillMaxHeight())
+                HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.5f, height * 0.40f, Vyrk.type.titleM, Modifier.fillMaxHeight())
             }
-            if (item?.watched == true) {
-                Box(Modifier.align(Alignment.TopEnd).padding(7.dp).size(17.dp).background(c.accent, CircleShape), contentAlignment = Alignment.Center) {
-                    Icon(R.drawable.ic_check, null, Modifier.size(10.dp), tint = c.onAccent)
-                }
-            }
-            Row(
-                Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 8.dp, end = 9.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
-            ) {
-                Box(
-                    Modifier.size(20.dp).background(if (focused) c.accent else Color.Black.copy(alpha = 0.35f), CircleShape)
-                        .border(1.dp, if (focused) c.accent else Color.White.copy(alpha = 0.75f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) { Icon(R.drawable.ic_play, null, Modifier.padding(start = 1.dp).size(9.dp), tint = if (focused) c.onAccent else Color.White) }
-                Box(Modifier.weight(1f).height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.25f))) {
+            // No watched tick here: "watched" means finished at least once before, which a card in
+            // this row is not, now; the card shows where you are instead.
+            Box(
+                Modifier.align(Alignment.TopEnd).padding(9.dp).size(24.dp)
+                    .background(if (focused) c.accent else c.shade.copy(alpha = 0.45f), CircleShape)
+                    .border(1.dp, if (focused) c.accent else Color.White.copy(alpha = 0.45f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Icon(R.drawable.ic_play, null, Modifier.padding(start = 1.dp).size(10.dp), tint = if (focused) c.onAccent else Color.White.copy(alpha = 0.9f)) }
+            Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 10.dp)) {
+                if (label != null) Text(label, style = Vyrk.type.labelL, color = c.text, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(2.5.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.18f))) {
                     if (progress > 0f) Box(Modifier.fillMaxWidth(progress.coerceIn(0.03f, 1f)).fillMaxHeight().clip(RoundedCornerShape(2.dp)).background(c.accent))
                 }
-                if (label != null) Text(label, style = Vyrk.type.labelS, color = c.text, maxLines = 1, softWrap = false)
             }
         }
     }

@@ -171,6 +171,7 @@
     <string name="off">Aus</string>
     <string name="ok">OK</string>
     <string name="on">An</string>
+    <string name="options">Optionen</string>
     <string name="original_language">Audio in Originalsprache</string>
     <string name="other_sources">Andere Quellen</string>
     <string name="pairing_error">Der Stremio-Kontodienst ist nicht erreichbar.</string>

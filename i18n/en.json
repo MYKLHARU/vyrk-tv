@@ -371,5 +371,6 @@
     "discover_type": "Content type",
     "discover_catalog": "Catalogue",
     "discover_genre": "Genre",
-    "discover_no_catalogs": "No matching catalogues. Add a catalogue add-on in Settings or change content type."
+    "discover_no_catalogs": "No matching catalogues. Add a catalogue add-on in Settings or change content type.",
+    "options": "Options"
 }

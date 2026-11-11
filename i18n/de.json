@@ -371,5 +371,6 @@
     "discover_type": "Inhaltstyp",
     "discover_catalog": "Katalog",
     "discover_genre": "Genre",
-    "discover_no_catalogs": "Keine passenden Kataloge. Füge in den Einstellungen ein Katalog-Add-on hinzu oder ändere den Inhaltstyp."
+    "discover_no_catalogs": "Keine passenden Kataloge. Füge in den Einstellungen ein Katalog-Add-on hinzu oder ändere den Inhaltstyp.",
+    "options": "Optionen"
 }

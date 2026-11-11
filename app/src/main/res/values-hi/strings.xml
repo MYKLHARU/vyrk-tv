@@ -171,6 +171,7 @@
     <string name="off">बंद</string>
     <string name="ok">ठीक है</string>
     <string name="on">चालू</string>
+    <string name="options">विकल्प</string>
     <string name="original_language">मूल भाषा का ऑडियो</string>
     <string name="other_sources">दूसरे स्रोत</string>
     <string name="pairing_error">Stremio खाता सेवा तक पहुँच नहीं हो सकी।</string>
