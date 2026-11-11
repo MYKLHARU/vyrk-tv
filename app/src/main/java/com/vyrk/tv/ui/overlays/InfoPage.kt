@@ -121,9 +121,9 @@ private val ACTION_H = 46.dp
 
 /**
  * The title page, all on one screen. On the left, over the title's own artwork: logo, facts,
- * synopsis, people and Play / Trailer / library / more. On the right, a panel with tabs: episodes
- * for a series or sources for a film, then the details, credits and cast (the more button opens
- * them). Back in the panel returns to Play; Back on Play closes the page.
+ * synopsis, people and Play / Trailer / library / watched / info. The info button opens and closes
+ * a panel on the right with tabs: episodes for a series or sources for a film, then the details,
+ * credits and cast. Back with the panel open closes it; Back again closes the page.
  */
 @Composable
 fun InfoPage(o: Overlay.Info) {
@@ -156,7 +156,8 @@ fun InfoPage(o: Overlay.Info) {
     val tabs = buildList { if (isSeries) add(PanelTab.EPISODES) else if (showSourcesPanel) add(PanelTab.SOURCES); add(PanelTab.DETAILS) }
     var tab by remember(meta.id) { mutableStateOf<PanelTab?>(null) }
     val shownTab = tab?.takeIf { it in tabs } ?: tabs.first()
-    var panelFocused by remember { mutableStateOf(false) }
+    // The panel is closed until the info button (or "+N more") opens it.
+    var panelOpen by remember(meta.id) { mutableStateOf(o.showSources) }
     val tabReq = remember { FocusRequester() }
 
     fun loadSources() {
@@ -180,7 +181,7 @@ fun InfoPage(o: Overlay.Info) {
     }
     // Focus moves once the tab's content has been laid out.
     fun focusSoon(req: FocusRequester) = scope.launch { repeat(2) { androidx.compose.runtime.withFrameNanos { } }; runCatching { req.requestFocus() } }
-    fun toDetails() { tab = PanelTab.DETAILS; focusSoon(detailsReq) }
+    fun toDetails() { panelOpen = true; tab = PanelTab.DETAILS; focusSoon(detailsReq) }
     LaunchedEffect(meta.id) {
         if (!isSeries && settings.loadSourcesOnOpen && showSourcesPanel) loadSources()
         if (o.showSources) {
@@ -190,10 +191,10 @@ fun InfoPage(o: Overlay.Info) {
         } else runCatching { playReq.requestFocus() }
     }
 
-    // Back in the panel returns to Play. Back reaches dialogs through the back dispatcher on
-    // Android 13+, not as a key event, so this has to be a BackHandler (it runs before the
-    // window's own Back, which closes the page).
-    androidx.activity.compose.BackHandler(enabled = panelFocused) { runCatching { playReq.requestFocus() } }
+    // Back with the panel open closes it and returns to Play. Back reaches dialogs through the back
+    // dispatcher on Android 13+, not as a key event, so this has to be a BackHandler (it runs
+    // before the window's own Back, which closes the page).
+    androidx.activity.compose.BackHandler(enabled = panelOpen) { runCatching { playReq.requestFocus() }; panelOpen = false }
 
     val c = Vyrk.colors
     val art = rememberTitleArt(meta, full, metadataLoading = details.loading)
@@ -235,9 +236,13 @@ fun InfoPage(o: Overlay.Info) {
                     VyrkIconButton(if (inLib) R.drawable.ic_check else R.drawable.ic_plus, str(if (inLib) R.string.in_library else R.string.add_to_library),
                         onClick = { if (inLib) session.removeFromLibrary(meta.id) else session.addToLibrary(meta) },
                         size = ACTION_H, modifier = Modifier.traceFocus("info:library"))
-                    VyrkIconButton(R.drawable.ic_info, str(R.string.more), onClick = { toDetails() }, size = ACTION_H,
-                        // Right goes on into the panel, not up to the people above.
-                        modifier = Modifier.focusProperties { right = if (tabs.size > 1) tabReq else detailsReq }.traceFocus("info:more"))
+                    val watched = item?.watched == true
+                    VyrkIconButton(R.drawable.ic_eye, str(if (watched) R.string.mark_unwatched else R.string.mark_watched),
+                        onClick = { session.markWatched(meta, !watched) }, size = ACTION_H, active = watched, modifier = Modifier.traceFocus("info:mark_watched"))
+                    // Opens and closes the panel; it stays lit while the panel is open.
+                    VyrkIconButton(R.drawable.ic_info, str(R.string.more), onClick = { panelOpen = !panelOpen }, size = ACTION_H, active = panelOpen,
+                        // Right goes on into the open panel, not up to the people above.
+                        modifier = Modifier.focusProperties { right = if (!panelOpen) FocusRequester.Cancel else if (tabs.size > 1) tabReq else detailsReq }.traceFocus("info:more"))
                 }
                 if (item?.isInContinueWatching == true && item.progress > 0f) {
                     Spacer(Modifier.height(12.dp))
@@ -245,10 +250,9 @@ fun InfoPage(o: Overlay.Info) {
                 }
             }
             // ---- The panel: episodes or sources, and the details ----
-            Column(
+            if (panelOpen) Column(
                 Modifier.weight(1f).fillMaxHeight()
                     .onFocusChanged {
-                        panelFocused = it.hasFocus
                         if (it.hasFocus && !isSeries && showSourcesPanel && sources is SourcesState.Idle) loadSources()
                     }
                     .focusGroup()

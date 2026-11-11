@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.30
+
+- Movie and series pages: a Watched button beside + (gold when the title is marked watched; press again to mark it unwatched).
+- The info button now opens and closes the Episodes / Sources / Details panel, which starts closed so the title shows over its artwork. Back with the panel open closes it.
+
 ## v0.1.29
 
 - Movie and series pages now fit on one screen: the title, facts, synopsis, people and buttons on the left, and a panel on the right with Episodes (series) or Sources (films) and a Details tab with the full synopsis, Mark watched, credits and cast. More (or "+N more") opens Details; Back from the panel returns to Play.

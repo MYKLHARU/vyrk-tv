@@ -105,6 +105,8 @@ fun VyrkIconButton(
     size: Dp = Dimens.buttonHeight,
     shape: Shape = CircleShape,
     onLongClick: (() -> Unit)? = null,
+    /** An on/off button that is on: filled gold. */
+    active: Boolean = false,
 ) {
     val c = Vyrk.colors
     Surface(
@@ -113,7 +115,7 @@ fun VyrkIconButton(
         modifier = modifier.size(size).semantics { contentDescription = description },
         shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = c.raised.copy(alpha = 0.8f), contentColor = c.text,
+            containerColor = if (active) c.gold else c.raised.copy(alpha = 0.8f), contentColor = if (active) c.background else c.text,
             focusedContainerColor = c.text, focusedContentColor = c.background,
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
