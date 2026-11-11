@@ -1,5 +1,6 @@
 package com.vyrk.tv.ui.screens
 
+import com.vyrk.tv.ui.components.centeredGlow
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import com.vyrk.tv.ui.theme.motionSpec
@@ -174,7 +175,7 @@ fun MainScreen(session: ProfileSession) {
             if (!loaded) return@Box
             when (app.section) {
                 Section.SEARCH -> SearchScreen(session)
-                Section.SETTINGS -> SettingsScreen(session)
+                Section.SETTINGS -> com.vyrk.tv.ui.components.MenuColors { SettingsScreen(session) }
                 Section.TABS -> if (shownTab == Tab.LIBRARY) LibraryScreen(session, onPlay)
             }
             val onTabs = app.section == Section.TABS
@@ -263,20 +264,21 @@ fun tabIcon(t: Tab): Int = when (t) {
 }
 
 /**
- * A top-bar tab: icon and label. The open tab is a cyan-edged pill with a soft glow; the focused
- * tab fills with the accent. Changes animate unless Reduce motion is on.
+ * A top-bar tab: gold icon and label. The focused tab is a gold-edged pill with a soft gold glow;
+ * the open tab has a gold rune knot under it. Changes animate unless Reduce motion is on.
  */
 @Composable
 private fun NavTab(label: String, icon: Int, active: Boolean, requester: FocusRequester, onSelect: () -> Unit, trace: String) {
     var focused by remember { mutableStateOf(false) }
     val c = Vyrk.colors
     val fill by androidx.compose.animation.animateColorAsState(
-        if (focused) c.accent.copy(alpha = 0.24f) else Color.Transparent, motionSpec(Motion.FAST), label = "tab-fill")
+        if (focused) c.goldActive else Color.Transparent, motionSpec(Motion.FAST), label = "tab-fill")
     val edge by androidx.compose.animation.animateColorAsState(
-        if (focused) c.accent else Color.Transparent, motionSpec(Motion.FAST), label = "tab-edge")
-    // Two different marks: remote focus is a frosted cyan pill with a lit edge; the open tab is a
-    // gold rune knot under its label (and a gold icon), so the two never read as the same thing.
-    val ink = if (focused || active) c.text else c.textSecondary
+        if (focused) c.gold else Color.Transparent, motionSpec(Motion.FAST), label = "tab-edge")
+    // Two different marks: remote focus is a gold-edged pill with a soft glow; the open tab is a
+    // gold rune knot under its label, so the two never read as the same thing.
+    val ink = if (focused) c.goldHighlight else c.gold
+    val halo by androidx.compose.animation.core.animateFloatAsState(if (focused) 1f else 0f, motionSpec(Motion.FAST), label = "tab-halo")
     val mark by androidx.compose.animation.core.animateFloatAsState(if (active) 1f else 0f, motionSpec(Motion.STANDARD), label = "tab-mark")
     androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
     // Same space above as the mark takes below, so the label stays level with Search and Settings.
@@ -289,14 +291,14 @@ private fun NavTab(label: String, icon: Int, active: Boolean, requester: FocusRe
             .semantics { role = Role.Tab; contentDescription = label }
             .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onSelect(); true } else false }
             .focusable()
-            .then(if (focused) Modifier.shadow(14.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
+            .centeredGlow(c.goldGlow, alpha = halo)
             .background(fill, Dimens.pillShape)
             .border(1.dp, edge, Dimens.pillShape)
             .padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
-        Icon(icon, null, Modifier.size(15.dp), tint = when { focused -> c.accent; active -> c.gold; else -> ink })
+        Icon(icon, null, Modifier.size(15.dp), tint = ink)
         Text(label, style = Vyrk.type.titleS, color = ink, maxLines = 1)
     }
     val gold = c.gold
@@ -324,15 +326,15 @@ private fun SearchPill(active: Boolean, requester: FocusRequester, modifier: Mod
             .semantics { contentDescription = desc; role = Role.Button }
             .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onSelect(); true } else false }
             .focusable()
-            .then(if (focused) Modifier.shadow(14.dp, Dimens.pillShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
-            .background(if (focused) c.text else c.raised.copy(alpha = 0.55f), Dimens.pillShape)
-            .border(1.dp, if (active && !focused) c.accent.copy(alpha = 0.7f) else c.glassEdge, Dimens.pillShape)
+            .centeredGlow(c.goldGlow, alpha = if (focused) 1f else 0f)
+            .background(if (focused) c.goldActive else c.raised.copy(alpha = 0.55f), Dimens.pillShape)
+            .border(1.dp, when { focused -> c.gold; active -> c.gold.copy(alpha = 0.7f); else -> c.glassEdge }, Dimens.pillShape)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(R.drawable.ic_search, null, Modifier.size(15.dp), tint = if (focused) c.background else c.textSecondary)
-        Text(str(R.string.search), style = Vyrk.type.labelL, color = if (focused) c.background else c.textMuted, maxLines = 1,
+        Icon(R.drawable.ic_search, null, Modifier.size(15.dp), tint = if (focused) c.goldHighlight else c.gold)
+        Text(str(R.string.search), style = Vyrk.type.labelL, color = if (focused) c.goldHighlight else c.gold.copy(alpha = 0.75f), maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
@@ -351,12 +353,12 @@ private fun NavGear(active: Boolean, requester: FocusRequester, onSelect: () -> 
             .semantics { contentDescription = desc; role = Role.Button }
             .onKeyEvent { e -> if (e.type == KeyEventType.KeyUp && (e.key == Key.DirectionCenter || e.key == Key.Enter)) { onSelect(); true } else false }
             .focusable()
-            .then(if (focused) Modifier.shadow(14.dp, CircleShape, clip = false, ambientColor = c.accent, spotColor = c.accent) else Modifier)
-            .background(if (focused) c.text else c.raised.copy(alpha = 0.55f), CircleShape)
-            .border(1.dp, when { focused -> c.text; active -> c.accent.copy(alpha = 0.7f); else -> c.glassEdge }, CircleShape),
+            .centeredGlow(c.goldGlow, spread = 12.dp, alpha = if (focused) 1f else 0f)
+            .background(if (focused) c.goldActive else c.raised.copy(alpha = 0.55f), CircleShape)
+            .border(1.dp, when { focused -> c.gold; active -> c.gold.copy(alpha = 0.7f); else -> c.glassEdge }, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(R.drawable.ic_cog, null, Modifier.size(18.dp), tint = when { focused -> c.background; active -> c.accent; else -> c.textSecondary })
+        Icon(R.drawable.ic_cog, null, Modifier.size(18.dp), tint = if (focused) c.goldHighlight else c.gold)
     }
 }
 

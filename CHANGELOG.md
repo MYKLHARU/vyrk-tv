@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.35
+
+- Menus and Settings use the VYRK gold: top bar labels and icons, the focused tab, Search and the settings button, the Settings list, choice pills, switches, checkboxes, colour swatches, the title options menu and dialogs, the Add-ons page, and the player's Audio & subtitles list. The Accent colour setting still colours content (Watch now, posters, the player timeline).
+- The glow behind the focused top-bar item and Settings category is centred (it used to fall down and to the left).
+
 ## v0.1.34
 
 - The title header no longer shows the OK / Options / Preview key hints.

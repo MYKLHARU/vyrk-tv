@@ -142,7 +142,7 @@ fun AddonActions(session: ProfileSession, typing: String?, onTyping: (String?) -
     LaunchedEffect(typing == null) { if (typing == null && refocus) { refocus = false; runCatching { installReq.requestFocus() } } }
     if (typing == null) {
         WrapRow(spacing = 6.dp) {
-            VyrkButton(str(R.string.install_from_url), icon = R.drawable.ic_plus, style = ButtonStyle.PRIMARY, shape = Dimens.pillShape, glow = true, onClick = { refocus = true; onTyping("") },
+            VyrkButton(str(R.string.install_from_url), icon = R.drawable.ic_plus, style = ButtonStyle.BRAND, shape = Dimens.pillShape, glow = true, onClick = { refocus = true; onTyping("") },
                 modifier = Modifier.focusRequester(installReq).traceFocus("addons:install_url"))
             if (account is AccountState.Connected) VyrkButton(str(R.string.save_to_account), onClick = { scope.launch { if (session.saveAddonsToAccount()) app.showToast(savedMsg) } }, modifier = Modifier.traceFocus("addons:save"))
         }
@@ -150,14 +150,14 @@ fun AddonActions(session: ProfileSession, typing: String?, onTyping: (String?) -
             Text(str(R.string.addons_pending_sync), style = Vyrk.type.bodyS, color = c.textMuted)
         return
     }
-    Column(Modifier.fillMaxWidth().background(c.panel.copy(alpha = 0.72f), RoundedCornerShape(16.dp)).border(1.dp, c.accent.copy(alpha = 0.35f), RoundedCornerShape(16.dp)).padding(16.dp)) {
+    Column(Modifier.fillMaxWidth().background(c.panel.copy(alpha = 0.72f), RoundedCornerShape(16.dp)).border(1.dp, c.gold.copy(alpha = 0.35f), RoundedCornerShape(16.dp)).padding(16.dp)) {
         Text(str(R.string.addon_url), style = Vyrk.type.labelL, color = c.textMuted)
         Text(typing.ifEmpty { "https://…/manifest.json" }, style = Vyrk.type.titleM, color = if (typing.isEmpty()) c.textMuted else c.text, maxLines = 3)
         Spacer(Modifier.height(10.dp))
         UrlKeyboard(onChar = { onTyping(typing + it) }, onBackspace = { onTyping(typing.dropLast(1)) }, onClear = { onTyping("") })
         Spacer(Modifier.height(10.dp))
         WrapRow {
-            VyrkButton(str(R.string.next), style = ButtonStyle.PRIMARY, onClick = {
+            VyrkButton(str(R.string.next), style = ButtonStyle.BRAND, onClick = {
                 val input = typing; onTyping(null)
                 val url = com.vyrk.core.addon.AddonUrls.normaliseInstallUrl(input) ?: input
                 app.push(Overlay.InstallConfirm(null, url, external = false))
@@ -187,7 +187,7 @@ fun AddonCard(session: ProfileSession, d: com.vyrk.core.addon.Descriptor, index:
     Column(
         Modifier.fillMaxWidth().onFocusChanged { within = it.hasFocus }
             .background(if (within) c.raised.copy(alpha = 0.78f) else c.panel.copy(alpha = 0.66f), shape)
-            .border(1.dp, if (within) c.accent.copy(alpha = 0.42f) else c.text.copy(alpha = 0.07f), shape)
+            .border(1.dp, if (within) c.gold.copy(alpha = 0.45f) else c.text.copy(alpha = 0.07f), shape)
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -213,7 +213,7 @@ fun AddonCard(session: ProfileSession, d: com.vyrk.core.addon.Descriptor, index:
         Spacer(Modifier.height(6.dp))
         WrapRow(spacing = 5.dp) {
             m.resources.forEach { Tag(it.name) }
-            m.types.forEach { Tag(it, background = c.accent.copy(alpha = 0.18f), color = c.accent) }
+            m.types.forEach { Tag(it, background = c.gold.copy(alpha = 0.16f), color = c.gold) }
         }
         if (skipped) Text(str(R.string.needs_streaming_server), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
         if (com.vyrk.core.addon.AddonUrls.isUnencryptedPublic(d.transportUrl)) Text(str(R.string.addon_not_encrypted), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))

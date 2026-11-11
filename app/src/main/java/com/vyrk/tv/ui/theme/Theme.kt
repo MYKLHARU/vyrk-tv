@@ -18,7 +18,7 @@ import androidx.tv.material3.darkColorScheme
 import com.vyrk.tv.R
 
 /**
- * VYRK palette: obsidian surfaces with a frost-blue accent. Values are on the 960×540 design
+ * VYRK palette: obsidian surfaces, brand gold for menus and a frost-blue content accent. Values are on the 960×540 design
  * canvas; see [FittedDensity].
  */
 @Immutable
@@ -48,8 +48,21 @@ data class VyrkColors(
     val ambientViolet: Color = Color(0xFF1E5C8C),
     /** Nordic steel: card and control surfaces between [raised] and the borders. */
     val steel: Color = Color(0xFF1B313D),
-    /** Antique gold, for the VYRK brand, rune ornaments and section accents only, never for focus. */
+    /**
+     * Brand gold, sampled from the V logo and the HOME eyebrow. Menus and settings (top bar,
+     * Settings, option lists, toggles, checks, choice pills, context and player menus) use the gold
+     * set below for labels, icons, selection and focus; the Accent colour setting still colours
+     * content (Watch now, posters, the player timeline).
+     */
     val gold: Color = Color(0xFFD4A65A),
+    /** Lighter gold from the logo's lit facet: focused menu labels and icons. */
+    val goldHighlight: Color = Color(0xFFF3DEB0),
+    /** Text and icons on a solid gold fill. */
+    val onGold: Color = Color(0xFF1A1206),
+    /** Subtle wash behind an active or selected menu item. */
+    val goldActive: Color = Color(0xFFD4A65A).copy(alpha = 0.10f),
+    /** Soft halo around a focused menu item. */
+    val goldGlow: Color = Color(0xFFD4A65A).copy(alpha = 0.25f),
     /** Soft frost, for secondary highlights on dark glass. */
     val frostSoft: Color = Color(0xFFA9E1F3),
 )

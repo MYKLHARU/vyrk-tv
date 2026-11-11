@@ -84,10 +84,10 @@ fun Overlays() {
             OverlayWindow(onDismiss = { closeOverlay(app, o) }) {
                 when (o) {
                     is Overlay.Info -> InfoPage(o)
-                    is Overlay.ItemMenu -> ItemMenu(o)
-                    is Overlay.InstallConfirm -> InstallConfirm(o)
-                    is Overlay.AddonQr -> AddonQr(o)
-                    is Overlay.Message -> MessageBox(o)
+                    is Overlay.ItemMenu -> com.vyrk.tv.ui.components.MenuColors { ItemMenu(o) }
+                    is Overlay.InstallConfirm -> com.vyrk.tv.ui.components.MenuColors { InstallConfirm(o) }
+                    is Overlay.AddonQr -> com.vyrk.tv.ui.components.MenuColors { AddonQr(o) }
+                    is Overlay.Message -> com.vyrk.tv.ui.components.MenuColors { MessageBox(o) }
                     is Overlay.SeeAll -> SeeAll(o)
                     is Overlay.Person -> PersonPage(o)
                 }
@@ -163,7 +163,7 @@ private fun ItemMenu(o: Overlay.ItemMenu) {
             Text(o.meta.name, style = Vyrk.type.headlineS, color = c.text, maxLines = 2)
             Spacer(Modifier.height(4.dp))
             val full = Modifier.fillMaxWidth()
-            VyrkButton(str(if (inCw) R.string.resume else R.string.play), icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY, modifier = full.focusRequester(first).traceFocus("menu:play"), onClick = {
+            VyrkButton(str(if (inCw) R.string.resume else R.string.play), icon = R.drawable.ic_play, style = ButtonStyle.BRAND, modifier = full.focusRequester(first).traceFocus("menu:play"), onClick = {
                 app.overlays.remove(o); Playback.start(activity, graph, session, o.meta, origin = o.origin); o.origin?.let { app.restore = it }
             })
             if (inCw) VyrkButton(str(R.string.remove_from_cw), icon = R.drawable.ic_close, modifier = full.traceFocus("menu:remove_cw"), onClick = {
@@ -224,7 +224,7 @@ private fun InstallConfirm(o: Overlay.InstallConfirm) {
                 Spacer(Modifier.height(8.dp))
                 WrapRow(spacing = 6.dp) {
                     d.manifest.resources.forEach { Tag(it.name) }
-                    d.manifest.types.forEach { Tag(it, background = Vyrk.colors.accent.copy(alpha = 0.18f), color = Vyrk.colors.accent) }
+                    d.manifest.types.forEach { Tag(it, background = Vyrk.colors.gold.copy(alpha = 0.16f), color = Vyrk.colors.gold) }
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(Redact.url(d.transportUrl), style = Vyrk.type.labelM, color = Vyrk.colors.textMuted)
@@ -234,7 +234,7 @@ private fun InstallConfirm(o: Overlay.InstallConfirm) {
         }
         Spacer(Modifier.height(18.dp))
         WrapRow {
-            if (d != null && !needsServer) VyrkButton(str(R.string.install), style = ButtonStyle.PRIMARY, modifier = Modifier.focusRequester(first).traceFocus("install:confirm"), onClick = {
+            if (d != null && !needsServer) VyrkButton(str(R.string.install), style = ButtonStyle.BRAND, modifier = Modifier.focusRequester(first).traceFocus("install:confirm"), onClick = {
                 scope.launch { session.install(d); app.showToast(installedMsg) }
                 app.overlays.remove(o)
             })
@@ -261,7 +261,7 @@ private fun AddonQr(o: Overlay.AddonQr) {
                 Spacer(Modifier.height(8.dp))
                 Text(Redact.url(url), style = Vyrk.type.labelM, color = Vyrk.colors.textMuted)
                 Spacer(Modifier.height(16.dp))
-                VyrkButton(str(R.string.done), style = ButtonStyle.PRIMARY, modifier = Modifier.focusRequester(first), onClick = { app.overlays.remove(o) })
+                VyrkButton(str(R.string.done), style = ButtonStyle.BRAND, modifier = Modifier.focusRequester(first), onClick = { app.overlays.remove(o) })
             }
         }
     }
@@ -277,7 +277,7 @@ private fun MessageBox(o: Overlay.Message) {
         Spacer(Modifier.height(8.dp))
         Text(o.body, style = Vyrk.type.bodyM, color = Vyrk.colors.textSecondary)
         Spacer(Modifier.height(16.dp))
-        VyrkButton(str(R.string.ok), style = ButtonStyle.PRIMARY, modifier = Modifier.focusRequester(first), onClick = { app.overlays.remove(o) })
+        VyrkButton(str(R.string.ok), style = ButtonStyle.BRAND, modifier = Modifier.focusRequester(first), onClick = { app.overlays.remove(o) })
     }
 }
 

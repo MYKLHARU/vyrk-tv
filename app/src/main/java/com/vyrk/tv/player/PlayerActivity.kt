@@ -564,9 +564,9 @@ private fun TrackRow(name: String, tag: String?, selected: Boolean, trace: Strin
         onClick = onClick,
         modifier = modifier.fillMaxWidth().traceFocus(trace).semantics { contentDescription = listOfNotNull(name, tag).joinToString(", ") },
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
-        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(containerColor = Color.Transparent, contentColor = c.text, focusedContainerColor = c.raised, focusedContentColor = c.text),
+        colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(containerColor = Color.Transparent, contentColor = c.text, focusedContainerColor = c.gold.copy(alpha = 0.16f), focusedContentColor = c.goldHighlight),
         scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.02f),
-        border = androidx.tv.material3.ClickableSurfaceDefaults.border(border = androidx.tv.material3.Border.None, focusedBorder = androidx.tv.material3.Border.None),
+        border = androidx.tv.material3.ClickableSurfaceDefaults.border(border = androidx.tv.material3.Border.None, focusedBorder = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.gold))),
         glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
     ) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -576,7 +576,7 @@ private fun TrackRow(name: String, tag: String?, selected: Boolean, trace: Strin
                 Text(tag, style = Vyrk.type.bodyM, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
             }
             Spacer(Modifier.weight(1f))
-            if (selected) com.vyrk.tv.ui.components.Icon(R.drawable.ic_check, null, Modifier.size(18.dp), tint = c.accent)
+            if (selected) com.vyrk.tv.ui.components.Icon(R.drawable.ic_check, null, Modifier.size(18.dp), tint = c.gold)
         }
     }
 }
@@ -584,7 +584,7 @@ private fun TrackRow(name: String, tag: String?, selected: Boolean, trace: Strin
 @Composable
 private fun SectionHeader(text: String) {
     Text(text.uppercase(), style = Vyrk.type.labelL.copy(letterSpacing = androidx.compose.ui.unit.TextUnit(2f, androidx.compose.ui.unit.TextUnitType.Sp)),
-        color = Vyrk.colors.accent, modifier = Modifier.padding(start = 2.dp, top = 14.dp, bottom = 4.dp))
+        color = Vyrk.colors.gold, modifier = Modifier.padding(start = 2.dp, top = 14.dp, bottom = 4.dp))
 }
 
 private fun codecName(mime: String?): String? {

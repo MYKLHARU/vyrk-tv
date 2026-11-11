@@ -1,5 +1,6 @@
 package com.vyrk.tv.ui.screens
 
+import com.vyrk.tv.ui.components.centeredGlow
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.focusable
 import androidx.compose.ui.draw.clip
@@ -210,13 +211,13 @@ private val TILE_SHAPE = RoundedCornerShape(14.dp)
 
 /**
  * A setting's tile: dark steel glass with a hairline edge. While focus is inside it, the tile
- * lifts slightly and its edge lights cyan, so the row being changed is always obvious.
+ * lifts slightly and its edge lights gold, so the row being changed is always obvious.
  */
 @Composable
 private fun Modifier.settingTile(): Modifier {
     val c = Vyrk.colors
     var within by remember { mutableStateOf(false) }
-    val edge by androidx.compose.animation.animateColorAsState(if (within) c.accent.copy(alpha = 0.42f) else c.text.copy(alpha = 0.07f), com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.FAST), label = "tile-edge")
+    val edge by androidx.compose.animation.animateColorAsState(if (within) c.gold.copy(alpha = 0.45f) else c.text.copy(alpha = 0.07f), com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.FAST), label = "tile-edge")
     val fill by androidx.compose.animation.animateColorAsState(if (within) c.raised.copy(alpha = 0.78f) else c.panel.copy(alpha = 0.66f), com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.FAST), label = "tile-fill")
     return this.onFocusChanged { within = it.hasFocus }
         .background(fill, TILE_SHAPE)
@@ -294,7 +295,7 @@ private fun SettingPair(left: @Composable (split: Boolean) -> Unit, right: @Comp
 
 /**
  * A category. The open one carries a gold bar and a gold-lit icon on dark steel; remote focus is a
- * frosted cyan pill with a lit edge. They combine when the open category also has focus.
+ * soft gold pill with a lit gold edge. They combine when the open category also has focus.
  */
 @Composable
 private fun SidebarEntry(g: Group, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -303,19 +304,20 @@ private fun SidebarEntry(g: Group, selected: Boolean, onClick: () -> Unit, modif
     val shape = RoundedCornerShape(12.dp)
     androidx.tv.material3.Surface(
         onClick = onClick,
-        modifier = modifier.onFocusChanged { focused = it.isFocused }.fillMaxWidth().height(42.dp),
+        modifier = modifier.onFocusChanged { focused = it.isFocused }.centeredGlow(c.goldGlow, spread = 10.dp, alpha = if (focused) 1f else 0f).fillMaxWidth().height(42.dp),
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(shape),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
             containerColor = if (selected) c.steel.copy(alpha = 0.75f) else Color.Transparent, contentColor = if (selected) c.text else c.textSecondary,
-            focusedContainerColor = c.accent.copy(alpha = 0.22f), focusedContentColor = c.text,
-            pressedContainerColor = c.accent.copy(alpha = 0.35f), pressedContentColor = c.text,
+            focusedContainerColor = c.gold.copy(alpha = 0.16f), focusedContentColor = c.goldHighlight,
+            pressedContainerColor = c.gold.copy(alpha = 0.28f), pressedContentColor = c.goldHighlight,
         ),
         border = androidx.tv.material3.ClickableSurfaceDefaults.border(
             border = androidx.tv.material3.Border.None,
-            focusedBorder = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent), shape = shape),
+            focusedBorder = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.gold), shape = shape),
         ),
         scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.03f),
-        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.32f), 10.dp)),
+        // The glow is drawn centred (centeredGlow): a Surface glow is a shadow that slides down-left here.
+        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.width(3.dp).height(20.dp).background(if (selected) c.gold else Color.Transparent, RoundedCornerShape(2.dp)))
@@ -325,7 +327,7 @@ private fun SidebarEntry(g: Group, selected: Boolean, onClick: () -> Unit, modif
                     .border(1.dp, if (selected) c.gold.copy(alpha = 0.45f) else Color.Transparent, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                com.vyrk.tv.ui.components.Icon(g.icon, null, Modifier.size(15.dp), tint = when { focused -> c.accent; selected -> c.gold; else -> c.textSecondary })
+                com.vyrk.tv.ui.components.Icon(g.icon, null, Modifier.size(15.dp), tint = when { focused -> c.goldHighlight; selected -> c.gold; else -> c.textSecondary })
             }
             Spacer(Modifier.width(11.dp))
             Text(str(g.title), style = Vyrk.type.titleS, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -554,7 +556,7 @@ private fun AboutGroup(session: ProfileSession) {
     }
     when (val a = account) {
         is AccountState.Connected -> Setting(str(R.string.stremio_account), a.email) { VyrkButton(str(R.string.sign_out), onClick = { scope.launch { session.logout() } }, modifier = Modifier.traceFocus("about:logout")) }
-        is AccountState.Expired -> Setting(str(R.string.stremio_account), str(R.string.session_expired)) { VyrkButton(str(R.string.reconnect), style = ButtonStyle.PRIMARY, onClick = { app.screen = Screen.Pairing(session.profile.id) }) }
+        is AccountState.Expired -> Setting(str(R.string.stremio_account), str(R.string.session_expired)) { VyrkButton(str(R.string.reconnect), style = ButtonStyle.BRAND, onClick = { app.screen = Screen.Pairing(session.profile.id) }) }
         AccountState.None -> Setting(str(R.string.stremio_account), str(R.string.no_account)) { VyrkButton(str(R.string.sign_in_stremio), onClick = { app.screen = Screen.Pairing(session.profile.id) }, modifier = Modifier.traceFocus("about:sign_in")) }
     }
     if (!BuildConfig.STORE_BUILD) {
@@ -575,7 +577,7 @@ private fun AboutGroup(session: ProfileSession) {
         status?.let { Text(it, style = Vyrk.type.bodyM, color = c.textSecondary) }
         available?.let { a ->
             Text(a.release.body.orEmpty().take(600), style = Vyrk.type.bodyS, color = c.textMuted)
-            VyrkButton(str(R.string.download_install), style = ButtonStyle.PRIMARY, onClick = {
+            VyrkButton(str(R.string.download_install), style = ButtonStyle.BRAND, onClick = {
                 if (!updater.canInstall()) { updater.requestInstallPermission(); return@VyrkButton }
                 scope.launch {
                     updater.download(a.asset) { p -> status = "${(p * 100).toInt()}%" }
