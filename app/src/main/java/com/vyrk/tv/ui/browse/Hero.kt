@@ -291,6 +291,9 @@ fun CreditLines(full: MetaItem?, meta: MetaPreview, reserve: Boolean = false, ic
 private val HERO_LOGO_W = 360.dp
 private val HERO_LOGO_H = 150.dp
 private val HERO_TEXT_W = 520.dp
+// The left arrow sits clear of the rune pillar (17-31dp) and the hero text starts after the arrow.
+private val HERO_ARROW_START = 40.dp
+private val HERO_TEXT_START = 88.dp
 
 @Composable
 fun Hero(
@@ -324,7 +327,7 @@ fun Hero(
         // Bottom-anchored. Every line below the logo keeps a fixed height, so the logo's share (all
         // that's left) never changes and nothing moves when the title's details arrive.
         Column(
-            Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = Dimens.screenMargin, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
+            Modifier.align(Alignment.BottomStart).fillMaxHeight().padding(start = HERO_TEXT_START, top = 6.dp, bottom = 22.dp).width(HERO_TEXT_W),
             verticalArrangement = Arrangement.Bottom,
         ) {
             TitleEyebrow(meta, pageLabel)
@@ -363,7 +366,7 @@ fun Hero(
         // Carousel: an arrow at each side of the hero (shown, not focused: Left and Right on Watch now
         // move through the titles and light the arrow up), and the position dots level with Watch now.
         if (carousel) {
-            HeroArrow(R.drawable.ic_left, lit = pressed < 0, Modifier.align(Alignment.CenterStart).padding(start = 8.dp))
+            HeroArrow(R.drawable.ic_left, lit = pressed < 0, Modifier.align(Alignment.CenterStart).padding(start = HERO_ARROW_START))
             HeroArrow(R.drawable.ic_right, lit = pressed > 0, Modifier.align(Alignment.CenterEnd).padding(end = 8.dp))
             Row(
                 Modifier.align(Alignment.BottomEnd).padding(end = Dimens.screenMargin, bottom = 39.dp),
@@ -414,13 +417,6 @@ fun BoxScope.TitleHeader(meta: MetaPreview, full: MetaItem?, art: TitleArt, heig
             Text(full?.description ?: meta.description ?: "", style = Vyrk.type.bodyS, color = c.textSecondary, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Box(Modifier.height(4.dp))
             CreditLines(full, meta, reserve = true, icons = true)
-            Box(Modifier.height(10.dp))
-            // What the remote does here, as key caps; OK is the call to action.
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                com.vyrk.tv.ui.components.KeyHint("OK", str(R.string.more_info), primary = true)
-                com.vyrk.tv.ui.components.KeyHint("☰", str(R.string.options))
-                com.vyrk.tv.ui.components.KeyHint("⏯", str(R.string.preview))
-            }
         }
     }
 }

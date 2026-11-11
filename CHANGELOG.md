@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.34
+
+- The title header no longer shows the OK / Options / Preview key hints.
+- The home banner's left arrow and text sit clear of the gold rune pillar, and rows fade out as they scroll under it.
+
 ## v0.1.33
 
 - Series pages open with the episode list shown; films still open with the panel closed (the info button opens it). On a series, Back from the episodes returns to Play, and Back again leaves the page.

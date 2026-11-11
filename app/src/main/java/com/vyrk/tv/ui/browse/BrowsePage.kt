@@ -30,6 +30,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.focusGroup
@@ -326,9 +331,13 @@ fun BrowsePage(
                 state = listState,
                 // Under the title header, rows that scroll up are cut off at its bottom edge (it has
                 // no background now, so they would show through the text).
-                modifier = Modifier.fillMaxSize().clipToBounds().drawWithContent {
-                    if (headerShown) clipRect(top = headerBottomPx) { this@drawWithContent.drawContent() } else drawContent()
-                },
+                // Rows that scroll left fade out behind the rune pillar instead of running over it.
+                modifier = Modifier.fillMaxSize().clipToBounds()
+                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                    .drawWithContent {
+                        if (headerShown) clipRect(top = headerBottomPx) { this@drawWithContent.drawContent() } else drawContent()
+                        drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black), startX = 24.dp.toPx(), endX = 40.dp.toPx()), blendMode = BlendMode.DstIn)
+                    },
                 contentPadding = PaddingValues(bottom = 200.dp),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Dimens.rowGap),
             ) {
