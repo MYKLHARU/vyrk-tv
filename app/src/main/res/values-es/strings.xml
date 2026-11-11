@@ -227,6 +227,7 @@
     <string name="search_hint">Busca películas y series</string>
     <string name="searching">Buscando…</string>
     <string name="season_n">Temporada %1$d</string>
+    <string name="seasons_count">%1$d temporadas</string>
     <string name="see_all">Ver todo</string>
     <string name="session_expired">Tu sesión de Stremio caducó. Tus datos se conservan. Vuelve a conectar para sincronizar.</string>
     <string name="setting_chapter_markers">Marcas de capítulos</string>

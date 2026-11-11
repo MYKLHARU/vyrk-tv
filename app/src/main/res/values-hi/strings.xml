@@ -227,6 +227,7 @@
     <string name="search_hint">फ़िल्में और सीरीज़ खोजें</string>
     <string name="searching">खोज रहे हैं…</string>
     <string name="season_n">सीज़न %1$d</string>
+    <string name="seasons_count">%1$d सीज़न</string>
     <string name="see_all">सभी देखें</string>
     <string name="session_expired">आपका Stremio सत्र समाप्त हो गया। आपका डेटा सुरक्षित है। सिंक के लिए फिर से जोड़ें।</string>
     <string name="setting_chapter_markers">अध्याय चिह्न</string>

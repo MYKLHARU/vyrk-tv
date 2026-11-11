@@ -372,5 +372,6 @@
     "discover_catalog": "कैटलॉग",
     "discover_genre": "शैली",
     "discover_no_catalogs": "कोई मेल खाता कैटलॉग नहीं। सेटिंग में कैटलॉग ऐड-ऑन जोड़ें या सामग्री का प्रकार बदलें।",
-    "options": "विकल्प"
+    "options": "विकल्प",
+    "seasons_count": "%1$d सीज़न"
 }

@@ -372,5 +372,6 @@
     "discover_catalog": "Catalogue",
     "discover_genre": "Genre",
     "discover_no_catalogs": "Aucun catalogue correspondant. Ajoutez un module de catalogue dans les paramètres ou changez de type de contenu.",
-    "options": "Options"
+    "options": "Options",
+    "seasons_count": "%1$d saisons"
 }

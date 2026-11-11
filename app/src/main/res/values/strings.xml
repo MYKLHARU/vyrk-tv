@@ -227,6 +227,7 @@
     <string name="search_hint">Search movies and series</string>
     <string name="searching">Searching…</string>
     <string name="season_n">Season %1$d</string>
+    <string name="seasons_count">%1$d seasons</string>
     <string name="see_all">See all</string>
     <string name="session_expired">Your Stremio session expired. Your data is kept. Reconnect to sync again.</string>
     <string name="setting_chapter_markers">Chapter markers</string>

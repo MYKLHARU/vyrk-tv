@@ -223,7 +223,7 @@ fun typeLabel(meta: MetaPreview): String = when (meta.type) {
 
 /** Kicker over a title: a gold rune, its type in spaced capitals and a short fading rule. */
 @Composable
-private fun TitleEyebrow(meta: MetaPreview) {
+fun TitleEyebrow(meta: MetaPreview) {
     val c = Vyrk.colors
     Row(Modifier.height(16.dp), verticalAlignment = Alignment.CenterVertically) {
         com.vyrk.tv.ui.components.RuneGlyph(10.dp, color = c.gold)

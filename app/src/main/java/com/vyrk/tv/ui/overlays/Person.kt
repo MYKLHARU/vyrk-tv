@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -73,29 +74,72 @@ fun PersonPhoto(name: String, path: String?, size: Dp) {
     }
 }
 
-/** "Cast & crew" row on the info page: photos, names and roles; OK opens the person page. */
+/**
+ * "Cast & crew" on the info page: the cast as portrait cards (photo, name, character), then the key
+ * crew as smaller chips with their role in gold. OK on either opens the person page.
+ */
 @Composable
 fun CastCrewRow(cast: List<Credit>, crew: List<Credit>) {
     val app = LocalApp.current
-    val people = (crew.take(3) + cast.take(15)).distinctBy { it.personId to it.role }
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 6.dp)) {
-        itemsIndexed(people, key = { i, p -> "${p.personId}-$i" }) { i, p ->
-            Surface(
-                onClick = { app.push(Overlay.Person(p.personId, p.name)) },
-                modifier = Modifier.width(96.dp).traceFocus("info:person#$i").semantics { contentDescription = listOfNotNull(p.name, p.role).joinToString(", ") },
-                shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(14.dp)),
-                colors = ClickableSurfaceDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent, focusedContainerColor = Vyrk.colors.raised),
-                scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
-                border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
-                glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+    val castPeople = cast.take(15).distinctBy { it.personId }
+    val crewPeople = crew.take(4).distinctBy { it.personId to it.role }
+    if (castPeople.isNotEmpty()) LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 8.dp, horizontal = 2.dp)) {
+        itemsIndexed(castPeople, key = { i, p -> "${p.personId}-$i" }) { i, p ->
+            CastCard(p, "info:person#$i") { app.push(Overlay.Person(p.personId, p.name)) }
+        }
+    }
+    if (crewPeople.isNotEmpty()) LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 6.dp, horizontal = 2.dp)) {
+        itemsIndexed(crewPeople, key = { i, p -> "crew-${p.personId}-$i" }) { i, p ->
+            CrewChip(p, "info:crew#$i") { app.push(Overlay.Person(p.personId, p.name)) }
+        }
+    }
+}
+
+/** A cast member as a portrait card; initials in gold on dark steel when TMDB has no photo. */
+@Composable
+private fun CastCard(p: Credit, trace: String, onClick: () -> Unit) {
+    val c = Vyrk.colors
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.width(92.dp).traceFocus(trace).semantics { contentDescription = listOfNotNull(p.name, p.role).joinToString(", ") },
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+        colors = ClickableSurfaceDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent, focusedContainerColor = c.raised.copy(alpha = 0.9f)),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.05f)),
+        border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent))),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.32f), 10.dp)),
+    ) {
+        Column(Modifier.padding(5.dp)) {
+            Box(
+                Modifier.fillMaxWidth().height(118.dp).clip(RoundedCornerShape(9.dp))
+                    .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(c.steel, c.panel))),
+                contentAlignment = Alignment.Center,
             ) {
-                Column(Modifier.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    PersonPhoto(p.name, p.profilePath, 64.dp)
-                    Spacer(Modifier.height(6.dp))
-                    Text(p.name, style = Vyrk.type.labelL, color = Vyrk.colors.text, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
-                    p.role?.let { Text(it, style = Vyrk.type.labelS, color = Vyrk.colors.textMuted, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis) }
-                }
+                Text(p.name.split(' ').mapNotNull { it.firstOrNull()?.uppercase() }.take(2).joinToString(""), style = Vyrk.type.cinematicM, color = c.gold.copy(alpha = 0.6f))
+                TmdbClient.image(p.profilePath)?.let { AsyncImage(it, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
             }
+            Spacer(Modifier.height(6.dp))
+            Text(p.name, style = Vyrk.type.labelL, color = c.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            p.role?.let { Text(it, style = Vyrk.type.labelS, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
+    }
+}
+
+/** A key crew member: role in gold capitals, then the name. */
+@Composable
+private fun CrewChip(p: Credit, trace: String, onClick: () -> Unit) {
+    val c = Vyrk.colors
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.height(30.dp).traceFocus(trace),
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(15.dp)),
+        colors = ClickableSurfaceDefaults.colors(containerColor = c.shade.copy(alpha = 0.45f), contentColor = c.text, focusedContainerColor = c.text, focusedContentColor = c.background),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.04f),
+        border = ClickableSurfaceDefaults.border(border = Border(androidx.compose.foundation.BorderStroke(1.dp, c.text.copy(alpha = 0.14f))), focusedBorder = Border.None),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+    ) {
+        Row(Modifier.fillMaxHeight().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            p.role?.let { Text(it.uppercase(), style = Vyrk.type.labelS.copy(letterSpacing = Vyrk.type.eyebrow.letterSpacing * 0.5f), color = c.gold, maxLines = 1) }
+            Text(p.name, style = Vyrk.type.labelL, maxLines = 1)
         }
     }
 }

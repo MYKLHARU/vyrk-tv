@@ -372,5 +372,6 @@
     "discover_catalog": "Catálogo",
     "discover_genre": "Gênero",
     "discover_no_catalogs": "Nenhum catálogo correspondente. Adicione um complemento de catálogo nas Configurações ou altere o tipo de conteúdo.",
-    "options": "Opções"
+    "options": "Opções",
+    "seasons_count": "%1$d temporadas"
 }
