@@ -7,6 +7,7 @@
     <string name="accent_colour">Colore di accento</string>
     <string name="accent_desc">Colore di evidenziazione per focus e controlli</string>
     <string name="accent_frost">Ghiaccio</string>
+    <string name="accent_gold">Oro</string>
     <string name="accent_pink">Rosa</string>
     <string name="accent_teal">Turchese</string>
     <string name="accent_violet">Viola</string>
@@ -173,7 +174,6 @@
     <string name="off">No</string>
     <string name="ok">OK</string>
     <string name="on">Sì</string>
-    <string name="options">Opzioni</string>
     <string name="original_language">Audio in lingua originale</string>
     <string name="other_sources">Altre fonti</string>
     <string name="pairing_error">Impossibile raggiungere il servizio account di Stremio.</string>

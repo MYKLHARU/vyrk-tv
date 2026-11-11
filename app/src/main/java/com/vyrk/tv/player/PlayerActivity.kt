@@ -1,5 +1,6 @@
 package com.vyrk.tv.player
 
+import com.vyrk.tv.ui.components.focusHalo
 import com.vyrk.tv.ui.theme.Dimens
 import android.os.Bundle
 import android.view.KeyEvent
@@ -132,7 +133,7 @@ class PlayerActivity : ComponentActivity() {
             override fun onPlaybackStateChanged(playbackState: Int) = m.onPlaybackState(playbackState)
             override fun onIsPlayingChanged(isPlaying: Boolean) { if (!isPlaying) m.saveProgress() }
         })
-        val accent = runCatching { AccentChoice.valueOf(session.settings.value.accent) }.getOrDefault(AccentChoice.FROST)
+        val accent = runCatching { AccentChoice.valueOf(session.settings.value.accent) }.getOrDefault(AccentChoice.GOLD)
         val size = runCatching { InterfaceSize.valueOf(dev.interfaceSize) }.getOrDefault(InterfaceSize.MEDIUM)
         FocusTrace.enter(PLAYER_LAYER)
         setContent {
@@ -414,7 +415,7 @@ private fun RoundButton(
         androidx.tv.material3.Surface(
             onClick = onClick,
             interactionSource = interaction,
-            modifier = modifier.size(size).traceFocus(trace).semantics { contentDescription = label },
+            modifier = modifier.focusHalo().size(size).traceFocus(trace).semantics { contentDescription = label },
             shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(androidx.compose.foundation.shape.CircleShape),
             colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
                 containerColor = if (hero) c.text else Color.White.copy(alpha = 0.10f),
@@ -427,7 +428,7 @@ private fun RoundButton(
                 border = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = if (hero) 0f else 0.22f))),
                 focusedBorder = androidx.tv.material3.Border.None,
             ),
-            glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
+            glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
         ) {
             com.vyrk.tv.ui.components.Icon(icon, null, Modifier.size(size * 0.42f).align(Alignment.Center), tint = androidx.tv.material3.LocalContentColor.current)
         }
@@ -562,12 +563,12 @@ private fun TrackRow(name: String, tag: String?, selected: Boolean, trace: Strin
     val c = Vyrk.colors
     androidx.tv.material3.Surface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().traceFocus(trace).semantics { contentDescription = listOfNotNull(name, tag).joinToString(", ") },
+        modifier = modifier.focusHalo().fillMaxWidth().traceFocus(trace).semantics { contentDescription = listOfNotNull(name, tag).joinToString(", ") },
         shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
         colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(containerColor = Color.Transparent, contentColor = c.text, focusedContainerColor = c.gold.copy(alpha = 0.16f), focusedContentColor = c.goldHighlight),
         scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.02f),
         border = androidx.tv.material3.ClickableSurfaceDefaults.border(border = androidx.tv.material3.Border.None, focusedBorder = androidx.tv.material3.Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.gold))),
-        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = com.vyrk.tv.ui.components.focusGlow()),
+        glow = androidx.tv.material3.ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(name, style = Vyrk.type.titleL, color = c.text, maxLines = 1)

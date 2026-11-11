@@ -7,6 +7,7 @@
     <string name="accent_colour">Couleur d\'accent</string>
     <string name="accent_desc">Couleur de surbrillance du focus et des commandes</string>
     <string name="accent_frost">Givre</string>
+    <string name="accent_gold">Or</string>
     <string name="accent_pink">Rose</string>
     <string name="accent_teal">Turquoise</string>
     <string name="accent_violet">Violet</string>
@@ -173,7 +174,6 @@
     <string name="off">Désactivé</string>
     <string name="ok">OK</string>
     <string name="on">Activé</string>
-    <string name="options">Options</string>
     <string name="original_language">Audio en version originale</string>
     <string name="other_sources">Autres sources</string>
     <string name="pairing_error">Impossible de joindre le service de comptes Stremio.</string>

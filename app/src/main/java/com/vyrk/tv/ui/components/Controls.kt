@@ -17,6 +17,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.Color
@@ -72,6 +76,17 @@ fun Modifier.centeredGlow(color: Color, spread: Dp = 14.dp, alpha: Float = 1f): 
         }
     }
 
+/**
+ * A centred glow while this item (or something in it) has focus, fading in and out. Used in place
+ * of a Surface's focusedGlow, which is an elevation shadow and falls down and away from the
+ * screen's centre.
+ */
+fun Modifier.focusHalo(color: Color? = null, spread: Dp = 12.dp): Modifier = composed {
+    var on by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val a by androidx.compose.animation.core.animateFloatAsState(if (on) 1f else 0f, com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.FAST), label = "halo")
+    this.onFocusChanged { on = it.hasFocus }.centeredGlow(color ?: Vyrk.colors.accent.copy(alpha = 0.35f), spread, a)
+}
+
 /** Focus halo for menu and settings items: brand gold instead of the content accent. */
 @Composable
 fun menuGlow(): Glow = Glow(elevationColor = Vyrk.colors.goldGlow, elevation = Dimens.glowRadius)
@@ -105,12 +120,12 @@ fun VyrkButton(
     // In menus every button but a content-accent PRIMARY takes focus in gold.
     val goldFocus = brand || (LocalMenuColors.current && style != ButtonStyle.PRIMARY)
     val lit = if (brand) c.gold else c.accent
-    val halo = if (glow) Modifier.shadow(18.dp, shape, clip = false, ambientColor = lit, spotColor = lit) else Modifier
+    val halo = if (glow) Modifier.centeredGlow(lit.copy(alpha = 0.40f), spread = 16.dp) else Modifier
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
         enabled = enabled,
-        modifier = modifier.then(halo).height(height).defaultMinSize(minWidth = 40.dp),
+        modifier = modifier.focusHalo().then(halo).height(height).defaultMinSize(minWidth = 40.dp),
         shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = bg, contentColor = fg,
@@ -124,7 +139,7 @@ fun VyrkButton(
             border = if (style == ButtonStyle.OUTLINE) Border(androidx.compose.foundation.BorderStroke(1.dp, c.text.copy(alpha = 0.38f)), shape = shape) else Border.None,
             focusedBorder = Border.None,
         ),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = if (goldFocus) menuGlow() else focusGlow()),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(
             Modifier.padding(horizontal = horizontalPadding).align(Alignment.Center),
@@ -154,7 +169,7 @@ fun VyrkIconButton(
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.size(size).semantics { contentDescription = description },
+        modifier = modifier.focusHalo().size(size).semantics { contentDescription = description },
         shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (active) c.gold else c.raised.copy(alpha = 0.8f), contentColor = if (active) c.background else c.text,
@@ -162,7 +177,7 @@ fun VyrkIconButton(
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
         border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Icon(icon, null, Modifier.size(size * 0.45f).align(Alignment.Center), tint = androidx.tv.material3.LocalContentColor.current)
     }
@@ -182,7 +197,7 @@ fun VyrkChip(
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.defaultMinSize(minHeight = 32.dp),
+        modifier = modifier.focusHalo().defaultMinSize(minHeight = 32.dp),
         shape = ClickableSurfaceDefaults.shape(if (maxLines > 1) Dimens.chipShape else Dimens.pillShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) c.goldActive else c.raised.copy(alpha = 0.6f),
@@ -194,7 +209,7 @@ fun VyrkChip(
             border = Border(androidx.compose.foundation.BorderStroke(1.dp, if (selected) c.gold.copy(alpha = 0.65f) else c.glassEdge)),
             focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.gold)),
         ),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = menuGlow()),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(
             Modifier.padding(horizontal = 12.dp, vertical = if (maxLines > 1) 8.dp else 0.dp).align(if (maxLines > 1) Alignment.CenterStart else Alignment.Center),

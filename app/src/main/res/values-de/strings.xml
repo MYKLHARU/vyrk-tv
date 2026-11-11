@@ -7,6 +7,7 @@
     <string name="accent_colour">Akzentfarbe</string>
     <string name="accent_desc">Hervorhebungsfarbe für Fokus und Bedienelemente</string>
     <string name="accent_frost">Frost</string>
+    <string name="accent_gold">Gold</string>
     <string name="accent_pink">Pink</string>
     <string name="accent_teal">Türkis</string>
     <string name="accent_violet">Violett</string>
@@ -173,7 +174,6 @@
     <string name="off">Aus</string>
     <string name="ok">OK</string>
     <string name="on">An</string>
-    <string name="options">Optionen</string>
     <string name="original_language">Audio in Originalsprache</string>
     <string name="other_sources">Andere Quellen</string>
     <string name="pairing_error">Der Stremio-Kontodienst ist nicht erreichbar.</string>

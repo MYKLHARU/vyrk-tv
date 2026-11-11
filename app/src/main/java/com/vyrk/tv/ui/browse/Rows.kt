@@ -1,5 +1,6 @@
 package com.vyrk.tv.ui.browse
 
+import com.vyrk.tv.ui.components.focusHalo
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -126,7 +127,7 @@ fun Poster(
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier
+        modifier = modifier.focusHalo()
             .size(width, height)
             .semantics { contentDescription = desc }
             .traceFocus(traceLabel)
@@ -145,7 +146,7 @@ fun Poster(
             border = Border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.06f))),
             focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent.copy(alpha = 0.8f))),
         ),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         // Never a blank card: the add-on's poster, then Cinemeta's by IMDb id, then the title on
         // a tinted card (or the type, when even the name is missing).
@@ -436,7 +437,7 @@ fun ContinueCard(
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier
+        modifier = modifier.focusHalo()
             .size(width, height)
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = desc }
@@ -457,7 +458,7 @@ fun ContinueCard(
             border = Border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))),
             focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent.copy(alpha = 0.9f))),
         ),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.35f), 10.dp)),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Box(Modifier.fillMaxSize()) {
             // The title's backdrop, then Cinemeta's, then its poster; never blank.

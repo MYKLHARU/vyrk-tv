@@ -271,7 +271,7 @@ private fun OptionPill(label: String, on: Boolean, onClick: () -> Unit, trace: S
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
-        modifier = Modifier.height(if (separated) 34.dp else 30.dp).traceFocus(trace),
+        modifier = Modifier.focusHalo().height(if (separated) 34.dp else 30.dp).traceFocus(trace),
         shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = when { on -> c.gold; separated -> c.steel.copy(alpha = 0.55f); else -> Color.Transparent },
@@ -284,7 +284,7 @@ private fun OptionPill(label: String, on: Boolean, onClick: () -> Unit, trace: S
             border = if (separated && !on) Border(BorderStroke(1.dp, c.text.copy(alpha = 0.10f))) else Border.None,
             focusedBorder = Border(BorderStroke(2.dp, c.goldHighlight)),
         ),
-        glow = ClickableSurfaceDefaults.glow(glow = if (on) Glow(c.goldGlow, 6.dp) else Glow.None, focusedGlow = Glow(c.goldGlow, 10.dp)),
+        glow = ClickableSurfaceDefaults.glow(glow = if (on) Glow(c.goldGlow, 6.dp) else Glow.None, focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.padding(horizontal = 14.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (on) Icon(R.drawable.ic_check, null, Modifier.size(12.dp), tint = LocalContentColor.current)
@@ -308,7 +308,7 @@ fun OnOffControl(value: Boolean, trace: String, onLabel: String, offLabel: Strin
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Surface(
             onClick = { onChange(!value) },
-            modifier = Modifier.size(46.dp, 26.dp).traceFocus("$trace:switch")
+            modifier = Modifier.focusHalo().size(46.dp, 26.dp).traceFocus("$trace:switch")
                 .semantics { role = androidx.compose.ui.semantics.Role.Switch; stateDescription = state },
             shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
             colors = ClickableSurfaceDefaults.colors(containerColor = track, focusedContainerColor = track, pressedContainerColor = track),
@@ -317,7 +317,7 @@ fun OnOffControl(value: Boolean, trace: String, onLabel: String, offLabel: Strin
                 border = if (value) Border.None else Border(BorderStroke(1.dp, c.text.copy(alpha = 0.18f))),
                 focusedBorder = Border(BorderStroke(2.dp, c.goldHighlight)),
             ),
-            glow = ClickableSurfaceDefaults.glow(glow = if (value) Glow(c.goldGlow, 8.dp) else Glow.None, focusedGlow = Glow(c.gold.copy(alpha = 0.40f), 12.dp)),
+            glow = ClickableSurfaceDefaults.glow(glow = if (value) Glow(c.goldGlow, 8.dp) else Glow.None, focusedGlow = androidx.tv.material3.Glow.None),
         ) {
             Box(Modifier.fillMaxSize()) {
                 Box(Modifier.align(Alignment.CenterStart).offset(x = thumbX).size(20.dp).shadow(3.dp, CircleShape).background(if (value) Color.White else c.textSecondary, CircleShape))
@@ -333,7 +333,7 @@ fun CheckChip(label: String, checked: Boolean, onClick: () -> Unit, trace: Strin
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
-        modifier = modifier.height(34.dp).traceFocus(trace),
+        modifier = modifier.focusHalo().height(34.dp).traceFocus(trace),
         shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (checked) c.goldActive else c.steel.copy(alpha = 0.55f), contentColor = if (checked) c.text else c.textSecondary,
@@ -344,7 +344,7 @@ fun CheckChip(label: String, checked: Boolean, onClick: () -> Unit, trace: Strin
             border = Border(BorderStroke(1.dp, if (checked) c.gold.copy(alpha = 0.7f) else c.text.copy(alpha = 0.10f))),
             focusedBorder = Border(BorderStroke(2.dp, c.goldHighlight)),
         ),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(c.goldGlow, 10.dp)),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.padding(horizontal = 12.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val box = RoundedCornerShape(4.dp)
@@ -371,12 +371,12 @@ fun ColorSwatch(color: Color, onColor: Color, label: String, selected: Boolean, 
             if (selected) Box(Modifier.matchParentSize().border(2.dp, color, CircleShape))
             Surface(
                 onClick = onClick,
-                modifier = Modifier.size(28.dp).traceFocus(trace),
+                modifier = Modifier.focusHalo().size(28.dp).traceFocus(trace),
                 shape = ClickableSurfaceDefaults.shape(CircleShape),
                 colors = ClickableSurfaceDefaults.colors(containerColor = color, focusedContainerColor = color, pressedContainerColor = color),
                 scale = ClickableSurfaceDefaults.scale(focusedScale = 1.22f),
                 border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border(BorderStroke(2.dp, c.goldHighlight))),
-                glow = ClickableSurfaceDefaults.glow(glow = if (selected) Glow(color.copy(alpha = 0.55f), 8.dp) else Glow.None, focusedGlow = Glow(color.copy(alpha = 0.7f), 12.dp)),
+                glow = ClickableSurfaceDefaults.glow(glow = if (selected) Glow(color.copy(alpha = 0.55f), 8.dp) else Glow.None, focusedGlow = androidx.tv.material3.Glow.None),
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     if (selected) Icon(R.drawable.ic_check, null, Modifier.size(14.dp), tint = onColor)

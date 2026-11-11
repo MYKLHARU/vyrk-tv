@@ -7,6 +7,7 @@
     <string name="accent_colour">Accent colour</string>
     <string name="accent_desc">Highlight colour for focus and controls</string>
     <string name="accent_frost">Frost</string>
+    <string name="accent_gold">Gold</string>
     <string name="accent_pink">Pink</string>
     <string name="accent_teal">Teal</string>
     <string name="accent_violet">Violet</string>
@@ -173,7 +174,6 @@
     <string name="off">Off</string>
     <string name="ok">OK</string>
     <string name="on">On</string>
-    <string name="options">Options</string>
     <string name="original_language">Original-language audio</string>
     <string name="other_sources">Other sources</string>
     <string name="pairing_error">Couldn\'t reach the Stremio account service.</string>

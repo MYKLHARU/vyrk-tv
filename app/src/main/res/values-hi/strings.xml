@@ -7,6 +7,7 @@
     <string name="accent_colour">एक्सेंट रंग</string>
     <string name="accent_desc">फ़ोकस और कंट्रोल के लिए हाइलाइट रंग</string>
     <string name="accent_frost">फ़्रॉस्ट</string>
+    <string name="accent_gold">सुनहरा</string>
     <string name="accent_pink">गुलाबी</string>
     <string name="accent_teal">टील</string>
     <string name="accent_violet">बैंगनी</string>
@@ -173,7 +174,6 @@
     <string name="off">बंद</string>
     <string name="ok">ठीक है</string>
     <string name="on">चालू</string>
-    <string name="options">विकल्प</string>
     <string name="original_language">मूल भाषा का ऑडियो</string>
     <string name="other_sources">दूसरे स्रोत</string>
     <string name="pairing_error">Stremio खाता सेवा तक पहुँच नहीं हो सकी।</string>

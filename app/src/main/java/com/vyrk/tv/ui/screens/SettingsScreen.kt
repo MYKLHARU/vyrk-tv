@@ -516,7 +516,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
 
 @Composable
 private fun accentName(a: AccentChoice) = when (a) {
-    AccentChoice.FROST -> str(R.string.accent_frost); AccentChoice.BLUE -> str(R.string.accent_blue); AccentChoice.TEAL -> str(R.string.accent_teal)
+    AccentChoice.GOLD -> str(R.string.accent_gold); AccentChoice.FROST -> str(R.string.accent_frost); AccentChoice.BLUE -> str(R.string.accent_blue); AccentChoice.TEAL -> str(R.string.accent_teal)
     AccentChoice.VIOLET -> str(R.string.accent_violet); AccentChoice.AMBER -> str(R.string.accent_amber); AccentChoice.PINK -> str(R.string.accent_pink)
 }
 

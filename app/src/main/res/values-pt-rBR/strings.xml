@@ -7,6 +7,7 @@
     <string name="accent_colour">Cor de destaque</string>
     <string name="accent_desc">Cor de realce para o foco e os controles</string>
     <string name="accent_frost">Gelo</string>
+    <string name="accent_gold">Ouro</string>
     <string name="accent_pink">Rosa</string>
     <string name="accent_teal">Turquesa</string>
     <string name="accent_violet">Violeta</string>
@@ -173,7 +174,6 @@
     <string name="off">Desativado</string>
     <string name="ok">OK</string>
     <string name="on">Ativado</string>
-    <string name="options">Opções</string>
     <string name="original_language">Áudio no idioma original</string>
     <string name="other_sources">Outras fontes</string>
     <string name="pairing_error">Não foi possível acessar o serviço de contas do Stremio.</string>

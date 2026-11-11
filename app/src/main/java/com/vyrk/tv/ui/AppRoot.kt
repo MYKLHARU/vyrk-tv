@@ -48,7 +48,7 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
     val device by graph.deviceSettings.collectAsState()
     val session by graph.session.collectAsState()
     val settings = session?.settings?.collectAsState()?.value
-    val accent = runCatching { AccentChoice.valueOf(settings?.accent ?: "FROST") }.getOrDefault(AccentChoice.FROST)
+    val accent = runCatching { AccentChoice.valueOf(settings?.accent ?: "GOLD") }.getOrDefault(AccentChoice.GOLD)
     val size = runCatching { InterfaceSize.valueOf(device.interfaceSize) }.getOrDefault(InterfaceSize.MEDIUM)
     val scope = rememberCoroutineScope()
 

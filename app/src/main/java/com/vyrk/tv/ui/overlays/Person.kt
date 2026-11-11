@@ -1,5 +1,6 @@
 package com.vyrk.tv.ui.overlays
 
+import com.vyrk.tv.ui.components.focusHalo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,12 +102,12 @@ private fun CastCard(p: Credit, trace: String, onClick: () -> Unit) {
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
-        modifier = Modifier.width(92.dp).traceFocus(trace).semantics { contentDescription = listOfNotNull(p.name, p.role).joinToString(", ") },
+        modifier = Modifier.focusHalo().width(92.dp).traceFocus(trace).semantics { contentDescription = listOfNotNull(p.name, p.role).joinToString(", ") },
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
         colors = ClickableSurfaceDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent, focusedContainerColor = c.raised.copy(alpha = 0.9f)),
         scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.05f)),
         border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border(androidx.compose.foundation.BorderStroke(1.5.dp, c.accent))),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.32f), 10.dp)),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Column(Modifier.padding(5.dp)) {
             Box(
@@ -130,12 +131,12 @@ private fun CrewChip(p: Credit, trace: String, onClick: () -> Unit) {
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
-        modifier = Modifier.height(30.dp).traceFocus(trace),
+        modifier = Modifier.focusHalo().height(30.dp).traceFocus(trace),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(15.dp)),
         colors = ClickableSurfaceDefaults.colors(containerColor = c.shade.copy(alpha = 0.45f), contentColor = c.text, focusedContainerColor = c.text, focusedContentColor = c.background),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.04f),
         border = ClickableSurfaceDefaults.border(border = Border(androidx.compose.foundation.BorderStroke(1.dp, c.text.copy(alpha = 0.14f))), focusedBorder = Border.None),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.fillMaxHeight().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             p.role?.let { Text(it.uppercase(), style = Vyrk.type.labelS.copy(letterSpacing = Vyrk.type.eyebrow.letterSpacing * 0.5f), color = c.gold, maxLines = 1) }
@@ -208,13 +209,13 @@ fun PersonPage(o: Overlay.Person) {
                                 }
                             }
                         },
-                        modifier = Modifier.width(118.dp).then(if (i == 0) Modifier.focusRequester(first) else Modifier).traceFocus("person:credit#$i")
+                        modifier = Modifier.focusHalo().width(118.dp).then(if (i == 0) Modifier.focusRequester(first) else Modifier).traceFocus("person:credit#$i")
                             .semantics { contentDescription = listOfNotNull(pc.title, pc.year, pc.role).joinToString(", ") },
                         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
                         colors = ClickableSurfaceDefaults.colors(containerColor = c.raised, focusedContainerColor = c.raised),
                         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
                         border = ClickableSurfaceDefaults.border(border = Border.None, focusedBorder = Border.None),
-                        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+                        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
                     ) {
                         Column {
                             Box(Modifier.fillMaxWidth().height(177.dp).background(c.panel), contentAlignment = Alignment.Center) {

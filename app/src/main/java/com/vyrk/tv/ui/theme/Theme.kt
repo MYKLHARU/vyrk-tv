@@ -18,7 +18,7 @@ import androidx.tv.material3.darkColorScheme
 import com.vyrk.tv.R
 
 /**
- * VYRK palette: obsidian surfaces, brand gold for menus and a frost-blue content accent. Values are on the 960×540 design
+ * VYRK palette: obsidian surfaces with brand gold for focus, menus and controls. Values are on the 960×540 design
  * canvas; see [FittedDensity].
  */
 @Immutable
@@ -31,8 +31,8 @@ data class VyrkColors(
     val text: Color = Color(0xFFF4F5F6),
     val textSecondary: Color = Color(0xFF9FB1B9),
     val textMuted: Color = Color(0xFF6E838E),
-    val accent: Color = Color(0xFF55DFFF),
-    val onAccent: Color = Color(0xFF031117),
+    val accent: Color = Color(0xFFD4A65A),
+    val onAccent: Color = Color(0xFF1A1206),
     val success: Color = Color(0xFF7FD69A),
     val warning: Color = Color(0xFFFFC266),
     val danger: Color = Color(0xFFFF7A7A),
@@ -51,8 +51,8 @@ data class VyrkColors(
     /**
      * Brand gold, sampled from the V logo and the HOME eyebrow. Menus and settings (top bar,
      * Settings, option lists, toggles, checks, choice pills, context and player menus) use the gold
-     * set below for labels, icons, selection and focus; the Accent colour setting still colours
-     * content (Watch now, posters, the player timeline).
+     * set below for labels, icons, selection and focus. The Accent colour setting (gold by
+     * default) colours content: Watch now, Play, poster focus, the player timeline.
      */
     val gold: Color = Color(0xFFD4A65A),
     /** Lighter gold from the logo's lit facet: focused menu labels and icons. */
@@ -67,8 +67,9 @@ data class VyrkColors(
     val frostSoft: Color = Color(0xFFA9E1F3),
 )
 
-/** Accent choices offered in Settings. Frost is VYRK's own; the rest follow the spec. */
+/** Accent choices offered in Settings. Gold is VYRK's own and the default; the rest follow the spec. */
 enum class AccentChoice(val color: Color, val onColor: Color) {
+    GOLD(Color(0xFFD4A65A), Color(0xFF1A1206)),
     FROST(Color(0xFF55DFFF), Color(0xFF031117)),
     BLUE(Color(0xFF6EA8FF), Color(0xFF0B1220)),
     TEAL(Color(0xFF7FD1C7), Color(0xFF0B1A18)),
@@ -192,7 +193,7 @@ object Vyrk {
 }
 
 @Composable
-fun VyrkTheme(accent: AccentChoice = AccentChoice.FROST, reduceMotion: Boolean = false, content: @Composable () -> Unit) {
+fun VyrkTheme(accent: AccentChoice = AccentChoice.GOLD, reduceMotion: Boolean = false, content: @Composable () -> Unit) {
     val colors = VyrkColors(accent = accent.color, onAccent = accent.onColor)
     val scheme = darkColorScheme(
         primary = colors.accent,

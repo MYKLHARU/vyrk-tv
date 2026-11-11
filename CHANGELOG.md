@@ -2,6 +2,12 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.36
+
+- Gold is VYRK's accent: Watch now, Play, poster focus, page dots and the player timeline are gold instead of blue. Gold is the new default in Settings › Accent colour, and everyone is moved to it once (other colours can still be chosen afterwards).
+- Focus glows are centred on the item everywhere (buttons, posters, chips, episode and source rows, player buttons); they used to fall down and to one side.
+- The "More info · Library" key hint beside Watch now is gone (hold OK or press Menu for the title menu).
+
 ## v0.1.35
 
 - Menus and Settings use the VYRK gold: top bar labels and icons, the focused tab, Search and the settings button, the Settings list, choice pills, switches, checkboxes, colour swatches, the title options menu and dialogs, the Add-ons page, and the player's Audio & subtitles list. The Accent colour setting still colours content (Watch now, posters, the player timeline).

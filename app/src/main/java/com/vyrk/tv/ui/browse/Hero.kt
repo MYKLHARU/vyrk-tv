@@ -358,9 +358,6 @@ fun Hero(
                             }
                         },
                 )
-                // Left and Right on Watch now turn the carousel, so More info and the library are not
-                // separate buttons: Hold OK or Menu opens the title menu that has both.
-                com.vyrk.tv.ui.components.KeyHint("☰", str(R.string.more_info) + "  ·  " + str(R.string.tab_library))
             }
         }
         // Carousel: an arrow at each side of the hero (shown, not focused: Left and Right on Watch now

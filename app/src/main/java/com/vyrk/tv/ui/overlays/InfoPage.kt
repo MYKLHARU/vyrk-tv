@@ -1,5 +1,6 @@
 package com.vyrk.tv.ui.overlays
 
+import com.vyrk.tv.ui.components.focusHalo
 import android.os.Build
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
@@ -405,7 +406,7 @@ private fun PersonChip(name: String, photo: String?, trace: String, showPhoto: B
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
-        modifier = Modifier.height(CHIP_H).traceFocus(trace),
+        modifier = Modifier.focusHalo().height(CHIP_H).traceFocus(trace),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(CHIP_H / 2)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = c.shade.copy(alpha = 0.55f), contentColor = c.text,
@@ -413,7 +414,7 @@ private fun PersonChip(name: String, photo: String?, trace: String, showPhoto: B
         ),
         border = ClickableSurfaceDefaults.border(border = Border(BorderStroke(1.dp, c.text.copy(alpha = 0.16f))), focusedBorder = Border.None),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = focusGlow()),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.fillMaxHeight().padding(start = if (showPhoto) 4.dp else 14.dp, end = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (showPhoto) PersonPhoto(name, photo, CHIP_H - 8.dp)
@@ -623,7 +624,7 @@ private fun SeasonTab(label: String, selected: Boolean, onClick: () -> Unit, tra
     val c = Vyrk.colors
     Surface(
         onClick = onClick,
-        modifier = modifier.height(32.dp).traceFocus(trace),
+        modifier = modifier.focusHalo().height(32.dp).traceFocus(trace),
         shape = ClickableSurfaceDefaults.shape(Dimens.pillShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) c.steel.copy(alpha = 0.9f) else Color.Transparent, contentColor = if (selected) c.text else c.textSecondary,
@@ -635,7 +636,7 @@ private fun SeasonTab(label: String, selected: Boolean, onClick: () -> Unit, tra
             focusedBorder = Border(BorderStroke(1.5.dp, c.accent)),
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.04f),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.35f), 8.dp)),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.fillMaxHeight().padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             if (selected) com.vyrk.tv.ui.components.RuneGlyph(9.dp, color = c.gold)
@@ -657,7 +658,7 @@ private fun EpisodeCard(
     val c = Vyrk.colors
     Surface(
         onClick = onClick, onLongClick = onMenu,
-        modifier = Modifier.fillMaxWidth().traceFocus("episode:${v.id}")
+        modifier = Modifier.focusHalo().fillMaxWidth().traceFocus("episode:${v.id}")
             .onPreviewKeyEvent { e -> if (e.type == KeyEventType.KeyUp && e.key == Key.Menu) { onMenu(); true } else false },
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(14.dp)),
         colors = ClickableSurfaceDefaults.colors(
@@ -669,7 +670,7 @@ private fun EpisodeCard(
             focusedBorder = Border(BorderStroke(1.5.dp, c.accent)),
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.02f)),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.30f), 10.dp)),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(144.dp, 81.dp).clip(RoundedCornerShape(9.dp)).background(Brush.linearGradient(listOf(c.steel, c.panel)))) {
@@ -718,7 +719,7 @@ private fun InfoSourceCard(r: Ranked, recommended: Boolean, modifier: Modifier =
     val uhd = (i.resolution ?: 0) >= 2160
     Surface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().traceFocus("source:${r.candidate.addonId}:${r.candidate.index}"),
+        modifier = modifier.focusHalo().fillMaxWidth().traceFocus("source:${r.candidate.addonId}:${r.candidate.index}"),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (recommended) c.accent.copy(alpha = 0.10f) else c.raised.copy(alpha = 0.55f), contentColor = c.text,
@@ -729,7 +730,7 @@ private fun InfoSourceCard(r: Ranked, recommended: Boolean, modifier: Modifier =
             focusedBorder = Border(BorderStroke(1.5.dp, c.accent)),
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = com.vyrk.tv.ui.theme.focusZoom(1.02f)),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow(c.accent.copy(alpha = 0.30f), 10.dp)),
+        glow = ClickableSurfaceDefaults.glow(focusedGlow = androidx.tv.material3.Glow.None),
     ) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(

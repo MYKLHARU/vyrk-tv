@@ -44,7 +44,8 @@ data class ProfileSettings(
     val heroEnabled: Boolean = true,
     val heroRotation: Boolean = true,
     val posterSize: Int = 118,
-    val accent: String = "FROST",
+    // Stored under a new key so everyone moved to the gold default once (the old key held FROST).
+    @kotlinx.serialization.SerialName("accentColour") val accent: String = "GOLD",
     val reduceMotion: Boolean = false,
     val blurUnwatched: Boolean = false,
     val hiddenRows: Set<String> = emptySet(),
