@@ -208,7 +208,7 @@ jobs:
           for d in results/e2e-results-*; do
             p=${d##*-}
             (cd "$d" && zip -q -r "$OLDPWD/out/e2e-results-part$p.zip" . || true)
-            for f in "$d"/*.png "$d"/focus-trace.txt "$d"/logcat-app.txt "$d"/logcat.txt "$d"/addon.log; do cp "$f" "out/part$p-$(basename "$f")"; done
+            for f in "$d"/*.png "$d"/focus-trace.txt "$d"/logcat-app.txt "$d"/logcat.txt "$d"/addon.log; do if [[ -f "$f" ]]; then cp "$f" "out/part$p-$(basename "$f")"; fi; done
           done
           existing=(out/*)
           recreate() { local tag=$1; shift; for i in 1 2 3 4 5; do gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true; gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" >/dev/null 2>&1 || true; sleep $((i * 4)); gh release create "$tag" "$@" && return 0; echo "create retry $i"; done; return 1; }
