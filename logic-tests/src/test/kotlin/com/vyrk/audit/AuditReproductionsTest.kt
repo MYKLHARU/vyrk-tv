@@ -367,11 +367,16 @@ class AuditReproductionsTest {
         val file = File(dir, "state.json")
         val gate = java.util.concurrent.CountDownLatch(1)
         val seenAtFlush = CompletableDeferred<String?>()
+        val captured = java.util.concurrent.CountDownLatch(1)
         AtomicFiles.writeTextLater(File(dir, "blocker.json")) { gate.await(); "x" }
         AtomicFiles.writeTextLater(file) { "before-flush" }
         // UNDISPATCHED: the flush marker is queued before this line returns.
-        launch(Dispatchers.Default, CoroutineStart.UNDISPATCHED) { AtomicFiles.flush(); seenAtFlush.complete(AtomicFiles.readText(file)) }
-        AtomicFiles.writeTextLater(file) { "after-flush" }
+        launch(Dispatchers.Default, CoroutineStart.UNDISPATCHED) {
+            try { AtomicFiles.flush(); seenAtFlush.complete(AtomicFiles.readText(file)) } finally { captured.countDown() }
+        }
+        // The writer carries on as soon as the flush resumes its caller: hold the later save back
+        // until the file has been read, so the read cannot see it whatever the scheduling.
+        AtomicFiles.writeTextLater(file) { captured.await(10, java.util.concurrent.TimeUnit.SECONDS); "after-flush" }
         gate.countDown()
         assertEquals("before-flush", seenAtFlush.await(), "A flush is a promise that earlier saves are on disk")
         AtomicFiles.flush()

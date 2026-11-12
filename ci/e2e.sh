@@ -93,7 +93,8 @@ dismiss_stall_prompt() {
       key KEYCODE_DPAD_UP 0.4 "prompt retains focus above"
       expect '^prompt:no$' "prompt prevents focus escaping to the timeline"
       key KEYCODE_DPAD_CENTER 1 "continue the local sample"
-      wait_focus '^player:' 10
+      # The prompt can rise over a panel the journey has just opened; focus then returns to the panel.
+      wait_focus '^(player|panel):' 10
     fi
   fi
 }
@@ -157,7 +158,13 @@ key KEYCODE_CAPTIONS 2 "CC opens Audio & subtitles"
 # The CI emulator can be slow to give the panel window focus: wait, and press CC once more if it never opened.
 for _ in 1 2 3 4 5; do
   [[ "$(focus_now)" =~ ^panel: ]] && break
-  if [[ "$(focus_now)" == prompt:yes ]]; then dismiss_stall_prompt; key KEYCODE_CAPTIONS 2 "CC after the stall prompt"; continue; fi
+  if [[ "$(focus_now)" == prompt:yes ]]; then
+    dismiss_stall_prompt
+    # CC may have opened the panel just before the prompt rose over it: pressing CC again is only
+    # for when it did not.
+    [[ "$(focus_now)" =~ ^panel: ]] && break
+    key KEYCODE_CAPTIONS 2 "CC after the stall prompt"; continue
+  fi
   probe "panel" >/dev/null 2>&1 || true; sleep 1
 done
 [[ "$(focus_now)" =~ ^panel: ]] || key KEYCODE_CAPTIONS 3 "CC again"
