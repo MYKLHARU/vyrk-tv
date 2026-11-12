@@ -404,4 +404,23 @@ class AuditReproductionsTest {
         repeat(4) { f.model.onPlaybackState(androidx.media3.common.Player.STATE_BUFFERING) }
         assertFalse(f.model.stallPrompt, "Rebuffering in the first seconds of a source is start-up, not a stall")
     }
+
+    @Test fun stallPromptWaitsForAnOpenPanelToClose() = runTest {
+        val f = fixture(backgroundScope)
+        f.model.start(); runCurrent(); f.model.onFirstFrame()
+        android.os.SystemClock.advanceMs += 11_000 // past the start-up grace
+        f.model.panel = com.vyrk.tv.player.Panel.AUDIO_SUBS
+        repeat(3) { f.model.onPlaybackState(androidx.media3.common.Player.STATE_BUFFERING) }
+        assertFalse(f.model.stallPrompt, "The prompt must not take focus from an open panel")
+        f.model.panel = com.vyrk.tv.player.Panel.NONE
+        assertTrue(f.model.stallPrompt, "The prompt is shown once the panel closes")
+    }
+
+    @Test fun stallPromptIsRaisedAtOnceWhenNoPanelIsOpen() = runTest {
+        val f = fixture(backgroundScope)
+        f.model.start(); runCurrent(); f.model.onFirstFrame()
+        android.os.SystemClock.advanceMs += 11_000
+        repeat(3) { f.model.onPlaybackState(androidx.media3.common.Player.STATE_BUFFERING) }
+        assertTrue(f.model.stallPrompt)
+    }
 }

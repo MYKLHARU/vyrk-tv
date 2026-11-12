@@ -82,7 +82,18 @@ class PlayerModel(
     var buffered by mutableStateOf(0L)
     var playing by mutableStateOf(false)
     var controlsVisible by mutableStateOf(false)
-    var panel by mutableStateOf(Panel.NONE)
+    private var panelState by mutableStateOf(Panel.NONE)
+    var panel: Panel
+        get() = panelState
+        set(value) {
+            panelState = value
+            if (value == Panel.NONE && stallPromptDue) {
+                stallPromptDue = false
+                if (phase == Phase.PLAYING && lowerQualityIndex() >= 0) stallPrompt = true
+            }
+        }
+    /** The stall prompt came due while a panel was open: it is shown when the panel closes. */
+    private var stallPromptDue = false
     var lastInteraction = SystemClock.elapsedRealtime()
     var stallPrompt by mutableStateOf(false)
     var upNext by mutableStateOf(false)
@@ -183,7 +194,7 @@ class PlayerModel(
         incompleteReason = null
         upNext = false
         upNextCountdown = 10
-        stallPrompt = false
+        stallPrompt = false; stallPromptDue = false
         panel = Panel.NONE
         resetTimeline()
         scope.launch { loadSegments(req.meta.type, req.meta.id, vid, generation) }
@@ -251,7 +262,7 @@ class PlayerModel(
         endedHandled = false
         upNext = false
         upNextCountdown = 10
-        stallPrompt = false
+        stallPrompt = false; stallPromptDue = false
         position = 0
         duration = 0
         current = r
@@ -503,7 +514,7 @@ class PlayerModel(
 
     /** After the stall prompt: the next candidate with a lower resolution. */
     fun lowerQuality() {
-        stallPrompt = false
+        stallPrompt = false; stallPromptDue = false
         val idx = lowerQualityIndex()
         if (idx < 0) return
         val pos = engine.player.currentPosition
@@ -604,7 +615,10 @@ class PlayerModel(
         if (state == Player.STATE_BUFFERING && firstFrame) {
             Diagnostics.log("player", "rebuffer ${engine.bufferDiagnostics()}")
             // "Try a lower quality?" is only asked when there is one: its button did nothing otherwise.
-            if (stall.onBuffering(SystemClock.elapsedRealtime()) && lowerQualityIndex() >= 0) stallPrompt = true
+            // It waits for an open panel to close: it would take focus from the list being browsed.
+            if (stall.onBuffering(SystemClock.elapsedRealtime()) && lowerQualityIndex() >= 0) {
+                if (panel == Panel.NONE) stallPrompt = true else stallPromptDue = true
+            }
         }
         if (state == Player.STATE_ENDED) onEnded()
     }
@@ -630,7 +644,7 @@ class PlayerModel(
         current?.let { episodeGuard.rememberSuspect(sourceId(it)) }
         upNext = false
         upNextCountdown = 10
-        stallPrompt = false
+        stallPrompt = false; stallPromptDue = false
         firstFrameJob?.cancel()
         engine.player.pause()
         saveProgress()
