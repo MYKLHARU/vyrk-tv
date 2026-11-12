@@ -63,8 +63,10 @@ class OkHttpTransport(private val client: OkHttpClient) : HttpTransport {
             override fun onResponse(call: Call, response: Response) {
                 val r = try {
                     response.use { HttpResult(it.code, it.body.string()) }
-                } catch (e: IOException) {
-                    if (cont.isActive) cont.resumeWithException(e)
+                } catch (e: Exception) {
+                    // Not only IOException: anything thrown here would otherwise be swallowed by
+                    // OkHttp and leave the caller suspended for good.
+                    if (cont.isActive) cont.resumeWithException(if (e is IOException) e else IOException(e.javaClass.simpleName, e))
                     return
                 }
                 if (cont.isActive) cont.resume(r)

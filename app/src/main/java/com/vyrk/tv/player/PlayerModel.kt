@@ -82,7 +82,18 @@ class PlayerModel(
     var buffered by mutableStateOf(0L)
     var playing by mutableStateOf(false)
     var controlsVisible by mutableStateOf(false)
-    var panel by mutableStateOf(Panel.NONE)
+    private var panelState by mutableStateOf(Panel.NONE)
+    var panel: Panel
+        get() = panelState
+        set(value) {
+            panelState = value
+            if (value == Panel.NONE && stallPromptDue) {
+                stallPromptDue = false
+                if (phase == Phase.PLAYING && lowerQualityIndex() >= 0) stallPrompt = true
+            }
+        }
+    /** The stall prompt came due while a panel was open: it is shown when the panel closes. */
+    private var stallPromptDue = false
     var lastInteraction = SystemClock.elapsedRealtime()
     var stallPrompt by mutableStateOf(false)
     var upNext by mutableStateOf(false)
@@ -183,7 +194,7 @@ class PlayerModel(
         incompleteReason = null
         upNext = false
         upNextCountdown = 10
-        stallPrompt = false
+        stallPrompt = false; stallPromptDue = false
         panel = Panel.NONE
         resetTimeline()
         scope.launch { loadSegments(req.meta.type, req.meta.id, vid, generation) }
@@ -197,6 +208,7 @@ class PlayerModel(
             val cands = results.flatMapIndexed { order, (addon, r) ->
                 (r as? AddonResult.Ok)?.value?.streams.orEmpty().mapIndexed { i, st -> Candidate(st, addon.manifest.id, addon.manifest.name, order, i) }
             }
+            if (generation != loadGeneration) return
             if (results.isEmpty()) { fail(Phase.NO_SOURCES, s(com.vyrk.tv.R.string.no_stream_addons)); return }
             StreamRanker.rank(cands, caps(), prefs(req.meta.id))
         }
@@ -250,7 +262,7 @@ class PlayerModel(
         endedHandled = false
         upNext = false
         upNextCountdown = 10
-        stallPrompt = false
+        stallPrompt = false; stallPromptDue = false
         position = 0
         duration = 0
         current = r
@@ -410,6 +422,7 @@ class PlayerModel(
         engine.select(C.TRACK_TYPE_AUDIO, next.id)
         Diagnostics.log("player", "audio track failed; switched to ${next.language ?: "?"} ${next.codec ?: ""}")
         vyrkEvent("audio_switched")
+        stall.onSeek(SystemClock.elapsedRealtime())
         engine.player.seekTo(pos)
         engine.player.prepare()
         engine.player.playWhenReady = true
@@ -493,12 +506,16 @@ class PlayerModel(
         playCandidate(pos)
     }
 
+    /** The first usable source with a lower resolution than the one playing, or -1. */
+    private fun lowerQualityIndex(): Int {
+        val curRes = current?.info?.resolution ?: return -1
+        return candidates.indexOfFirst { !suspectSource(it) && (it.info.resolution ?: 0) in 1 until curRes }
+    }
+
     /** After the stall prompt: the next candidate with a lower resolution. */
     fun lowerQuality() {
-        stallPrompt = false
-        val cur = current ?: return
-        val curRes = cur.info.resolution ?: return
-        val idx = candidates.indexOfFirst { !suspectSource(it) && (it.info.resolution ?: 0) in 1 until curRes }
+        stallPrompt = false; stallPromptDue = false
+        val idx = lowerQualityIndex()
         if (idx < 0) return
         val pos = engine.player.currentPosition
         index = idx
@@ -597,7 +614,11 @@ class PlayerModel(
     fun onPlaybackState(state: Int) {
         if (state == Player.STATE_BUFFERING && firstFrame) {
             Diagnostics.log("player", "rebuffer ${engine.bufferDiagnostics()}")
-            if (stall.onBuffering(SystemClock.elapsedRealtime())) stallPrompt = true
+            // "Try a lower quality?" is only asked when there is one: its button did nothing otherwise.
+            // It waits for an open panel to close: it would take focus from the list being browsed.
+            if (stall.onBuffering(SystemClock.elapsedRealtime()) && lowerQualityIndex() >= 0) {
+                if (panel == Panel.NONE) stallPrompt = true else stallPromptDue = true
+            }
         }
         if (state == Player.STATE_ENDED) onEnded()
     }
@@ -623,7 +644,7 @@ class PlayerModel(
         current?.let { episodeGuard.rememberSuspect(sourceId(it)) }
         upNext = false
         upNextCountdown = 10
-        stallPrompt = false
+        stallPrompt = false; stallPromptDue = false
         firstFrameJob?.cancel()
         engine.player.pause()
         saveProgress()

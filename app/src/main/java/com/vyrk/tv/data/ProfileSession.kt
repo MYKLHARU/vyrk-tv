@@ -54,7 +54,11 @@ class ProfileSession(
     private val accountApi: StremioAccountApi,
     private val sharedAddons: () -> List<Descriptor>,
 ) {
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // Background sync and saves must never take the app down: an uncaught exception in a
+    // coroutine without a handler ends the process on Android.
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
+        Diagnostics.log("session", "background task failed: ${e.javaClass.simpleName}")
+    })
     @Volatile private var closed = false
     private val now get() = System.currentTimeMillis()
 
@@ -133,16 +137,21 @@ class ProfileSession(
     @Synchronized
     fun updateSettings(transform: (ProfileSettings) -> ProfileSettings) {
         if (closed) return
+        val before = _settings.value
         _settings.update(transform)
         val snapshot = _settings.value
+        if (snapshot == before) return
         AtomicFiles.writeTextLater(settingsFile) { AppJson.encodeToString(ProfileSettings.serializer(), snapshot) }
     }
 
     @Synchronized
     fun updateState(transform: (SessionState) -> SessionState) {
         if (closed) return
+        val before = _state.value
         _state.update(transform)
         val snapshot = _state.value
+        // Unchanged (the pending ids during playback, once a second): nothing new to write.
+        if (snapshot == before) return
         AtomicFiles.writeTextLater(stateFile) { AppJson.encodeToString(SessionState.serializer(), snapshot) }
     }
 
@@ -279,7 +288,7 @@ class ProfileSession(
 
     private fun onExpired() {
         authKey = null
-        scope.launch { vault.writeSecret(authFile, "") }
+        scope.launch { runCatching { vault.writeSecret(authFile, "") }.onFailure { Diagnostics.log("account", "clearing the expired key failed: ${it.javaClass.simpleName}") } }
         _account.value = AccountState.Expired(profile.accountEmail)
         Diagnostics.log("account", "session expired")
     }
@@ -305,7 +314,9 @@ class ProfileSession(
             val plan = LibrarySync.plan(_library.value, meta, now)
             if (plan.pull.isNotEmpty()) {
                 val items = plan.pull.chunked(200).flatMap { accountApi.datastoreGet(key, it) }
-                _library.value = LibraryRules.merge(_library.value, items)
+                // Atomic: a local change made while this merges (progress, Add to library) must
+                // not be replaced by the copy read before it.
+                _library.update { LibraryRules.merge(it, items) }
                 saveLibrary()
             }
             plan.push.forEach { pending.mark(it) }

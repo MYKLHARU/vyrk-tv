@@ -344,4 +344,83 @@ class AuditReproductionsTest {
         f.model.seekBy(-30 * minute)
         assertEquals(10 * minute, f.session.item("show")!!.state.timeOffset)
     }
+
+    // ---- v0.1.36 audit ----
+
+    @Test fun supersededQueuedSavesAreSkippedButTheNewestIsWritten() = runBlocking {
+        val dir = Files.createTempDirectory("vyrk-coalesce-").toFile()
+        val file = File(dir, "library.json")
+        val gate = java.util.concurrent.CountDownLatch(1)
+        val serialised = java.util.concurrent.atomic.AtomicInteger()
+        // The disk is busy: one write blocks while a film's once-a-second saves pile up behind it.
+        AtomicFiles.writeTextLater(File(dir, "blocker.json")) { gate.await(); "x" }
+        repeat(500) { n -> AtomicFiles.writeTextLater(file) { serialised.incrementAndGet(); "save-$n" } }
+        gate.countDown()
+        AtomicFiles.flush()
+        println("Queued saves=500 serialised=${serialised.get()} disk=${file.readText()}")
+        assertEquals("save-499", file.readText(), "The newest save must be the one on disk")
+        assertTrue(serialised.get() <= 2, "Saves replaced before they were written must not be serialised (was ${serialised.get()})")
+    }
+
+    @Test fun flushWritesWhatWasQueuedBeforeItEvenIfANewerSaveFollows() = runBlocking {
+        val dir = Files.createTempDirectory("vyrk-barrier-").toFile()
+        val file = File(dir, "state.json")
+        val gate = java.util.concurrent.CountDownLatch(1)
+        val seenAtFlush = CompletableDeferred<String?>()
+        val captured = java.util.concurrent.CountDownLatch(1)
+        AtomicFiles.writeTextLater(File(dir, "blocker.json")) { gate.await(); "x" }
+        AtomicFiles.writeTextLater(file) { "before-flush" }
+        // UNDISPATCHED: the flush marker is queued before this line returns.
+        launch(Dispatchers.Default, CoroutineStart.UNDISPATCHED) {
+            try { AtomicFiles.flush(); seenAtFlush.complete(AtomicFiles.readText(file)) } finally { captured.countDown() }
+        }
+        // The writer carries on as soon as the flush resumes its caller: hold the later save back
+        // until the file has been read, so the read cannot see it whatever the scheduling.
+        AtomicFiles.writeTextLater(file) { captured.await(10, java.util.concurrent.TimeUnit.SECONDS); "after-flush" }
+        gate.countDown()
+        assertEquals("before-flush", seenAtFlush.await(), "A flush is a promise that earlier saves are on disk")
+        AtomicFiles.flush()
+        assertEquals("after-flush", file.readText())
+    }
+
+    @Test fun unchangedSessionStateIsNotRewrittenEverySecond() = runBlocking {
+        val dir = Files.createTempDirectory("vyrk-state-").toFile()
+        val s = session(FakeHttp(), dir = dir)
+        s.updateState { it.copy(pendingIds = setOf("tt1")) }
+        AtomicFiles.flush()
+        val stateFile = File(dir, "state.json")
+        assertTrue(stateFile.setLastModified(1_000_000))
+        repeat(50) { s.updateState { it.copy(pendingIds = setOf("tt1")) } }
+        AtomicFiles.flush()
+        assertEquals(1_000_000, stateFile.lastModified(), "An unchanged state must not be written again")
+        s.updateState { it.copy(pendingIds = setOf("tt1", "tt2")) }
+        AtomicFiles.flush()
+        assertTrue(stateFile.readText().contains("tt2"))
+    }
+
+    @Test fun stallPromptIsNotRaisedWhileASourceIsStillStarting() = runTest {
+        val f = fixture(backgroundScope)
+        f.model.start(); runCurrent(); f.model.onFirstFrame()
+        repeat(4) { f.model.onPlaybackState(androidx.media3.common.Player.STATE_BUFFERING) }
+        assertFalse(f.model.stallPrompt, "Rebuffering in the first seconds of a source is start-up, not a stall")
+    }
+
+    @Test fun stallPromptWaitsForAnOpenPanelToClose() = runTest {
+        val f = fixture(backgroundScope)
+        f.model.start(); runCurrent(); f.model.onFirstFrame()
+        android.os.SystemClock.advanceMs += 11_000 // past the start-up grace
+        f.model.panel = com.vyrk.tv.player.Panel.AUDIO_SUBS
+        repeat(3) { f.model.onPlaybackState(androidx.media3.common.Player.STATE_BUFFERING) }
+        assertFalse(f.model.stallPrompt, "The prompt must not take focus from an open panel")
+        f.model.panel = com.vyrk.tv.player.Panel.NONE
+        assertTrue(f.model.stallPrompt, "The prompt is shown once the panel closes")
+    }
+
+    @Test fun stallPromptIsRaisedAtOnceWhenNoPanelIsOpen() = runTest {
+        val f = fixture(backgroundScope)
+        f.model.start(); runCurrent(); f.model.onFirstFrame()
+        android.os.SystemClock.advanceMs += 11_000
+        repeat(3) { f.model.onPlaybackState(androidx.media3.common.Player.STATE_BUFFERING) }
+        assertTrue(f.model.stallPrompt)
+    }
 }

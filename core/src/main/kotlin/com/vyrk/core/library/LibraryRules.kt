@@ -180,6 +180,16 @@ object LibraryRules {
         items.filter { it.isInContinueWatching }
             .sortedWith(compareByDescending<LibraryItem> { it.state.lastWatchedMs ?: it.mtimeMs }.thenBy { it.id })
 
+    /**
+     * What the launcher's Watch Next row shows for [items], to the minute: the row is republished
+     * only when this changes. Progress is saved every second during playback, and rewriting the
+     * row that often cleared and refilled it on the home screen for the whole film.
+     */
+    fun watchNextDigest(items: Collection<LibraryItem>, limit: Int = 10): List<String> =
+        continueWatching(items).take(limit).map { i ->
+            listOf(i.id, i.type, i.name, i.poster.orEmpty(), (i.state.timeOffset / 60_000L).toString(), i.state.duration.toString()).joinToString("\u0000")
+        }
+
     /** stremio-core LibraryBucket::merge_items: newer-or-equal mtime wins. */
     fun merge(local: Map<String, LibraryItem>, incoming: Collection<LibraryItem>): Map<String, LibraryItem> {
         val out = local.toMutableMap()

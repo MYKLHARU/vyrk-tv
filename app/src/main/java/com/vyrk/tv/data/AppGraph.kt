@@ -13,6 +13,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.ListSerializer
@@ -22,7 +24,9 @@ import java.util.UUID
 
 /** App-wide singletons. Created once in [com.vyrk.tv.VyrkApp]. */
 class AppGraph(val context: Context) {
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + kotlinx.coroutines.CoroutineExceptionHandler { _, e ->
+        Diagnostics.log("app", "background task failed: ${e.javaClass.simpleName}")
+    })
     val http: OkHttpClient = OkHttpTransport.client("VYRK/${BuildConfig.VERSION_NAME} (Android TV)")
     val transport = OkHttpTransport(http)
     val addonClient = AddonClient(
@@ -68,7 +72,11 @@ class AppGraph(val context: Context) {
         watchNextJob?.cancel()
         watchNextJob = scope.launch {
             watchNext.clear()
-            s.library.collect { lib -> kotlinx.coroutines.delay(2_000); watchNext.publish(lib.values) }
+            // Republish only when the row's content changes (to the minute), two seconds after the
+            // last change: progress is saved every second during playback.
+            s.library
+                .distinctUntilChangedBy { lib -> com.vyrk.core.library.LibraryRules.watchNextDigest(lib.values) }
+                .collectLatest { lib -> kotlinx.coroutines.delay(2_000); watchNext.publish(lib.values) }
         }
     }
 
