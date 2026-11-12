@@ -2,7 +2,7 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
-## Unreleased
+## v0.1.37
 
 - Fix: "Playback keeps pausing. Try a lower quality?" could appear a few seconds after a film started (or after switching source), because buffering while a stream was still starting counted as stalls. The first 10 seconds of a source no longer count, and the question is only asked when a lower-quality source exists (its button did nothing otherwise).
 - The "Playback keeps pausing" prompt no longer appears over an open panel (Audio & subtitles, Sources, Sleep timer) and takes focus from it: it waits until the panel is closed.
