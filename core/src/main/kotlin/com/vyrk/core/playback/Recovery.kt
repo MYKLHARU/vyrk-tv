@@ -102,12 +102,15 @@ class RecoveryPolicy(
 
 /**
  * Offers a lower quality after [threshold] stalls within [windowMs], ignoring buffering during
- * start-up and right after a seek.
+ * start-up and right after a seek. Start-up is everything before the first frame and the
+ * [ignoreAfterStartMs] after it: a stream that has just started often dips back into buffering a
+ * few times while its buffer fills, which is not the steady "keeps pausing" this is for.
  */
 class StallDetector(
     private val threshold: Int = 3,
     private val windowMs: Long = 60_000,
     private val ignoreAfterSeekMs: Long = 5_000,
+    private val ignoreAfterStartMs: Long = 10_000,
 ) {
     private val stalls = ArrayDeque<Long>()
     private var startedAt: Long? = null
@@ -120,7 +123,8 @@ class StallDetector(
 
     /** Returns true when the lower-quality prompt should be shown. */
     fun onBuffering(nowMs: Long): Boolean {
-        if (startedAt == null) return false
+        val started = startedAt ?: return false
+        if (nowMs - started < ignoreAfterStartMs) return false
         if (nowMs - lastSeekAt < ignoreAfterSeekMs) return false
         stalls.addLast(nowMs)
         while (stalls.isNotEmpty() && nowMs - stalls.first() > windowMs) stalls.removeFirst()

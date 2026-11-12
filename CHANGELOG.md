@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## Unreleased
+
+- Fix: "Playback keeps pausing. Try a lower quality?" could appear a few seconds after a film started (or after switching source), because buffering while a stream was still starting counted as stalls. The first 10 seconds of a source no longer count, and the question is only asked when a lower-quality source exists (its button did nothing otherwise).
+- Fix: a title added or marked while a library sync was merging could be lost.
+- Less work during playback: the library file is no longer queued for writing faster than storage can keep up, unchanged session state isn't rewritten every second, and the launcher's Watch Next row is republished only when it changes instead of every couple of seconds.
+- Hardening: a failed background save or sync can no longer close the app, and a response that fails while being read no longer leaves its request waiting for good.
+
 ## v0.1.36
 
 - Gold is VYRK's accent: Watch now, Play, poster focus, page dots and the player timeline are gold instead of blue. Gold is the new default in Settings › Accent colour, and everyone is moved to it once (other colours can still be chosen afterwards).
