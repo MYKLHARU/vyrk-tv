@@ -423,4 +423,16 @@ class AuditReproductionsTest {
         repeat(3) { f.model.onPlaybackState(androidx.media3.common.Player.STATE_BUFFERING) }
         assertTrue(f.model.stallPrompt)
     }
+
+    @Test fun stallPromptWaitsForATimelineSeekToBeChosen() = runTest {
+        val f = fixture(backgroundScope)
+        f.model.start(); runCurrent(); f.model.onFirstFrame()
+        android.os.SystemClock.advanceMs += 11_000
+        f.model.scrubStep(true)
+        assertTrue(f.model.scrubTarget != null, "The timeline is being scrubbed")
+        repeat(3) { f.model.onPlaybackState(androidx.media3.common.Player.STATE_BUFFERING) }
+        assertFalse(f.model.stallPrompt, "OK on the timeline must not land on Lower quality")
+        f.model.scrubCancel()
+        assertTrue(f.model.stallPrompt, "The prompt is shown once the scrub is over")
+    }
 }

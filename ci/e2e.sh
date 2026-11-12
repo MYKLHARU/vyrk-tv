@@ -312,21 +312,30 @@ EVENTS=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
 if printf '%s\n' "$EVENTS" | grep -q 'skip_offered INTRO'; then log "ok: Skip intro offered from IntroDB timings"
 else log "warn: Skip intro not seen ($(printf '%s\n' "$EVENTS" | grep -o 'introdb_segments [0-9]*' | tail -n 1 || echo 'no IntroDB answer'))"; fi
 dismiss_stall_prompt
-key KEYCODE_DPAD_DOWN 1.5 "show controls"
-key KEYCODE_DPAD_UP 1.2 "to timeline"
-# The stall prompt can come back between the dismissal and these keys; close it and try again.
-for _ in 1 2; do
-  [[ "$(focus_now)" == prompt:yes ]] || break
+# Up from the controls focuses the timeline; Left/Right scrub; Up enters chapter mode; OK seeks.
+TIMELINE_AT=none
+timeline_seek() {
+  key KEYCODE_DPAD_DOWN 1.5 "show controls"
+  key KEYCODE_DPAD_UP 1.2 "to timeline"
+  TIMELINE_AT=$(focus_now)
+  [[ "$TIMELINE_AT" == player:timeline ]] || return 1
+  key KEYCODE_DPAD_RIGHT 0.4 "scrub"; key KEYCODE_DPAD_RIGHT 0.4
+  [[ ${1:-} == shots ]] && shot timeline-scrub
+  key KEYCODE_DPAD_UP 1.0 "chapter mode"
+  [[ ${1:-} == shots ]] && shot timeline-chapters
+  key KEYCODE_DPAD_CENTER 2 "seek"
+  [[ "$(focus_now)" == player:timeline ]]
+}
+# The stall prompt can rise at any point in this sequence on the slow software decoder and take the
+# keys meant for the timeline (it waits out a scrub, then appears after the seek). It is asked once
+# per source: close it if it is up and run the sequence once more.
+if ! timeline_seek shots; then
+  log "timeline sequence interrupted at '$(focus_now)' (stall prompt events: $(adb_run logcat -d -s VyrkEvent:I 2>/dev/null | grep -c stall_prompt || true)); trying once more"
   dismiss_stall_prompt
-  key KEYCODE_DPAD_DOWN 1.5 "show controls again"
-  key KEYCODE_DPAD_UP 1.2 "to timeline again"
-done
-expect '^player:timeline$' "timeline takes focus above the controls"
-key KEYCODE_DPAD_RIGHT 0.4 "scrub"; key KEYCODE_DPAD_RIGHT 0.4
-shot timeline-scrub
-key KEYCODE_DPAD_UP 1.0 "chapter mode"
-shot timeline-chapters
-key KEYCODE_DPAD_CENTER 2 "seek"
+  timeline_seek || true
+fi
+if [[ "$TIMELINE_AT" == player:timeline ]]; then log "ok: timeline takes focus above the controls ($TIMELINE_AT)"
+else fail "timeline takes focus above the controls: focus is '$TIMELINE_AT'"; fi
 expect '^player:timeline$' "focus stays on the timeline after seeking"
 
 # Use local, deterministic episode metadata for both the short and full-file scenarios.

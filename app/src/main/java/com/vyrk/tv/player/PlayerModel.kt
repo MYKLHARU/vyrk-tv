@@ -87,13 +87,24 @@ class PlayerModel(
         get() = panelState
         set(value) {
             panelState = value
-            if (value == Panel.NONE && stallPromptDue) {
-                stallPromptDue = false
-                if (phase == Phase.PLAYING && lowerQualityIndex() >= 0) stallPrompt = true
-            }
+            raiseDueStallPrompt()
         }
-    /** The stall prompt came due while a panel was open: it is shown when the panel closes. */
+    /** The stall prompt came due while it had to wait (see [raiseStallPrompt]). */
     private var stallPromptDue = false
+
+    /**
+     * The prompt takes focus with "Lower quality" selected, so it waits while a key meant for
+     * something else could land on it: an open panel, or a seek being chosen on the timeline.
+     */
+    private fun raiseStallPrompt() {
+        if (panel == Panel.NONE && !scrubber.active) { stallPrompt = true; vyrkEvent("stall_prompt") } else stallPromptDue = true
+    }
+
+    private fun raiseDueStallPrompt() {
+        if (!stallPromptDue || panel != Panel.NONE || scrubber.active) return
+        stallPromptDue = false
+        if (phase == Phase.PLAYING && lowerQualityIndex() >= 0) { stallPrompt = true; vyrkEvent("stall_prompt") }
+    }
     var lastInteraction = SystemClock.elapsedRealtime()
     var stallPrompt by mutableStateOf(false)
     var upNext by mutableStateOf(false)
@@ -292,7 +303,7 @@ class PlayerModel(
         firstFrameJob?.cancel()
         progressTo(1f)
         phase = Phase.PLAYING
-        stall.reset(); stall.onFirstFrame(SystemClock.elapsedRealtime())
+        stall.reset(); stallPromptDue = false; stall.onFirstFrame(SystemClock.elapsedRealtime())
         val r = current ?: return
         val titleId = request.meta.id
         session.updateTitleMemory(titleId) { mem ->
@@ -361,7 +372,7 @@ class PlayerModel(
     // Scrubbing state mirrored into Compose state so the timeline redraws.
     var scrubTarget by mutableStateOf<Long?>(null)
     var chapterMode by mutableStateOf(false)
-    private fun syncScrub() { scrubTarget = scrubber.targetMs; chapterMode = scrubber.chapterMode }
+    private fun syncScrub() { scrubTarget = scrubber.targetMs; chapterMode = scrubber.chapterMode; raiseDueStallPrompt() }
     fun scrubStep(forward: Boolean) { scrubber.step(forward, position, SystemClock.elapsedRealtime()); syncScrub(); touch() }
     fun scrubEnterChapters(): Boolean { val ok = scrubber.enterChapterMode(position); syncScrub(); touch(); return ok }
     fun scrubExitChapters() { scrubber.exitChapterMode(); syncScrub(); touch() }
@@ -615,10 +626,7 @@ class PlayerModel(
         if (state == Player.STATE_BUFFERING && firstFrame) {
             Diagnostics.log("player", "rebuffer ${engine.bufferDiagnostics()}")
             // "Try a lower quality?" is only asked when there is one: its button did nothing otherwise.
-            // It waits for an open panel to close: it would take focus from the list being browsed.
-            if (stall.onBuffering(SystemClock.elapsedRealtime()) && lowerQualityIndex() >= 0) {
-                if (panel == Panel.NONE) stallPrompt = true else stallPromptDue = true
-            }
+            if (stall.onBuffering(SystemClock.elapsedRealtime()) && lowerQualityIndex() >= 0) raiseStallPrompt()
         }
         if (state == Player.STATE_ENDED) onEnded()
     }
