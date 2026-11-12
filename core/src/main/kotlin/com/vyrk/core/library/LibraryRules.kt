@@ -190,6 +190,24 @@ object LibraryRules {
             listOf(i.id, i.type, i.name, i.poster.orEmpty(), (i.state.timeOffset / 60_000L).toString(), i.state.duration.toString()).joinToString("\u0000")
         }
 
+    /**
+     * "S1 E3" or "E3" for the episode [videoId] of the title [itemId], or null. What follows the
+     * title's own ID is `season:episode` (`tt…:1:3`) or, for anime IDs such as `kitsu:11469:2`,
+     * the episode alone: the show's number is part of the title's ID, not a season. An ID under
+     * another title ID (a provider's canonical one) is read as `…:season:episode`.
+     */
+    fun episodeLabel(itemId: String, videoId: String?): String? {
+        if (videoId == null) return null
+        val own = videoId.startsWith("$itemId:")
+        val parts = (if (own) videoId.substring(itemId.length + 1) else videoId).split(':')
+        val nums = (if (own) parts else parts.takeLast(2).takeIf { parts.size >= 3 } ?: return null).map { it.toIntOrNull() ?: return null }
+        return when (nums.size) {
+            1 -> "E${nums[0]}"
+            2 -> "S${nums[0]} E${nums[1]}"
+            else -> null
+        }
+    }
+
     /** stremio-core LibraryBucket::merge_items: newer-or-equal mtime wins. */
     fun merge(local: Map<String, LibraryItem>, incoming: Collection<LibraryItem>): Map<String, LibraryItem> {
         val out = local.toMutableMap()

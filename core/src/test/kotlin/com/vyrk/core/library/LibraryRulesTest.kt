@@ -202,4 +202,18 @@ class LibraryRulesTest {
         assertNull(meta.nextVideo("s:1:1", now)) // next is unreleased
         assertNull(meta.nextVideo("s:1:2", now))
     }
+
+    // Kitsu progress is saved as kitsu:<show>:<episode>: the show number was shown as a season
+    // ("Resume · S11469 E2").
+    @Test fun episodeLabelDoesNotReadAnAnimeShowNumberAsASeason() {
+        assertEquals("E2", LibraryRules.episodeLabel("kitsu:11469", "kitsu:11469:2"))
+        assertEquals("S1 E3", LibraryRules.episodeLabel("tt0944947", "tt0944947:1:3"))
+        assertEquals("S2 E5", LibraryRules.episodeLabel("mal:62516", "mal:62516:2:5"))
+        assertEquals("S1 E2", LibraryRules.episodeLabel("vyrk-short", "vyrk-short:1:2"))
+        // Saved under the provider's canonical ID after playing from its episode list.
+        assertEquals("S1 E2", LibraryRules.episodeLabel("kitsu:11469", "tt5626028:1:2"))
+        assertEquals(null, LibraryRules.episodeLabel("tt0111161", "tt0111161"))
+        assertEquals(null, LibraryRules.episodeLabel("tt0111161", null))
+        assertEquals(null, LibraryRules.episodeLabel("kitsu:1", "kitsu:1:special"))
+    }
 }

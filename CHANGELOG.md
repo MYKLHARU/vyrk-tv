@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.39
+
+- Fix: Resume and Continue Watching showed an anime title's show number as a season ("S11469 E2") when progress was saved under a Kitsu-style episode ID. They now show the episode ("E2").
+
 ## v0.1.38
 
 - Fix: titles from a catalogue-only anime add-on (a Kitsu shelf, for example) had no logo and no episode list when the metadata add-on answered under its own ID, as AIO Metadata does for `kitsu:` titles. The answer is now used for the title that was asked for; the library and watched state stay under the catalogue's ID.

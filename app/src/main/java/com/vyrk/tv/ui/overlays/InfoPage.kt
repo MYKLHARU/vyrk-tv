@@ -230,7 +230,7 @@ fun InfoPage(o: Overlay.Info) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     val inCw = item?.isInContinueWatching == true
                     // The flagship action, as on Home: a glowing pill; a series names the episode it resumes.
-                    val resumeEp = if (inCw && isSeries) episodeLabel(item?.state?.videoId) else null
+                    val resumeEp = if (inCw && isSeries) item?.let { com.vyrk.core.library.LibraryRules.episodeLabel(it.id, it.state.videoId) } else null
                     VyrkButton(str(if (inCw) R.string.resume else R.string.play) + (resumeEp?.let { "  ·  $it" } ?: ""), icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
                         height = ACTION_H + 2.dp, horizontalPadding = 24.dp, glow = true, shape = Dimens.pillShape,
                         modifier = Modifier.focusRequester(playReq).traceFocus("info:play"), onClick = {
@@ -752,11 +752,6 @@ private fun InfoSourceCard(r: Ranked, recommended: Boolean, modifier: Modifier =
     }
 }
 
-/** "S1 E3" from a series video id (tt…:1:3), or null. */
-private fun episodeLabel(videoId: String?): String? = videoId?.split(':')?.takeIf { it.size >= 3 }?.let { p ->
-    val s = p[p.size - 2].toIntOrNull(); val e = p.last().toIntOrNull()
-    if (s != null && e != null) "S$s E$e" else null
-}
 
 /** Where a started title stands: a slim accent bar and "S1 E3 · 42m left". */
 @Composable
@@ -769,7 +764,7 @@ private fun ResumeLine(item: LibraryItem) {
         Box(Modifier.width(180.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.2f))) {
             Box(Modifier.fillMaxWidth(item.progress.coerceIn(0.03f, 1f)).fillMaxHeight().background(c.accent))
         }
-        val label = listOfNotNull(episodeLabel(st.videoId), left).joinToString("  ·  ")
+        val label = listOfNotNull(com.vyrk.core.library.LibraryRules.episodeLabel(item.id, st.videoId), left).joinToString("  ·  ")
         if (label.isNotEmpty()) Text(label, style = Vyrk.type.labelL, color = c.textSecondary, maxLines = 1)
     }
 }
