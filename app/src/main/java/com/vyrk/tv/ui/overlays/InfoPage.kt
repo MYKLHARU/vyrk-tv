@@ -276,7 +276,7 @@ fun InfoPage(o: Overlay.Info) {
                     com.vyrk.tv.ui.components.RuneDivider(Modifier.padding(top = 8.dp, bottom = 10.dp).fillMaxWidth(), centered = false)
                 }
                 when (shownTab) {
-                    PanelTab.EPISODES -> SeasonGuide(full, item, sstate.newEpisodes[meta.id].orEmpty(), settings.blurUnwatched, onPlay = { v ->
+                    PanelTab.EPISODES -> SeasonGuide(full, details.loading, item, sstate.newEpisodes[meta.id].orEmpty(), settings.blurUnwatched, onPlay = { v ->
                         Playback.start(activity, graph, session, meta, videoId = v.id, origin = o.origin)
                     }, onMark = { videos, watched -> full?.let { session.markVideos(it, videos, watched) } })
                     PanelTab.SOURCES -> SourcesPane(sources, sourcesReq, onRefresh = { loadSources() }, onPick = { r ->
@@ -548,9 +548,10 @@ private fun SourcesPane(state: SourcesState, firstReq: FocusRequester, onRefresh
 }
 
 @Composable
-private fun SeasonGuide(meta: MetaItem?, item: LibraryItem?, newIds: Set<String>, blurUnwatched: Boolean, onPlay: (Video) -> Unit, onMark: (List<Video>, Boolean) -> Unit) {
+private fun SeasonGuide(meta: MetaItem?, loading: Boolean, item: LibraryItem?, newIds: Set<String>, blurUnwatched: Boolean, onPlay: (Video) -> Unit, onMark: (List<Video>, Boolean) -> Unit) {
     val c = Vyrk.colors
-    if (meta == null) { Text(str(R.string.loading), style = Vyrk.type.bodyM, color = c.textMuted); return }
+    // Finished without matching metadata: say so instead of showing "Loading…" forever.
+    if (meta == null) { Text(str(if (loading) R.string.loading else R.string.no_episodes), style = Vyrk.type.bodyM, color = c.textMuted); return }
     val seasons = meta.videos.mapNotNull { it.season }.distinct().sortedWith(compareBy { if (it == 0) Int.MAX_VALUE else it })
     val wb = item?.watchedBitField(meta.videos)
     val now = System.currentTimeMillis()

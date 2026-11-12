@@ -168,6 +168,7 @@
     "no_sources_torrent":  "Seules des sources torrent ont été trouvées. Elles nécessitent un serveur de streaming.",
     "no_stream_addons":  "Aucun module installé ne propose de flux pour ce titre. Installez-en un dans Paramètres › Modules.",
     "no_trailer":  "Pas de bande-annonce pour ce titre.",
+    "no_episodes":  "Aucun module n'a fourni d'épisodes pour ce titre.",
     "none":  "Aucun",
     "none_hidden":  "Aucune masquée",
     "not_affiliated":  "VYRK n'héberge aucun contenu et n'est pas affilié à Stremio.",

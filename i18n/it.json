@@ -168,6 +168,7 @@
     "no_sources_torrent":  "Ci sono solo fonti torrent. Richiedono un server di streaming.",
     "no_stream_addons":  "Nessun componente installato offre stream per questo titolo. Installane uno in Impostazioni › Componenti.",
     "no_trailer":  "Nessun trailer per questo titolo.",
+    "no_episodes":  "Nessun componente ha fornito episodi per questo titolo.",
     "none":  "Nessuno",
     "none_hidden":  "Nessuna nascosta",
     "not_affiliated":  "VYRK non ospita contenuti e non è affiliato a Stremio.",

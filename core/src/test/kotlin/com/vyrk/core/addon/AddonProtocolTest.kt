@@ -124,6 +124,37 @@ class AddonProtocolTest {
         url,
     )
 
+    private fun metaAddon(id: String, url: String) = Descriptor(
+        ProtocolJson.decodeFromString(Manifest.serializer(),
+            """{"id":"$id","name":"$id","types":["series"],"resources":[{"name":"meta","types":["series"],"idPrefixes":["kitsu:","tt"]}]}"""),
+        url,
+    )
+
+    @Test
+    fun firstMetaPrefersAnExactTitleOverAnEarlierCanonicalAlias() = runTest {
+        // AIO Metadata answers kitsu:3936 with its canonical IMDb entry; Kitsu Anime Shelf has the exact title.
+        val http = FakeHttp { url ->
+            when {
+                url.startsWith("https://aio/") -> HttpResult(200, """{"meta":{"id":"tt1355642","type":"series","name":"Fullmetal Alchemist: Brotherhood","_kitsuId":"3936"}}""")
+                url.startsWith("https://kitsu/") -> HttpResult(200, """{"meta":{"id":"kitsu:3936","type":"series","name":"Fullmetal Alchemist: Brotherhood","videos":[{"id":"kitsu:3936:1","season":1,"episode":1}]}}""")
+                else -> HttpResult(404, "")
+            }
+        }
+        val client = AddonClient(http)
+        val aio = metaAddon("aio-metadata", "https://aio/manifest.json")
+        val kitsu = metaAddon("personal.kitsu.anime.shelf", "https://kitsu/manifest.json")
+        val exact = client.firstMeta(listOf(aio, kitsu), "series", "kitsu:3936")
+        assertEquals("kitsu:3936", exact?.id)
+        assertEquals(1, exact?.videos?.size)
+        // With no exact answer, the canonical alias is still returned (season-logo prequel lookups use it).
+        assertEquals("tt1355642", client.firstMeta(listOf(aio), "series", "kitsu:3936")?.id)
+        // An exact first answer is returned without asking later add-ons.
+        val asked = mutableListOf<String>()
+        val counting = AddonClient(FakeHttp { url -> asked += url; http.handler(url) })
+        assertEquals("kitsu:3936", counting.firstMeta(listOf(kitsu, aio), "series", "kitsu:3936")?.id)
+        assertEquals(1, asked.size)
+    }
+
     @Test
     fun slowAddonTimesOutWithoutBlockingOthers() = runTest {
         val http = FakeHttp { url ->

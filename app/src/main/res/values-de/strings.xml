@@ -158,6 +158,7 @@
     <string name="next">Weiter</string>
     <string name="next_episode">Nächste Folge</string>
     <string name="no_account">Nicht angemeldet. Deine Mediathek wird auf diesem Fernseher gespeichert.</string>
+    <string name="no_episodes">Kein Add-on hat Folgen für diesen Titel geliefert.</string>
     <string name="no_hidden">Nichts ausgeblendet.</string>
     <string name="no_results">Keine Ergebnisse für „%1$s“</string>
     <string name="no_sources_found">Kein Add-on hat eine Quelle für diesen Titel gefunden.</string>

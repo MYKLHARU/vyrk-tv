@@ -168,6 +168,7 @@
     "no_sources_torrent":  "Só há fontes torrent. Elas precisam de um servidor de streaming.",
     "no_stream_addons":  "Nenhum complemento instalado oferece streams para este título. Instale um em Configurações › Complementos.",
     "no_trailer":  "Este título não tem trailer.",
+    "no_episodes":  "Nenhum complemento retornou episódios para este título.",
     "none":  "Nenhum",
     "none_hidden":  "Nenhuma oculta",
     "not_affiliated":  "O VYRK não hospeda mídia e não é afiliado ao Stremio.",

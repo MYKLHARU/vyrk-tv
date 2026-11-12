@@ -158,6 +158,7 @@
     <string name="next">Próximo</string>
     <string name="next_episode">Próximo episódio</string>
     <string name="no_account">Sem login. Sua biblioteca fica salva nesta TV.</string>
+    <string name="no_episodes">Nenhum complemento retornou episódios para este título.</string>
     <string name="no_hidden">Nada oculto.</string>
     <string name="no_results">Nenhum resultado para \"%1$s\"</string>
     <string name="no_sources_found">Nenhum complemento encontrou uma fonte para este título.</string>

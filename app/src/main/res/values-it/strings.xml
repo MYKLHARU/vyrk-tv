@@ -158,6 +158,7 @@
     <string name="next">Avanti</string>
     <string name="next_episode">Episodio successivo</string>
     <string name="no_account">Accesso non effettuato. La libreria è salvata su questo televisore.</string>
+    <string name="no_episodes">Nessun componente ha fornito episodi per questo titolo.</string>
     <string name="no_hidden">Niente di nascosto.</string>
     <string name="no_results">Nessun risultato per «%1$s»</string>
     <string name="no_sources_found">Nessun componente ha trovato una fonte per questo titolo.</string>

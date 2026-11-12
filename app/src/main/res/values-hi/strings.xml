@@ -158,6 +158,7 @@
     <string name="next">आगे</string>
     <string name="next_episode">अगला एपिसोड</string>
     <string name="no_account">साइन इन नहीं है। आपकी लाइब्रेरी इस टीवी पर सहेजी जाती है।</string>
+    <string name="no_episodes">किसी ऐड-ऑन ने इस टाइटल के एपिसोड नहीं दिए।</string>
     <string name="no_hidden">कुछ भी छिपा नहीं है।</string>
     <string name="no_results">\"%1$s\" के लिए कोई नतीजा नहीं</string>
     <string name="no_sources_found">किसी ऐड-ऑन को इस टाइटल का स्रोत नहीं मिला।</string>

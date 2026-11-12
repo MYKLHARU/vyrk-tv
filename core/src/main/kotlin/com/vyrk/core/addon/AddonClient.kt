@@ -102,13 +102,22 @@ class AddonClient(
                 .map { it.await() }
         }
 
-    /** First add-on (in order) that returns a meta for the ID. */
+    /**
+     * First add-on (in order) whose meta has the requested ID and type. Some providers answer an
+     * alias with their canonical entry (AIO Metadata returns `tt…` for `kitsu:…`); callers that
+     * show details discard such a meta, which left the episode list loading forever while a later
+     * add-on had the exact title. Later add-ons are tried, and the first non-matching meta is only
+     * returned when none matches (canonical aliases still serve season-logo lookups).
+     */
     suspend fun firstMeta(addons: List<Descriptor>, type: String, id: String): MetaItem? {
+        var alias: MetaItem? = null
         for (a in addons.filter { it.manifest.supports("meta", type, id) }) {
             val r = meta(a, type, id)
-            if (r is AddonResult.Ok && r.value.meta != null) return r.value.meta
+            val m = (r as? AddonResult.Ok)?.value?.meta ?: continue
+            if (m.id == id && m.type == type) return m
+            if (alias == null) alias = m
         }
-        return null
+        return alias
     }
 
     suspend fun allSubtitles(addons: List<Descriptor>, type: String, id: String, extra: List<Pair<String, String>> = emptyList()) =

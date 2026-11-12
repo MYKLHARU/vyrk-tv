@@ -168,6 +168,7 @@
     "no_sources_torrent":  "Only torrent sources were found. They need a streaming server.",
     "no_stream_addons":  "No installed add-on provides streams for this title. Install one in Settings › Add-ons.",
     "no_trailer":  "No trailer for this title.",
+    "no_episodes":  "No add-on returned episodes for this title.",
     "none":  "None",
     "none_hidden":  "None hidden",
     "not_affiliated":  "VYRK hosts no media and isn't affiliated with Stremio.",

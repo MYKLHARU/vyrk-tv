@@ -158,6 +158,7 @@
     <string name="next">Suivant</string>
     <string name="next_episode">Épisode suivant</string>
     <string name="no_account">Non connecté. Votre bibliothèque est enregistrée sur ce téléviseur.</string>
+    <string name="no_episodes">Aucun module n\'a fourni d\'épisodes pour ce titre.</string>
     <string name="no_hidden">Rien de masqué.</string>
     <string name="no_results">Aucun résultat pour « %1$s »</string>
     <string name="no_sources_found">Aucun module n\'a trouvé de source pour ce titre.</string>
