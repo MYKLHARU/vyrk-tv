@@ -27,4 +27,28 @@ class ArtworkTest {
         assertNull(Artwork.forLogo(" "))
         assertNull(Artwork.forBackdrop(null, "w1280"))
     }
+
+    // A catalogue-only Kitsu shelf with AIO Metadata as the only metadata provider: the answer to
+    // `kitsu:…` comes back as `tt…`. It was discarded, leaving the title with no logo or episodes.
+    @Test fun anAnswerUnderTheProvidersCanonicalIdIsStillThisTitlesMetadata() {
+        val preview = com.vyrk.core.addon.MetaPreview(id = "kitsu:11469", type = "series", name = "My Hero Academia")
+        val answer = com.vyrk.core.addon.MetaItem(id = "tt5626028", type = "series", name = "My Hero Academia", logo = "https://example.test/logo.png",
+            videos = listOf(com.vyrk.core.addon.Video(id = "tt5626028:1:1", title = "Izuku Midoriya: Origin", season = 1, episode = 1)))
+        assertNull(Artwork.matchingMeta(preview, answer), "The strict check still rejects another identity")
+        val full = Artwork.answerFor(preview, answer)!!
+        assertEquals("kitsu:11469", full.id, "Library and watched state stay under the catalogue's ID")
+        assertEquals("series", full.type)
+        assertEquals("tt5626028", full.imdbId, "The canonical IMDb ID is kept for artwork")
+        assertEquals(listOf("tt5626028:1:1"), full.videos.map { it.id }, "Episode IDs are the provider's")
+        assertEquals(full, Artwork.matchingMeta(preview, full))
+        assertEquals("tt5626028", Artwork.lookupId(preview, full))
+        assertEquals("https://example.test/logo.png", Artwork.logos(preview, full, null).first())
+    }
+
+    @Test fun anExactAnswerIsReturnedUnchangedAndNoAnswerStaysNone() {
+        val preview = com.vyrk.core.addon.MetaPreview(id = "kitsu:1", type = "series", name = "A")
+        val exact = com.vyrk.core.addon.MetaItem(id = "kitsu:1", type = "series", name = "A")
+        assertEquals(true, Artwork.answerFor(preview, exact) === exact)
+        assertNull(Artwork.answerFor(preview, null))
+    }
 }

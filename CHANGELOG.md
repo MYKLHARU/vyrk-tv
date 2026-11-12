@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.38
+
+- Fix: titles from a catalogue-only anime add-on (a Kitsu shelf, for example) had no logo and no episode list when the metadata add-on answered under its own ID, as AIO Metadata does for `kitsu:` titles. The answer is now used for the title that was asked for; the library and watched state stay under the catalogue's ID.
+- The request log (`VyrkPerf`) records how each metadata request was answered, by ID scheme only.
+
 ## v0.1.37
 
 - Fix: "Playback keeps pausing. Try a lower quality?" could appear a few seconds after a film started (or after switching source), because buffering while a stream was still starting counted as stalls. The first 10 seconds of a source no longer count, and the question is only asked when a lower-quality source exists (its button did nothing otherwise).

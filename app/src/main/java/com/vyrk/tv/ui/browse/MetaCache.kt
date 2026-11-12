@@ -13,6 +13,8 @@ class MetaCache(
     private val currentAddons: (() -> List<Descriptor>)? = null,
     private val clock: () -> Long = System::currentTimeMillis,
     private val ttlMs: Long = 10 * 60_000,
+    /** A fetch finished: requested type and ID, and the answer (null when no add-on had one). */
+    private val onFetched: ((String, String, MetaItem?) -> Unit)? = null,
 ) {
     private data class Entry(val meta: MetaItem, val providers: List<Descriptor>?, val saved: Long)
     private val cache = ConcurrentHashMap<String, Entry>()
@@ -27,7 +29,9 @@ class MetaCache(
     suspend fun get(addons: List<Descriptor>, type: String, id: String): MetaItem? {
         val key = "$type:$id"
         cached(key, addons)?.let { return it }
-        val m = client.firstMeta(addons, type, id) ?: return null
+        val m = client.firstMeta(addons, type, id)
+        onFetched?.invoke(type, id, m)
+        if (m == null) return null
         cache[key] = Entry(m, addons.toList(), clock()); version += 1
         return m
     }

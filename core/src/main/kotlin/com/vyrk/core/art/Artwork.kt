@@ -12,6 +12,18 @@ object Artwork {
     fun matchingMeta(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem?): com.vyrk.core.addon.MetaItem? =
         full?.takeIf { it.type == meta.type && it.id == meta.id }
 
+    /**
+     * [answer] is what the add-ons returned when asked for [meta]'s own type and ID. A provider may
+     * answer under its canonical ID (AIO Metadata returns `tt…` for a `kitsu:…` title): it is still
+     * this title's metadata, as it is in Stremio. It is given the requested identity, so the library
+     * and watched state stay under the catalogue's ID, and the canonical IMDb ID is kept for artwork.
+     * Episode IDs are left as the provider sent them. Only for an answer to that exact request.
+     */
+    fun answerFor(meta: com.vyrk.core.addon.MetaPreview, answer: com.vyrk.core.addon.MetaItem?): com.vyrk.core.addon.MetaItem? {
+        if (answer == null || (answer.type == meta.type && answer.id == meta.id)) return answer
+        return answer.copy(id = meta.id, type = meta.type, imdbId = answer.imdbId ?: imdbId(answer.id))
+    }
+
     /** Explicit provider mappings allow Kitsu/MAL titles to use artwork without changing playback IDs. */
     fun lookupId(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem? = null): String? =
         imdbId(meta.id) ?: meta.imdbId?.let(::imdbId) ?: matchingMeta(meta, full)?.imdbId?.let(::imdbId)

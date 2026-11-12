@@ -469,7 +469,11 @@ fun produceMeta(session: ProfileSession, meta: MetaPreview?, debounceMs: Long = 
     }
     return remember(session, key) {
         object : MetaState {
-            override val value: com.vyrk.core.addon.MetaItem? get() = meta?.let { m -> com.vyrk.core.art.Artwork.matchingMeta(m,
+            // Both sources are answers to a request for this title's own type and ID (the fetch is
+            // tagged with its key, the cache is keyed by the request), so an answer under the
+            // provider's canonical ID is this title's too. Discarding it left Kitsu titles from a
+            // catalogue-only add-on with no logo and no episodes.
+            override val value: com.vyrk.core.addon.MetaItem? get() = meta?.let { m -> com.vyrk.core.art.Artwork.answerFor(m,
                 fetched.value.takeIf { it.first == key }?.second ?: graph.metaCache.peek(m.type, m.id)) }
             override val loading: Boolean get() = meta != null && value == null && (fetched.value.first != key || fetched.value.third)
         }

@@ -38,7 +38,13 @@ class AppGraph(val context: Context) {
     val accountApi = StremioAccountApi(transport)
     val vault = SecretVault()
     val device = DeviceCapabilities(context)
-    val metaCache = com.vyrk.tv.ui.browse.MetaCache(addonClient, { session.value?.effectiveAddons().orEmpty() })
+    val metaCache = com.vyrk.tv.ui.browse.MetaCache(addonClient, { session.value?.effectiveAddons().orEmpty() },
+        // ID schemes only (kitsu, tt, mal…), never the IDs: shows when a provider answers under another ID.
+        onFetched = { type, id, m ->
+            fun scheme(s: String) = if (':' in s) s.substringBefore(':') else if (s.startsWith("tt")) "tt" else "other"
+            com.vyrk.tv.ui.Perf.log(if (m == null) "meta $type ${scheme(id)} -> none"
+                else "meta $type ${scheme(id)} -> ${m.type} ${scheme(m.id)} videos=${m.videos.size} logo=${m.logo != null} exact=${m.id == id && m.type == type}")
+        })
     // Failures are logged with the API path and reason only; the key never appears.
     val tmdb = com.vyrk.core.tmdb.TmdbClient(transport, BuildConfig.TMDB_API_KEY) { path, reason -> com.vyrk.tv.ui.Perf.log("tmdb $path failed: $reason") }
     val fanart = com.vyrk.core.art.FanartClient(transport, BuildConfig.FANART_API_KEY)
