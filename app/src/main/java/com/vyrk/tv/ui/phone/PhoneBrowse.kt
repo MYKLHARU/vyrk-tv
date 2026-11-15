@@ -251,7 +251,9 @@ private fun PhoneHero(session: ProfileSession, model: BrowseModel, items: List<M
     }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         // Tall enough for the artwork to read, short enough to show the first row below.
-        val h = (maxWidth * 1.25f).coerceIn(440.dp, 620.dp)
+        // Landscape: never taller than the screen, so the title and Watch now stay in view.
+        val screenH = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp
+        val h = minOf((maxWidth * 1.25f).coerceIn(440.dp, 620.dp), screenH * 0.92f)
         HorizontalPager(pager, Modifier.fillMaxWidth().height(h), key = { items[it].type + items[it].id }) { page ->
             HeroPage(session, items[page], h)
         }

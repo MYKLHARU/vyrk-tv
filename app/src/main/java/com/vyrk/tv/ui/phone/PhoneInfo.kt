@@ -231,7 +231,9 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
 private fun InfoHeader(meta: MetaPreview, full: MetaItem?, backdrops: List<String>, logos: List<String>, logosLoading: Boolean, name: String) {
     val c = Vyrk.colors
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val h = (maxWidth * 1.05f).coerceIn(360.dp, 560.dp)
+        // Landscape: short enough that Play shows under the artwork.
+        val screenH = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp
+        val h = minOf((maxWidth * 1.05f).coerceIn(360.dp, 560.dp), screenH * 0.72f)
         Box(Modifier.fillMaxWidth().height(h)) {
             val urls = (backdrops + listOfNotNull(meta.poster)).distinct()
             var attempt by remember(urls) { mutableIntStateOf(0) }
