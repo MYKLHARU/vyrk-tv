@@ -43,6 +43,11 @@ find_el() {
   deadline=$((SECONDS + secs))
   while (( SECONDS < deadline )); do
     dump
+    # The emulator's own apps (the launcher) sometimes stop responding; Android's dialog would
+    # cover VYRK. Answer "Wait" and look again.
+    if grep -q "isn&apos;t responding\|isn't responding" "$OUT/ui.xml" 2>/dev/null && at=$(python3 "$HERE/ui_find.py" "$OUT/ui.xml" text "Wait"); then
+      log "dismissed a system 'not responding' dialog"; adb_run shell input tap $at; sleep 1; continue
+    fi
     if at=$(python3 "$HERE/ui_find.py" "$OUT/ui.xml" "$mode" "$want"); then echo "$at"; return 0; fi
     sleep 1
   done
@@ -50,7 +55,7 @@ find_el() {
 }
 front_is_vyrk() {
   local w; w=$(window_now)
-  [[ "$w" == *"$PKG"* || "$w" == *ImmersiveModeConfirmation* ]] || { fail "VYRK is not in front: $w"; return 1; }
+  [[ "$w" == *"$PKG"* || "$w" == *ImmersiveModeConfirmation* || "$w" == *"Application Not Responding"* ]] || { fail "VYRK is not in front: $w"; return 1; }
 }
 tap() {
   local mode=$1 want=$2 label=${3:-$2} secs=${4:-20} at

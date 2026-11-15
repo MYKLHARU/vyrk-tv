@@ -1,5 +1,22 @@
 # VYRK feature matrix
 
+## Phones and tablets (v0.1.40)
+
+One APK: VYRK shows the remote interface on TVs (television UI mode, or no touchscreen) and a touch interface on everything else. Evidence `phone` = `ci/phone.sh` on a Pixel 6 emulator (API 34), screenshots in the `ci-phone` pre-release.
+
+| Requirement | Where | Status | Evidence |
+|---|---|---|---|
+| Device choice: TV interface on TVs, touch interface on phones and tablets; TVs unchanged | `ui/phone/FormFactor.kt`, `AppRoot.kt` | Done | phone; E2E (TV journey unchanged) |
+| Phones rotate freely, drawn edge to edge; the player is landscape and immersive | `MainActivity.kt`, `PlayerActivity.kt`, manifest | Done | phone |
+| Sign-in opens Stremio's page in the browser, with the code for another device; Use without an account | `ui/phone/PhoneScreens.kt` | Built | phone (screen and guest path); browser sign-in not completed in CI |
+| Bottom bar (Home, Search, Library, Settings); page strip (Home, Movies, Series, Anime, Live, Discover) | `ui/phone/PhoneRoot.kt`, `PhoneBrowse.kt` | Done | phone |
+| Swipeable featured titles, Continue Watching (tap resumes), catalogue and Top 10 rows, See all | `ui/phone/PhoneBrowse.kt`, `PhoneOverlays.kt` | Done | phone |
+| Title page: Play/Resume, library, trailer in YouTube, watched, cast, seasons and episodes, sources | `ui/phone/PhoneInfo.kt` | Done | phone (film with sources); series episodes not driven in CI |
+| Title menu, add-on install confirmation, add-on configuration in the browser, person pages, Discover | `ui/phone/PhoneOverlays.kt` | Built | phone (install confirmation) |
+| Search with the keyboard and voice; Library grid with filters and sort | `ui/phone/PhoneScreens.kt` | Done | phone |
+| Settings groups (add-ons, streams, subtitles, languages, appearance, sound, about and updates); TV-only options left out | `ui/phone/PhoneSettings.kt` | Done | phone (Settings and Add-ons pages) |
+| Player: tap for controls, double-tap ±10 s, draggable timeline, audio and subtitles, sources and sleep sheets, prompts, Back leaves | `player/PhonePlayer.kt` | Done | phone (playback, controls, audio and subtitles sheet, Back) |
+
 ## Anime browsing (v0.1.22)
 
 - Switch to Anime / Switch to Regular below the tab bar, saved per profile.

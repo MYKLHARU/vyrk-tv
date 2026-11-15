@@ -3,6 +3,7 @@
 <p align="center">
   <a href="https://github.com/MYKLHARU/vyrk-tv/actions/workflows/ci.yml"><img alt="Build" src="https://github.com/MYKLHARU/vyrk-tv/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Android TV 6.0+" src="https://img.shields.io/badge/Android%20TV-6.0%2B-0B141D?logo=android">
+  <img alt="Phones and tablets" src="https://img.shields.io/badge/phones%20%26%20tablets-6.0%2B-0B141D?logo=android">
   <img alt="Kotlin 2.4" src="https://img.shields.io/badge/Kotlin-2.4-A9E1F3?logo=kotlin&logoColor=0B141D">
   <img alt="Compose for TV" src="https://img.shields.io/badge/Compose%20for%20TV-1.1-A9E1F3">
   <img alt="Media3 + FFmpeg" src="https://img.shields.io/badge/Media3%20%2B%20FFmpeg-1.9-A9E1F3">
@@ -15,7 +16,7 @@
 
 **Website and downloads: [myklharu.github.io/vyrk-tv](https://myklharu.github.io/vyrk-tv/)**
 
-VYRK is a free, open-source Android TV client for Stremio add-ons. Sign in to your Stremio account or use it without one, and press Play: VYRK picks the best source your TV and connection can handle.
+VYRK is a free, open-source Android TV client for Stremio add-ons, with a touch interface of its own for Android phones and tablets. Sign in to your Stremio account or use it without one, and press Play: VYRK picks the best source your device and connection can handle.
 
 > VYRK hosts, indexes and provides no media. Everything you see comes from the add-ons you install. VYRK isn't affiliated with Stremio.
 
@@ -46,6 +47,8 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Settings** — in the menu under your avatar: a glass sidebar with eight groups and compact rows, each with a short description, over the artwork you were last looking at, blurred.
 
+**Phones and tablets** — the same APK installs on a phone or tablet and opens a touch interface made for it, with the same account, add-ons, library and source ranking. A bottom bar with Home, Search, Library and Settings; swipeable featured titles and catalogue rows; a title page that scrolls, with episodes or sources under Play; search with the phone's keyboard or voice; Stremio sign-in in the browser instead of a QR code. The player goes full screen in landscape: tap for the controls, double-tap the left or right side to skip 10 seconds, drag the timeline, and open audio, subtitles, sources and the sleep timer as sheets. TVs keep the remote interface; VYRK chooses by device.
+
 **TV integration** — Watch Next on the launcher, MediaSession, frame-rate matching, passthrough, automatic updates from GitHub Releases when you open VYRK.
 
 **Privacy** — no ads, analytics, tracking or VYRK account. Your Stremio key and add-on URLs are encrypted with an Android Keystore key and redacted everywhere they're shown or logged. VYRK talks to your add-ons, the Stremio account service, IntroDB (intro timings, by IMDb ID only), TMDB (cast pages, only when the build has a key), YouTube for trailers and GitHub for updates.
@@ -56,7 +59,7 @@ The full list, with what is verified and how, is in [docs/FEATURES.md](docs/FEAT
 
 | APK | For |
 |---|---|
-| `vyrk-<version>-arm64-v8a.apk` | Most current TVs and streamers (Google TV, Shield, newer Fire TV) |
+| `vyrk-<version>-arm64-v8a.apk` | Most current TVs and streamers (Google TV, Shield, newer Fire TV) and phones |
 | `vyrk-<version>-armeabi-v7a.apk` | Older 32-bit devices and many Fire TV sticks |
 | `vyrk-<version>-x86_64.apk` | Emulators and x86 boxes |
 | `vyrk-<version>-universal.apk` | Any device, larger download |
@@ -73,11 +76,13 @@ adb connect <tv-ip>:5555
 adb install -r vyrk-<version>-arm64-v8a.apk
 ```
 
+**On a phone or tablet** — open the APK link in the browser, allow the browser to install unknown apps when Android asks, and install.
+
 **On the TV** — install a downloader app, allow it to install unknown apps in Settings, open the APK link and install.
 
 ## Getting started
 
-1. Open VYRK and choose **Sign in with Stremio** (scan the QR code or open the link and confirm the code) or **Use without an account**.
+1. Open VYRK and choose **Sign in with Stremio** (on a TV, scan the QR code or open the link and confirm the code; on a phone, tap **Open Stremio sign-in**) or **Use without an account**.
 2. Add a stream add-on in **Settings › Add-ons › Install from URL**, or from a `stremio://` link.
 3. Pick a title and press **Play**.
 
@@ -98,12 +103,28 @@ adb install -r vyrk-<version>-arm64-v8a.apk
 | Next | Player | Next episode |
 | CC or Audio | Player | Opens Audio & subtitles |
 
+## Touch (phones and tablets)
+
+| Gesture | Where | Does |
+|---|---|---|
+| Tap | Poster | Opens the title page |
+| Tap | Continue Watching card | Resumes |
+| Long press | Poster, Continue Watching card | Opens the title menu |
+| Long press | Episode | Watched actions |
+| Swipe | Featured titles | Next or previous title |
+| Tap | Player | Shows or hides the controls |
+| Double-tap left / right | Player | −10 s / +10 s |
+| Double-tap centre | Player | Play / pause |
+| Drag or tap | Player timeline | Seeks |
+| Back | Anywhere | Closes the innermost sheet or page; in the player, leaves it |
+
 ## Architecture
 
 ```mermaid
 flowchart LR
   subgraph app [app: Android]
     UI[Compose for TV UI] --> Session[ProfileSession<br/>StateFlows]
+    Phone[Touch UI<br/>phones and tablets] --> Session
     Player[PlayerActivity<br/>Media3 + FFmpeg] --> Session
     Session --> Vault[Keystore vault]
     Session --> Store[Atomic JSON storage]
@@ -129,7 +150,8 @@ core/   add-on protocol and URL encoding, Stremio account API, library and watch
         new-episode rules, stream parsing and ranking, recovery and stall policy,
         track selection, subtitle parsing, search ranking, languages, PIN hashing, update rules
 app/    profiles, Keystore storage, add-on client wiring, account sync, Compose for TV UI,
-        Media3 playback, device capabilities, Watch Next, in-app updater
+        the touch UI for phones and tablets (ui/phone), Media3 playback, device capabilities,
+        Watch Next, in-app updater
 ci/     local test add-on, emulator journey, showcase journey, shared helpers, debug signing key
 docs/   feature matrix, README images and the script that builds them
 i18n/   one source file per language; tools/gen_strings.py generates res/values*/strings.xml
@@ -174,6 +196,7 @@ Every push to `main` publishes a `ci-latest` pre-release. Pushing a `vX.Y.Z` tag
 - `./gradlew :core:test` — unit tests for the add-on protocol, watched bitfield and library rules (with stremio-core's vectors), new episodes, ranking, recovery, stall detection, tracks, subtitles, search, PINs and updates.
 - `python tools/gen_strings.py --check` — every language has every key, with matching placeholders.
 - `ci/e2e.sh` — drives the real app on an Android TV emulator with remote keys only, against the local test add-on (`ci/test_addon.py`), and writes screenshots, a per-key focus trace and logcat.
+- `ci/phone.sh` — drives the touch interface on a phone emulator (Pixel 6, API 34) by tapping elements found by their test tags (`ci/ui_find.py`), through first run, Home, an add-on install, Search, the title page, the player, Library and Settings, and Home in landscape. Its screenshots go to the `ci-phone` pre-release.
 - `ci/showcase.sh` — captures the README screenshots; `docs/tools/make_images.py` builds the images.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to run the journeys locally.

@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.40
+
+- VYRK now works on Android phones and tablets. The same APK opens a touch interface made for them: a bottom bar (Home, Search, Library, Settings), swipeable featured titles and catalogue rows, a scrolling title page with episodes or sources under Play, search with the phone's keyboard or voice, and Settings as groups. Sign-in opens Stremio's page in the browser instead of showing a QR code. TVs keep the remote interface, unchanged.
+- The player on a phone goes full screen in landscape: tap for the controls, double-tap the left or right side to skip 10 seconds (the middle plays or pauses), drag the timeline to seek, and open audio and subtitles, other sources and the sleep timer as sheets. Back leaves the player.
+
 ## v0.1.39
 
 - Fix: Resume and Continue Watching showed an anime title's show number as a season ("S11469 E2") when progress was saved under a Kitsu-style episode ID. They now show the episode ("E2").
