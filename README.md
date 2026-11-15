@@ -189,7 +189,7 @@ Without them, builds are signed with the key in [`ci/debug-signing`](ci/debug-si
 
 ### Releases and updates
 
-Every push to `main` publishes a `ci-latest` pre-release. Pushing a `vX.Y.Z` tag builds signed per-ABI APKs and publishes a GitHub Release, and refuses to do so without the signing secrets. The app checks `https://api.github.com/repos/<vyrk.updateRepo>/releases/latest` on launch and about every four hours (switchable), ignores pre-releases, and verifies the package name, a newer version code and the signing certificate before handing the APK to Android's installer.
+Every push to `main` publishes a `ci-latest` pre-release. Pushing a `vX.Y.Z` tag, or publishing a `vX.Y.Z` release on the GitHub website or app (which creates the tag), builds signed per-ABI APKs and attaches them to the release with the changelog's notes, and refuses to do so without the signing secrets. The app checks `https://api.github.com/repos/<vyrk.updateRepo>/releases/latest` on launch and about every four hours (switchable), ignores pre-releases, and verifies the package name, a newer version code and the signing certificate before handing the APK to Android's installer.
 
 ## Testing
 

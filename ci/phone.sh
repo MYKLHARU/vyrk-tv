@@ -153,6 +153,9 @@ cx=$(( (w > h ? w : h) / 2 )); cy=$(( (w > h ? h : w) / 2 ))
 adb_run shell input tap "$cx" "$cy"
 sleep 1
 shot phone-player-controls
+# The slow emulator often raises "Playback keeps pausing"; while it is up the player (as on a TV)
+# ignores media keys. Answer it first.
+if at=$(find_el id prompt:no 3); then adb_run shell input tap $at; log "answered the stall prompt"; sleep 1; fi
 # Paused, the controls stay up while the screen is read (playing, they hide after 5 s).
 adbs input keyevent KEYCODE_MEDIA_PAUSE
 sleep 1
