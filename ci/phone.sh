@@ -53,9 +53,15 @@ find_el() {
   done
   return 1
 }
+# The activity Android has resumed in front. Window focus is not used: on the emulator a frozen
+# launcher can be reported as focused while VYRK is plainly on screen.
+resumed_now() { local o; o=$(adbs dumpsys activity activities 2>/dev/null || true); printf '%s\n' "$o" | grep -m1 -E "topResumedActivity|mResumedActivity" || true; }
 front_is_vyrk() {
-  local w; w=$(window_now)
-  [[ "$w" == *"$PKG"* || "$w" == *ImmersiveModeConfirmation* || "$w" == *"Application Not Responding"* ]] || { fail "VYRK is not in front: $w"; return 1; }
+  local r deadline=$((SECONDS + 8))
+  while (( SECONDS < deadline )); do
+    r=$(resumed_now); [[ "$r" == *"$PKG"* ]] && return 0; sleep 1
+  done
+  fail "VYRK is not in front: $r"; return 1
 }
 tap() {
   local mode=$1 want=$2 label=${3:-$2} secs=${4:-20} at
@@ -139,7 +145,7 @@ shot phone-info-sources
 tap id info:play "play"
 sleep 25
 front_is_vyrk
-[[ "$(window_now)" == *PlayerActivity* ]] || fail "the player didn't open: $(window_now)"
+[[ "$(resumed_now)" == *PlayerActivity* ]] || fail "the player didn't open: $(resumed_now)"
 shot phone-player
 size=$(adbs wm size | sed 's/.*: //'); w=${size%x*}; h=${size#*x}
 # The player is landscape whichever way the display reports its size.
@@ -160,7 +166,7 @@ adbs input keyevent KEYCODE_BACK
 sleep 1
 adbs input keyevent KEYCODE_BACK
 sleep 3
-[[ "$(window_now)" == *PlayerActivity* ]] && fail "Back didn't leave the player"
+[[ "$(resumed_now)" == *PlayerActivity* ]] && fail "Back didn't leave the player"
 expect_el id info:play 10 "leaving the player returns to the title page"
 adbs input keyevent KEYCODE_BACK
 sleep 2
