@@ -23,7 +23,12 @@ on_exit() {
   local code=$?
   trap - EXIT
   timeout --kill-after=2s 15s "$ADB" logcat -d > "$OUT/logcat.txt" 2>&1 || true
-  if (( code != 0 )); then timeout --kill-after=2s 10s "$ADB" exec-out screencap -p > "$OUT/failure.png" 2>/dev/null || true; fi
+  if (( code != 0 )); then
+    timeout --kill-after=2s 10s "$ADB" exec-out screencap -p > "$OUT/failure.png" 2>/dev/null || true
+    # In the job log too: the crash buffer and VYRK's own errors.
+    echo "----- crash buffer -----"; timeout 10s "$ADB" logcat -d -b crash 2>/dev/null | tail -n 120 || true
+    echo "----- errors -----"; grep -E " E (AndroidRuntime|Vyrk|ExoPlayer|MediaCodec)| F |FATAL" "$OUT/logcat.txt" | tail -n 60 || true
+  fi
   exit "$code"
 }
 trap on_exit EXIT

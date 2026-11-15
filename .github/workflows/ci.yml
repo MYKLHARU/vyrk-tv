@@ -232,6 +232,19 @@ jobs:
         with:
           name: phone-results
           path: ci/out/phone/
+      - name: Publish ci-phone pre-release
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          shopt -s nullglob
+          files=(ci/out/phone/*.png ci/out/phone/taps.txt ci/out/phone/logcat.txt)
+          (( ${#files[@]} )) || exit 0
+          recreate() { local tag=$1; shift; for i in 1 2 3 4 5; do gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true; gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" >/dev/null 2>&1 || true; sleep $((i * 4)); gh release create "$tag" "$@" && return 0; echo "create retry $i"; done; return 1; }
+          recreate ci-phone --prerelease --target "${{ github.event.pull_request.head.sha || github.sha }}" --title "Phone journey (${{ needs.build.outputs.version }})" \
+            --notes "Screenshots, taps and logcat from ci/phone.sh on a Pixel 6 emulator (API 34)."
+          for i in 1 2 3 4 5; do gh release upload ci-phone "${files[@]}" --clobber && break; echo "upload retry $i"; sleep $((i * 5)); done
 
   # Both halves' screenshots, focus traces and logcats in one ci-screens pre-release.
   e2e-screens:
