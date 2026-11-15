@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>VYRK · Forged for Streaming</title>
-  <meta name="description" content="VYRK is a free, open-source Android TV app for Stremio add-ons. Sign in with Stremio or use it without an account, browse your catalogues and press Play, all with the remote.">
+  <meta name="description" content="VYRK is a free, open-source Stremio add-on app for Android TV, with a touch interface for Android phones and tablets. Sign in with Stremio or use it without an account, browse your catalogues and press Play.">
   <meta name="theme-color" content="#050A0E">
   <link rel="icon" href="img/mark.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
   <meta property="og:title" content="VYRK · Forged for Streaming">
-  <meta property="og:description" content="A free, open-source Android TV app for Stremio add-ons. Browse, choose, press Play. Everything with the remote.">
+  <meta property="og:description" content="A free, open-source Stremio add-on app for Android TV, phones and tablets. Browse, choose, press Play.">
   <meta property="og:image" content="https://myklharu.github.io/vyrk-tv/img/social-preview.jpg">
   <meta property="og:url" content="https://myklharu.github.io/vyrk-tv/">
   <meta name="twitter:card" content="summary_large_image">
@@ -40,21 +40,21 @@
     <section class="hero" id="top">
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">Android TV · Free and open source</p>
+          <p class="eyebrow">Android TV · Phones and tablets · Free and open source</p>
           <h1 class="wordmark">
             <img src="img/mark.svg" alt="" width="96" height="96">
             <span>VYRK</span>
           </h1>
           <p class="tagline">Forged for Streaming</p>
-          <p class="lede">A free, open-source Android TV app for Stremio add-ons. Sign in with Stremio or use it without an account, browse your catalogues and press Play. Everything with the remote.</p>
+          <p class="lede">A free, open-source Android TV app for Stremio add-ons, with a touch interface of its own on Android phones and tablets. Sign in with Stremio or use it without an account, browse your catalogues and press Play.</p>
           <div class="cta">
             <a class="btn btn-primary" id="dl-main" href="https://github.com/MYKLHARU/vyrk-tv/releases/latest">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Download for Android TV</span>
+              <span>Download for Android</span>
             </a>
             <a class="btn btn-ghost" href="https://github.com/MYKLHARU/vyrk-tv">View on GitHub</a>
           </div>
-          <p class="fineprint" id="dl-meta">Latest release on GitHub · works on any Android TV</p>
+          <p class="fineprint" id="dl-meta">Latest release on GitHub · Android TV, phones and tablets</p>
           <p class="fineprint">No ads, analytics or tracking. VYRK hosts no media and isn't affiliated with Stremio.</p>
         </div>
         <figure class="tv">
@@ -95,6 +95,10 @@
             <p>Scan the QR code on first run to sign in with Stremio, or use VYRK without an account. Watched state follows Stremio's own rules, so progress reads correctly in other Stremio apps.</p>
           </article>
           <article class="card">
+            <h3>On your phone too</h3>
+            <p>The same app on Android phones and tablets, with a touch interface of its own: swipe through featured titles, tap to play, double-tap to skip, drag the timeline. TVs keep the remote interface.</p>
+          </article>
+          <article class="card">
             <h3>Seven languages</h3>
             <p>English, Spanish, Brazilian Portuguese, French, German, Hindi and Italian, with an in-app language choice.</p>
           </article>
@@ -131,7 +135,7 @@
           <div class="card apk-card">
             <h3>Pick the APK for your device</h3>
             <ul class="apks" id="apks">
-              <li><a class="apk" data-abi="arm64-v8a" href="https://github.com/MYKLHARU/vyrk-tv/releases/latest"><span class="apk-name">arm64-v8a</span><span class="apk-for">Most current TVs and streamers: Google TV, NVIDIA SHIELD, newer Fire TV</span><span class="apk-size"></span></a></li>
+              <li><a class="apk" data-abi="arm64-v8a" href="https://github.com/MYKLHARU/vyrk-tv/releases/latest"><span class="apk-name">arm64-v8a</span><span class="apk-for">Most current TVs and streamers (Google TV, NVIDIA SHIELD, newer Fire TV) and phones</span><span class="apk-size"></span></a></li>
               <li><a class="apk" data-abi="armeabi-v7a" href="https://github.com/MYKLHARU/vyrk-tv/releases/latest"><span class="apk-name">armeabi-v7a</span><span class="apk-for">Older 32-bit devices and many Fire TV sticks</span><span class="apk-size"></span></a></li>
               <li><a class="apk" data-abi="universal" href="https://github.com/MYKLHARU/vyrk-tv/releases/latest"><span class="apk-name">universal</span><span class="apk-for">Any device, larger download</span><span class="apk-size"></span></a></li>
               <li><a class="apk" data-abi="x86_64" href="https://github.com/MYKLHARU/vyrk-tv/releases/latest"><span class="apk-name">x86_64</span><span class="apk-for">Emulators and x86 boxes</span><span class="apk-size"></span></a></li>
@@ -148,13 +152,21 @@
               </ol>
             </div>
             <div class="card">
+              <h3>On a phone or tablet</h3>
+              <ol>
+                <li>Open this page on the phone and tap your APK (most phones: arm64-v8a).</li>
+                <li>Allow your browser to install unknown apps when Android asks.</li>
+                <li>Open the download and install.</li>
+              </ol>
+            </div>
+            <div class="card">
               <h3>With adb</h3>
               <pre><code>adb connect &lt;tv-ip&gt;:5555
 adb install -r vyrk-&lt;version&gt;-arm64-v8a.apk</code></pre>
             </div>
             <div class="card">
               <h3>Then</h3>
-              <p>Choose <strong>Sign in with Stremio</strong> and scan the QR code, or <strong>Use without an account</strong>. Add stream add-ons in <strong>Settings › Add-ons</strong>. Later versions install by themselves when you open VYRK (or from <strong>Settings › About & updates</strong>).</p>
+              <p>Choose <strong>Sign in with Stremio</strong> (scan the QR code on a TV; on a phone, tap <strong>Open Stremio sign-in</strong>), or <strong>Use without an account</strong>. Add stream add-ons in <strong>Settings › Add-ons</strong>. Later versions install by themselves when you open VYRK (or from <strong>Settings › About & updates</strong>).</p>
               <p class="fineprint">Coming from a test build (the <code>ci-latest</code> pre-release)? Uninstall it first: test builds are signed with a public key, so Android won't update them to a release.</p>
             </div>
           </div>
