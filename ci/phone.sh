@@ -180,10 +180,17 @@ sleep 1
 
 # Landscape on a phone (rotation is allowed outside the player).
 tap id nav:browse "Home"
-adbs settings put system user_rotation 1 || true
+adbs wm user-rotation lock 1 || adbs settings put system user_rotation 1 || true
 sleep 4
 shot phone-home-landscape
-adbs settings put system user_rotation 0 || true
+python3 -c "from PIL import Image" 2>/dev/null && python3 - "$OUT" <<'PY' || true
+import glob, sys
+from PIL import Image
+f = sorted(glob.glob(sys.argv[1] + "/*-phone-home-landscape.png"))[-1]
+w, h = Image.open(f).size
+print("[e2e] landscape capture %dx%d: %s" % (w, h, "rotated" if w > h else "NOT rotated"))
+PY
+adbs wm user-rotation lock 0 || adbs settings put system user_rotation 0 || true
 sleep 2
 
 if crashed; then fail "VYRK crashed (see logcat)"; fi

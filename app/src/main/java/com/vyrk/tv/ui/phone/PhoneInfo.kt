@@ -206,7 +206,7 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
         }
         // A back arrow over the artwork; the bar fills in once the artwork has scrolled away.
         val solid by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 240 } }
-        Box(Modifier.fillMaxWidth().background(if (solid) c.background.copy(alpha = 0.96f) else Color.Transparent)) {
+        Box(Modifier.fillMaxWidth().background(if (solid) c.background else Color.Transparent)) {
             PhoneTopBar(if (solid) name else null, onBack = onClose)
         }
     }

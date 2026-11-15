@@ -387,11 +387,13 @@ private fun AudioSubs(m: PlayerModel) {
     Text(stringResource(R.string.audio).uppercase(), style = Vyrk.type.eyebrow, color = c.gold, modifier = Modifier.padding(top = 4.dp, bottom = 4.dp))
     audio.forEachIndexed { i, t ->
         val lang = t.language?.takeUnless { it.lowercase() in setOf("und", "mul", "zxx", "mis") }?.let { Languages.name(it) }
-        val extra = t.label?.takeIf { l -> lang == null || !l.equals(lang, true) && !l.equals(t.language, true) }
+        // A label that only repeats the language code ("UND") says nothing: the track gets a number.
+        val label = t.label?.takeUnless { it.isBlank() || it.equals(t.language, true) }
+        val extra = label?.takeIf { l -> lang == null || !l.equals(lang, true) }
         val channels = when (t.channels) { 1 -> mono; 2 -> stereo; 6 -> "5.1"; 8 -> "7.1"; 0 -> null; else -> "${t.channels}ch" }
         val tag = listOfNotNull(extra, if (TrackSelector.isCommentary(t) && extra?.contains(commentary, true) != true) commentary else null, codecLabel(t.codec), channels).joinToString(" · ")
         val sel = m.selectedAudio == t.id || (m.selectedAudio == null && t.isDefault)
-        PhoneListRow(lang ?: t.label ?: stringResource(R.string.audio_track_n, i + 1), { m.selectAudio(t.id) }, hint = tag.ifBlank { null }, selected = sel, tag = "panel:audio#$i")
+        PhoneListRow(lang ?: label ?: stringResource(R.string.audio_track_n, i + 1), { m.selectAudio(t.id) }, hint = tag.ifBlank { null }, selected = sel, tag = "panel:audio#$i")
     }
     Spacer(Modifier.height(8.dp))
     Text(stringResource(R.string.subtitles).uppercase(), style = Vyrk.type.eyebrow, color = c.gold, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))

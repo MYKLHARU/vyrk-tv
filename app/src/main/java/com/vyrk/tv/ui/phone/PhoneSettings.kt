@@ -80,13 +80,14 @@ import com.vyrk.tv.ui.theme.NorseDisplay
 import com.vyrk.tv.ui.theme.Vyrk
 import kotlinx.coroutines.launch
 
-private enum class PhoneGroup(val title: Int, val icon: Int, val subtitle: Int) {
+private enum class PhoneGroup(val title: Int, val icon: Int, val subtitle: Int?) {
     ADDONS(R.string.settings_addons, R.drawable.ic_puzzle, R.string.settings_addons_sub),
     STREAMS(R.string.settings_streams, R.drawable.ic_live, R.string.settings_streams_sub),
     SUBTITLES(R.string.settings_subtitles, R.drawable.ic_subtitles, R.string.settings_subtitles_sub),
     LANGUAGES(R.string.settings_languages, R.drawable.ic_globe, R.string.settings_languages_sub),
     APPEARANCE(R.string.settings_profile, R.drawable.ic_profile, R.string.settings_profile_sub),
-    SOUND(R.string.settings_picture, R.drawable.ic_audio, R.string.settings_picture_sub),
+    // Phones have none of the TV picture options (interface size, frame rate): sound only.
+    SOUND(R.string.settings_picture, R.drawable.ic_audio, null),
     ABOUT(R.string.settings_about, R.drawable.ic_info, R.string.settings_about_sub),
 }
 
@@ -125,7 +126,7 @@ fun PhoneSettings(session: ProfileSession) {
         AccountCard(session)
         PhoneCard {
             PhoneGroup.entries.forEach { g ->
-                PhoneListRow(str(g.title), { open = g.name }, icon = g.icon, hint = str(g.subtitle), tag = "settings:${g.name.lowercase()}")
+                PhoneListRow(str(g.title), { open = g.name }, icon = g.icon, hint = g.subtitle?.let { str(it) }, tag = "settings:${g.name.lowercase()}")
             }
         }
         Crest()
