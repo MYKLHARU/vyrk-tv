@@ -378,5 +378,7 @@
     "discover_no_catalogs": "No hay catálogos compatibles. Añade un complemento de catálogo en Ajustes o cambia el tipo de contenido.",
     "options": "Opciones",
     "seasons_count": "%1$d temporadas",
-    "subtitle_preview": "Así se verán los subtítulos."
+    "subtitle_preview": "Así se verán los subtítulos.",
+    "phone_open_sign_in": "Abrir el inicio de sesión de Stremio",
+    "phone_sign_in_body": "Inicia sesión en la página de Stremio en tu navegador y vuelve aquí. VYRK termina de iniciar sesión por sí solo."
 }

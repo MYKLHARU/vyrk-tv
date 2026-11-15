@@ -41,8 +41,8 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density"
-            android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustNothing">
+            <!-- Orientation is set in MainActivity: landscape on TVs, free on phones and tablets. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -72,7 +72,7 @@
             android:name=".player.PlayerActivity"
             android:exported="false"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density"
-            android:screenOrientation="landscape"
+            android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.Vyrk.Player" />
 
         <receiver

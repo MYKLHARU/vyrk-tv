@@ -187,6 +187,8 @@
     <string name="pause">Pause</string>
     <string name="paused">En pause</string>
     <string name="person_unavailable">Impossible de charger les informations de cette personne.</string>
+    <string name="phone_open_sign_in">Ouvrir la connexion Stremio</string>
+    <string name="phone_sign_in_body">Connectez-vous sur la page de Stremio dans votre navigateur, puis revenez ici. VYRK termine la connexion tout seul.</string>
     <string name="play">Lecture</string>
     <string name="play_now">Lire maintenant</string>
     <string name="poster_size">Taille des affiches</string>

@@ -378,5 +378,7 @@
     "discover_no_catalogs": "Nessun catalogo corrispondente. Aggiungi un componente catalogo nelle Impostazioni o cambia il tipo di contenuto.",
     "options": "Opzioni",
     "seasons_count": "%1$d stagioni",
-    "subtitle_preview": "I sottotitoli appariranno così."
+    "subtitle_preview": "I sottotitoli appariranno così.",
+    "phone_open_sign_in": "Apri l'accesso a Stremio",
+    "phone_sign_in_body": "Accedi alla pagina di Stremio nel browser, poi torna qui. VYRK completa l'accesso da solo."
 }

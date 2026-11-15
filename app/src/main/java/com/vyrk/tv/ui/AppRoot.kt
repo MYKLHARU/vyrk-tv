@@ -126,7 +126,15 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
         s.scope.launch { handleLink(app, s, pending, external) }
     }
 
+    val phone = remember { com.vyrk.tv.ui.phone.FormFactor.isPhone(activity) }
     VyrkTheme(accent, reduceMotion = settings?.reduceMotion == true) {
+        // Phones and tablets: the touch interface, at the device's own density.
+        if (phone) {
+            androidx.compose.runtime.CompositionLocalProvider(
+                LocalApp provides app, LocalGraph provides graph, LocalSession provides session, LocalActivity provides activity,
+            ) { com.vyrk.tv.ui.phone.PhoneRoot(session) }
+            return@VyrkTheme
+        }
         FittedCanvas(size) {
             androidx.compose.runtime.CompositionLocalProvider(
                 LocalApp provides app, LocalGraph provides graph, LocalSession provides session, LocalActivity provides activity,

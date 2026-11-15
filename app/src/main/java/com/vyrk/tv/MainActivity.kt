@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.vyrk.tv.ui.AppRoot
@@ -22,6 +23,19 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (com.vyrk.tv.ui.phone.FormFactor.isTv(this)) {
+            requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } else {
+            // Phones and tablets: any orientation, the status and navigation bars shown, drawn
+            // edge to edge (the phone screens pad themselves), and the keyboard resizes the page.
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            enableEdgeToEdge(
+                statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+                navigationBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            )
+            @Suppress("DEPRECATION")
+            window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        }
         handleIntent(intent)
         // Back arrives through the dispatcher on Android 16; log it for the focus trace.
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {

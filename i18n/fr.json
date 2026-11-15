@@ -378,5 +378,7 @@
     "discover_no_catalogs": "Aucun catalogue correspondant. Ajoutez un module de catalogue dans les paramètres ou changez de type de contenu.",
     "options": "Options",
     "seasons_count": "%1$d saisons",
-    "subtitle_preview": "Les sous-titres ressembleront à ceci."
+    "subtitle_preview": "Les sous-titres ressembleront à ceci.",
+    "phone_open_sign_in": "Ouvrir la connexion Stremio",
+    "phone_sign_in_body": "Connectez-vous sur la page de Stremio dans votre navigateur, puis revenez ici. VYRK termine la connexion tout seul."
 }
