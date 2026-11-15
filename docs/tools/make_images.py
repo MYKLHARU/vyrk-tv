@@ -14,10 +14,14 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-OBSIDIAN = (11, 20, 29)
-FROST = (169, 225, 243)
-TEXT = (244, 246, 250)
-MUTED = (180, 186, 196)
+# The app's palette (app/.../ui/theme/Theme.kt): antique gold on deep navy.
+OBSIDIAN = (5, 10, 14)
+GOLD = (212, 166, 90)
+GOLD_HIGHLIGHT = (243, 222, 176)
+TEXT = (244, 245, 246)
+MUTED = (159, 177, 185)
+# The wordmark is the system serif on Android (Noto Serif); these are close stand-ins.
+SERIFS = ["NotoSerif-SemiBold.ttf", "NotoSerif-Regular.ttf", "DejaVuSerif.ttf", "FreeSerif.ttf", "LiberationSerif-Regular.ttf"]
 
 NAMES = [
     "home", "top10-rows", "info-page", "series-info", "player", "audio-subtitles", "search",
@@ -34,13 +38,32 @@ def font(root: Path, size: int, weight: int = 800) -> ImageFont.FreeTypeFont:
     return f
 
 
+def serif(root: Path, size: int) -> ImageFont.FreeTypeFont:
+    for name in SERIFS:
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            for d in ("/usr/share/fonts", "/usr/local/share/fonts", "/System/Library/Fonts", "C:/Windows/Fonts"):
+                hits = list(Path(d).rglob(name)) if Path(d).exists() else []
+                if hits:
+                    return ImageFont.truetype(str(hits[0]), size)
+    return font(root, size, 700)
+
+
+def draw_wordmark(d: ImageDraw.ImageDraw, x: float, y: float, size: int, f: ImageFont.FreeTypeFont):
+    """VYRK in spaced serif capitals, like the Wordmark composable (letter spacing 0.30 of the height)."""
+    for ch in "VYRK":
+        d.text((x, y), ch, font=f, fill=TEXT, stroke_width=max(1, size // 60), stroke_fill=TEXT)
+        x += d.textlength(ch, font=f) + size * 0.30
+
+
 def draw_mark(d: ImageDraw.ImageDraw, x: int, y: int, s: float):
-    """The angular V, same geometry as res/drawable/ic_vyrk_mark.xml (100x100 viewport)."""
+    """The angular V in gold, same geometry and colours as res/drawable/ic_launcher.xml (100x100 viewport)."""
     def p(px, py):
         return (x + px * s, y + py * s)
-    d.polygon([p(8, 14), p(30, 14), p(54, 70), p(50, 88)], fill=FROST)
-    d.polygon([p(92, 14), p(70, 14), p(56, 47), p(63, 63)], fill=(230, 247, 252))
-    d.polygon([p(40, 14), p(60, 14), p(50, 36)], fill=(120, 160, 175))
+    d.polygon([p(8, 14), p(30, 14), p(54, 70), p(50, 88)], fill=GOLD)
+    d.polygon([p(92, 14), p(70, 14), p(56, 47), p(63, 63)], fill=GOLD_HIGHLIGHT)
+    d.polygon([p(40, 14), p(60, 14), p(50, 36)], fill=(119, 95, 55))  # gold at 55% on the background
 
 
 def tv_frame(capture: Image.Image, width: int) -> Image.Image:
@@ -61,7 +84,7 @@ def hero_image(root: Path, capture: Image.Image, size, out: Path):
     img = Image.new("RGB", size, OBSIDIAN)
     glow = Image.new("RGBA", size, (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow)
-    gd.ellipse([int(w * 0.35), -h // 2, int(w * 1.3), int(h * 1.3)], fill=(169, 225, 243, 40))
+    gd.ellipse([int(w * 0.35), -h // 2, int(w * 1.3), int(h * 1.3)], fill=(212, 166, 90, 26))
     img.paste(glow.filter(ImageFilter.GaussianBlur(h // 4)), (0, 0), glow.filter(ImageFilter.GaussianBlur(h // 4)))
     tv = tv_frame(capture, int(w * 0.52))
     shadow = Image.new("RGBA", (tv.width + 60, tv.height + 60), (0, 0, 0, 0))
@@ -76,8 +99,11 @@ def hero_image(root: Path, capture: Image.Image, size, out: Path):
     left = int(w * 0.06)
     top = int(h * 0.28)
     draw_mark(d, left, top, mark / 100)
-    d.text((left + mark * 1.05, top + mark * 0.02), "vyrk", font=font(root, int(mark * 0.92), 800), fill=TEXT)
-    d.text((left, top + mark * 1.25), "Forged for Streaming", font=font(root, int(h * 0.065), 700), fill=FROST)
+    size = int(mark * 0.52)
+    f = serif(root, size)
+    asc, desc = f.getmetrics()
+    draw_wordmark(d, left + mark * 1.08, top + (mark - asc) / 2 + mark * 0.02, size, f)
+    d.text((left, top + mark * 1.25), "Forged for Streaming", font=font(root, int(h * 0.065), 700), fill=GOLD)
     d.text((left, top + mark * 1.25 + h * 0.09), "Browse, choose, press Play.\nEverything with the remote.", font=font(root, int(h * 0.04), 500), fill=MUTED, spacing=8)
     img.save(out)
 
