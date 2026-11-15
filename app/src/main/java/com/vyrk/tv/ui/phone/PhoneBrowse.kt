@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -291,7 +292,8 @@ private fun HeroPage(session: ProfileSession, meta: MetaPreview, height: Dp) {
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
             0f to shade.copy(alpha = 0.55f), 0.22f to Color.Transparent, 0.48f to Color.Transparent, 0.78f to c.background.copy(alpha = 0.86f), 1f to c.background,
         )))
-        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = PhoneMargin, end = PhoneMargin, bottom = 22.dp)) {
+        // On wide screens (landscape, tablets) the title and buttons keep a phone's width.
+        Column(Modifier.align(Alignment.BottomStart).widthIn(max = 560.dp).fillMaxWidth().padding(start = PhoneMargin, end = PhoneMargin, bottom = 22.dp)) {
             BoxWithConstraints(Modifier.fillMaxWidth().height(96.dp)) {
                 HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), full?.name ?: meta.name, art.logos,
                     maxWidth * 0.78f, 96.dp, Vyrk.type.cinematicM, Modifier.fillMaxHeight(), loading = art.logosLoading)
