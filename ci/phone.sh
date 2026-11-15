@@ -147,7 +147,13 @@ cx=$(( (w > h ? w : h) / 2 )); cy=$(( (w > h ? h : w) / 2 ))
 adb_run shell input tap "$cx" "$cy"
 sleep 1
 shot phone-player-controls
-tap id player:audio_subs "audio and subtitles" 8 || true
+# Paused, the controls stay up while the screen is read (playing, they hide after 5 s).
+adbs input keyevent KEYCODE_MEDIA_PAUSE
+sleep 1
+tap id player:play_pause "controls are touchable (play)" 15
+adbs input keyevent KEYCODE_MEDIA_PAUSE
+sleep 1
+tap id player:audio_subs "audio and subtitles" 15
 sleep 1
 shot phone-player-audio-subs
 adbs input keyevent KEYCODE_BACK
