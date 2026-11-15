@@ -188,6 +188,51 @@ jobs:
           name: e2e-results-${{ matrix.part }}
           path: ci/out/e2e/
 
+  # The touch interface on a phone emulator: taps by test tag, screenshots of each screen.
+  phone:
+    needs: build
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          name: apks
+          path: dist
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Media and test add-on
+        run: |
+          timeout --kill-after=5s 120s python3 ci/install_test_ffmpeg.py --directory "$RUNNER_TEMP/vyrk-test-tools"
+          export PATH="$RUNNER_TEMP/vyrk-test-tools:$PATH"
+          mkdir -p ci/media ci/out/phone
+          timeout --kill-after=5s 120s ffmpeg -loglevel error -y -f lavfi -i testsrc2=size=1280x720:rate=10 -f lavfi -i sine=frequency=440:sample_rate=48000 \
+            -t 300 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -crf 32 -g 50 -c:a aac -b:a 64k -movflags +faststart ci/media/sample-720p.mp4
+          cp ci/media/sample-720p.mp4 ci/media/bbb-clip.mp4
+          nohup python3 ci/test_addon.py > ci/out/phone/addon.log 2>&1 &
+          sleep 3 && curl -sf http://127.0.0.1:7000/manifest.json > /dev/null
+      - name: Phone journey
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-build: '15917651' # 37.1.11 stable, as for the TV journeys
+          ram-size: 2048M
+          heap-size: 512M
+          disable-animations: true
+          emulator-options: -no-window -gpu swangle -noaudio -no-boot-anim -no-snapshot -no-metrics
+          script: APK="$(ls dist/*-universal.apk)" OUT=ci/out/phone bash ci/phone.sh
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: phone-results
+          path: ci/out/phone/
+
   # Both halves' screenshots, focus traces and logcats in one ci-screens pre-release.
   e2e-screens:
     needs: [build, e2e]
