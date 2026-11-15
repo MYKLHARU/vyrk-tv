@@ -378,5 +378,7 @@
     "discover_no_catalogs": "Nenhum catálogo correspondente. Adicione um complemento de catálogo nas Configurações ou altere o tipo de conteúdo.",
     "options": "Opções",
     "seasons_count": "%1$d temporadas",
-    "subtitle_preview": "As legendas ficarão assim."
+    "subtitle_preview": "As legendas ficarão assim.",
+    "phone_open_sign_in": "Abrir o login do Stremio",
+    "phone_sign_in_body": "Entre na página do Stremio no navegador e volte para cá. O VYRK conclui o login sozinho."
 }

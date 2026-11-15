@@ -187,6 +187,8 @@
     <string name="pause">Pause</string>
     <string name="paused">Pausiert</string>
     <string name="person_unavailable">Die Angaben zu dieser Person konnten nicht geladen werden.</string>
+    <string name="phone_open_sign_in">Stremio-Anmeldung öffnen</string>
+    <string name="phone_sign_in_body">Melde dich im Browser auf der Seite von Stremio an und kehre dann hierher zurück. VYRK schließt die Anmeldung selbst ab.</string>
     <string name="play">Abspielen</string>
     <string name="play_now">Jetzt abspielen</string>
     <string name="poster_size">Postergröße</string>

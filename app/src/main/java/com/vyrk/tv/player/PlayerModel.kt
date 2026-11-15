@@ -617,6 +617,9 @@ class PlayerModel(
         position = target
     }
 
+    /** Seeks to [ms] from the start (the phone timeline, dragged and let go). */
+    fun seekTo(ms: Long) = seekBy(ms - engine.player.currentPosition)
+
     fun togglePlay() {
         val p = engine.player
         if (p.isPlaying) { p.pause(); session.pushNow() } else p.play()

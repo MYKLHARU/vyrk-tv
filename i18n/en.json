@@ -378,5 +378,7 @@
     "discover_no_catalogs": "No matching catalogues. Add a catalogue add-on in Settings or change content type.",
     "options": "Options",
     "seasons_count": "%1$d seasons",
-    "subtitle_preview": "Subtitles will look like this."
+    "subtitle_preview": "Subtitles will look like this.",
+    "phone_open_sign_in": "Open Stremio sign-in",
+    "phone_sign_in_body": "Sign in on Stremio's page in your browser, then come back here. VYRK finishes signing in by itself."
 }

@@ -378,5 +378,7 @@
     "discover_no_catalogs": "Keine passenden Kataloge. Füge in den Einstellungen ein Katalog-Add-on hinzu oder ändere den Inhaltstyp.",
     "options": "Optionen",
     "seasons_count": "%1$d Staffeln",
-    "subtitle_preview": "So sehen die Untertitel aus."
+    "subtitle_preview": "So sehen die Untertitel aus.",
+    "phone_open_sign_in": "Stremio-Anmeldung öffnen",
+    "phone_sign_in_body": "Melde dich im Browser auf der Seite von Stremio an und kehre dann hierher zurück. VYRK schließt die Anmeldung selbst ab."
 }

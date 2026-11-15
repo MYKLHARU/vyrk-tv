@@ -136,15 +136,36 @@ class PlayerActivity : ComponentActivity() {
         val accent = runCatching { AccentChoice.valueOf(session.settings.value.accent) }.getOrDefault(AccentChoice.GOLD)
         val size = runCatching { InterfaceSize.valueOf(dev.interfaceSize) }.getOrDefault(InterfaceSize.MEDIUM)
         FocusTrace.enter(PLAYER_LAYER)
+        val phone = com.vyrk.tv.ui.phone.FormFactor.isPhone(this)
+        if (phone) {
+            // Phones: the whole screen, cutout included; the bars come back with a swipe.
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+            if (android.os.Build.VERSION.SDK_INT >= 28) window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+            androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
+                hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+                systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+            m.showControls()
+        }
         setContent {
             androidx.compose.runtime.CompositionLocalProvider(com.vyrk.tv.ui.LocalTraceLayer provides PLAYER_LAYER) {
-                VyrkTheme(accent) { FittedCanvas(size) { PlayerScreen(m) { finish() } } }
+                VyrkTheme(accent) {
+                    if (phone) PhonePlayerScreen(m) { finish() }
+                    else FittedCanvas(size) { PlayerScreen(m) { finish() } }
+                }
             }
         }
         // Android 16 delivers Back through the back dispatcher, not as a key event.
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 KeyBus.onKey(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
+                if (phone) {
+                    // On a phone Back closes an open sheet, and otherwise leaves the player.
+                    if (m.panel != Panel.NONE) m.panel = Panel.NONE else finish()
+                    return
+                }
                 when {
                     m.phase == Phase.INCOMPLETE && m.panel != Panel.NONE -> { m.panel = Panel.NONE }
                     m.phase == Phase.PLAYING && m.panel != Panel.NONE -> { m.panel = Panel.NONE; m.showControls() }
