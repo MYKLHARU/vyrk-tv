@@ -50,7 +50,7 @@ find_el() {
 }
 front_is_vyrk() {
   local w; w=$(window_now)
-  [[ "$w" == *"$PKG"* ]] || { fail "VYRK is not in front: $w"; return 1; }
+  [[ "$w" == *"$PKG"* || "$w" == *ImmersiveModeConfirmation* ]] || { fail "VYRK is not in front: $w"; return 1; }
 }
 tap() {
   local mode=$1 want=$2 label=${3:-$2} secs=${4:-20} at
@@ -78,6 +78,8 @@ for _ in $(seq 1 30); do adbs pm path android >/dev/null 2>&1 && break; sleep 2;
 log "device: $(adbs getprop ro.product.model) API $(adbs getprop ro.build.version.sdk), $(adbs wm size)"
 adbs settings put system accelerometer_rotation 0 || true
 adbs settings put system user_rotation 0 || true
+# Android's one-time "Viewing full screen" notice would sit over the player.
+adbs settings put secure immersive_mode_confirmations confirmed || true
 if [[ -n "$APK" ]]; then
   adb_run uninstall "$PKG" >/dev/null 2>&1 || true
   adb_run install -r "$APK"
