@@ -124,6 +124,7 @@ fun PhoneSettings(session: ProfileSession) {
         Spacer(Modifier.height(8.dp))
         Text(str(R.string.settings), style = Vyrk.type.displayS, color = c.text)
         AccountCard(session)
+        TraktCard()
         PhoneCard {
             PhoneGroup.entries.forEach { g ->
                 PhoneListRow(str(g.title), { open = g.name }, icon = g.icon, hint = g.subtitle?.let { str(it) }, tag = "settings:${g.name.lowercase()}")
@@ -154,6 +155,37 @@ private fun AccountCard(session: ProfileSession) {
                 Text(str(R.string.saved_on_device), style = Vyrk.type.bodyM, color = Vyrk.colors.textSecondary)
                 Spacer(Modifier.height(10.dp))
                 PhoneButton(str(R.string.sign_in_stremio), { app.screen = Screen.Pairing(session.profile.id) }, style = PhoneButtonStyle.PRIMARY, tag = "about:sign_in")
+            }
+        }
+    }
+}
+
+@Composable
+private fun TraktCard() {
+    val graph = com.vyrk.tv.ui.LocalGraph.current
+    val state by graph.trakt.state.collectAsState()
+    val signIn = com.vyrk.tv.ui.components.rememberTraktSignIn(graph.trakt)
+    val uri = androidx.compose.ui.platform.LocalUriHandler.current
+    val s = state
+    if (s == com.vyrk.tv.data.TraktAccount.State.Off) return
+    PhoneCard(title = str(R.string.trakt)) {
+        if (s is com.vyrk.tv.data.TraktAccount.State.Connected) {
+            Text(s.username?.let { str(R.string.trakt_connected_as, it) } ?: str(R.string.trakt_desc), style = Vyrk.type.bodyM, color = Vyrk.colors.text)
+            Spacer(Modifier.height(10.dp))
+            PhoneButton(str(R.string.trakt_disconnect), { graph.trakt.disconnect() }, style = PhoneButtonStyle.OUTLINE, tag = "about:trakt_disconnect")
+        } else {
+            Text(str(R.string.trakt_desc), style = Vyrk.type.bodyM, color = Vyrk.colors.textSecondary)
+            Spacer(Modifier.height(10.dp))
+            com.vyrk.tv.ui.components.TraktCodePanel(signIn.step, qr = false)
+            val step = signIn.step
+            if (step is com.vyrk.tv.data.TraktAccount.SignIn.Code) {
+                Spacer(Modifier.height(10.dp))
+                PhoneButton(str(R.string.trakt_open_site), { runCatching { uri.openUri(step.code.verificationUrl) } }, style = PhoneButtonStyle.PRIMARY, tag = "about:trakt_open")
+                Spacer(Modifier.height(8.dp))
+                PhoneButton(str(R.string.cancel), { signIn.cancel() }, style = PhoneButtonStyle.OUTLINE, tag = "about:trakt_cancel")
+            } else {
+                Spacer(Modifier.height(10.dp))
+                PhoneButton(str(R.string.trakt_connect), { signIn.start() }, style = PhoneButtonStyle.PRIMARY, tag = "about:trakt_connect")
             }
         }
     }

@@ -380,5 +380,15 @@
     "seasons_count": "%1$d stagioni",
     "subtitle_preview": "I sottotitoli appariranno così.",
     "phone_open_sign_in": "Apri l'accesso a Stremio",
-    "phone_sign_in_body": "Accedi alla pagina di Stremio nel browser, poi torna qui. VYRK completa l'accesso da solo."
+    "phone_sign_in_body": "Accedi alla pagina di Stremio nel browser, poi torna qui. VYRK completa l'accesso da solo.",
+    "trakt": "Trakt",
+    "trakt_desc": "Sincronizza ciò che guardi con la cronologia di Trakt mentre lo guardi.",
+    "trakt_connect": "Collega Trakt",
+    "trakt_disconnect": "Scollega",
+    "trakt_connected_as": "Collegato come %1$s",
+    "trakt_activate": "Sul telefono, vai su %1$s e inserisci:",
+    "trakt_waiting": "In attesa della tua approvazione su Trakt…",
+    "trakt_failed": "Impossibile collegarsi a Trakt. Riprova.",
+    "trakt_expired": "Il codice è scaduto. Riprova.",
+    "trakt_open_site": "Apri trakt.tv"
 }

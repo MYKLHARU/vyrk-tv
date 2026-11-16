@@ -332,6 +332,16 @@
     <string name="top10_suggestion_desc">The card on Home that offers Top 10 rows</string>
     <string name="trailer">Trailer</string>
     <string name="trailer_refused">This trailer can\'t play here. Open it in YouTube from the info page.</string>
+    <string name="trakt">Trakt</string>
+    <string name="trakt_activate">On your phone, go to %1$s and enter:</string>
+    <string name="trakt_connect">Connect Trakt</string>
+    <string name="trakt_connected_as">Connected as %1$s</string>
+    <string name="trakt_desc">Sync what you watch to your Trakt history as you watch it.</string>
+    <string name="trakt_disconnect">Disconnect</string>
+    <string name="trakt_expired">The code expired. Try again.</string>
+    <string name="trakt_failed">Couldn\'t connect to Trakt. Try again.</string>
+    <string name="trakt_open_site">Open trakt.tv</string>
+    <string name="trakt_waiting">Waiting for you to approve on Trakt…</string>
     <string name="try_again">Try again</string>
     <string name="tv_speaker_mode">TV-speaker mode</string>
     <string name="type_live">Live</string>

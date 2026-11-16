@@ -332,6 +332,16 @@
     <string name="top10_suggestion_desc">La carte de l\'Accueil qui propose les rangées Top 10</string>
     <string name="trailer">Bande-annonce</string>
     <string name="trailer_refused">Cette bande-annonce ne peut pas être lue ici. Ouvrez-la dans YouTube depuis la page d\'infos.</string>
+    <string name="trakt">Trakt</string>
+    <string name="trakt_activate">Sur votre téléphone, allez sur %1$s et saisissez :</string>
+    <string name="trakt_connect">Connecter Trakt</string>
+    <string name="trakt_connected_as">Connecté en tant que %1$s</string>
+    <string name="trakt_desc">Synchronise ce que vous regardez avec votre historique Trakt, en direct.</string>
+    <string name="trakt_disconnect">Déconnecter</string>
+    <string name="trakt_expired">Le code a expiré. Réessayez.</string>
+    <string name="trakt_failed">Impossible de se connecter à Trakt. Réessayez.</string>
+    <string name="trakt_open_site">Ouvrir trakt.tv</string>
+    <string name="trakt_waiting">En attente de votre validation sur Trakt…</string>
     <string name="try_again">Réessayer</string>
     <string name="tv_speaker_mode">Mode haut-parleurs du téléviseur</string>
     <string name="type_live">Direct</string>

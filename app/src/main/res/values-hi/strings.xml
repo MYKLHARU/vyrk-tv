@@ -332,6 +332,16 @@
     <string name="top10_suggestion_desc">होम पर वह कार्ड जो टॉप 10 पंक्तियाँ जोड़ने का सुझाव देता है</string>
     <string name="trailer">ट्रेलर</string>
     <string name="trailer_refused">यह ट्रेलर यहाँ नहीं चल सकता। जानकारी पेज से इसे YouTube में खोलें।</string>
+    <string name="trakt">Trakt</string>
+    <string name="trakt_activate">अपने फ़ोन पर %1$s पर जाएँ और यह दर्ज करें:</string>
+    <string name="trakt_connect">Trakt कनेक्ट करें</string>
+    <string name="trakt_connected_as">%1$s के रूप में कनेक्टेड</string>
+    <string name="trakt_desc">आप जो देखते हैं, उसे देखते समय ही अपने Trakt इतिहास में सिंक करें।</string>
+    <string name="trakt_disconnect">डिस्कनेक्ट करें</string>
+    <string name="trakt_expired">कोड की समय-सीमा खत्म हो गई। फिर से कोशिश करें।</string>
+    <string name="trakt_failed">Trakt से कनेक्ट नहीं हो सका। फिर से कोशिश करें।</string>
+    <string name="trakt_open_site">trakt.tv खोलें</string>
+    <string name="trakt_waiting">Trakt पर आपकी मंज़ूरी का इंतज़ार है…</string>
     <string name="try_again">फिर कोशिश करें</string>
     <string name="tv_speaker_mode">टीवी स्पीकर मोड</string>
     <string name="type_live">लाइव</string>

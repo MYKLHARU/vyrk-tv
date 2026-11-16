@@ -141,6 +141,8 @@ class PlayerModel(
     private var item: LibraryItem? = null
     /** The video whose file the engine has, so progress is saved against it (not the one loading next). */
     private var playingVideoId: String? = null
+    /** The title on screen for Trakt: the film, or the playing episode. */
+    val traktItem get() = com.vyrk.core.trakt.TraktItem.of(request.meta.type, request.meta.id, playingVideoId ?: request.videoId)
     private var firstFrame = false
     private var firstFrameJob: Job? = null
     private var lastPushMs = SystemClock.elapsedRealtime()

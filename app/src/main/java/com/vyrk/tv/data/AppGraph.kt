@@ -48,6 +48,9 @@ class AppGraph(val context: Context) {
     // Failures are logged with the API path and reason only; the key never appears.
     val tmdb = com.vyrk.core.tmdb.TmdbClient(transport, BuildConfig.TMDB_API_KEY) { path, reason -> com.vyrk.tv.ui.Perf.log("tmdb $path failed: $reason") }
     val fanart = com.vyrk.core.art.FanartClient(transport, BuildConfig.FANART_API_KEY)
+    /** Trakt sync; off unless the build has TRAKT_CLIENT_ID and TRAKT_CLIENT_SECRET. */
+    val trakt = TraktAccount(com.vyrk.core.trakt.TraktClient(transport, BuildConfig.TRAKT_CLIENT_ID, BuildConfig.TRAKT_CLIENT_SECRET),
+        vault, File(File(context.filesDir, "vyrk"), "trakt.enc"), scope)
     /** Hand-off from the UI to PlayerActivity (same process). */
     @Volatile var pendingPlayback: com.vyrk.tv.player.PlaybackRequest? = null
 

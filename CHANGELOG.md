@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.45
+
+- Trakt: connect your Trakt account in Settings → About (enter the code shown at trakt.tv/activate, or scan the QR code). VYRK then scrobbles as you watch: Trakt shows what's playing, and a film or episode watched past 80% goes into your Trakt history. Disconnect any time. Titles without an IMDb id (some anime catalogues) aren't sent. Phones get the same card in Settings.
+
 ## v0.1.41
 
 - Home never shows anime, on TVs and phones: no anime catalogues, no anime titles in the other rows or the featured titles, and none in Continue Watching. A title counts as anime by its type, an anime ID (Kitsu, MAL, AniList, AniDB) or an "Anime" tag; "Animation" alone doesn't count. Anime stays on the Anime tab, in Movies and Series, Search and the Library.

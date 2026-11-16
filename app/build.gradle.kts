@@ -23,6 +23,9 @@ val storeBuild = prop("vyrk.storeBuild", "false").toBoolean()
 // A byte-order mark or spaces around the value (easy to get when setting the secret from Windows
 // PowerShell) made TMDB reject every request; TmdbClient also cleans the key up.
 val tmdbKey = prop("vyrk.tmdbApiKey", System.getenv("TMDB_API_KEY") ?: "").replace("﻿", "").trim()
+// Trakt app keys (trakt.tv/oauth/applications) from the environment; never committed. Without them Trakt is off.
+val traktId = (System.getenv("TRAKT_CLIENT_ID") ?: "").trim().filter { it.isLetterOrDigit() }
+val traktSecret = (System.getenv("TRAKT_CLIENT_SECRET") ?: "").trim().filter { it.isLetterOrDigit() }
 val fanartKey = (System.getenv("FANART_API_KEY") ?: "").trim().takeIf { it.matches(Regex("[a-fA-F0-9]{32}")) }.orEmpty()
 
 // Release signing comes from the environment. Without it, builds are signed with the committed
@@ -46,6 +49,8 @@ android {
         buildConfigField("boolean", "STORE_BUILD", storeBuild.toString())
         buildConfigField("String", "TMDB_API_KEY", "\"${tmdbKey.replace("\"", "")}\"")
         buildConfigField("String", "FANART_API_KEY", "\"$fanartKey\"")
+        buildConfigField("String", "TRAKT_CLIENT_ID", "\"$traktId\"")
+        buildConfigField("String", "TRAKT_CLIENT_SECRET", "\"$traktSecret\"")
         vectorDrawables.useSupportLibrary = true
     }
 
