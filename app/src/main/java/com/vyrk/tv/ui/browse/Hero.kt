@@ -127,7 +127,8 @@ fun Wallpaper(titleKey: String, urls: List<String>, modifier: Modifier = Modifie
         ) {
             androidx.compose.runtime.key(titleKey) {
                 Crossfade(shown, animationSpec = com.vyrk.tv.ui.theme.motionSpec(WALLPAPER_FADE_MS), label = "wallpaper") { u ->
-                    if (u != null) AsyncImage(request(u), null, contentScale = ContentScale.Crop, alignment = Alignment.Center, modifier = Modifier.fillMaxSize())
+                    if (u != null) AsyncImage(request(u), null, contentScale = ContentScale.Crop, alignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize().then(slowDrift(u)))
                 }
             }
             // Left: under the logo, facts and synopsis.
@@ -441,4 +442,18 @@ fun Top10Card(onAdd: () -> Unit, onNotNow: () -> Unit, addReq: FocusRequester, o
             }
         }
     }
+}
+
+/**
+ * Each new wallpaper eases in a little over 30 seconds (from 100% to 106%), so a still page has
+ * some life. Off with Reduce motion.
+ */
+@Composable
+private fun slowDrift(key: String): Modifier {
+    if (com.vyrk.tv.ui.theme.LocalReduceMotion.current) return Modifier
+    val zoom = androidx.compose.runtime.remember(key) { androidx.compose.animation.core.Animatable(1f) }
+    androidx.compose.runtime.LaunchedEffect(key) {
+        zoom.animateTo(1.06f, androidx.compose.animation.core.tween(30_000, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
+    }
+    return Modifier.graphicsLayer { scaleX = zoom.value; scaleY = zoom.value }
 }

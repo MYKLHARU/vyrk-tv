@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.44
+
+- Screen saver: VYRK can be the TV's screen saver (Settings › Device preferences › Screen saver, on launchers that list other apps' screen savers). It shows the artwork of what you've been watching, one title at a time, drifting slowly, with its name and the time; with nothing watched yet, the gold V. Text moves between corners so nothing stays in one place.
+- Home's background artwork eases in slowly while you stay on a title. Reduce motion turns it off.
+
 ## v0.1.43
 
 - Home: "Because you watched …" rows, with TMDB's recommendations for the two titles you watched most recently, after the first two rows. Titles you've watched or saved are left out, and so is anime. They open through your add-ons like any other title.
