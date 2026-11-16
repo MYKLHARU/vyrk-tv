@@ -21,12 +21,27 @@ class AnimeBrowseModelTest {
             .also { it.rebuild(listOf(addon()), emptySet()) }
         val regular = model(Tab.HOME, false)
         val home = model(Tab.HOME, true)
-        assertEquals(3, regular.rows.size)
+        // The regular Home leaves anime catalogues out; anime mode's Home has only them.
+        assertEquals(listOf("regular"), regular.rows.map { it.ref!!.catalog.id })
         assertEquals(2, home.rows.size)
         assertEquals(listOf("movie"), model(Tab.MOVIES, true).rows.map { it.ref!!.catalog.type })
         assertEquals(listOf("series"), model(Tab.SERIES, true).rows.map { it.ref!!.catalog.type })
         assertNotSame(regular.rows.first(), home.rows.first())
         assertEquals(regular.rows, model(Tab.HOME, false).rows)
+    }
+
+    @Test fun regularHomeDropsAnimeTitlesButSeriesTabKeepsThem() = runBlocking {
+        val client = AddonClient(http { """{"metas":[{"id":"tt1","type":"series"},{"id":"kitsu:2","type":"series"},{"id":"tt3","type":"series","genres":["Anime"]},{"id":"tt4","type":"series","genres":["Animation"]}]}""" })
+        val store = RowStore()
+        val home = BrowseModel(client, Tab.HOME, this, store).also { it.rebuild(listOf(addon()), emptySet()) }
+        val series = BrowseModel(client, Tab.SERIES, this, store).also { it.rebuild(listOf(addon()), emptySet()) }
+        val homeRow = home.rows.single()
+        val seriesRow = series.rows.single { it.ref!!.catalog.id == "regular" }
+        assertNotSame(homeRow, seriesRow)
+        home.ensureLoaded(homeRow); homeRow.job!!.join()
+        series.ensureLoaded(seriesRow); seriesRow.job!!.join()
+        assertEquals(listOf("tt1", "tt4"), homeRow.items.map { it.id })
+        assertEquals(4, seriesRow.items.size)
     }
 
     @Test fun paginationAdvancesByRawCountWhenGenreRemovesEveryItem() = runBlocking {

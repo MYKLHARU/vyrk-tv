@@ -23,6 +23,8 @@ enum class RowKind { CONTINUE, TOP10, CATALOG }
 @Stable
 class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initialTitle: String,
     val animeOnly: Boolean = false, val browseType: String? = null, val genre: String? = null,
+    /** Home's rows: anime titles are left out (the Anime tab is where anime lives). */
+    val noAnime: Boolean = false,
 ) {
     internal var fetchedCount = 0
     internal var lastPageIds: List<String> = emptyList()
@@ -42,11 +44,12 @@ class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initial
  */
 class RowStore {
     private val rows = HashMap<String, RowState>()
-    fun row(ref: CatalogRef, kind: RowKind, animeOnly: Boolean = false, browseType: String? = null, genre: String? = null): RowState {
-        val key = ref.key + kind + if (animeOnly) ":anime:$browseType:$genre" else ""
+    fun row(ref: CatalogRef, kind: RowKind, animeOnly: Boolean = false, browseType: String? = null, genre: String? = null, noAnime: Boolean = false): RowState {
+        // Home's rows drop anime titles, so they are not shared with the other tabs' rows.
+        val key = ref.key + kind + (if (animeOnly) ":anime:$browseType:$genre" else "") + (if (noAnime) ":noanime" else "")
         rows[key]?.takeIf { it.ref?.addon?.transportUrl == ref.addon.transportUrl }?.let { return it }
         val title = if (kind == RowKind.TOP10) CatalogRules.top10Title(ref) ?: CatalogRules.rowTitle(ref) else CatalogRules.rowTitle(ref)
-        return RowState(key, kind, ref, title, animeOnly, browseType, genre).also { rows[key] = it }
+        return RowState(key, kind, ref, title, animeOnly, browseType, genre, noAnime).also { rows[key] = it }
     }
 }
 
@@ -106,7 +109,10 @@ class BrowseModel(
         val rest = (allRest + requiredGenre).filter { !animeOnly || CatalogRules.isAnimeCatalog(it) }
         hasTop10Catalogs = top.isNotEmpty()
         val catalogs: List<Pair<CatalogRef, RowKind>> = when (tab) {
-            Tab.HOME -> top.map { it to RowKind.TOP10 } + rest.filter { it.catalog.type != "tv" && it.catalog.type != "channel" }.map { it to RowKind.CATALOG }
+            // The regular Home never shows anime: no anime catalogues, and anime titles are dropped
+            // from the rest. (In anime mode Home is anime only, filtered above.)
+            Tab.HOME -> top.filter { animeOnly || !CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.TOP10 } +
+                rest.filter { it.catalog.type != "tv" && it.catalog.type != "channel" && (animeOnly || !CatalogRules.isAnimeCatalog(it)) }.map { it to RowKind.CATALOG }
             Tab.MOVIES -> (top + rest).filter { it.catalog.type == "movie" || animeOnly && it.catalog.type == "anime" }.map { it to RowKind.CATALOG }
             Tab.SERIES -> (top + rest).filter { it.catalog.type == "series" || animeOnly && it.catalog.type == "anime" }.map { it to RowKind.CATALOG }
             Tab.ANIME -> (top + rest).filter { CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.CATALOG }
@@ -117,7 +123,7 @@ class BrowseModel(
         val sig = visible.joinToString("|") { it.first.key + it.second } + "#" + addons.joinToString { it.transportUrl.hashCode().toString() }
         if (sig == signature) { built = true; return }
         signature = sig
-        rows = visible.map { (ref, kind) -> store.row(ref, kind, animeOnly, when (tab) { Tab.MOVIES -> "movie"; Tab.SERIES -> "series"; else -> null }, genre) }
+        rows = visible.map { (ref, kind) -> store.row(ref, kind, animeOnly, when (tab) { Tab.MOVIES -> "movie"; Tab.SERIES -> "series"; else -> null }, genre, noAnime = tab == Tab.HOME && !animeOnly) }
         built = true
     }
 
@@ -162,7 +168,8 @@ class BrowseModel(
                     row.lastPageIds = ids
                     row.fetchedCount = skip + raw.size
                     val incoming = raw.filter { AnimeBrowse.matches(it, row.browseType, row.genre,
-                        trustedCatalog = !row.animeOnly || CatalogRules.isAnimeCatalog(ref), serverFiltered = serverGenre != null) }
+                        trustedCatalog = !row.animeOnly || CatalogRules.isAnimeCatalog(ref), serverFiltered = serverGenre != null) &&
+                        !(row.noAnime && AnimeBrowse.isAnimeTitle(it)) }
                     val merged = (if (reset) incoming else row.items + incoming).distinctBy { it.type + ":" + it.id }
                     row.items = if (row.kind == RowKind.TOP10) merged.take(CatalogRules.TOP_N) else merged
                     row.hasMore = row.kind != RowKind.TOP10 && raw.isNotEmpty() && !repeatedPage && ref.catalog.supportsExtra("skip")
