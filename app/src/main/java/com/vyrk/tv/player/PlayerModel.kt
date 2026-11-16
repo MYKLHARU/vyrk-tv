@@ -635,7 +635,7 @@ class PlayerModel(
             showNotice(s(com.vyrk.tv.R.string.subtitles_off))
             return
         }
-        val tracks = com.vyrk.core.playback.TrackSelector.sortForDisplay(allTextTracks(), sessionSettingsLanguages())
+        val tracks = com.vyrk.core.playback.TrackSelector.sortForDisplay(allTextTracks(), session.settings.value.subtitleLanguages)
         val pick = tracks.firstOrNull { it.id == lastSubtitle } ?: tracks.firstOrNull { !it.forced } ?: tracks.firstOrNull()
         if (pick == null) { showNotice(s(com.vyrk.tv.R.string.no_subtitles)); return }
         selectSubtitle(pick.id)

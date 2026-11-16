@@ -13,4 +13,13 @@ const val nothing_played = 9
 const val skipped_intro = 10
 const val skipped_recap = 11
 const val source_failed_body = 12
+const val picture_now = 13
+const val picture_fit = 14
+const val picture_zoom = 15
+const val picture_stretch = 16
+const val subtitles_off = 17
+const val no_subtitles = 18
+const val subtitles_now = 19
+const val audio_now = 20
+const val audio_track_n = 21
 } }
