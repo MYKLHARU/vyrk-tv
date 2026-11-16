@@ -74,6 +74,8 @@ class AppGraph(val context: Context) {
     private val sharedCache = mutableMapOf<String, List<Descriptor>>()
 
     val watchNext = WatchNext(context)
+    /** VYRK's row on the launcher's home screen (TVs only). */
+    val homeChannel = HomeChannel(context)
     private var watchNextJob: kotlinx.coroutines.Job? = null
 
     /** Watch Next follows the active session's Continue Watching. */

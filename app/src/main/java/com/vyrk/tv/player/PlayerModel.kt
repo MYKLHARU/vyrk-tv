@@ -51,7 +51,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 enum class Phase { CONNECTING, PLAYING, ASK, INCOMPLETE, ERROR, NO_SOURCES }
-enum class Panel { NONE, AUDIO_SUBS, SOURCES, SLEEP }
+enum class Panel { NONE, AUDIO_SUBS, SOURCES, SLEEP, EPISODES }
+
+/** How the picture fills the screen: whole picture, cropped to fill, or stretched to fill. */
+enum class PictureSize { FIT, ZOOM, STRETCH }
 enum class SleepMode { OFF, END_OF_EPISODE, MINUTES_60 }
 
 data class ExternalSub(val id: String, val lang: String, val label: String, val source: String, val url: String)
@@ -605,6 +608,71 @@ class PlayerModel(
         if (cues.isEmpty()) return null
         val t = position - subDelayMs
         return cues.firstOrNull { t >= it.startMs && t <= it.endMs }?.text
+    }
+
+    /** Picture size, remembered on this device for every title. */
+    var pictureSize by mutableStateOf(runCatching { PictureSize.valueOf(graph.deviceSettings.value.pictureSize) }.getOrDefault(PictureSize.FIT))
+        private set
+
+    fun cyclePictureSize() {
+        val next = PictureSize.entries[(pictureSize.ordinal + 1) % PictureSize.entries.size]
+        pictureSize = next
+        graph.updateDevice { it.copy(pictureSize = next.name) }
+        showNotice(s(com.vyrk.tv.R.string.picture_now, s(when (next) {
+            PictureSize.FIT -> com.vyrk.tv.R.string.picture_fit
+            PictureSize.ZOOM -> com.vyrk.tv.R.string.picture_zoom
+            PictureSize.STRETCH -> com.vyrk.tv.R.string.picture_stretch
+        })))
+    }
+
+    /** The subtitles last turned off with [toggleSubtitles], to bring back the same ones. */
+    private var lastSubtitle: String? = null
+
+    /** One press: subtitles off, or back on (the ones last used, else the first in your languages). */
+    fun toggleSubtitles() {
+        val on = selectedSub
+        if (on != null) {
+            lastSubtitle = on
+            selectSubtitle(null)
+            showNotice(s(com.vyrk.tv.R.string.subtitles_off))
+            return
+        }
+        val tracks = com.vyrk.core.playback.TrackSelector.sortForDisplay(allTextTracks(), session.settings.value.subtitleLanguages)
+        val pick = tracks.firstOrNull { it.id == lastSubtitle } ?: tracks.firstOrNull { !it.forced } ?: tracks.firstOrNull()
+        if (pick == null) { showNotice(s(com.vyrk.tv.R.string.no_subtitles)); return }
+        selectSubtitle(pick.id)
+        showNotice(s(com.vyrk.tv.R.string.subtitles_now, pick.language?.let { com.vyrk.core.lang.Languages.name(it) } ?: pick.label ?: pick.source))
+    }
+
+    /** The remote's audio-track button: the next audio track, named over the video. */
+    fun cycleAudio() {
+        val tracks = engine.audioTracks()
+        if (tracks.size < 2) { tracks.firstOrNull()?.let { showNotice(s(com.vyrk.tv.R.string.audio_now, audioName(it, 0))) }; return }
+        val at = tracks.indexOfFirst { it.id == selectedAudio }.takeIf { it >= 0 } ?: tracks.indexOfFirst { it.isDefault }.coerceAtLeast(0)
+        val i = (at + 1) % tracks.size
+        selectAudio(tracks[i].id)
+        showNotice(s(com.vyrk.tv.R.string.audio_now, audioName(tracks[i], i)))
+    }
+
+    private fun audioName(t: com.vyrk.core.playback.AudioTrack, i: Int): String =
+        t.language?.takeUnless { it.lowercase() in setOf("und", "mul", "zxx", "mis") }?.let { com.vyrk.core.lang.Languages.name(it) }
+            ?: t.label?.takeUnless { it.isBlank() || it.equals(t.language, true) } ?: s(com.vyrk.tv.R.string.audio_track_n, i + 1)
+
+    /** Plays another episode of this series, chosen from the episode list. */
+    fun playEpisode(v: Video) {
+        panel = Panel.NONE
+        if (v.id == (playingVideoId ?: video?.id ?: request.videoId)) return
+        upNext = false
+        autoplayedInRow = 0
+        saveProgress()
+        engine.player.pause()
+        endedHandled = true
+        firstFrame = false
+        firstFrameJob?.cancel()
+        request = request.copy(videoId = v.id, picked = null, ranked = null)
+        prefsApplied = false
+        selectedSub = null
+        scope.launch { load() }
     }
 
     fun showControls() { controlsVisible = true; lastInteraction = SystemClock.elapsedRealtime() }

@@ -142,9 +142,16 @@ fun BrowsePage(
     cwRow.items = cwItems; cwRow.loadedOnce = true; cwRow.title = cwTitle
 
     val showTop10Card = isHome && !model.animeOnly && !model.hasTop10Catalogs && !settings.top10CardDismissed && BuildConfig.TOP10_ADDON_URL.isNotBlank()
+    // "Because you watched …" on the regular Home, after its first two catalogue rows; on a TV the
+    // same titles fill VYRK's row on the launcher.
+    val recRows = rememberRecommendationRows(session, enabled = isHome && !model.animeOnly) { picks ->
+        if (com.vyrk.tv.ui.phone.FormFactor.isTv(graph.context)) session.scope.launch { graph.homeChannel.publish(picks) }
+    }
     val rows = buildList {
         if (isHome && cwItems.isNotEmpty()) add(cwRow)
-        addAll(model.rows)
+        addAll(model.rows.take(2))
+        addAll(recRows)
+        addAll(model.rows.drop(2))
     }
 
     // Hero: featured titles. Movies, Series and the other pages feature the first catalogue with

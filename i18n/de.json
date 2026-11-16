@@ -390,5 +390,18 @@
     "trakt_waiting": "Warte auf deine Bestätigung bei Trakt…",
     "trakt_failed": "Verbindung zu Trakt fehlgeschlagen. Versuch es noch einmal.",
     "trakt_expired": "Der Code ist abgelaufen. Versuch es noch einmal.",
-    "trakt_open_site": "trakt.tv öffnen"
+    "trakt_open_site": "trakt.tv öffnen",
+    "because_you_watched": "Weil du %1$s gesehen hast",
+    "home_channel_name": "VYRK: Für dich",
+    "picture_size": "Bildgröße",
+    "picture_fit": "Einpassen",
+    "picture_zoom": "Zoom",
+    "picture_stretch": "Strecken",
+    "picture_now": "Bild: %1$s",
+    "quick_subtitles": "Untertitel ein oder aus",
+    "subtitles_off": "Untertitel aus",
+    "subtitles_now": "Untertitel: %1$s",
+    "no_subtitles": "Keine Untertitel für dieses Video",
+    "audio_now": "Audio: %1$s",
+    "up_next": "Als Nächstes"
 }

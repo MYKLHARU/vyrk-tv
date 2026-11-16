@@ -390,5 +390,18 @@
     "trakt_waiting": "Waiting for you to approve on Trakt…",
     "trakt_failed": "Couldn't connect to Trakt. Try again.",
     "trakt_expired": "The code expired. Try again.",
-    "trakt_open_site": "Open trakt.tv"
+    "trakt_open_site": "Open trakt.tv",
+    "because_you_watched": "Because you watched %1$s",
+    "home_channel_name": "VYRK: For you",
+    "picture_size": "Picture size",
+    "picture_fit": "Fit",
+    "picture_zoom": "Zoom",
+    "picture_stretch": "Stretch",
+    "picture_now": "Picture: %1$s",
+    "quick_subtitles": "Subtitles on or off",
+    "subtitles_off": "Subtitles off",
+    "subtitles_now": "Subtitles: %1$s",
+    "no_subtitles": "No subtitles for this video",
+    "audio_now": "Audio: %1$s",
+    "up_next": "Up next"
 }

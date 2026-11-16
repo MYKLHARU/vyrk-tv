@@ -390,5 +390,18 @@
     "trakt_waiting": "Trakt पर आपकी मंज़ूरी का इंतज़ार है…",
     "trakt_failed": "Trakt से कनेक्ट नहीं हो सका। फिर से कोशिश करें।",
     "trakt_expired": "कोड की समय-सीमा खत्म हो गई। फिर से कोशिश करें।",
-    "trakt_open_site": "trakt.tv खोलें"
+    "trakt_open_site": "trakt.tv खोलें",
+    "because_you_watched": "क्योंकि आपने %1$s देखा",
+    "home_channel_name": "VYRK: आपके लिए",
+    "picture_size": "चित्र का आकार",
+    "picture_fit": "फ़िट",
+    "picture_zoom": "ज़ूम",
+    "picture_stretch": "खींचें",
+    "picture_now": "चित्र: %1$s",
+    "quick_subtitles": "सबटाइटल चालू या बंद",
+    "subtitles_off": "सबटाइटल बंद",
+    "subtitles_now": "सबटाइटल: %1$s",
+    "no_subtitles": "इस वीडियो के लिए कोई सबटाइटल नहीं",
+    "audio_now": "ऑडियो: %1$s",
+    "up_next": "अगला"
 }
