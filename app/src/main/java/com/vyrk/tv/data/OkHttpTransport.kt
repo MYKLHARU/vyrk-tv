@@ -28,6 +28,11 @@ class OkHttpTransport(private val client: OkHttpClient) : HttpTransport {
         return execute(req, timeoutMs)
     }
 
+    override suspend fun post(url: String, body: String, headers: Map<String, String>, timeoutMs: Long): HttpResult {
+        val req = Request.Builder().url(url).apply { headers.forEach { (k, v) -> header(k, v) } }.post(body.toRequestBody(JSON)).build()
+        return execute(req, timeoutMs)
+    }
+
     override suspend fun getBytes(url: String, headers: Map<String, String>, timeoutMs: Long): ByteArray? = suspendCancellableCoroutine { cont ->
         val req = Request.Builder().url(url).apply { headers.forEach { (k, v) -> header(k, v) } }.build()
         val call = client.newCall(req)

@@ -344,6 +344,16 @@
     <string name="top10_suggestion_desc">Die Karte auf Start, die Top-10-Reihen anbietet</string>
     <string name="trailer">Trailer</string>
     <string name="trailer_refused">Dieser Trailer kann hier nicht abgespielt werden. Öffne ihn über die Infoseite in YouTube.</string>
+    <string name="trakt">Trakt</string>
+    <string name="trakt_activate">Öffne auf deinem Handy %1$s und gib ein:</string>
+    <string name="trakt_connect">Trakt verbinden</string>
+    <string name="trakt_connected_as">Verbunden als %1$s</string>
+    <string name="trakt_desc">Synchronisiert, was du schaust, direkt mit deinem Trakt-Verlauf.</string>
+    <string name="trakt_disconnect">Trennen</string>
+    <string name="trakt_expired">Der Code ist abgelaufen. Versuch es noch einmal.</string>
+    <string name="trakt_failed">Verbindung zu Trakt fehlgeschlagen. Versuch es noch einmal.</string>
+    <string name="trakt_open_site">trakt.tv öffnen</string>
+    <string name="trakt_waiting">Warte auf deine Bestätigung bei Trakt…</string>
     <string name="try_again">Erneut versuchen</string>
     <string name="tv_speaker_mode">TV-Lautsprecher-Modus</string>
     <string name="type_live">Live</string>

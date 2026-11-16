@@ -104,6 +104,7 @@ class PlayerActivity : ComponentActivity() {
     private var model: PlayerModel? = null
     private var mediaSession: MediaSession? = null
     private var originalModeId = 0
+    private val trakt by lazy { com.vyrk.tv.data.TraktScrobbler(graph.trakt) }
 
     override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(com.vyrk.tv.AppLocale.wrap(base))
 
@@ -133,7 +134,10 @@ class PlayerActivity : ComponentActivity() {
             }
             override fun onPlayerError(error: PlaybackException) = m.onError(error)
             override fun onPlaybackStateChanged(playbackState: Int) = m.onPlaybackState(playbackState)
-            override fun onIsPlayingChanged(isPlaying: Boolean) { if (!isPlaying) m.saveProgress() }
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                if (!isPlaying) m.saveProgress()
+                if (!m.isLive) trakt.onPlaying(m.traktItem, isPlaying, engine.player.currentPosition, engine.player.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0)
+            }
         })
         val accent = runCatching { AccentChoice.valueOf(session.settings.value.accent) }.getOrDefault(AccentChoice.GOLD)
         val size = runCatching { InterfaceSize.valueOf(dev.interfaceSize) }.getOrDefault(InterfaceSize.MEDIUM)
@@ -240,6 +244,7 @@ class PlayerActivity : ComponentActivity() {
         FocusTrace.exit(PLAYER_LAYER)
         if (originalModeId != 0 || window.attributes.preferredDisplayModeId != 0) window.attributes = window.attributes.apply { preferredDisplayModeId = originalModeId }
         mediaSession?.release()
+        model?.engine?.player?.let { p -> trakt.close(p.currentPosition, p.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0) }
         model?.engine?.release()
         model = null
     }

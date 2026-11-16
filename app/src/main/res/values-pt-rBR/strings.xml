@@ -344,6 +344,16 @@
     <string name="top10_suggestion_desc">O cartão no Início que oferece as fileiras do Top 10</string>
     <string name="trailer">Trailer</string>
     <string name="trailer_refused">Este trailer não toca aqui. Abra no YouTube pela página de informações.</string>
+    <string name="trakt">Trakt</string>
+    <string name="trakt_activate">No celular, acesse %1$s e digite:</string>
+    <string name="trakt_connect">Conectar Trakt</string>
+    <string name="trakt_connected_as">Conectado como %1$s</string>
+    <string name="trakt_desc">Sincronize o que você assiste com seu histórico do Trakt enquanto assiste.</string>
+    <string name="trakt_disconnect">Desconectar</string>
+    <string name="trakt_expired">O código expirou. Tente novamente.</string>
+    <string name="trakt_failed">Não foi possível conectar ao Trakt. Tente novamente.</string>
+    <string name="trakt_open_site">Abrir trakt.tv</string>
+    <string name="trakt_waiting">Aguardando sua aprovação no Trakt…</string>
     <string name="try_again">Tentar de novo</string>
     <string name="tv_speaker_mode">Modo alto-falantes da TV</string>
     <string name="type_live">Ao vivo</string>

@@ -521,6 +521,27 @@ private fun accentName(a: AccentChoice) = when (a) {
 }
 
 @Composable
+private fun TraktSetting() {
+    val graph = LocalGraph.current
+    val state by graph.trakt.state.collectAsState()
+    val signIn = com.vyrk.tv.ui.components.rememberTraktSignIn(graph.trakt)
+    when (val s = state) {
+        com.vyrk.tv.data.TraktAccount.State.Off -> return
+        is com.vyrk.tv.data.TraktAccount.State.Connected ->
+            Setting(str(R.string.trakt), s.username?.let { str(R.string.trakt_connected_as, it) } ?: str(R.string.trakt_desc)) {
+                VyrkButton(str(R.string.trakt_disconnect), onClick = { graph.trakt.disconnect() }, modifier = Modifier.traceFocus("about:trakt_disconnect"))
+            }
+        com.vyrk.tv.data.TraktAccount.State.SignedOut -> {
+            Setting(str(R.string.trakt), str(R.string.trakt_desc)) {
+                if (signIn.waiting) VyrkButton(str(R.string.cancel), onClick = { signIn.cancel() }, modifier = Modifier.traceFocus("about:trakt_cancel"))
+                else VyrkButton(str(R.string.trakt_connect), style = ButtonStyle.BRAND, onClick = { signIn.start() }, modifier = Modifier.traceFocus("about:trakt_connect"))
+            }
+            com.vyrk.tv.ui.components.TraktCodePanel(signIn.step, qr = true)
+        }
+    }
+}
+
+@Composable
 private fun AboutGroup(session: ProfileSession) {
     val app = LocalApp.current
     val graph = LocalGraph.current
@@ -559,6 +580,7 @@ private fun AboutGroup(session: ProfileSession) {
         is AccountState.Expired -> Setting(str(R.string.stremio_account), str(R.string.session_expired)) { VyrkButton(str(R.string.reconnect), style = ButtonStyle.BRAND, onClick = { app.screen = Screen.Pairing(session.profile.id) }) }
         AccountState.None -> Setting(str(R.string.stremio_account), str(R.string.no_account)) { VyrkButton(str(R.string.sign_in_stremio), onClick = { app.screen = Screen.Pairing(session.profile.id) }, modifier = Modifier.traceFocus("about:sign_in")) }
     }
+    TraktSetting()
     if (!BuildConfig.STORE_BUILD) {
         Setting(str(R.string.updates), str(R.string.update_source, BuildConfig.UPDATE_REPO.ifEmpty { "—" })) {
             VyrkButton(str(R.string.check_for_updates), onClick = {

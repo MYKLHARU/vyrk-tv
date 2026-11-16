@@ -344,6 +344,16 @@
     <string name="top10_suggestion_desc">La scheda nella Home che propone le file Top 10</string>
     <string name="trailer">Trailer</string>
     <string name="trailer_refused">Questo trailer non si può riprodurre qui. Aprilo su YouTube dalla pagina informazioni.</string>
+    <string name="trakt">Trakt</string>
+    <string name="trakt_activate">Sul telefono, vai su %1$s e inserisci:</string>
+    <string name="trakt_connect">Collega Trakt</string>
+    <string name="trakt_connected_as">Collegato come %1$s</string>
+    <string name="trakt_desc">Sincronizza ciò che guardi con la cronologia di Trakt mentre lo guardi.</string>
+    <string name="trakt_disconnect">Scollega</string>
+    <string name="trakt_expired">Il codice è scaduto. Riprova.</string>
+    <string name="trakt_failed">Impossibile collegarsi a Trakt. Riprova.</string>
+    <string name="trakt_open_site">Apri trakt.tv</string>
+    <string name="trakt_waiting">In attesa della tua approvazione su Trakt…</string>
     <string name="try_again">Riprova</string>
     <string name="tv_speaker_mode">Modalità altoparlanti TV</string>
     <string name="type_live">Diretta</string>

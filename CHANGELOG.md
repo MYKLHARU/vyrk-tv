@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.45
+
+- Trakt: connect your Trakt account in Settings → About (enter the code shown at trakt.tv/activate, or scan the QR code). VYRK then scrobbles as you watch: Trakt shows what's playing, and a film or episode watched past 80% goes into your Trakt history. Disconnect any time. Titles without an IMDb id (some anime catalogues) aren't sent. Phones get the same card in Settings.
+
 ## v0.1.44
 
 - Screen saver: VYRK can be the TV's screen saver (Settings › Device preferences › Screen saver, on launchers that list other apps' screen savers). It shows the artwork of what you've been watching, one title at a time, drifting slowly, with its name and the time; with nothing watched yet, the gold V. Text moves between corners so nothing stays in one place.
