@@ -381,6 +381,8 @@
     "subtitle_preview": "So sehen die Untertitel aus.",
     "phone_open_sign_in": "Stremio-Anmeldung öffnen",
     "phone_sign_in_body": "Melde dich im Browser auf der Seite von Stremio an und kehre dann hierher zurück. VYRK schließt die Anmeldung selbst ab.",
+    "because_you_watched": "Weil du %1$s gesehen hast",
+    "home_channel_name": "VYRK: Für dich",
     "picture_size": "Bildgröße",
     "picture_fit": "Einpassen",
     "picture_zoom": "Zoom",

@@ -381,6 +381,8 @@
     "subtitle_preview": "Así se verán los subtítulos.",
     "phone_open_sign_in": "Abrir el inicio de sesión de Stremio",
     "phone_sign_in_body": "Inicia sesión en la página de Stremio en tu navegador y vuelve aquí. VYRK termina de iniciar sesión por sí solo.",
+    "because_you_watched": "Porque viste %1$s",
+    "home_channel_name": "VYRK: Para ti",
     "picture_size": "Tamaño de imagen",
     "picture_fit": "Ajustar",
     "picture_zoom": "Zoom",

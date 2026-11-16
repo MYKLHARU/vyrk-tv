@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.43
+
+- Home: "Because you watched …" rows, with TMDB's recommendations for the two titles you watched most recently, after the first two rows. Titles you've watched or saved are left out, and so is anime. They open through your add-ons like any other title.
+- On TVs, the same picks fill a "VYRK: For you" row on the launcher's home screen, where the launcher shows app rows (Android TV Home). Google TV shows VYRK's Continue Watching only.
+
 ## v0.1.42
 
 - Player: Picture size (Fit, Zoom, Stretch) in the controls, remembered on the TV for every title. Zoom fills the screen for ultrawide films; Stretch fills it for 4:3 shows.
