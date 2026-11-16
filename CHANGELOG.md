@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.41
+
+- Home never shows anime, on TVs and phones: no anime catalogues, no anime titles in the other rows or the featured titles, and none in Continue Watching. A title counts as anime by its type, an anime ID (Kitsu, MAL, AniList, AniDB) or an "Anime" tag; "Animation" alone doesn't count. Anime stays on the Anime tab, in Movies and Series, Search and the Library.
+
 ## v0.1.40
 
 - VYRK now works on Android phones and tablets. The same APK opens a touch interface made for them: a bottom bar (Home, Search, Library, Settings), swipeable featured titles and catalogue rows, a scrolling title page with episodes or sources under Play, search with the phone's keyboard or voice, and Settings as groups. Sign-in opens Stremio's page in the browser instead of showing a QR code. TVs keep the remote interface, unchanged.

@@ -159,11 +159,16 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
             MetaPreview(id = li.id, type = li.type, name = li.name.ifBlank { full?.name.orEmpty() },
                 poster = li.poster ?: full?.poster ?: com.vyrk.core.art.Artwork.metahubPoster(li.id),
                 background = full?.background, logo = full?.logo, genres = full?.allGenres.orEmpty())
+        }.filter {
+            // Home never shows anime, Continue Watching included.
+            val full = graph.metaCache.peek(it.type, it.id)
+            !isHome || full?.malId == null && full?.kitsuId == null && !com.vyrk.core.catalog.AnimeBrowse.isAnimeTitle(it)
         }
     }
-    LaunchedEffect(cwLibrary.filter { it.name.isBlank() || it.poster == null }.map { it.id }) {
+    // Every title's details: to fill blank cards, and to tell anime apart.
+    LaunchedEffect(cwLibrary.map { it.id }) {
         val addons = session.effectiveAddons()
-        cwLibrary.filter { it.name.isBlank() || it.poster == null }.take(24).forEach { graph.metaCache.get(addons, it.type, it.id) }
+        cwLibrary.take(24).forEach { graph.metaCache.get(addons, it.type, it.id) }
     }
 
     // Featured titles: on Home a mix taken in turn from the first rows, elsewhere the first row with artwork.

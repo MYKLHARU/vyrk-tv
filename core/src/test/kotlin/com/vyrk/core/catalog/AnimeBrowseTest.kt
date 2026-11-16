@@ -37,6 +37,14 @@ class AnimeBrowseTest {
         assertTrue(AnimeBrowse.matches(MetaPreview("tt123", "series"), trustedCatalog = true))
     }
 
+    @Test fun homeRecognisesAnimeTitlesByTypeIdOrTagButNotAnimation() {
+        assertTrue(AnimeBrowse.isAnimeTitle(MetaPreview("kitsu:1", "series")))
+        assertTrue(AnimeBrowse.isAnimeTitle(MetaPreview("tt1", "anime")))
+        assertTrue(AnimeBrowse.isAnimeTitle(MetaPreview("tt2", "series", genres = listOf("Action", "Anime"))))
+        assertFalse(AnimeBrowse.isAnimeTitle(MetaPreview("tt3", "series", genres = listOf("Animation", "Comedy"))))
+        assertFalse(AnimeBrowse.isAnimeTitle(MetaPreview("tt4", "movie")))
+    }
+
     @Test fun genreFilterRequiresEvidenceUnlessProviderAlreadyFiltered() {
         val item = MetaPreview("mal:1", "series")
         assertFalse(AnimeBrowse.matches(item, genre = "Comedy"))

@@ -121,14 +121,20 @@ fun BrowsePage(
             )
         }.filter {
             val full = graph.metaCache.peek(it.type, it.id)
-            !model.animeOnly || com.vyrk.core.catalog.AnimeBrowse.matches(it, genre = model.genre,
-                trustedCatalog = full?.malId != null || full?.kitsuId != null)
+            val animeIds = full?.malId != null || full?.kitsuId != null
+            when {
+                model.animeOnly -> com.vyrk.core.catalog.AnimeBrowse.matches(it, genre = model.genre, trustedCatalog = animeIds)
+                // Home never shows anime, Continue Watching included.
+                isHome -> !animeIds && !com.vyrk.core.catalog.AnimeBrowse.isAnimeTitle(it)
+                else -> true
+            }
         }
     }
     // One at a time, so these never take the request slots the rows need.
-    LaunchedEffect(cwLibrary.filter { model.animeOnly || it.name.isBlank() || it.poster == null }.map { it.type to it.id }) {
+    // Home and Anime need every title's details to tell anime apart.
+    LaunchedEffect(cwLibrary.filter { model.animeOnly || isHome || it.name.isBlank() || it.poster == null }.map { it.type to it.id }) {
         val addons = session.effectiveAddons()
-        cwLibrary.filter { model.animeOnly || it.name.isBlank() || it.poster == null }.take(24)
+        cwLibrary.filter { model.animeOnly || isHome || it.name.isBlank() || it.poster == null }.take(24)
             .forEach { li -> graph.metaCache.get(addons, li.type, li.id) }
     }
     val cwRow = remember { RowState(CW_ROW, RowKind.CONTINUE, null, "") }

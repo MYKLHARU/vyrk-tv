@@ -30,6 +30,12 @@ object AnimeBrowse {
             (type == null || meta.type == type || type == "series" && meta.type == "anime") &&
             (serverFiltered || matchesGenre(tags(meta), genre))
 
+    /**
+     * A title that is anime by its type, an anime ID (Kitsu, MAL, AniList, AniDB) or an "Anime"
+     * tag. Home leaves these out. ("Animation" alone is not anime: Western cartoons use it too.)
+     */
+    fun isAnimeTitle(meta: MetaPreview): Boolean = CatalogRules.isAnime(meta) || tags(meta).any { it.equals("Anime", true) }
+
     private fun tags(meta: MetaPreview): List<String> = meta.genres.ifEmpty { meta.genre }
         .ifEmpty { meta.links.filter { it.category.equals("Genres", true) }.map { it.name } }
 }
