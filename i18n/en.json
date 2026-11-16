@@ -380,5 +380,18 @@
     "seasons_count": "%1$d seasons",
     "subtitle_preview": "Subtitles will look like this.",
     "phone_open_sign_in": "Open Stremio sign-in",
-    "phone_sign_in_body": "Sign in on Stremio's page in your browser, then come back here. VYRK finishes signing in by itself."
+    "phone_sign_in_body": "Sign in on Stremio's page in your browser, then come back here. VYRK finishes signing in by itself.",
+    "because_you_watched": "Because you watched %1$s",
+    "home_channel_name": "VYRK: For you",
+    "picture_size": "Picture size",
+    "picture_fit": "Fit",
+    "picture_zoom": "Zoom",
+    "picture_stretch": "Stretch",
+    "picture_now": "Picture: %1$s",
+    "quick_subtitles": "Subtitles on or off",
+    "subtitles_off": "Subtitles off",
+    "subtitles_now": "Subtitles: %1$s",
+    "no_subtitles": "No subtitles for this video",
+    "audio_now": "Audio: %1$s",
+    "up_next": "Up next"
 }

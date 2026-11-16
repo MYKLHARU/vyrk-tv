@@ -9,6 +9,7 @@ class AppGraph(val transport: HttpTransport) {
     val addonClient = AddonClient(transport)
     val metaCache = MetaCache(addonClient)
     val deviceSettings = MutableStateFlow(DeviceSettings())
+    fun updateDevice(f: (DeviceSettings) -> DeviceSettings) { deviceSettings.value = f(deviceSettings.value) }
     val device = AuditDevice()
 }
 class AuditDevice {

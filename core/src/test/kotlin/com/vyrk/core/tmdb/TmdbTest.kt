@@ -16,6 +16,24 @@ class TmdbTest {
     private fun obj(s: String) = ProtocolJson.parseToJsonElement(s) as JsonObject
 
     @Test
+    fun recommendationsKeepPosteredTitlesWithVotesAndMarkJapaneseAnimation() {
+        val o = obj("""{"results":[
+            {"id":1,"media_type":"tv","name":"Show","poster_path":"/a.jpg","first_air_date":"2019-05-01","vote_count":900,"genre_ids":[18],"original_language":"en"},
+            {"id":2,"media_type":"tv","name":"Anime","poster_path":"/b.jpg","vote_count":500,"genre_ids":[16,10759],"original_language":"ja"},
+            {"id":3,"media_type":"tv","name":"Cartoon","poster_path":"/c.jpg","vote_count":500,"genre_ids":[16],"original_language":"en"},
+            {"id":4,"media_type":"tv","name":"No poster","vote_count":500},
+            {"id":5,"media_type":"tv","name":"Obscure","poster_path":"/e.jpg","vote_count":3},
+            {"id":6,"media_type":"person","name":"Someone","poster_path":"/f.jpg","vote_count":900},
+            {"id":7,"title":"Film","poster_path":"/g.jpg","release_date":"2001-01-01","vote_count":50}
+        ]}""")
+        val r = TmdbClient.parseRecommendations(o, "series")
+        assertEquals(listOf(1L, 2L, 3L, 7L), r.map { it.tmdbId })
+        assertEquals("2019", r[0].year)
+        assertEquals("series", r[3].type) // no media_type: the asked-for type
+        assertEquals(listOf(false, true, false, false), r.map { it.looksAnime })
+    }
+
+    @Test
     fun findPrefersTheRequestedType() {
         val o = obj("""{"movie_results":[{"id":11}],"tv_results":[{"id":22}],"person_results":[]}""")
         assertEquals(11L to "movie", TmdbClient.parseFind(o, preferTv = false))

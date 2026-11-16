@@ -7,6 +7,18 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 - Screen saver: VYRK can be the TV's screen saver (Settings › Device preferences › Screen saver, on launchers that list other apps' screen savers). It shows the artwork of what you've been watching, one title at a time, drifting slowly, with its name and the time; with nothing watched yet, the gold V. Text moves between corners so nothing stays in one place.
 - Home's background artwork eases in slowly while you stay on a title. Reduce motion turns it off.
 
+## v0.1.43
+
+- Home: "Because you watched …" rows, with TMDB's recommendations for the two titles you watched most recently, after the first two rows. Titles you've watched or saved are left out, and so is anime. They open through your add-ons like any other title.
+- On TVs, the same picks fill a "VYRK: For you" row on the launcher's home screen, where the launcher shows app rows (Android TV Home). Google TV shows VYRK's Continue Watching only.
+
+## v0.1.42
+
+- Player: Picture size (Fit, Zoom, Stretch) in the controls, remembered on the TV for every title. Zoom fills the screen for ultrawide films; Stretch fills it for 4:3 shows.
+- Player: a subtitles on/off button in the controls, which brings back the subtitles you last had; and the remote's audio button now goes straight to the next audio track, naming it over the video.
+- Player: Episodes in the controls of a series: the seasons along the top, the season's episodes below, opened on the one playing; OK plays another.
+- Up next is now a card with the next episode's still, its number and title, and a bar that empties with the countdown.
+
 ## v0.1.41
 
 - Home never shows anime, on TVs and phones: no anime catalogues, no anime titles in the other rows or the featured titles, and none in Continue Watching. A title counts as anime by its type, an anime ID (Kitsu, MAL, AniList, AniDB) or an "Anime" tag; "Animation" alone doesn't count. Anime stays on the Anime tab, in Movies and Series, Search and the Library.

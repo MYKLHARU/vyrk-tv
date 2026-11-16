@@ -380,5 +380,18 @@
     "seasons_count": "%1$d सीज़न",
     "subtitle_preview": "उपशीर्षक ऐसे दिखेंगे।",
     "phone_open_sign_in": "Stremio साइन-इन खोलें",
-    "phone_sign_in_body": "अपने ब्राउज़र में Stremio के पेज पर साइन इन करें, फिर यहाँ लौटें। VYRK साइन-इन अपने आप पूरा कर लेता है।"
+    "phone_sign_in_body": "अपने ब्राउज़र में Stremio के पेज पर साइन इन करें, फिर यहाँ लौटें। VYRK साइन-इन अपने आप पूरा कर लेता है।",
+    "because_you_watched": "क्योंकि आपने %1$s देखा",
+    "home_channel_name": "VYRK: आपके लिए",
+    "picture_size": "चित्र का आकार",
+    "picture_fit": "फ़िट",
+    "picture_zoom": "ज़ूम",
+    "picture_stretch": "खींचें",
+    "picture_now": "चित्र: %1$s",
+    "quick_subtitles": "सबटाइटल चालू या बंद",
+    "subtitles_off": "सबटाइटल बंद",
+    "subtitles_now": "सबटाइटल: %1$s",
+    "no_subtitles": "इस वीडियो के लिए कोई सबटाइटल नहीं",
+    "audio_now": "ऑडियो: %1$s",
+    "up_next": "अगला"
 }

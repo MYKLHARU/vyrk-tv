@@ -28,6 +28,7 @@
     <string name="audio">Audio</string>
     <string name="audio_formats">Formati audio</string>
     <string name="audio_languages">Lingue audio</string>
+    <string name="audio_now">Audio: %1$s</string>
     <string name="audio_subtitles">Audio e sottotitoli</string>
     <string name="audio_switched">Quella traccia audio non funziona più. Passato a %1$s.</string>
     <string name="audio_track_n">Traccia %1$d</string>
@@ -37,6 +38,7 @@
     <string name="back">Indietro</string>
     <string name="back_10">Indietro di 10 secondi</string>
     <string name="badge_new">Nuovo</string>
+    <string name="because_you_watched">Perché hai guardato %1$s</string>
     <string name="bg_box">Riquadro</string>
     <string name="bg_shadow">Ombra</string>
     <string name="blur_unwatched">Sfoca gli episodi non visti</string>
@@ -118,6 +120,7 @@
     <string name="hide_row">Nascondi questa riga</string>
     <string name="hint_play_pause">Riproduci / pausa</string>
     <string name="hint_seek">Scorri sulla barra</string>
+    <string name="home_channel_name">VYRK: Per te</string>
     <string name="in_library">Nella libreria</string>
     <string name="incomplete_stream_body">Questo stream potrebbe essere incompleto. Prova un altro stream o riprova dall’inizio.</string>
     <string name="incomplete_stream_title">L’episodio è terminato prima del previsto</string>
@@ -165,6 +168,7 @@
     <string name="no_sources_playable">Sono state trovate fonti, ma nessuna si riproduce su questo televisore.</string>
     <string name="no_sources_torrent">Ci sono solo fonti torrent. Richiedono un server di streaming.</string>
     <string name="no_stream_addons">Nessun componente installato offre stream per questo titolo. Installane uno in Impostazioni › Componenti.</string>
+    <string name="no_subtitles">Nessun sottotitolo per questo video</string>
     <string name="no_trailer">Nessun trailer per questo titolo.</string>
     <string name="none">Nessuno</string>
     <string name="none_hidden">Nessuna nascosta</string>
@@ -189,6 +193,11 @@
     <string name="person_unavailable">Impossibile caricare i dati di questa persona.</string>
     <string name="phone_open_sign_in">Apri l\'accesso a Stremio</string>
     <string name="phone_sign_in_body">Accedi alla pagina di Stremio nel browser, poi torna qui. VYRK completa l\'accesso da solo.</string>
+    <string name="picture_fit">Adatta</string>
+    <string name="picture_now">Immagine: %1$s</string>
+    <string name="picture_size">Dimensione immagine</string>
+    <string name="picture_stretch">Allunga</string>
+    <string name="picture_zoom">Zoom</string>
     <string name="play">Riproduci</string>
     <string name="play_now">Riproduci ora</string>
     <string name="poster_size">Dimensione locandine</string>
@@ -207,6 +216,7 @@
     <string name="preview_manual">Manuale</string>
     <string name="preview_sound">Audio dell\'anteprima</string>
     <string name="previews">Anteprime</string>
+    <string name="quick_subtitles">Sottotitoli sì o no</string>
     <string name="rating_attribution">Voto di IMDb, tramite i tuoi componenti.</string>
     <string name="ready_when_you_are">Pronto quando vuoi</string>
     <string name="recent_searches">Ricerche recenti</string>
@@ -302,6 +312,8 @@
     <string name="subtitle_preview">I sottotitoli appariranno così.</string>
     <string name="subtitle_size">Dimensione</string>
     <string name="subtitles">Sottotitoli</string>
+    <string name="subtitles_now">Sottotitoli: %1$s</string>
+    <string name="subtitles_off">Sottotitoli disattivati</string>
     <string name="switch_stream">Cambia stream</string>
     <string name="sync_now">Sincronizza ora</string>
     <string name="sync_style">Sincronia e stile</string>
@@ -338,6 +350,7 @@
     <string name="type_movie">Film</string>
     <string name="type_series">Serie</string>
     <string name="unknown">Sconosciuto</string>
+    <string name="up_next">Prossimo</string>
     <string name="up_next_in">A seguire: %1$s tra %2$d s</string>
     <string name="up_to_date">Hai l\'ultima versione.</string>
     <string name="update_failed">Controllo aggiornamenti non riuscito: %1$s</string>
