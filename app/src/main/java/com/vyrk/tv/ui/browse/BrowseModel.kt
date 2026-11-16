@@ -109,9 +109,10 @@ class BrowseModel(
         val rest = (allRest + requiredGenre).filter { !animeOnly || CatalogRules.isAnimeCatalog(it) }
         hasTop10Catalogs = top.isNotEmpty()
         val catalogs: List<Pair<CatalogRef, RowKind>> = when (tab) {
-            // Home never shows anime: no anime catalogues, and anime titles are dropped from the rest.
-            Tab.HOME -> top.filterNot { CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.TOP10 } +
-                rest.filter { it.catalog.type != "tv" && it.catalog.type != "channel" && !CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.CATALOG }
+            // The regular Home never shows anime: no anime catalogues, and anime titles are dropped
+            // from the rest. (In anime mode Home is anime only, filtered above.)
+            Tab.HOME -> top.filter { animeOnly || !CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.TOP10 } +
+                rest.filter { it.catalog.type != "tv" && it.catalog.type != "channel" && (animeOnly || !CatalogRules.isAnimeCatalog(it)) }.map { it to RowKind.CATALOG }
             Tab.MOVIES -> (top + rest).filter { it.catalog.type == "movie" || animeOnly && it.catalog.type == "anime" }.map { it to RowKind.CATALOG }
             Tab.SERIES -> (top + rest).filter { it.catalog.type == "series" || animeOnly && it.catalog.type == "anime" }.map { it to RowKind.CATALOG }
             Tab.ANIME -> (top + rest).filter { CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.CATALOG }
@@ -122,7 +123,7 @@ class BrowseModel(
         val sig = visible.joinToString("|") { it.first.key + it.second } + "#" + addons.joinToString { it.transportUrl.hashCode().toString() }
         if (sig == signature) { built = true; return }
         signature = sig
-        rows = visible.map { (ref, kind) -> store.row(ref, kind, animeOnly, when (tab) { Tab.MOVIES -> "movie"; Tab.SERIES -> "series"; else -> null }, genre, noAnime = tab == Tab.HOME) }
+        rows = visible.map { (ref, kind) -> store.row(ref, kind, animeOnly, when (tab) { Tab.MOVIES -> "movie"; Tab.SERIES -> "series"; else -> null }, genre, noAnime = tab == Tab.HOME && !animeOnly) }
         built = true
     }
 
