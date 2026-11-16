@@ -28,6 +28,7 @@
     <string name="audio">Audio</string>
     <string name="audio_formats">Formatos de audio</string>
     <string name="audio_languages">Idiomas de audio</string>
+    <string name="audio_now">Audio: %1$s</string>
     <string name="audio_subtitles">Audio y subtítulos</string>
     <string name="audio_switched">Esa pista de audio dejó de funcionar. Se cambió a %1$s.</string>
     <string name="audio_track_n">Pista %1$d</string>
@@ -167,6 +168,7 @@
     <string name="no_sources_playable">Se encontraron fuentes, pero ninguna se puede reproducir en este televisor.</string>
     <string name="no_sources_torrent">Solo hay fuentes torrent. Necesitan un servidor de streaming.</string>
     <string name="no_stream_addons">Ningún complemento instalado ofrece streams para este título. Instala uno en Ajustes › Complementos.</string>
+    <string name="no_subtitles">No hay subtítulos para este vídeo</string>
     <string name="no_trailer">Este título no tiene tráiler.</string>
     <string name="none">Ninguno</string>
     <string name="none_hidden">Ninguna oculta</string>
@@ -191,6 +193,11 @@
     <string name="person_unavailable">No se pudieron cargar los datos de esta persona.</string>
     <string name="phone_open_sign_in">Abrir el inicio de sesión de Stremio</string>
     <string name="phone_sign_in_body">Inicia sesión en la página de Stremio en tu navegador y vuelve aquí. VYRK termina de iniciar sesión por sí solo.</string>
+    <string name="picture_fit">Ajustar</string>
+    <string name="picture_now">Imagen: %1$s</string>
+    <string name="picture_size">Tamaño de imagen</string>
+    <string name="picture_stretch">Estirar</string>
+    <string name="picture_zoom">Zoom</string>
     <string name="play">Reproducir</string>
     <string name="play_now">Reproducir ya</string>
     <string name="poster_size">Tamaño de los pósteres</string>
@@ -209,6 +216,7 @@
     <string name="preview_manual">Manual</string>
     <string name="preview_sound">Sonido de la vista previa</string>
     <string name="previews">Vistas previas</string>
+    <string name="quick_subtitles">Activar o desactivar subtítulos</string>
     <string name="rating_attribution">Puntuación de IMDb, a través de tus complementos.</string>
     <string name="ready_when_you_are">Listo cuando tú quieras</string>
     <string name="recent_searches">Búsquedas recientes</string>
@@ -304,6 +312,8 @@
     <string name="subtitle_preview">Así se verán los subtítulos.</string>
     <string name="subtitle_size">Tamaño</string>
     <string name="subtitles">Subtítulos</string>
+    <string name="subtitles_now">Subtítulos: %1$s</string>
+    <string name="subtitles_off">Subtítulos desactivados</string>
     <string name="switch_stream">Cambiar stream</string>
     <string name="sync_now">Sincronizar ahora</string>
     <string name="sync_style">Sincronía y estilo</string>
@@ -340,6 +350,7 @@
     <string name="type_movie">Película</string>
     <string name="type_series">Serie</string>
     <string name="unknown">Desconocido</string>
+    <string name="up_next">A continuación</string>
     <string name="up_next_in">A continuación: %1$s en %2$d s</string>
     <string name="up_to_date">Tienes la última versión.</string>
     <string name="update_failed">Error al buscar actualizaciones: %1$s</string>

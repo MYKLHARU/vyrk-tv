@@ -382,5 +382,16 @@
     "phone_open_sign_in": "Apri l'accesso a Stremio",
     "phone_sign_in_body": "Accedi alla pagina di Stremio nel browser, poi torna qui. VYRK completa l'accesso da solo.",
     "because_you_watched": "Perché hai guardato %1$s",
-    "home_channel_name": "VYRK: Per te"
+    "home_channel_name": "VYRK: Per te",
+    "picture_size": "Dimensione immagine",
+    "picture_fit": "Adatta",
+    "picture_zoom": "Zoom",
+    "picture_stretch": "Allunga",
+    "picture_now": "Immagine: %1$s",
+    "quick_subtitles": "Sottotitoli sì o no",
+    "subtitles_off": "Sottotitoli disattivati",
+    "subtitles_now": "Sottotitoli: %1$s",
+    "no_subtitles": "Nessun sottotitolo per questo video",
+    "audio_now": "Audio: %1$s",
+    "up_next": "Prossimo"
 }

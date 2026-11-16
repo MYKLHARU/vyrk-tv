@@ -28,6 +28,7 @@
     <string name="audio">ऑडियो</string>
     <string name="audio_formats">ऑडियो फ़ॉर्मैट</string>
     <string name="audio_languages">ऑडियो भाषाएँ</string>
+    <string name="audio_now">ऑडियो: %1$s</string>
     <string name="audio_subtitles">ऑडियो और सबटाइटल</string>
     <string name="audio_switched">वह ऑडियो ट्रैक काम नहीं कर रहा। %1$s पर बदला गया।</string>
     <string name="audio_track_n">ट्रैक %1$d</string>
@@ -167,6 +168,7 @@
     <string name="no_sources_playable">स्रोत मिले, लेकिन कोई भी इस टीवी पर नहीं चलता।</string>
     <string name="no_sources_torrent">केवल टॉरेंट स्रोत मिले। इनके लिए स्ट्रीमिंग सर्वर चाहिए।</string>
     <string name="no_stream_addons">कोई इंस्टॉल ऐड-ऑन इस टाइटल की स्ट्रीम नहीं देता। सेटिंग › ऐड-ऑन में जाकर एक इंस्टॉल करें।</string>
+    <string name="no_subtitles">इस वीडियो के लिए कोई सबटाइटल नहीं</string>
     <string name="no_trailer">इस टाइटल का कोई ट्रेलर नहीं।</string>
     <string name="none">कोई नहीं</string>
     <string name="none_hidden">कोई छिपी नहीं</string>
@@ -191,6 +193,11 @@
     <string name="person_unavailable">इस व्यक्ति का विवरण लोड नहीं हो सका।</string>
     <string name="phone_open_sign_in">Stremio साइन-इन खोलें</string>
     <string name="phone_sign_in_body">अपने ब्राउज़र में Stremio के पेज पर साइन इन करें, फिर यहाँ लौटें। VYRK साइन-इन अपने आप पूरा कर लेता है।</string>
+    <string name="picture_fit">फ़िट</string>
+    <string name="picture_now">चित्र: %1$s</string>
+    <string name="picture_size">चित्र का आकार</string>
+    <string name="picture_stretch">खींचें</string>
+    <string name="picture_zoom">ज़ूम</string>
     <string name="play">चलाएँ</string>
     <string name="play_now">अभी चलाएँ</string>
     <string name="poster_size">पोस्टर का आकार</string>
@@ -209,6 +216,7 @@
     <string name="preview_manual">मैन्युअल</string>
     <string name="preview_sound">प्रीव्यू की आवाज़</string>
     <string name="previews">प्रीव्यू</string>
+    <string name="quick_subtitles">सबटाइटल चालू या बंद</string>
     <string name="rating_attribution">IMDb की रेटिंग, आपके ऐड-ऑन के ज़रिए।</string>
     <string name="ready_when_you_are">आप तैयार, तो हम तैयार</string>
     <string name="recent_searches">हाल की खोजें</string>
@@ -304,6 +312,8 @@
     <string name="subtitle_preview">उपशीर्षक ऐसे दिखेंगे।</string>
     <string name="subtitle_size">आकार</string>
     <string name="subtitles">सबटाइटल</string>
+    <string name="subtitles_now">सबटाइटल: %1$s</string>
+    <string name="subtitles_off">सबटाइटल बंद</string>
     <string name="switch_stream">स्ट्रीम बदलें</string>
     <string name="sync_now">अभी सिंक करें</string>
     <string name="sync_style">सिंक और स्टाइल</string>
@@ -340,6 +350,7 @@
     <string name="type_movie">फ़िल्म</string>
     <string name="type_series">सीरीज़</string>
     <string name="unknown">अज्ञात</string>
+    <string name="up_next">अगला</string>
     <string name="up_next_in">आगे: %1$s, %2$d सेकंड में</string>
     <string name="up_to_date">आपके पास नया संस्करण है।</string>
     <string name="update_failed">अपडेट जाँच विफल: %1$s</string>
