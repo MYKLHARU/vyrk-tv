@@ -139,7 +139,7 @@ private fun DreamScreen(graph: AppGraph?) {
                 VyrkMark(96.dp, accent = c.gold, highlight = c.goldHighlight)
             }
         } else {
-            Crossfade(index, androidx.compose.animation.core.tween(2_000), label = "slide") { i ->
+            Crossfade(index, animationSpec = androidx.compose.animation.core.tween<Float>(2_000), label = "slide") { i ->
                 val s = list[i % list.size]
                 KenBurns(s.image, toRight = i % 2 == 0)
             }
