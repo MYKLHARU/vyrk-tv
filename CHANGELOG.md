@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.44
+
+- Screen saver: VYRK can be the TV's screen saver (Settings › Device preferences › Screen saver, on launchers that list other apps' screen savers). It shows the artwork of what you've been watching, one title at a time, drifting slowly, with its name and the time; with nothing watched yet, the gold V. Text moves between corners so nothing stays in one place.
+- Home's background artwork eases in slowly while you stay on a title. Reduce motion turns it off.
+
 ## v0.1.41
 
 - Home never shows anime, on TVs and phones: no anime catalogues, no anime titles in the other rows or the featured titles, and none in Continue Watching. A title counts as anime by its type, an anime ID (Kitsu, MAL, AniList, AniDB) or an "Anime" tag; "Animation" alone doesn't count. Anime stays on the Anime tab, in Movies and Series, Search and the Library.
