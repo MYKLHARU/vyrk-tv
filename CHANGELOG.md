@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.42
+
+- Player: Picture size (Fit, Zoom, Stretch) in the controls, remembered on the TV for every title. Zoom fills the screen for ultrawide films; Stretch fills it for 4:3 shows.
+- Player: a subtitles on/off button in the controls, which brings back the subtitles you last had; and the remote's audio button now goes straight to the next audio track, naming it over the video.
+- Player: Episodes in the controls of a series: the seasons along the top, the season's episodes below, opened on the one playing; OK plays another.
+- Up next is now a card with the next episode's still, its number and title, and a bar that empties with the countdown.
+
 ## v0.1.41
 
 - Home never shows anime, on TVs and phones: no anime catalogues, no anime titles in the other rows or the featured titles, and none in Continue Watching. A title counts as anime by its type, an anime ID (Kitsu, MAL, AniList, AniDB) or an "Anime" tag; "Animation" alone doesn't count. Anime stays on the Anime tab, in Movies and Series, Search and the Library.

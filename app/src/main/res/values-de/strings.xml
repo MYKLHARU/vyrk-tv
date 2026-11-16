@@ -28,6 +28,7 @@
     <string name="audio">Audio</string>
     <string name="audio_formats">Audioformate</string>
     <string name="audio_languages">Audiosprachen</string>
+    <string name="audio_now">Audio: %1$s</string>
     <string name="audio_subtitles">Audio &amp; Untertitel</string>
     <string name="audio_switched">Diese Tonspur funktioniert nicht mehr. Gewechselt zu %1$s.</string>
     <string name="audio_track_n">Spur %1$d</string>
@@ -165,6 +166,7 @@
     <string name="no_sources_playable">Es wurden Quellen gefunden, aber keine läuft auf diesem Fernseher.</string>
     <string name="no_sources_torrent">Es wurden nur Torrent-Quellen gefunden. Sie brauchen einen Streaming-Server.</string>
     <string name="no_stream_addons">Kein installiertes Add-on liefert Streams für diesen Titel. Installiere eins unter Einstellungen › Add-ons.</string>
+    <string name="no_subtitles">Keine Untertitel für dieses Video</string>
     <string name="no_trailer">Kein Trailer für diesen Titel.</string>
     <string name="none">Keine</string>
     <string name="none_hidden">Keine ausgeblendet</string>
@@ -189,6 +191,11 @@
     <string name="person_unavailable">Die Angaben zu dieser Person konnten nicht geladen werden.</string>
     <string name="phone_open_sign_in">Stremio-Anmeldung öffnen</string>
     <string name="phone_sign_in_body">Melde dich im Browser auf der Seite von Stremio an und kehre dann hierher zurück. VYRK schließt die Anmeldung selbst ab.</string>
+    <string name="picture_fit">Einpassen</string>
+    <string name="picture_now">Bild: %1$s</string>
+    <string name="picture_size">Bildgröße</string>
+    <string name="picture_stretch">Strecken</string>
+    <string name="picture_zoom">Zoom</string>
     <string name="play">Abspielen</string>
     <string name="play_now">Jetzt abspielen</string>
     <string name="poster_size">Postergröße</string>
@@ -207,6 +214,7 @@
     <string name="preview_manual">Manuell</string>
     <string name="preview_sound">Ton der Vorschau</string>
     <string name="previews">Vorschauen</string>
+    <string name="quick_subtitles">Untertitel ein oder aus</string>
     <string name="rating_attribution">Bewertung von IMDb, über deine Add-ons.</string>
     <string name="ready_when_you_are">Bereit, wenn du es bist</string>
     <string name="recent_searches">Letzte Suchen</string>
@@ -302,6 +310,8 @@
     <string name="subtitle_preview">So sehen die Untertitel aus.</string>
     <string name="subtitle_size">Größe</string>
     <string name="subtitles">Untertitel</string>
+    <string name="subtitles_now">Untertitel: %1$s</string>
+    <string name="subtitles_off">Untertitel aus</string>
     <string name="switch_stream">Stream wechseln</string>
     <string name="sync_now">Jetzt synchronisieren</string>
     <string name="sync_style">Synchronität &amp; Stil</string>
@@ -338,6 +348,7 @@
     <string name="type_movie">Film</string>
     <string name="type_series">Serie</string>
     <string name="unknown">Unbekannt</string>
+    <string name="up_next">Als Nächstes</string>
     <string name="up_next_in">Als Nächstes: %1$s in %2$d s</string>
     <string name="up_to_date">Du hast die neueste Version.</string>
     <string name="update_failed">Update-Prüfung fehlgeschlagen: %1$s</string>

@@ -50,6 +50,8 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
@@ -209,7 +211,9 @@ class PlayerActivity : ComponentActivity() {
         // Modal prompts own arrows and OK; playback shortcuts must not seek beneath them.
         if (m.panel != Panel.NONE || m.stallPrompt || m.stillWatching) return false
         when (code) {
-            KeyEvent.KEYCODE_CAPTIONS, KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK -> return consume { m.panel = Panel.AUDIO_SUBS; m.showControls() }
+            KeyEvent.KEYCODE_CAPTIONS -> return consume { m.panel = Panel.AUDIO_SUBS; m.showControls() }
+            // The remote's audio button: straight to the next audio track, named over the video.
+            KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK -> return consume { m.cycleAudio() }
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> return consume { m.togglePlay(); m.showControls() }
             KeyEvent.KEYCODE_MEDIA_REWIND -> return consume { m.seekBy(-30_000) }
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> return consume { m.seekBy(30_000) }
@@ -265,6 +269,13 @@ fun PlayerScreen(m: PlayerModel, onExit: () -> Unit) {
                     subtitleView?.setStyle(CaptionStyleCompat(android.graphics.Color.WHITE, android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT, CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW, android.graphics.Color.BLACK, null))
                 }
             },
+            update = { view ->
+                view.resizeMode = when (m.pictureSize) {
+                    PictureSize.FIT -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    PictureSize.ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    PictureSize.STRETCH -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                }
+            },
             modifier = Modifier.fillMaxSize(),
         )
         // Add-on subtitles rendered by VYRK (supports the sync delay).
@@ -308,6 +319,7 @@ fun PlayerScreen(m: PlayerModel, onExit: () -> Unit) {
                 if (m.panel == Panel.AUDIO_SUBS) AudioSubsPanel(m)
                 if (m.panel == Panel.SOURCES) SourcesPanel(m)
                 if (m.panel == Panel.SLEEP) SleepPanel(m)
+                if (m.panel == Panel.EPISODES) EpisodesPanel(m)
                 if (m.stallPrompt) Prompt(stringResource(R.string.stall_prompt), stringResource(R.string.lower_quality), { m.lowerQuality() }, stringResource(R.string.keep_trying)) { m.stallPrompt = false; m.showControls() }
                 if (m.upNext && m.nextVideo != null && !m.controlsVisible) UpNext(m)
                 if (m.stillWatching) Prompt(stringResource(R.string.still_watching), stringResource(R.string.continue_playing), { m.confirmStillWatching() }, stringResource(R.string.exit)) { onExit() }
@@ -537,6 +549,7 @@ private fun Controls(m: PlayerModel) {
             Box(Modifier.fillMaxWidth()) {
                 Row(Modifier.align(Alignment.TopCenter).focusGroup(), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     RoundButton(R.drawable.ic_subtitles, stringResource(R.string.audio_subtitles), { m.panel = Panel.AUDIO_SUBS }, "player:audio_subs")
+                    RoundButton(R.drawable.ic_cc, stringResource(R.string.quick_subtitles), { m.toggleSubtitles(); m.touch() }, "player:cc")
                     RoundButton(R.drawable.ic_sources, stringResource(R.string.other_sources), { m.panel = Panel.SOURCES }, "player:sources")
                     Box(Modifier.padding(top = 10.dp)) { Divider() }
                     RoundButton(R.drawable.ic_back10, stringResource(R.string.back_10), { m.seekBy(-10_000); m.touch() }, "player:back10")
@@ -544,7 +557,9 @@ private fun Controls(m: PlayerModel) {
                         { m.togglePlay(); m.touch() }, "player:play_pause", Modifier.focusRequester(playReq), size = 64.dp, hero = true)
                     RoundButton(R.drawable.ic_fwd10, stringResource(R.string.forward_10), { m.seekBy(10_000); m.touch() }, "player:fwd10")
                     Box(Modifier.padding(top = 10.dp)) { Divider() }
+                    RoundButton(R.drawable.ic_crop, stringResource(R.string.picture_size), { m.cyclePictureSize(); m.touch() }, "player:picture")
                     RoundButton(R.drawable.ic_sleep, stringResource(R.string.sleep), { m.panel = Panel.SLEEP }, "player:sleep")
+                    if (m.video != null && m.meta?.videos.orEmpty().size > 1) RoundButton(R.drawable.ic_rows, stringResource(R.string.episodes), { m.panel = Panel.EPISODES }, "player:episodes")
                     if (m.nextVideo != null) RoundButton(R.drawable.ic_next, stringResource(R.string.next_episode), { m.playNext(auto = false) }, "player:next")
                     m.skipSegment?.let { seg ->
                         Box(Modifier.padding(top = 4.dp)) {
@@ -794,11 +809,88 @@ private fun Prompt(text: String, yes: String, onYes: () -> Unit, no: String, onN
     }
 }
 
+/**
+ * Up next, when the credits start: the next episode's still, its number and title, a bar that
+ * empties with the countdown, then Play now and Cancel. OK plays it; Back or Cancel keeps watching.
+ */
 @Composable
 private fun UpNext(m: PlayerModel) {
     val nv = m.nextVideo ?: return
-    val label = if (nv.season != null && nv.episode != null) "S${nv.season}E${nv.episode} ${nv.displayTitle}" else nv.displayTitle
-    Prompt(stringResource(R.string.up_next_in, label, m.upNextCountdown), stringResource(R.string.play_now), { m.playNext(auto = false) }, stringResource(R.string.cancel)) { m.dismissUpNext() }
+    val c = Vyrk.colors
+    val req = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { req.requestFocus() } }
+    val left by androidx.compose.animation.core.animateFloatAsState((m.upNextCountdown / 10f).coerceIn(0f, 1f),
+        androidx.compose.animation.core.tween(950, easing = androidx.compose.animation.core.LinearEasing), label = "countdown")
+    Box(Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.BottomEnd) {
+        Column(
+            Modifier.width(440.dp).background(c.panel.copy(alpha = 0.96f), RoundedCornerShape(20.dp))
+                .border(1.dp, c.gold.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
+                .focusProperties { onExit = { cancelFocusChange() } }.focusGroup(),
+        ) {
+            Box(Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)).background(c.raised)) {
+                val still = nv.thumbnail ?: m.meta?.background ?: m.request.meta.background
+                if (still != null) AsyncImage(still, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0.45f to Color.Transparent, 1f to c.panel)))
+                Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(3.dp).background(Color.White.copy(alpha = 0.15f))) {
+                    Box(Modifier.fillMaxWidth(left).fillMaxHeight().background(c.accent))
+                }
+            }
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 18.dp)) {
+                Text(stringResource(R.string.up_next).uppercase() + "  ·  " + m.upNextCountdown + " s",
+                    style = Vyrk.type.labelL.copy(letterSpacing = androidx.compose.ui.unit.TextUnit(2f, androidx.compose.ui.unit.TextUnitType.Sp)), color = c.gold)
+                val number = if (nv.season != null && nv.episode != null) "S${nv.season}E${nv.episode}  " else ""
+                Text(number + nv.displayTitle, style = Vyrk.type.headlineS, color = c.text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+                Spacer(Modifier.height(14.dp))
+                WrapRow {
+                    VyrkButton(stringResource(R.string.play_now), onClick = { m.playNext(auto = false) }, icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
+                        modifier = Modifier.focusRequester(req).traceFocus("prompt:yes"))
+                    VyrkButton(stringResource(R.string.cancel), onClick = { m.dismissUpNext() }, modifier = Modifier.traceFocus("prompt:no"))
+                }
+            }
+        }
+    }
+}
+
+/** Episodes, in the player: the seasons along the top, then the season's episodes; OK plays one. */
+@Composable
+private fun EpisodesPanel(m: PlayerModel) {
+    val c = Vyrk.colors
+    val videos = m.meta?.videos.orEmpty()
+    val currentId = m.video?.id ?: m.request.videoId
+    val seasons = videos.mapNotNull { it.season }.distinct().sortedWith(compareBy { if (it == 0) Int.MAX_VALUE else it })
+    var season by remember { androidx.compose.runtime.mutableStateOf(m.video?.season ?: seasons.firstOrNull { it > 0 } ?: seasons.firstOrNull()) }
+    val eps = videos.filter { it.season == season }.sortedBy { it.episode ?: 0 }
+    val listState = rememberLazyListState()
+    val currentReq = remember { FocusRequester() }
+    val firstReq = remember { FocusRequester() }
+    LaunchedEffect(season) {
+        val i = eps.indexOfFirst { it.id == currentId }
+        if (i > 0) listState.scrollToItem(i)
+        kotlinx.coroutines.delay(60)
+        runCatching { if (i >= 0) currentReq.requestFocus() else firstReq.requestFocus() }
+    }
+    SidePanel(stringResource(R.string.episodes)) {
+        if (seasons.size > 1) {
+            androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.focusGroup()) {
+                items(seasons) { s ->
+                    VyrkChip(if (s == 0) stringResource(R.string.specials) else stringResource(R.string.season_n, s), s == season, { season = s },
+                        Modifier.traceFocus("episodes:season:$s"))
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+        LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.focusGroup()) {
+            itemsIndexed(eps, key = { _, v -> v.id }) { i, v ->
+                val label = listOfNotNull(v.episode?.let { "E$it" }, v.displayTitle).joinToString("  ")
+                val mod = when {
+                    v.id == currentId -> Modifier.focusRequester(currentReq)
+                    i == 0 -> Modifier.focusRequester(firstReq)
+                    else -> Modifier
+                }
+                VyrkChip(label, v.id == currentId, { m.playEpisode(v) }, mod.fillMaxWidth().traceFocus("episodes:${v.id}"), maxLines = 2)
+            }
+        }
+    }
 }
 
 @Composable

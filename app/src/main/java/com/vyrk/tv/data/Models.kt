@@ -91,6 +91,8 @@ data class DeviceSettings(
     val lastProfileId: String? = null,
     val firstRunDone: Boolean = false,
     val measuredBps: Double? = null,
+    /** The player's picture size: FIT, ZOOM or STRETCH. */
+    val pictureSize: String = "FIT",
 )
 
 /** Where focus was on a tab: the row key, item index and the item ID as a tie-breaker. */

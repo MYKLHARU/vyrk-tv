@@ -28,6 +28,7 @@
     <string name="audio">Audio</string>
     <string name="audio_formats">Audio formats</string>
     <string name="audio_languages">Audio languages</string>
+    <string name="audio_now">Audio: %1$s</string>
     <string name="audio_subtitles">Audio &amp; subtitles</string>
     <string name="audio_switched">That audio track stopped working. Switched to %1$s.</string>
     <string name="audio_track_n">Track %1$d</string>
@@ -165,6 +166,7 @@
     <string name="no_sources_playable">Sources were found, but none can play on this TV.</string>
     <string name="no_sources_torrent">Only torrent sources were found. They need a streaming server.</string>
     <string name="no_stream_addons">No installed add-on provides streams for this title. Install one in Settings › Add-ons.</string>
+    <string name="no_subtitles">No subtitles for this video</string>
     <string name="no_trailer">No trailer for this title.</string>
     <string name="none">None</string>
     <string name="none_hidden">None hidden</string>
@@ -189,6 +191,11 @@
     <string name="person_unavailable">Details for this person couldn\'t load.</string>
     <string name="phone_open_sign_in">Open Stremio sign-in</string>
     <string name="phone_sign_in_body">Sign in on Stremio\'s page in your browser, then come back here. VYRK finishes signing in by itself.</string>
+    <string name="picture_fit">Fit</string>
+    <string name="picture_now">Picture: %1$s</string>
+    <string name="picture_size">Picture size</string>
+    <string name="picture_stretch">Stretch</string>
+    <string name="picture_zoom">Zoom</string>
     <string name="play">Play</string>
     <string name="play_now">Play now</string>
     <string name="poster_size">Poster size</string>
@@ -207,6 +214,7 @@
     <string name="preview_manual">Manual</string>
     <string name="preview_sound">Preview sound</string>
     <string name="previews">Previews</string>
+    <string name="quick_subtitles">Subtitles on or off</string>
     <string name="rating_attribution">Rating from IMDb, via your add-ons.</string>
     <string name="ready_when_you_are">Ready when you are</string>
     <string name="recent_searches">Recent searches</string>
@@ -302,6 +310,8 @@
     <string name="subtitle_preview">Subtitles will look like this.</string>
     <string name="subtitle_size">Size</string>
     <string name="subtitles">Subtitles</string>
+    <string name="subtitles_now">Subtitles: %1$s</string>
+    <string name="subtitles_off">Subtitles off</string>
     <string name="switch_stream">Switch stream</string>
     <string name="sync_now">Sync now</string>
     <string name="sync_style">Sync &amp; Style</string>
@@ -338,6 +348,7 @@
     <string name="type_movie">Movie</string>
     <string name="type_series">Series</string>
     <string name="unknown">Unknown</string>
+    <string name="up_next">Up next</string>
     <string name="up_next_in">Up next: %1$s in %2$d s</string>
     <string name="up_to_date">You have the latest version.</string>
     <string name="update_failed">Update check failed: %1$s</string>
