@@ -66,6 +66,25 @@ data class TmdbImage(
     val width: Int,
 )
 
+/** A film or show TMDB recommends; [type] is "movie" or "series". */
+data class TmdbTitle(
+    val tmdbId: Long,
+    val type: String,
+    val title: String,
+    val posterPath: String?,
+    val backdropPath: String?,
+    val year: String?,
+    val overview: String?,
+    val voteCount: Int,
+    val genreIds: List<Int>,
+    val originalLanguage: String?,
+) {
+    /** Japanese animation: what Home leaves out as anime. (Animation alone is not anime.) */
+    val looksAnime: Boolean get() = ANIMATION in genreIds && originalLanguage == "ja"
+
+    companion object { const val ANIMATION = 16 }
+}
+
 /** Artwork chosen for a title, as full image URLs; each is null when TMDB has none. */
 data class TmdbArtwork(val logo: String?, val backdrop: String?, val poster: String?)
 
@@ -169,6 +188,12 @@ class TmdbClient(
         return art
     }
 
+    /** Titles TMDB recommends for a film ([mediaType] "movie") or show ("tv"), best first. */
+    suspend fun recommendations(tmdbId: Long, mediaType: String): List<TmdbTitle> {
+        val path = if (mediaType == "tv") "/tv/$tmdbId/recommendations" else "/movie/$tmdbId/recommendations"
+        return get(path)?.let { parseRecommendations(it, if (mediaType == "tv") "series" else "movie") }.orEmpty()
+    }
+
     /** IMDb id of a film or show, so VYRK can open it through the user's add-ons. */
     suspend fun imdbId(tmdbId: Long, type: String): String? {
         val path = if (type == "series") "/tv/$tmdbId/external_ids" else "/movie/$tmdbId/external_ids"
@@ -263,6 +288,23 @@ class TmdbClient(
             knownFor = o.s("known_for_department"),
             profilePath = o.s("profile_path"),
         )
+
+        /**
+         * `/recommendations` results. Entries without a title or poster are dropped (they would show
+         * as blank cards), and so are ones with too few votes to be worth suggesting.
+         */
+        fun parseRecommendations(o: JsonObject, defaultType: String): List<TmdbTitle> = o.arr("results").mapNotNull { r ->
+            val type = when (r.s("media_type")) { "movie" -> "movie"; "tv" -> "series"; null -> defaultType; else -> return@mapNotNull null }
+            TmdbTitle(
+                tmdbId = r.l("id") ?: return@mapNotNull null, type = type,
+                title = r.s("title") ?: r.s("name") ?: return@mapNotNull null,
+                posterPath = r.s("poster_path") ?: return@mapNotNull null, backdropPath = r.s("backdrop_path"),
+                year = (r.s("release_date") ?: r.s("first_air_date"))?.take(4), overview = r.s("overview"),
+                voteCount = (r["vote_count"] as? JsonPrimitive)?.intOrNull ?: 0,
+                genreIds = (r["genre_ids"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.intOrNull }.orEmpty(),
+                originalLanguage = r.s("original_language"),
+            )
+        }.filter { it.voteCount >= 20 }.distinctBy { it.type + it.tmdbId }
 
         /** Films and shows, most notable first, one entry per title (acting roles win over crew jobs). */
         fun parsePersonCredits(o: JsonObject): List<PersonCredit> {

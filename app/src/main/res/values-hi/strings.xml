@@ -37,6 +37,7 @@
     <string name="back">वापस</string>
     <string name="back_10">10 सेकंड पीछे</string>
     <string name="badge_new">नया</string>
+    <string name="because_you_watched">क्योंकि आपने %1$s देखा</string>
     <string name="bg_box">बॉक्स</string>
     <string name="bg_shadow">छाया</string>
     <string name="blur_unwatched">न देखे गए एपिसोड धुँधले करें</string>
@@ -118,6 +119,7 @@
     <string name="hide_row">यह पंक्ति छिपाएँ</string>
     <string name="hint_play_pause">चलाएँ / रोकें</string>
     <string name="hint_seek">बार पर आगे-पीछे करें</string>
+    <string name="home_channel_name">VYRK: आपके लिए</string>
     <string name="in_library">लाइब्रेरी में</string>
     <string name="incomplete_stream_body">यह स्ट्रीम अधूरी हो सकती है। दूसरी स्ट्रीम आज़माएँ या शुरुआत से फिर कोशिश करें।</string>
     <string name="incomplete_stream_title">एपिसोड उम्मीद से पहले खत्म हो गया</string>

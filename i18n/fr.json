@@ -380,5 +380,7 @@
     "seasons_count": "%1$d saisons",
     "subtitle_preview": "Les sous-titres ressembleront à ceci.",
     "phone_open_sign_in": "Ouvrir la connexion Stremio",
-    "phone_sign_in_body": "Connectez-vous sur la page de Stremio dans votre navigateur, puis revenez ici. VYRK termine la connexion tout seul."
+    "phone_sign_in_body": "Connectez-vous sur la page de Stremio dans votre navigateur, puis revenez ici. VYRK termine la connexion tout seul.",
+    "because_you_watched": "Parce que vous avez regardé %1$s",
+    "home_channel_name": "VYRK : Pour vous"
 }

@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.43
+
+- Home: "Because you watched …" rows, with TMDB's recommendations for the two titles you watched most recently, after the first two rows. Titles you've watched or saved are left out, and so is anime. They open through your add-ons like any other title.
+- On TVs, the same picks fill a "VYRK: For you" row on the launcher's home screen, where the launcher shows app rows (Android TV Home). Google TV shows VYRK's Continue Watching only.
+
 ## v0.1.41
 
 - Home never shows anime, on TVs and phones: no anime catalogues, no anime titles in the other rows or the featured titles, and none in Continue Watching. A title counts as anime by its type, an anime ID (Kitsu, MAL, AniList, AniDB) or an "Anime" tag; "Animation" alone doesn't count. Anime stays on the Anime tab, in Movies and Series, Search and the Library.

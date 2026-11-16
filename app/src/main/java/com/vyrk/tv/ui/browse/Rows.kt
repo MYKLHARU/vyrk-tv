@@ -383,7 +383,8 @@ fun BrowseRow(
                             )
                         }
                     }
-                    if (row.kind == RowKind.CATALOG && (row.items.size >= 10 ||
+                    // See all needs a catalogue to page through ("Because you watched" rows have none).
+                    if (row.kind == RowKind.CATALOG && row.ref != null && (row.items.size >= 10 ||
                         row.animeOnly && row.ref?.catalog?.supportsExtra("skip") == true)) item(key = "catalog-action") {
                         Box(Modifier.size(posterWidth, height), contentAlignment = Alignment.Center) {
                             val more = row.animeOnly && row.hasMore

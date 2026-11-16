@@ -37,6 +37,7 @@
     <string name="back">Back</string>
     <string name="back_10">Back 10 seconds</string>
     <string name="badge_new">New</string>
+    <string name="because_you_watched">Because you watched %1$s</string>
     <string name="bg_box">Box</string>
     <string name="bg_shadow">Shadow</string>
     <string name="blur_unwatched">Blur unwatched episodes</string>
@@ -118,6 +119,7 @@
     <string name="hide_row">Hide this row</string>
     <string name="hint_play_pause">Play / pause</string>
     <string name="hint_seek">Seek on the bar</string>
+    <string name="home_channel_name">VYRK: For you</string>
     <string name="in_library">In library</string>
     <string name="incomplete_stream_body">This stream may be incomplete. Try another stream or retry from the beginning.</string>
     <string name="incomplete_stream_title">Episode ended earlier than expected</string>
