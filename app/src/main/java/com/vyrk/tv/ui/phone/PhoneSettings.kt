@@ -311,7 +311,8 @@ private fun PhoneCustomRows(session: ProfileSession) {
     val catalogs = remember(list) { com.vyrk.core.catalog.CustomRows.catalogs(list) }
     val c = Vyrk.colors
     fun upd(f: (com.vyrk.tv.data.ProfileSettings) -> com.vyrk.tv.data.ProfileSettings) = session.updateSettings(f)
-    fun tabName(key: String) = Tab.entries.firstOrNull { it.key == key }?.let { tabLabel(it) } ?: key
+    val tabNames = Tab.entries.associate { it.key to tabLabel(it) }
+    fun tabName(key: String) = tabNames[key] ?: key
     val rows = s.customRows
     PhoneCard(title = str(R.string.settings_rows)) {
         if (rows.isEmpty()) Text(str(R.string.custom_rows_empty), style = Vyrk.type.bodyM, color = c.textSecondary)
