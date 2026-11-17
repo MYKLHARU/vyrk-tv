@@ -100,6 +100,7 @@ import kotlinx.coroutines.launch
 
 private enum class Group(val title: Int, val icon: Int, val subtitle: Int) {
     PROFILE(R.string.settings_profile, R.drawable.ic_profile, R.string.settings_profile_sub),
+    ROWS(R.string.settings_rows, R.drawable.ic_rows, R.string.settings_rows_sub),
     STREAMS(R.string.settings_streams, R.drawable.ic_live, R.string.settings_streams_sub),
     PICTURE(R.string.settings_picture, R.drawable.ic_display, R.string.settings_picture_sub),
     LANGUAGES(R.string.settings_languages, R.drawable.ic_globe, R.string.settings_languages_sub),
@@ -449,6 +450,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                     VyrkButton(str(R.string.show_again), onClick = { upd { it.copy(top10CardDismissed = false) } }, style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, modifier = Modifier.traceFocus("set:show_top10"))
                 }
             }
+            Group.ROWS -> CustomRowsGroup(session)
             Group.STREAMS -> {
                 Choice(str(R.string.source_preset), listOf(Preset.BALANCED to str(R.string.preset_balanced), Preset.BEST_PICTURE to str(R.string.preset_best), Preset.FAST_START to str(R.string.preset_fast), Preset.ADDON_ORDER to str(R.string.preset_addon_order)), s.preset, "set:preset", str(R.string.preset_hint)) { v -> upd { it.copy(preset = v) } }
                 Choice(str(R.string.max_resolution), listOf(null to str(R.string.any), 2160 to "4K", 1080 to "1080p", 720 to "720p"), s.maxResolution, "set:max_res") { v -> upd { it.copy(maxResolution = v) } }
@@ -518,6 +520,59 @@ private fun GroupContent(session: ProfileSession, group: Group) {
 private fun accentName(a: AccentChoice) = when (a) {
     AccentChoice.GOLD -> str(R.string.accent_gold); AccentChoice.FROST -> str(R.string.accent_frost); AccentChoice.BLUE -> str(R.string.accent_blue); AccentChoice.TEAL -> str(R.string.accent_teal)
     AccentChoice.VIOLET -> str(R.string.accent_violet); AccentChoice.AMBER -> str(R.string.accent_amber); AccentChoice.PINK -> str(R.string.accent_pink)
+}
+
+/** Rows you make from an add-on catalogue and one of its genres, listed above a builder for a new one. */
+@Composable
+private fun CustomRowsGroup(session: ProfileSession) {
+    val app = LocalApp.current
+    val s by session.settings.collectAsState()
+    val addons by session.addons.collectAsState()
+    val list = remember(addons) { session.effectiveAddons() }
+    val catalogs = remember(list) { com.vyrk.core.catalog.CustomRows.catalogs(list) }
+    val c = Vyrk.colors
+    fun upd(f: (com.vyrk.tv.data.ProfileSettings) -> com.vyrk.tv.data.ProfileSettings) = session.updateSettings(f)
+    fun tabName(key: String) = Tab.entries.firstOrNull { it.key == key }
+    val rows = s.customRows
+    if (rows.isEmpty()) Text(str(R.string.custom_rows_empty), style = Vyrk.type.bodyM, color = c.textSecondary, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
+    rows.forEachIndexed { i, r ->
+        val ref = com.vyrk.core.catalog.CustomRows.resolve(r, list)
+        val where = tabName(r.tab)?.let { tabLabel(it) } ?: r.tab
+        Setting(ref?.let { com.vyrk.core.catalog.CustomRows.title(r, it) } ?: r.catalogId,
+            if (ref == null) str(R.string.custom_row_missing) else str(R.string.custom_row_on, where, ref.addon.manifest.name), R.drawable.ic_rows) {
+            if (i > 0) com.vyrk.tv.ui.components.VyrkIconButton(R.drawable.ic_up, str(R.string.move_up), { upd { it.copy(customRows = com.vyrk.core.catalog.CustomRows.move(it.customRows, r.id, -1)) } },
+                size = 32.dp, modifier = Modifier.traceFocus("rows:up:$i"))
+            if (i < rows.lastIndex) com.vyrk.tv.ui.components.VyrkIconButton(R.drawable.ic_down, str(R.string.move_down), { upd { it.copy(customRows = com.vyrk.core.catalog.CustomRows.move(it.customRows, r.id, 1)) } },
+                size = 32.dp, modifier = Modifier.traceFocus("rows:down:$i"))
+            VyrkButton(str(R.string.remove), icon = R.drawable.ic_trash, onClick = { upd { it.copy(customRows = it.customRows.filterNot { x -> x.id == r.id }) } },
+                style = ButtonStyle.OUTLINE, height = 32.dp, shape = Dimens.pillShape, modifier = Modifier.traceFocus("rows:remove:$i"))
+        }
+    }
+    Spacer(Modifier.height(6.dp))
+    Text(str(R.string.add_a_row).uppercase(), style = Vyrk.type.eyebrow, color = c.gold, modifier = Modifier.padding(start = 4.dp, top = 4.dp))
+    if (catalogs.isEmpty()) { Text(str(R.string.custom_rows_no_catalogues), style = Vyrk.type.bodyM, color = c.textSecondary); return }
+    var refKey by remember { mutableStateOf<String?>(null) }
+    val ref = catalogs.firstOrNull { it.key == refKey } ?: catalogs.first()
+    val genres = remember(ref.key) { com.vyrk.core.catalog.CustomRows.genres(ref) }
+    val allowsAll = com.vyrk.core.catalog.CustomRows.allowsAll(ref)
+    val tabs = com.vyrk.core.catalog.CustomRows.tabs(ref)
+    var genre by remember(ref.key) { mutableStateOf(if (allowsAll) null else genres.firstOrNull()) }
+    var tab by remember(ref.key) { mutableStateOf(tabs.first()) }
+    // Anime catalogues first: that's what these rows are mostly for.
+    val ordered = remember(catalogs) { catalogs.sortedByDescending { com.vyrk.core.catalog.CatalogRules.isAnimeCatalog(it) } }
+    Choice(str(R.string.row_catalogue), ordered.map { it.key to "${it.name} · ${com.vyrk.core.catalog.CatalogRules.typeLabel(it.catalog.type)}" }, ref.key,
+        "rows:catalogue", ref.addon.manifest.name, R.drawable.ic_puzzle) { refKey = it }
+    if (genres.isNotEmpty()) Choice(str(R.string.row_genre), (if (allowsAll) listOf<Pair<String?, String>>(null to str(R.string.any)) else emptyList()) + genres.map { it to it },
+        genre, "rows:genre", icon = R.drawable.ic_anime) { genre = it }
+    if (tabs.size > 1) Choice(str(R.string.row_tab), tabs.map { it to (tabName(it)?.let { t -> tabLabel(t) } ?: it) }, tab, "rows:tab", icon = R.drawable.ic_home) { tab = it }
+    val preview = com.vyrk.core.catalog.CustomRows.of("new", ref, genre, tab)
+    val added = str(R.string.row_added)
+    Setting(com.vyrk.core.catalog.CustomRows.title(preview, ref), str(R.string.custom_row_on, tabName(tab)?.let { tabLabel(it) } ?: tab, ref.addon.manifest.name), R.drawable.ic_plus) {
+        VyrkButton(str(R.string.add_row), style = ButtonStyle.BRAND, icon = R.drawable.ic_plus, modifier = Modifier.traceFocus("rows:add"), onClick = {
+            upd { it.copy(customRows = it.customRows + preview.copy(id = java.util.UUID.randomUUID().toString())) }
+            app.showToast(added)
+        })
+    }
 }
 
 @Composable

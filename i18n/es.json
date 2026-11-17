@@ -403,5 +403,17 @@
     "subtitles_now": "Subtítulos: %1$s",
     "no_subtitles": "No hay subtítulos para este vídeo",
     "audio_now": "Audio: %1$s",
-    "up_next": "A continuación"
+    "up_next": "A continuación",
+    "settings_rows": "Filas",
+    "settings_rows_sub": "Tus propias filas a partir de catálogos y géneros de complementos",
+    "custom_rows_empty": "Aún no tienes filas propias. Elige un catálogo y un género abajo.",
+    "custom_row_missing": "Su complemento no está instalado",
+    "custom_row_on": "En %1$s · %2$s",
+    "add_a_row": "Añadir una fila",
+    "custom_rows_no_catalogues": "Instala un complemento con catálogos para crear filas.",
+    "row_catalogue": "Catálogo",
+    "row_genre": "Género",
+    "row_tab": "Mostrar en",
+    "add_row": "Añadir fila",
+    "row_added": "Fila añadida"
 }

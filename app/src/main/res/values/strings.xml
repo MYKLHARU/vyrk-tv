@@ -11,6 +11,8 @@
     <string name="accent_pink">Pink</string>
     <string name="accent_teal">Teal</string>
     <string name="accent_violet">Violet</string>
+    <string name="add_a_row">Add a row</string>
+    <string name="add_row">Add row</string>
     <string name="add_to_library">Add to library</string>
     <string name="addon_not_encrypted">Uses http, not https: others on the network can read this address, including any sign-in in it.</string>
     <string name="addon_refreshed">Add-on refreshed</string>
@@ -70,6 +72,10 @@
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_diagnostics">Copy diagnostics</string>
     <string name="country">Country</string>
+    <string name="custom_row_missing">Its add-on isn\'t installed</string>
+    <string name="custom_row_on">On %1$s · %2$s</string>
+    <string name="custom_rows_empty">No rows of your own yet. Pick a catalogue and a genre below.</string>
+    <string name="custom_rows_no_catalogues">Install an add-on with catalogues to make rows.</string>
     <string name="default_profile_name">Me</string>
     <string name="default_tab">Default tab</string>
     <string name="default_tab_desc">The tab VYRK opens on</string>
@@ -233,8 +239,12 @@
     <string name="restore_rows">Restore %1$d rows</string>
     <string name="resume">Resume</string>
     <string name="retry">Retry</string>
+    <string name="row_added">Row added</string>
+    <string name="row_catalogue">Catalogue</string>
     <string name="row_empty">Nothing here yet.</string>
     <string name="row_error">This row didn\'t load.</string>
+    <string name="row_genre">Genre</string>
+    <string name="row_tab">Show on</string>
     <string name="save_to_account">Save to account</string>
     <string name="saved_on_device">Saved on this device only</string>
     <string name="saved_to_account">Add-ons saved to your account</string>
@@ -260,6 +270,8 @@
     <string name="settings_previews_sub">Trailer previews while you browse</string>
     <string name="settings_profile">Profile &amp; appearance</string>
     <string name="settings_profile_sub">Home screen, tabs and the look of VYRK</string>
+    <string name="settings_rows">Rows</string>
+    <string name="settings_rows_sub">Your own rows from add-on catalogues and genres</string>
     <string name="settings_streams">Streams</string>
     <string name="settings_streams_sub">Which sources play, and what happens after</string>
     <string name="settings_subtitles">Subtitles</string>

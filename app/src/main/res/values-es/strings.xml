@@ -11,6 +11,8 @@
     <string name="accent_pink">Rosa</string>
     <string name="accent_teal">Turquesa</string>
     <string name="accent_violet">Violeta</string>
+    <string name="add_a_row">Añadir una fila</string>
+    <string name="add_row">Añadir fila</string>
     <string name="add_to_library">Añadir a la biblioteca</string>
     <string name="addon_not_encrypted">Usa http, no https: otras personas en la red pueden leer esta dirección, incluido cualquier inicio de sesión que contenga.</string>
     <string name="addon_refreshed">Complemento actualizado</string>
@@ -70,6 +72,10 @@
     <string name="continue_watching">Seguir viendo</string>
     <string name="copy_diagnostics">Copiar diagnóstico</string>
     <string name="country">País</string>
+    <string name="custom_row_missing">Su complemento no está instalado</string>
+    <string name="custom_row_on">En %1$s · %2$s</string>
+    <string name="custom_rows_empty">Aún no tienes filas propias. Elige un catálogo y un género abajo.</string>
+    <string name="custom_rows_no_catalogues">Instala un complemento con catálogos para crear filas.</string>
     <string name="default_profile_name">Yo</string>
     <string name="default_tab">Pestaña inicial</string>
     <string name="default_tab_desc">La pestaña con la que se abre VYRK</string>
@@ -233,8 +239,12 @@
     <string name="restore_rows">Restaurar %1$d filas</string>
     <string name="resume">Reanudar</string>
     <string name="retry">Reintentar</string>
+    <string name="row_added">Fila añadida</string>
+    <string name="row_catalogue">Catálogo</string>
     <string name="row_empty">Aún no hay nada aquí.</string>
     <string name="row_error">Esta fila no se cargó.</string>
+    <string name="row_genre">Género</string>
+    <string name="row_tab">Mostrar en</string>
     <string name="save_to_account">Guardar en la cuenta</string>
     <string name="saved_on_device">Guardado solo en este dispositivo</string>
     <string name="saved_to_account">Complementos guardados en tu cuenta</string>
@@ -260,6 +270,8 @@
     <string name="settings_previews_sub">Avances mientras navegas</string>
     <string name="settings_profile">Perfil y apariencia</string>
     <string name="settings_profile_sub">Inicio, pestañas y el aspecto de VYRK</string>
+    <string name="settings_rows">Filas</string>
+    <string name="settings_rows_sub">Tus propias filas a partir de catálogos y géneros de complementos</string>
     <string name="settings_streams">Streams</string>
     <string name="settings_streams_sub">Qué fuentes se reproducen y qué pasa después</string>
     <string name="settings_subtitles">Subtítulos</string>
