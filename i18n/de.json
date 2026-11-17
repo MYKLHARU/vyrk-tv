@@ -403,5 +403,17 @@
     "subtitles_now": "Untertitel: %1$s",
     "no_subtitles": "Keine Untertitel für dieses Video",
     "audio_now": "Audio: %1$s",
-    "up_next": "Als Nächstes"
+    "up_next": "Als Nächstes",
+    "settings_rows": "Reihen",
+    "settings_rows_sub": "Eigene Reihen aus Add-on-Katalogen und Genres",
+    "custom_rows_empty": "Noch keine eigenen Reihen. Wähle unten einen Katalog und ein Genre.",
+    "custom_row_missing": "Sein Add-on ist nicht installiert",
+    "custom_row_on": "In %1$s · %2$s",
+    "add_a_row": "Reihe hinzufügen",
+    "custom_rows_no_catalogues": "Installiere ein Add-on mit Katalogen, um Reihen zu erstellen.",
+    "row_catalogue": "Katalog",
+    "row_genre": "Genre",
+    "row_tab": "Anzeigen in",
+    "add_row": "Reihe hinzufügen",
+    "row_added": "Reihe hinzugefügt"
 }

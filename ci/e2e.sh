@@ -261,7 +261,7 @@ key KEYCODE_DPAD_RIGHT 1.2 "into Profile & appearance"
 expect '^set:default_tab:0$' "Right enters Profile & appearance at its first row"
 key KEYCODE_DPAD_LEFT 1.2 "back to the groups"
 expect '^settings:profile$' "Left from the first row returns to its group"
-for g in streams picture languages subtitles previews addons about; do
+for g in rows streams picture languages subtitles previews addons about; do
   key KEYCODE_DPAD_DOWN 1.2 "group $g"
   expect "^settings:$g\$" "settings group $g"
   shot "settings-$g"

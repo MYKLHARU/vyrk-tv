@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.46
+
+- Your own rows: Settings › Rows makes a row from any add-on catalogue, narrowed to one of the genres it offers, such as "Romance · Kitsu Most Popular" or "Isekai · Top Airing". Anime rows go on the Anime tab; others on Home, Movies or Series. They appear at the top of their tab, in the order you set, with See all like any other row. Hide row on one of them removes it. Phones have the same page.
+
 ## v0.1.45
 
 - Trakt: connect your Trakt account in Settings → About (enter the code shown at trakt.tv/activate, or scan the QR code). VYRK then scrobbles as you watch: Trakt shows what's playing, and a film or episode watched past 80% goes into your Trakt history. Disconnect any time. Titles without an IMDb id (some anime catalogues) aren't sent. Phones get the same card in Settings.
