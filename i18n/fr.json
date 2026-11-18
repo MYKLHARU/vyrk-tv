@@ -415,5 +415,8 @@
     "row_genre": "Genre",
     "row_tab": "Afficher dans",
     "add_row": "Ajouter la rangée",
-    "row_added": "Rangée ajoutée"
+    "row_added": "Rangée ajoutée",
+    "row_genres": "Genres",
+    "row_genres_hint": "Cochez un genre pour ajouter sa rangée à l'onglet ; décochez-le pour la retirer.",
+    "row_whole_catalogue": "Catalogue entier"
 }

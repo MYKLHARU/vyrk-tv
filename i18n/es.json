@@ -415,5 +415,8 @@
     "row_genre": "Género",
     "row_tab": "Mostrar en",
     "add_row": "Añadir fila",
-    "row_added": "Fila añadida"
+    "row_added": "Fila añadida",
+    "row_genres": "Géneros",
+    "row_genres_hint": "Marca un género para añadir su fila a la pestaña; desmárcalo para quitarla.",
+    "row_whole_catalogue": "Catálogo completo"
 }

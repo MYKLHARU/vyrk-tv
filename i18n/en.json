@@ -415,5 +415,8 @@
     "row_genre": "Genre",
     "row_tab": "Show on",
     "add_row": "Add row",
-    "row_added": "Row added"
+    "row_added": "Row added",
+    "row_genres": "Genres",
+    "row_genres_hint": "Tick a genre to add its row to the tab; untick it to remove the row.",
+    "row_whole_catalogue": "Whole catalogue"
 }

@@ -12,7 +12,6 @@
     <string name="accent_teal">टील</string>
     <string name="accent_violet">बैंगनी</string>
     <string name="add_a_row">पंक्ति जोड़ें</string>
-    <string name="add_row">पंक्ति जोड़ें</string>
     <string name="add_to_library">लाइब्रेरी में जोड़ें</string>
     <string name="addon_not_encrypted">https नहीं, http का उपयोग करता है: नेटवर्क पर दूसरे लोग यह पता पढ़ सकते हैं, इसमें मौजूद साइन-इन जानकारी समेत।</string>
     <string name="addon_refreshed">ऐड-ऑन रीफ़्रेश हुआ</string>
@@ -239,12 +238,13 @@
     <string name="restore_rows">%1$d पंक्तियाँ वापस लाएँ</string>
     <string name="resume">फिर से शुरू करें</string>
     <string name="retry">फिर कोशिश करें</string>
-    <string name="row_added">पंक्ति जोड़ी गई</string>
     <string name="row_catalogue">कैटलॉग</string>
     <string name="row_empty">यहाँ अभी कुछ नहीं है।</string>
     <string name="row_error">यह पंक्ति लोड नहीं हुई।</string>
-    <string name="row_genre">शैली</string>
+    <string name="row_genres">शैलियाँ</string>
+    <string name="row_genres_hint">टैब में पंक्ति जोड़ने के लिए शैली पर टिक करें; हटाने के लिए टिक हटाएँ।</string>
     <string name="row_tab">यहाँ दिखाएँ</string>
+    <string name="row_whole_catalogue">पूरा कैटलॉग</string>
     <string name="save_to_account">खाते में सहेजें</string>
     <string name="saved_on_device">केवल इसी डिवाइस पर सहेजा गया</string>
     <string name="saved_to_account">ऐड-ऑन आपके खाते में सहेजे गए</string>

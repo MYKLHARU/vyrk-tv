@@ -415,5 +415,8 @@
     "row_genre": "Genre",
     "row_tab": "Anzeigen in",
     "add_row": "Reihe hinzufügen",
-    "row_added": "Reihe hinzugefügt"
+    "row_added": "Reihe hinzugefügt",
+    "row_genres": "Genres",
+    "row_genres_hint": "Hake ein Genre an, um seine Reihe zum Tab hinzuzufügen; entferne den Haken, um sie zu löschen.",
+    "row_whole_catalogue": "Ganzer Katalog"
 }

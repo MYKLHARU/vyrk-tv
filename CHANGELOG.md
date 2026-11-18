@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.47
+
+- Custom rows are now tick boxes: in Settings › Rows, pick a catalogue and tick the genres you want; each ticked genre is a row on the tab, unticking removes it. The genres are a fixed set of 40 (Action, Adventure, … Isekai, … Slice of Life, … Yaoi), in that order, showing only the ones the chosen catalogue has. Rows you already made keep working.
+
 ## v0.1.46
 
 - Your own rows: Settings › Rows makes a row from any add-on catalogue, narrowed to one of the genres it offers, such as "Romance · Kitsu Most Popular" or "Isekai · Top Airing". Anime rows go on the Anime tab; others on Home, Movies or Series. They appear at the top of their tab, in the order you set, with See all like any other row. Hide row on one of them removes it. Phones have the same page.
