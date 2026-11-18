@@ -12,7 +12,6 @@
     <string name="accent_teal">Turchese</string>
     <string name="accent_violet">Viola</string>
     <string name="add_a_row">Aggiungi una riga</string>
-    <string name="add_row">Aggiungi riga</string>
     <string name="add_to_library">Aggiungi alla libreria</string>
     <string name="addon_not_encrypted">Usa http, non https: altri sulla rete possono leggere questo indirizzo, incluse le credenziali che contiene.</string>
     <string name="addon_refreshed">Componente aggiornato</string>
@@ -239,12 +238,13 @@
     <string name="restore_rows">Ripristina %1$d righe</string>
     <string name="resume">Riprendi</string>
     <string name="retry">Riprova</string>
-    <string name="row_added">Riga aggiunta</string>
     <string name="row_catalogue">Catalogo</string>
     <string name="row_empty">Ancora niente qui.</string>
     <string name="row_error">Questa riga non è stata caricata.</string>
-    <string name="row_genre">Genere</string>
+    <string name="row_genres">Generi</string>
+    <string name="row_genres_hint">Spunta un genere per aggiungere la sua riga alla scheda; togli la spunta per rimuoverla.</string>
     <string name="row_tab">Mostra in</string>
+    <string name="row_whole_catalogue">Catalogo completo</string>
     <string name="save_to_account">Salva nell\'account</string>
     <string name="saved_on_device">Salvato solo su questo dispositivo</string>
     <string name="saved_to_account">Componenti salvati nel tuo account</string>

@@ -12,7 +12,6 @@
     <string name="accent_teal">Teal</string>
     <string name="accent_violet">Violet</string>
     <string name="add_a_row">Add a row</string>
-    <string name="add_row">Add row</string>
     <string name="add_to_library">Add to library</string>
     <string name="addon_not_encrypted">Uses http, not https: others on the network can read this address, including any sign-in in it.</string>
     <string name="addon_refreshed">Add-on refreshed</string>
@@ -239,12 +238,13 @@
     <string name="restore_rows">Restore %1$d rows</string>
     <string name="resume">Resume</string>
     <string name="retry">Retry</string>
-    <string name="row_added">Row added</string>
     <string name="row_catalogue">Catalogue</string>
     <string name="row_empty">Nothing here yet.</string>
     <string name="row_error">This row didn\'t load.</string>
-    <string name="row_genre">Genre</string>
+    <string name="row_genres">Genres</string>
+    <string name="row_genres_hint">Tick a genre to add its row to the tab; untick it to remove the row.</string>
     <string name="row_tab">Show on</string>
+    <string name="row_whole_catalogue">Whole catalogue</string>
     <string name="save_to_account">Save to account</string>
     <string name="saved_on_device">Saved on this device only</string>
     <string name="saved_to_account">Add-ons saved to your account</string>

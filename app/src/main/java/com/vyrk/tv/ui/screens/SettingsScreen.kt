@@ -525,7 +525,6 @@ private fun accentName(a: AccentChoice) = when (a) {
 /** Rows you make from an add-on catalogue and one of its genres, listed above a builder for a new one. */
 @Composable
 private fun CustomRowsGroup(session: ProfileSession) {
-    val app = LocalApp.current
     val s by session.settings.collectAsState()
     val addons by session.addons.collectAsState()
     val list = remember(addons) { session.effectiveAddons() }
@@ -556,22 +555,19 @@ private fun CustomRowsGroup(session: ProfileSession) {
     val genres = remember(ref.key) { com.vyrk.core.catalog.CustomRows.genres(ref) }
     val allowsAll = com.vyrk.core.catalog.CustomRows.allowsAll(ref)
     val tabs = com.vyrk.core.catalog.CustomRows.tabs(ref)
-    var genre by remember(ref.key) { mutableStateOf(if (allowsAll) null else genres.firstOrNull()) }
     var tab by remember(ref.key) { mutableStateOf(tabs.first()) }
     // Anime catalogues first: that's what these rows are mostly for.
     val ordered = remember(catalogs) { catalogs.sortedByDescending { com.vyrk.core.catalog.CatalogRules.isAnimeCatalog(it) } }
     Choice(str(R.string.row_catalogue), ordered.map { it.key to "${it.name} · ${com.vyrk.core.catalog.CatalogRules.typeLabel(it.catalog.type)}" }, ref.key,
         "rows:catalogue", ref.addon.manifest.name, R.drawable.ic_puzzle) { refKey = it }
-    if (genres.isNotEmpty()) Choice(str(R.string.row_genre), (if (allowsAll) listOf<Pair<String?, String>>(null to str(R.string.any)) else emptyList()) + genres.map { it to it },
-        genre, "rows:genre", icon = R.drawable.ic_anime) { genre = it }
     if (tabs.size > 1) Choice(str(R.string.row_tab), tabs.map { it to (tabName(it)?.let { t -> tabLabel(t) } ?: it) }, tab, "rows:tab", icon = R.drawable.ic_home) { tab = it }
-    val preview = com.vyrk.core.catalog.CustomRows.of("new", ref, genre, tab)
-    val added = str(R.string.row_added)
-    Setting(com.vyrk.core.catalog.CustomRows.title(preview, ref), str(R.string.custom_row_on, tabName(tab)?.let { tabLabel(it) } ?: tab, ref.addon.manifest.name), R.drawable.ic_plus) {
-        VyrkButton(str(R.string.add_row), style = ButtonStyle.BRAND, icon = R.drawable.ic_plus, modifier = Modifier.traceFocus("rows:add"), onClick = {
-            upd { it.copy(customRows = it.customRows + preview.copy(id = java.util.UUID.randomUUID().toString())) }
-            app.showToast(added)
-        })
+    // One tick box per genre: ticked means that row is on the tab.
+    fun tick(g: String?) = upd { it.copy(customRows = com.vyrk.core.catalog.CustomRows.toggle(it.customRows, ref, g, tab, java.util.UUID.randomUUID().toString())) }
+    Setting(str(R.string.row_genres), str(R.string.row_genres_hint), R.drawable.ic_anime) {
+        if (allowsAll) CheckChip(str(R.string.row_whole_catalogue), com.vyrk.core.catalog.CustomRows.has(rows, ref, null, tab), { tick(null) }, "rows:genre:all")
+        genres.forEach { g ->
+            CheckChip(com.vyrk.core.catalog.CustomRows.label(g), com.vyrk.core.catalog.CustomRows.has(rows, ref, g, tab), { tick(g) }, "rows:genre:${g.lowercase()}")
+        }
     }
 }
 

@@ -12,7 +12,6 @@
     <string name="accent_teal">Turquesa</string>
     <string name="accent_violet">Violeta</string>
     <string name="add_a_row">Adicionar uma fileira</string>
-    <string name="add_row">Adicionar fileira</string>
     <string name="add_to_library">Adicionar à biblioteca</string>
     <string name="addon_not_encrypted">Usa http, não https: outras pessoas na rede podem ler este endereço, incluindo qualquer login contido nele.</string>
     <string name="addon_refreshed">Complemento atualizado</string>
@@ -239,12 +238,13 @@
     <string name="restore_rows">Restaurar %1$d linhas</string>
     <string name="resume">Retomar</string>
     <string name="retry">Tentar de novo</string>
-    <string name="row_added">Fileira adicionada</string>
     <string name="row_catalogue">Catálogo</string>
     <string name="row_empty">Nada aqui ainda.</string>
     <string name="row_error">Esta linha não carregou.</string>
-    <string name="row_genre">Gênero</string>
+    <string name="row_genres">Gêneros</string>
+    <string name="row_genres_hint">Marque um gênero para adicionar a fileira à aba; desmarque para removê-la.</string>
     <string name="row_tab">Mostrar em</string>
+    <string name="row_whole_catalogue">Catálogo inteiro</string>
     <string name="save_to_account">Salvar na conta</string>
     <string name="saved_on_device">Salvo só neste dispositivo</string>
     <string name="saved_to_account">Complementos salvos na sua conta</string>

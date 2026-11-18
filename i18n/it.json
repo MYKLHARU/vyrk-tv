@@ -415,5 +415,8 @@
     "row_genre": "Genere",
     "row_tab": "Mostra in",
     "add_row": "Aggiungi riga",
-    "row_added": "Riga aggiunta"
+    "row_added": "Riga aggiunta",
+    "row_genres": "Generi",
+    "row_genres_hint": "Spunta un genere per aggiungere la sua riga alla scheda; togli la spunta per rimuoverla.",
+    "row_whole_catalogue": "Catalogo completo"
 }

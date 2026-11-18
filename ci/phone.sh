@@ -159,6 +159,15 @@ if at=$(find_el id prompt:no 3); then adb_run shell input tap $at; log "answered
 # Paused, the controls stay up while the screen is read (playing, they hide after 5 s).
 adbs input keyevent KEYCODE_MEDIA_PAUSE
 sleep 1
+# On a slow emulator the stall prompt can come late, or the tap can land as the controls hide:
+# answer the prompt and tap again until the controls are up.
+for _ in 1 2 3; do
+  find_el id player:play_pause 4 >/dev/null && break
+  if at=$(find_el id prompt:no 2); then adb_run shell input tap $at; log "answered the stall prompt"; sleep 1; fi
+  find_el id player:play_pause 2 >/dev/null && break
+  adb_run shell input tap "$cx" "$cy"; sleep 1
+  adbs input keyevent KEYCODE_MEDIA_PAUSE; sleep 1
+done
 tap id player:play_pause "controls are touchable (play)" 15
 adbs input keyevent KEYCODE_MEDIA_PAUSE
 sleep 1
