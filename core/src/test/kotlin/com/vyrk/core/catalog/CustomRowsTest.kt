@@ -16,19 +16,20 @@ class CustomRowsTest {
     private val addons = listOf(kitsu, cinemeta)
 
     @Test fun onlyBrowsableCataloguesAreOffered() {
-        // byGenre requires a genre and offers none of the allowed ones.
-        assertEquals(listOf("kitsu-anime-popular", "top"), CustomRows.catalogs(addons).map { it.catalog.id })
+        // Anime catalogues only.
+        assertEquals(listOf("kitsu-anime-popular"), CustomRows.catalogs(addons).map { it.catalog.id })
     }
 
     @Test fun genresTabsAndAll() {
-        val (pop, top) = CustomRows.catalogs(addons)
+        val pop = CustomRows.catalogs(addons).single()
+        val top = CatalogRef(cinemeta, cinemeta.manifest.catalogs[0], 1)
         val byGenre = CatalogRef(cinemeta, cinemeta.manifest.catalogs[1], 1)
         // Only the allowed genres, in their order, in the add-on's spelling.
         assertEquals(listOf("action", "Romance", "science-fiction"), CustomRows.genres(pop))
         assertEquals(listOf("Comedy", "Drama"), CustomRows.genres(top))
         assertEquals("Science Fiction", CustomRows.label("science-fiction"))
         assertEquals(listOf("anime"), CustomRows.tabs(pop))
-        assertEquals(listOf("home", "movies"), CustomRows.tabs(top))
+        assertTrue(CustomRows.forTab(listOf(CustomRows.of("h", pop, "Romance", "home")), "home", addons).isEmpty(), "rows show on the Anime tab only")
         assertFalse(CustomRows.allowsAll(byGenre))
         assertTrue(CustomRows.allowsAll(top))
     }

@@ -22,12 +22,12 @@ object CustomRows {
 
     fun key(row: CustomRow) = KEY_PREFIX + row.id
 
-    /** Catalogues a row can come from: none that need search, and a required genre must list its options. */
+    /** Catalogues a row can come from: anime ones only, none that need search, and a required genre must list its options. */
     fun catalogs(addons: List<Descriptor>): List<CatalogRef> =
         addons.flatMapIndexed { order, d -> d.manifest.catalogs.map { CatalogRef(d, it, order) } }
             .filter { ref ->
                 val c = ref.catalog
-                c.type != "tv" && c.type != "channel" && c.requiredExtras.all { it == "genre" } &&
+                CatalogRules.isAnimeCatalog(ref) && c.type != "tv" && c.type != "channel" && c.requiredExtras.all { it == "genre" } &&
                     (!c.requiresExtra("genre") || genres(ref).isNotEmpty())
             }.distinctBy { it.key }
 
@@ -58,16 +58,10 @@ object CustomRows {
     /** Whether "All" (no genre) is allowed: not when the add-on requires one. */
     fun allowsAll(ref: CatalogRef) = !ref.catalog.requiresExtra("genre")
 
-    /**
-     * Tabs a row from [ref] can go on. Anime catalogues live on the Anime tab (Home never shows
-     * anime); others can go on Home or the tab for their type.
-     */
-    fun tabs(ref: CatalogRef): List<String> = when {
-        CatalogRules.isAnimeCatalog(ref) -> listOf("anime")
-        ref.catalog.type == "movie" -> listOf("home", "movies")
-        ref.catalog.type == "series" -> listOf("home", "series")
-        else -> listOf("home")
-    }
+    /** Custom rows live on the Anime tab only. */
+    const val TAB = "anime"
+
+    fun tabs(@Suppress("UNUSED_PARAMETER") ref: CatalogRef): List<String> = listOf(TAB)
 
     fun resolve(row: CustomRow, addons: List<Descriptor>): CatalogRef? =
         catalogs(addons).firstOrNull { it.addon.manifest.id == row.addonId && it.catalog.type == row.type && it.catalog.id == row.catalogId }
@@ -94,7 +88,7 @@ object CustomRows {
 
     /** This tab's rows that still resolve, in the user's order. */
     fun forTab(rows: List<CustomRow>, tab: String, addons: List<Descriptor>): List<Pair<CustomRow, CatalogRef>> =
-        rows.filter { it.tab == tab }.mapNotNull { r -> resolve(r, addons)?.let { r to it } }
+        rows.filter { it.tab == tab && tab == TAB }.mapNotNull { r -> resolve(r, addons)?.let { r to it } }
 
     fun move(rows: List<CustomRow>, id: String, by: Int): List<CustomRow> {
         val i = rows.indexOfFirst { it.id == id }

@@ -4,7 +4,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 
 ## v0.1.47
 
-- Custom rows are now tick boxes: in Settings › Rows, pick a catalogue and tick the genres you want; each ticked genre is a row on the tab, unticking removes it. The genres are a fixed set of 40 (Action, Adventure, … Isekai, … Slice of Life, … Yaoi), in that order, showing only the ones the chosen catalogue has. Rows you already made keep working.
+- Custom rows are now tick boxes: in Settings › Rows, pick a catalogue and tick the genres you want; each ticked genre is a row on the tab, unticking removes it. The genres are a fixed set of 40 (Action, Adventure, … Isekai, … Slice of Life, … Yaoi), in that order, showing only the ones the chosen catalogue has. Custom rows are for anime only now: anime catalogues, shown on the Anime tab.
 
 ## v0.1.46
 
