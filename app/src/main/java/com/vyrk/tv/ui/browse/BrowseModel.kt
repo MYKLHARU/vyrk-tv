@@ -34,8 +34,6 @@ class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initial
     var error by mutableStateOf<String?>(null)
     var hasMore by mutableStateOf(true)
     var loadedOnce by mutableStateOf(false)
-    /** A short line per title on its poster, e.g. when its next episode airs. */
-    var labels by mutableStateOf<Map<String, String>>(emptyMap())
     internal var job: Job? = null
 }
 

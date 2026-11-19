@@ -422,10 +422,5 @@
     "skip_opening": "Pular abertura",
     "skip_ending": "Pular encerramento",
     "skipped_opening": "Abertura pulada",
-    "skipped_ending": "Encerramento pulado",
-    "new_episodes": "Episódios novos",
-    "airing_this_week": "No ar esta semana",
-    "today": "Hoje",
-    "tomorrow": "Amanhã",
-    "episode_short": "Ep. %1$d"
+    "skipped_ending": "Encerramento pulado"
 }

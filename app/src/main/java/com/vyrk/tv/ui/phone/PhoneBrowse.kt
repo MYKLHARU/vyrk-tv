@@ -195,7 +195,6 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
     val showTop10Card = isHome && !model.hasTop10Catalogs && !settings.top10CardDismissed && BuildConfig.TOP10_ADDON_URL.isNotBlank()
 
     val recRows = com.vyrk.tv.ui.browse.rememberRecommendationRows(session, enabled = isHome)
-    val airingRows = com.vyrk.tv.ui.browse.rememberAiringRows(session, enabled = model.tab == Tab.ANIME || (isHome && model.animeOnly))
     val bottom = bottomContentPadding()
     LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = bottom) {
         if (heroOn) item(key = "hero") {
@@ -232,7 +231,7 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
         if (model.built && model.rows.isEmpty()) item(key = "empty") {
             Text(str(R.string.row_empty), style = Vyrk.type.bodyL, color = Vyrk.colors.textMuted, modifier = Modifier.padding(PhoneMargin))
         }
-        items(airingRows + model.rows.take(2) + recRows + model.rows.drop(2), key = { it.key }) { row ->
+        items(model.rows.take(2) + recRows + model.rows.drop(2), key = { it.key }) { row ->
             LaunchedEffect(row) { model.ensureLoaded(row) }
             CatalogueRow(row, model, library, sstate.newEpisodes)
         }
@@ -358,7 +357,7 @@ private fun CatalogueRow(row: RowState, model: BrowseModel, library: Map<String,
                 LazyRow(state = state, contentPadding = PaddingValues(horizontal = PhoneMargin), horizontalArrangement = Arrangement.spacedBy(if (top10) 4.dp else 10.dp)) {
                     itemsIndexed(row.items, key = { _, m -> m.type + ":" + m.id }) { i, m ->
                         val poster = @Composable {
-                            PhonePoster(m, PosterW, posterState(library[m.id], newEpisodes[m.id].orEmpty(), row.labels[m.id]),
+                            PhonePoster(m, PosterW, posterState(library[m.id], newEpisodes[m.id].orEmpty()),
                                 onClick = { app.push(Overlay.Info(m, null)) }, onLongClick = { app.push(Overlay.ItemMenu(m, null)) },
                                 tag = "poster:${row.key}#$i")
                         }

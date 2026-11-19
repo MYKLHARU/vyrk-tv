@@ -147,11 +147,8 @@ fun BrowsePage(
     val recRows = rememberRecommendationRows(session, enabled = isHome && !model.animeOnly) { picks ->
         if (com.vyrk.tv.ui.phone.FormFactor.isTv(graph.context)) session.scope.launch { graph.homeChannel.publish(picks) }
     }
-    // Anime: what came out this week and what's coming, for the shows you follow.
-    val airingRows = rememberAiringRows(session, enabled = model.tab == Tab.ANIME || (isHome && model.animeOnly))
     val rows = buildList {
         if (isHome && cwItems.isNotEmpty()) add(cwRow)
-        addAll(airingRows)
         addAll(model.rows.take(2))
         addAll(recRows)
         addAll(model.rows.drop(2))

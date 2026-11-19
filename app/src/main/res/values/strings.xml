@@ -17,7 +17,6 @@
     <string name="addon_refreshed">Add-on refreshed</string>
     <string name="addon_url">Add-on URL</string>
     <string name="addons_pending_sync">Saved on this TV. Account sync pending.</string>
-    <string name="airing_this_week">Airing this week</string>
     <string name="airs_on">Airs %1$s</string>
     <string name="always_show_sources">Always show sources</string>
     <string name="anime_all_genres">All genres</string>
@@ -95,7 +94,6 @@
     <string name="download_install">Download and install</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Ends at %1$s</string>
-    <string name="episode_short">Ep %1$d</string>
     <string name="episodes">Episodes</string>
     <string name="excl_codec">this TV can\'t decode the video format</string>
     <string name="excl_decoder">higher resolution than this TV\'s decoder</string>
@@ -165,7 +163,6 @@
     <string name="move_down">Move down</string>
     <string name="move_up">Move up</string>
     <string name="needs_streaming_server">Needs Stremio\'s local streaming server, which VYRK doesn\'t include. It is skipped.</string>
-    <string name="new_episodes">New episodes</string>
     <string name="next">Next</string>
     <string name="next_episode">Next episode</string>
     <string name="no_account">Not signed in. Your library is saved on this TV.</string>
@@ -356,8 +353,6 @@
     <string name="time_left">%1$s left</string>
     <string name="time_m">%1$d min</string>
     <string name="timeline_hint">◀ ▶ Scrub · ▲ Chapters · OK Go</string>
-    <string name="today">Today</string>
-    <string name="tomorrow">Tomorrow</string>
     <string name="top10_add">Add Top 10 rows</string>
     <string name="top10_card_body">Adds the free third-party Streaming Catalogs add-on, which lists what\'s popular on each service.</string>
     <string name="top10_card_title">Top 10 on your streaming services</string>
