@@ -174,10 +174,16 @@ sleep 1
 tap id player:audio_subs "audio and subtitles" 15
 sleep 1
 shot phone-player-audio-subs
+# Back closes the panel, then leaves the player. Press it one at a time: a panel that closed on
+# its own would otherwise make the second press leave the title page too.
 adbs input keyevent KEYCODE_BACK
 sleep 1
-adbs input keyevent KEYCODE_BACK
-sleep 3
+for _ in 1 2 3; do
+  [[ "$(resumed_now)" == *PlayerActivity* ]] || break
+  adbs input keyevent KEYCODE_BACK
+  sleep 2
+done
+sleep 1
 [[ "$(resumed_now)" == *PlayerActivity* ]] && fail "Back didn't leave the player"
 expect_el id info:play 10 "leaving the player returns to the title page"
 adbs input keyevent KEYCODE_BACK
