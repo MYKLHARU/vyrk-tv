@@ -243,11 +243,16 @@ done
 # ---------------------------------------------------------------- search "matrix"
 until_focus KEYCODE_DPAD_RIGHT '^nav:search$' 4
 key KEYCODE_DPAD_CENTER 2 "open search"
-expect '^key:a$' "keyboard takes focus on open"
+expect '^key:q$' "keyboard takes focus on open"
 KB_ROW=0; KB_COL=0
 for ch in m a t r i x; do type_letter "$ch"; done
 sleep 6
 shot search-matrix
+key KEYCODE_BACK 1.5 "leave search"
+# "Search for … on VYRK" (Assistant / system search) opens Search with the words.
+adbs am start -a android.intent.action.SEARCH --es query bunny -n "$PKG/.MainActivity" >/dev/null
+sleep 3
+expect '^key:q$' "a search intent opens Search"
 key KEYCODE_BACK 1.5 "leave search"
 
 # ---------------------------------------------------------------- every settings group

@@ -50,6 +50,8 @@ class AppState {
     /** Non-focusable trailer preview card; any focus move or Back closes it. */
     var preview by mutableStateOf<MetaPreview?>(null)
     var searchQuery by mutableStateOf("")
+    /** Set by the remote's Search key: Search starts voice input when it opens. */
+    var startVoice by mutableStateOf(false)
     /** Backdrop of the title last featured on a catalogue page; Settings shows it blurred behind its glass panels. */
     var backdrop by mutableStateOf<String?>(null)
     /** True while the top navigation bar holds focus; pages never steal it then. */

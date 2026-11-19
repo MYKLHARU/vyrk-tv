@@ -418,5 +418,14 @@
     "row_added": "Riga aggiunta",
     "row_genres": "Generi",
     "row_genres_hint": "Spunta un genere per aggiungere la sua riga alla scheda; togli la spunta per rimuoverla.",
-    "row_whole_catalogue": "Catalogo completo"
+    "row_whole_catalogue": "Catalogo completo",
+    "skip_opening": "Salta opening",
+    "skip_ending": "Salta ending",
+    "skipped_opening": "Opening saltata",
+    "skipped_ending": "Ending saltata",
+    "new_episodes": "Nuovi episodi",
+    "airing_this_week": "In onda questa settimana",
+    "today": "Oggi",
+    "tomorrow": "Domani",
+    "episode_short": "Ep. %1$d"
 }

@@ -177,7 +177,7 @@ private fun Playing(m: PlayerModel, onExit: () -> Unit) {
         AnimatedVisibility(m.controlsVisible, enter = fadeIn(), exit = fadeOut()) { Controls(m, onExit) }
         val seg = m.skipSegment
         if (seg != null && !m.controlsVisible) Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.displayCutout).padding(24.dp), contentAlignment = Alignment.BottomEnd) {
-            PhoneButton(stringResource(if (seg.kind == SegmentKind.RECAP) R.string.skip_recap else R.string.skip_intro), { m.skipNow() },
+            PhoneButton(stringResource(m.skipLabel(seg)), { m.skipNow() },
                 icon = R.drawable.ic_next, style = PhoneButtonStyle.PRIMARY, tag = "player:skip")
         }
         m.notice?.let { n ->
@@ -236,7 +236,7 @@ private fun Controls(m: PlayerModel, onExit: () -> Unit) {
                 }
                 Text(facts.joinToString("  ·  "), style = Vyrk.type.labelL, color = c.textSecondary, modifier = Modifier.weight(1f).padding(start = 8.dp))
                 m.skipSegment?.let { seg ->
-                    PhoneButton(stringResource(if (seg.kind == SegmentKind.RECAP) R.string.skip_recap else R.string.skip_intro), { m.skipNow(); m.touch() },
+                    PhoneButton(stringResource(m.skipLabel(seg)), { m.skipNow(); m.touch() },
                         icon = R.drawable.ic_next, style = PhoneButtonStyle.PRIMARY, height = 40.dp, tag = "player:skip_controls")
                 }
                 if (m.nextVideo != null) PhoneButton(stringResource(R.string.next_episode), { m.playNext(auto = false) }, icon = R.drawable.ic_next, height = 40.dp, tag = "player:next")

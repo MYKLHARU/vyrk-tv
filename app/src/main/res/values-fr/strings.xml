@@ -17,6 +17,7 @@
     <string name="addon_refreshed">Module actualisé</string>
     <string name="addon_url">URL du module</string>
     <string name="addons_pending_sync">Enregistré sur ce téléviseur. Synchronisation du compte en attente.</string>
+    <string name="airing_this_week">Diffusé cette semaine</string>
     <string name="airs_on">Diffusion le %1$s</string>
     <string name="always_show_sources">Toujours afficher les sources</string>
     <string name="anime_all_genres">Tous les genres</string>
@@ -94,6 +95,7 @@
     <string name="download_install">Télécharger et installer</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Fin à %1$s</string>
+    <string name="episode_short">Ép. %1$d</string>
     <string name="episodes">Épisodes</string>
     <string name="excl_codec">ce téléviseur ne décode pas ce format vidéo</string>
     <string name="excl_decoder">résolution supérieure au décodeur du téléviseur</string>
@@ -163,6 +165,7 @@
     <string name="move_down">Descendre</string>
     <string name="move_up">Monter</string>
     <string name="needs_streaming_server">Nécessite le serveur de streaming local de Stremio, que VYRK n\'inclut pas. Il est ignoré.</string>
+    <string name="new_episodes">Nouveaux épisodes</string>
     <string name="next">Suivant</string>
     <string name="next_episode">Épisode suivant</string>
     <string name="no_account">Non connecté. Votre bibliothèque est enregistrée sur ce téléviseur.</string>
@@ -284,11 +287,15 @@
     <string name="size_medium">Moyenne</string>
     <string name="size_small">Petite</string>
     <string name="skip_automatic">Passer automatiquement</string>
+    <string name="skip_ending">Passer l\'ending</string>
     <string name="skip_intro">Passer le générique</string>
     <string name="skip_intro_hint">Utilise les horaires communautaires d\'IntroDB pour les génériques et résumés.</string>
+    <string name="skip_opening">Passer l\'opening</string>
     <string name="skip_recap">Passer le résumé</string>
     <string name="skip_show_button">Afficher un bouton</string>
+    <string name="skipped_ending">Ending passé</string>
     <string name="skipped_intro">Générique passé</string>
+    <string name="skipped_opening">Opening passé</string>
     <string name="skipped_recap">Résumé passé</string>
     <string name="sleep">Minuterie</string>
     <string name="sleep_60">Dans 60 minutes</string>
@@ -349,6 +356,8 @@
     <string name="time_left">Reste %1$s</string>
     <string name="time_m">%1$d min</string>
     <string name="timeline_hint">◀ ▶ Parcourir · ▲ Chapitres · OK Aller</string>
+    <string name="today">Aujourd\'hui</string>
+    <string name="tomorrow">Demain</string>
     <string name="top10_add">Ajouter les rangées Top 10</string>
     <string name="top10_card_body">Ajoute le module tiers gratuit Streaming Catalogs, qui liste les titres populaires de chaque service.</string>
     <string name="top10_card_title">Le Top 10 de vos services de streaming</string>

@@ -418,5 +418,14 @@
     "row_added": "Reihe hinzugefügt",
     "row_genres": "Genres",
     "row_genres_hint": "Hake ein Genre an, um seine Reihe zum Tab hinzuzufügen; entferne den Haken, um sie zu löschen.",
-    "row_whole_catalogue": "Ganzer Katalog"
+    "row_whole_catalogue": "Ganzer Katalog",
+    "skip_opening": "Opening überspringen",
+    "skip_ending": "Ending überspringen",
+    "skipped_opening": "Opening übersprungen",
+    "skipped_ending": "Ending übersprungen",
+    "new_episodes": "Neue Folgen",
+    "airing_this_week": "Läuft diese Woche",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "episode_short": "Ep. %1$d"
 }

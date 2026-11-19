@@ -106,6 +106,18 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
         com.vyrk.tv.data.Updater.events.value = null
     }
 
+    // Searches from Assistant or the Search key: open Search (once the app is ready) with the words.
+    val search by activity.incomingSearch.collectAsState()
+    LaunchedEffect(search, app.screen, session) {
+        val q = search ?: return@LaunchedEffect
+        if (app.screen != Screen.Main || session == null) return@LaunchedEffect
+        activity.incomingSearch.value = null
+        app.overlays.clear(); app.preview = null
+        app.searchQuery = q.query
+        app.startVoice = q.voice
+        app.section = Section.SEARCH
+    }
+
     // Incoming links: confirm before installing; wait until a profile is open.
     val link by activity.incomingLinks.collectAsState()
     LaunchedEffect(link, app.screen, session) {

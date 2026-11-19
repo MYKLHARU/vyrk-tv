@@ -22,4 +22,10 @@ const val no_subtitles = 18
 const val subtitles_now = 19
 const val audio_now = 20
 const val audio_track_n = 21
+const val skip_recap = 22
+const val skip_intro = 23
+const val skip_opening = 24
+const val skip_ending = 25
+const val skipped_opening = 26
+const val skipped_ending = 27
 } }

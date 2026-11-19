@@ -227,6 +227,11 @@ fun PhonePoster(
             AsyncImage(url, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                 onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
         }
+        state.label?.let { l ->
+            Box(Modifier.align(Alignment.BottomStart).padding(start = 5.dp, end = 5.dp, bottom = 11.dp).background(Color.Black.copy(alpha = 0.72f), RoundedCornerShape(5.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
+                Text(l, style = Vyrk.type.labelS, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
         if (state.isNew) Box(Modifier.align(Alignment.TopStart).padding(5.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
             Text(newLabel, style = Vyrk.type.labelS, color = c.onAccent)
         }

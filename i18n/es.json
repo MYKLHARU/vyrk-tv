@@ -418,5 +418,14 @@
     "row_added": "Fila añadida",
     "row_genres": "Géneros",
     "row_genres_hint": "Marca un género para añadir su fila a la pestaña; desmárcalo para quitarla.",
-    "row_whole_catalogue": "Catálogo completo"
+    "row_whole_catalogue": "Catálogo completo",
+    "skip_opening": "Saltar opening",
+    "skip_ending": "Saltar ending",
+    "skipped_opening": "Opening saltado",
+    "skipped_ending": "Ending saltado",
+    "new_episodes": "Episodios nuevos",
+    "airing_this_week": "En emisión esta semana",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "episode_short": "Ep. %1$d"
 }

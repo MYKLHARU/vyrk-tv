@@ -64,7 +64,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 
-/** Alphabetical keyboard: seven columns a–z, then 123, space, backspace and clear. */
+/** QWERTY keyboard: rows q–p, a–l and z–m (left-aligned, so Up and Down keep the column), then 123, space, backspace and clear. */
 @Composable
 fun AlphaKeyboard(
     onChar: (Char) -> Unit,
@@ -77,12 +77,12 @@ fun AlphaKeyboard(
     var digits by remember { mutableStateOf(digitsOnly) }
     LaunchedEffect(digitsOnly) { digits = digitsOnly }
     LaunchedEffect(requestInitialFocus) { if (requestInitialFocus) runCatching { firstKey.requestFocus() } }
-    val keys = if (digits) "1234567890".toList() else "abcdefghijklmnopqrstuvwxyz".toList()
+    val rows = if (digits) listOf("1234567890") else QWERTY
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        keys.chunked(7).forEachIndexed { r, row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        rows.forEachIndexed { r, row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 row.forEachIndexed { i, ch ->
-                    VyrkButton(ch.toString(), onClick = { onChar(ch) }, horizontalPadding = 0.dp, modifier = Modifier.width(40.dp).then(if (r == 0 && i == 0) Modifier.focusRequester(firstKey) else Modifier).traceFocus("key:$ch"))
+                    VyrkButton(ch.toString(), onClick = { onChar(ch) }, horizontalPadding = 0.dp, modifier = Modifier.width(30.dp).then(if (r == 0 && i == 0) Modifier.focusRequester(firstKey) else Modifier).traceFocus("key:$ch"))
                 }
             }
         }
@@ -94,6 +94,8 @@ fun AlphaKeyboard(
         }
     }
 }
+
+private val QWERTY = listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
 
 @Composable
 fun SearchScreen(session: ProfileSession) {
@@ -112,7 +114,14 @@ fun SearchScreen(session: ProfileSession) {
     }
     val hasVoice = remember { graph.context.packageManager.queryIntentActivities(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0).isNotEmpty() }
 
-    LaunchedEffect(Unit) { runCatching { firstKey.requestFocus() }; app.searchQuery = "" }
+    LaunchedEffect(Unit) { runCatching { firstKey.requestFocus() } }
+    // A query handed over while Search is open (Assistant, a cast name) replaces the current one.
+    LaunchedEffect(app.searchQuery) { if (app.searchQuery.isNotBlank()) query = app.searchQuery; app.searchQuery = "" }
+    LaunchedEffect(app.startVoice) {
+        if (!app.startVoice) return@LaunchedEffect
+        app.startVoice = false
+        if (hasVoice) runCatching { voice.launch(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)) }
+    }
     // Debounced, cancellable, bounded (AddonClient limits concurrency to 8).
     LaunchedEffect(query) {
         val q = query.trim()
@@ -154,7 +163,7 @@ fun SearchScreen(session: ProfileSession) {
                 }
             },
     ) {
-        Column(Modifier.width(330.dp)) {
+        Column(Modifier.width(340.dp)) {
             Box(Modifier.fillMaxWidth().background(c.raised, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 10.dp)) {
                 Text(query.ifEmpty { str(R.string.search_hint) }, style = Vyrk.type.titleL, color = if (query.isEmpty()) c.textMuted else c.text, maxLines = 1)
             }

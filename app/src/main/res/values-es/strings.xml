@@ -17,6 +17,7 @@
     <string name="addon_refreshed">Complemento actualizado</string>
     <string name="addon_url">URL del complemento</string>
     <string name="addons_pending_sync">Guardado en este televisor. Sincronización con la cuenta pendiente.</string>
+    <string name="airing_this_week">En emisión esta semana</string>
     <string name="airs_on">Se emite el %1$s</string>
     <string name="always_show_sources">Mostrar siempre las fuentes</string>
     <string name="anime_all_genres">Todos los géneros</string>
@@ -94,6 +95,7 @@
     <string name="download_install">Descargar e instalar</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Termina a las %1$s</string>
+    <string name="episode_short">Ep. %1$d</string>
     <string name="episodes">Episodios</string>
     <string name="excl_codec">este televisor no puede decodificar el formato de vídeo</string>
     <string name="excl_decoder">más resolución de la que admite el decodificador</string>
@@ -163,6 +165,7 @@
     <string name="move_down">Bajar</string>
     <string name="move_up">Subir</string>
     <string name="needs_streaming_server">Necesita el servidor de streaming local de Stremio, que VYRK no incluye. Se omite.</string>
+    <string name="new_episodes">Episodios nuevos</string>
     <string name="next">Siguiente</string>
     <string name="next_episode">Siguiente episodio</string>
     <string name="no_account">Sin sesión. Tu biblioteca se guarda en este televisor.</string>
@@ -284,11 +287,15 @@
     <string name="size_medium">Mediano</string>
     <string name="size_small">Pequeño</string>
     <string name="skip_automatic">Saltar automáticamente</string>
+    <string name="skip_ending">Saltar ending</string>
     <string name="skip_intro">Saltar intro</string>
     <string name="skip_intro_hint">Usa tiempos de la comunidad de IntroDB para intros y resúmenes.</string>
+    <string name="skip_opening">Saltar opening</string>
     <string name="skip_recap">Saltar resumen</string>
     <string name="skip_show_button">Mostrar botón</string>
+    <string name="skipped_ending">Ending saltado</string>
     <string name="skipped_intro">Intro saltada</string>
+    <string name="skipped_opening">Opening saltado</string>
     <string name="skipped_recap">Resumen saltado</string>
     <string name="sleep">Temporizador</string>
     <string name="sleep_60">En 60 minutos</string>
@@ -349,6 +356,8 @@
     <string name="time_left">Quedan %1$s</string>
     <string name="time_m">%1$d min</string>
     <string name="timeline_hint">◀ ▶ Avanzar · ▲ Capítulos · OK Ir</string>
+    <string name="today">Hoy</string>
+    <string name="tomorrow">Mañana</string>
     <string name="top10_add">Añadir filas Top 10</string>
     <string name="top10_card_body">Añade el complemento gratuito de terceros Streaming Catalogs, que muestra lo más popular de cada servicio.</string>
     <string name="top10_card_title">Top 10 de tus servicios de streaming</string>

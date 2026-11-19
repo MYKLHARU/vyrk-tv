@@ -319,7 +319,7 @@ fun PlayerScreen(m: PlayerModel, onExit: () -> Unit) {
             Phase.PLAYING -> {
                 if (m.controlsVisible && m.panel == Panel.NONE) Controls(m)
                 val seg = m.skipSegment
-                if (seg != null && !m.controlsVisible && m.panel == Panel.NONE) SkipPill(seg.kind == com.vyrk.core.playback.SegmentKind.RECAP)
+                if (seg != null && !m.controlsVisible && m.panel == Panel.NONE) SkipPill(m.skipLabel(seg))
                 m.notice?.let { Notice(it) }
                 if (m.panel == Panel.AUDIO_SUBS) AudioSubsPanel(m)
                 if (m.panel == Panel.SOURCES) SourcesPanel(m)
@@ -568,7 +568,7 @@ private fun Controls(m: PlayerModel) {
                     if (m.nextVideo != null) RoundButton(R.drawable.ic_next, stringResource(R.string.next_episode), { m.playNext(auto = false) }, "player:next")
                     m.skipSegment?.let { seg ->
                         Box(Modifier.padding(top = 4.dp)) {
-                            VyrkButton(stringResource(if (seg.kind == com.vyrk.core.playback.SegmentKind.RECAP) R.string.skip_recap else R.string.skip_intro), onClick = { m.skipNow() }, icon = R.drawable.ic_next, style = ButtonStyle.PRIMARY, modifier = Modifier.traceFocus("player:skip"))
+                            VyrkButton(stringResource(m.skipLabel(seg)), onClick = { m.skipNow() }, icon = R.drawable.ic_next, style = ButtonStyle.PRIMARY, modifier = Modifier.traceFocus("player:skip"))
                         }
                     }
                 }
@@ -907,7 +907,7 @@ fun Spinner(size: androidx.compose.ui.unit.Dp, color: Color) {
     }
 }
 @Composable
-private fun SkipPill(recap: Boolean) {
+private fun SkipPill(label: Int) {
     val c = Vyrk.colors
     Box(Modifier.fillMaxSize().padding(end = 48.dp, bottom = 56.dp), contentAlignment = Alignment.BottomEnd) {
         Row(
@@ -915,7 +915,7 @@ private fun SkipPill(recap: Boolean) {
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             com.vyrk.tv.ui.components.Icon(R.drawable.ic_next, null, Modifier.size(16.dp), tint = c.onAccent)
-            Text(stringResource(if (recap) R.string.skip_recap else R.string.skip_intro), style = Vyrk.type.titleM, color = c.onAccent)
+            Text(stringResource(label), style = Vyrk.type.titleM, color = c.onAccent)
             Text(stringResource(R.string.press_ok), style = Vyrk.type.labelM, color = c.onAccent.copy(alpha = 0.7f))
         }
     }

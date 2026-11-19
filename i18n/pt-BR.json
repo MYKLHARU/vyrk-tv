@@ -418,5 +418,14 @@
     "row_added": "Fileira adicionada",
     "row_genres": "Gêneros",
     "row_genres_hint": "Marque um gênero para adicionar a fileira à aba; desmarque para removê-la.",
-    "row_whole_catalogue": "Catálogo inteiro"
+    "row_whole_catalogue": "Catálogo inteiro",
+    "skip_opening": "Pular abertura",
+    "skip_ending": "Pular encerramento",
+    "skipped_opening": "Abertura pulada",
+    "skipped_ending": "Encerramento pulado",
+    "new_episodes": "Episódios novos",
+    "airing_this_week": "No ar esta semana",
+    "today": "Hoje",
+    "tomorrow": "Amanhã",
+    "episode_short": "Ep. %1$d"
 }

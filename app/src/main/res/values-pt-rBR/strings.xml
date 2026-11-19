@@ -17,6 +17,7 @@
     <string name="addon_refreshed">Complemento atualizado</string>
     <string name="addon_url">URL do complemento</string>
     <string name="addons_pending_sync">Salvo nesta TV. Sincronização da conta pendente.</string>
+    <string name="airing_this_week">No ar esta semana</string>
     <string name="airs_on">Vai ao ar em %1$s</string>
     <string name="always_show_sources">Sempre mostrar fontes</string>
     <string name="anime_all_genres">Todos os gêneros</string>
@@ -94,6 +95,7 @@
     <string name="download_install">Baixar e instalar</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Termina às %1$s</string>
+    <string name="episode_short">Ep. %1$d</string>
     <string name="episodes">Episódios</string>
     <string name="excl_codec">esta TV não decodifica o formato de vídeo</string>
     <string name="excl_decoder">resolução acima do decodificador desta TV</string>
@@ -163,6 +165,7 @@
     <string name="move_down">Mover para baixo</string>
     <string name="move_up">Mover para cima</string>
     <string name="needs_streaming_server">Precisa do servidor de streaming local do Stremio, que o VYRK não inclui. Ele é ignorado.</string>
+    <string name="new_episodes">Episódios novos</string>
     <string name="next">Próximo</string>
     <string name="next_episode">Próximo episódio</string>
     <string name="no_account">Sem login. Sua biblioteca fica salva nesta TV.</string>
@@ -284,11 +287,15 @@
     <string name="size_medium">Médio</string>
     <string name="size_small">Pequeno</string>
     <string name="skip_automatic">Pular automaticamente</string>
+    <string name="skip_ending">Pular encerramento</string>
     <string name="skip_intro">Pular abertura</string>
     <string name="skip_intro_hint">Usa tempos da comunidade IntroDB para aberturas e resumos.</string>
+    <string name="skip_opening">Pular abertura</string>
     <string name="skip_recap">Pular resumo</string>
     <string name="skip_show_button">Mostrar botão</string>
+    <string name="skipped_ending">Encerramento pulado</string>
     <string name="skipped_intro">Abertura pulada</string>
+    <string name="skipped_opening">Abertura pulada</string>
     <string name="skipped_recap">Resumo pulado</string>
     <string name="sleep">Timer</string>
     <string name="sleep_60">Em 60 minutos</string>
@@ -349,6 +356,8 @@
     <string name="time_left">Faltam %1$s</string>
     <string name="time_m">%1$d min</string>
     <string name="timeline_hint">◀ ▶ Navegar · ▲ Capítulos · OK Ir</string>
+    <string name="today">Hoje</string>
+    <string name="tomorrow">Amanhã</string>
     <string name="top10_add">Adicionar linhas Top 10</string>
     <string name="top10_card_body">Adiciona o complemento gratuito de terceiros Streaming Catalogs, que mostra o que está em alta em cada serviço.</string>
     <string name="top10_card_title">Top 10 dos seus serviços de streaming</string>
