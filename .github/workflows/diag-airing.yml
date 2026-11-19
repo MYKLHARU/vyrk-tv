@@ -1,0 +1,28 @@
+name: diag-airing
+on:
+  push:
+    branches: [diag/airing]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kitsu mapping (Cowboy Bebop kitsu:1 -> MAL 1)
+        run: curl -sS -H 'Accept: application/vnd.api+json' 'https://kitsu.app/api/edge/anime/1/mappings?page%5Blimit%5D=20' | head -c 1500; echo
+      - name: AniList - shows that aired this week
+        run: |
+          NOW=$(date +%s); FROM=$((NOW-7*86400))
+          Q='{"query":"query($from:Int,$to:Int){Page(perPage:5){airingSchedules(airingAt_greater:$from,airingAt_lesser:$to,sort:TIME_DESC){episode airingAt media{id idMal title{romaji}}}}}","variables":{"from":'$FROM',"to":'$NOW'}}'
+          curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json' -d "$Q" https://graphql.anilist.co | tee recent.json | head -c 2000; echo
+          echo "MAL=$(python3 -c "import json;print(','.join(str(s['media']['idMal']) for s in json.load(open('recent.json'))['data']['Page']['airingSchedules'] if s['media']['idMal']))")" >> $GITHUB_ENV
+      - name: VYRK's media query
+        run: |
+          Q='{"query":"query($ids:[Int]){Page(perPage:50){media(idMal_in:$ids,type:ANIME){id idMal status nextAiringEpisode{episode airingAt}}}}","variables":{"ids":['$MAL']}}'
+          curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json' -d "$Q" https://graphql.anilist.co | tee media.json | head -c 2000; echo
+          echo "AL=$(python3 -c "import json;print(','.join(str(m['id']) for m in json.load(open('media.json'))['data']['Page']['media']))")" >> $GITHUB_ENV
+      - name: VYRK's recent query
+        run: |
+          NOW=$(date +%s); FROM=$((NOW-7*86400))
+          Q='{"query":"query($ids:[Int],$from:Int,$to:Int){Page(perPage:50){airingSchedules(mediaId_in:$ids,airingAt_greater:$from,airingAt_lesser:$to,sort:TIME_DESC){episode airingAt mediaId}}}","variables":{"ids":['$AL'],"from":'$FROM',"to":'$NOW'}}'
+          curl -sS -H 'Content-Type: application/json' -H 'Accept: application/json' -d "$Q" https://graphql.anilist.co | head -c 2000; echo
+      - name: AniSkip (Frieren MAL 52991 ep 1)
+        run: curl -sS 'https://api.aniskip.com/v2/skip-times/52991/1?types%5B%5D=op&types%5B%5D=ed&types%5B%5D=mixed-op&types%5B%5D=mixed-ed&types%5B%5D=recap&episodeLength=0' | head -c 1500; echo
