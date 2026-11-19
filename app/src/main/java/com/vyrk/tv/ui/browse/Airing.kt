@@ -70,7 +70,8 @@ fun rememberAiringRows(session: ProfileSession, enabled: Boolean): List<RowState
     soonRow.title = str(R.string.airing_this_week)
     val today = str(R.string.today)
     val tomorrow = str(R.string.tomorrow)
-    val epFmt = str(R.string.episode_short)
+    val res = androidx.compose.ui.platform.LocalContext.current
+    fun ep(n: Int) = res.getString(R.string.episode_short, n)
     // What matters: which shows, and how far you've got in each.
     val followedKey = remember(library) {
         Airing.followed(library.values, System.currentTimeMillis()).map { it.id + "@" + it.state.videoId }
@@ -87,11 +88,11 @@ fun rememberAiringRows(session: ProfileSession, enabled: Boolean): List<RowState
                 .sortedBy { statuses[it.id]?.next?.atSec ?: 0 }
             fun preview(i: com.vyrk.core.library.LibraryItem) = MetaPreview(id = i.id, type = i.type, name = i.name, poster = i.poster)
             newRow.items = fresh.map(::preview)
-            newRow.labels = fresh.associate { it.id to epFmt.format(statuses.getValue(it.id).latest!!.number) }
+            newRow.labels = fresh.associate { it.id to ep(statuses.getValue(it.id).latest!!.number) }
             soonRow.items = soon.map(::preview)
             soonRow.labels = soon.associate { item ->
                 val n = statuses.getValue(item.id).next!!
-                item.id to "${whenLabel(n.atSec, today, tomorrow)} · ${epFmt.format(n.number)}"
+                item.id to "${whenLabel(n.atSec, today, tomorrow)} · ${ep(n.number)}"
             }
             newRow.loadedOnce = true; soonRow.loadedOnce = true
             // Badge the new episodes like add-on notifications do (titles page, posters elsewhere).
