@@ -174,4 +174,15 @@ class TmdbTest {
         assertNull(TmdbClient(f, "").artwork("tt0944947", "series"))
         assertEquals(3, f.urls.size)
     }
+
+    @Test fun trendingKeepsNewTitlesWithFewVotes() {
+        val o = kotlinx.serialization.json.Json.parseToJsonElement("""{"results":[
+            {"id":1,"media_type":"movie","title":"New film","poster_path":"/a.jpg","vote_count":3,"genre_ids":[28],"original_language":"en"},
+            {"id":2,"media_type":"movie","title":"No poster","vote_count":900},
+            {"id":3,"media_type":"movie","title":"Anime film","poster_path":"/b.jpg","vote_count":50,"genre_ids":[16],"original_language":"ja"}]}""") as kotlinx.serialization.json.JsonObject
+        val t = TmdbClient.parseTitles(o, "movie", minVotes = 0)
+        kotlin.test.assertEquals(listOf(1L, 3L), t.map { it.tmdbId })
+        kotlin.test.assertEquals(listOf(false, true), t.map { it.looksAnime })
+        kotlin.test.assertEquals(listOf(3L), TmdbClient.parseRecommendations(o, "movie").map { it.tmdbId })
+    }
 }

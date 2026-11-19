@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.50
+
+- Home has two Top 10 rows: Top 10 Movies and Top 10 TV Shows, this week's most popular on TMDB (no anime), right after Continue Watching. Each shows when an installed add-on can open IMDb titles (Cinemeta does). Streaming-service catalogues (Netflix, Disney+ …) are ordinary rows now, and the card suggesting a Top 10 add-on is gone.
+
 ## v0.1.49
 
 - Removed the "New episodes" and "Airing this week" rows from the Anime tab.

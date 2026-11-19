@@ -407,5 +407,7 @@
     "skip_opening": "Salta opening",
     "skip_ending": "Salta ending",
     "skipped_opening": "Opening saltata",
-    "skipped_ending": "Ending saltata"
+    "skipped_ending": "Ending saltata",
+    "top10_movies": "Top 10 film",
+    "top10_shows": "Top 10 serie TV"
 }

@@ -344,6 +344,8 @@
     <string name="top10_add">Add Top 10 rows</string>
     <string name="top10_card_body">Adds the free third-party Streaming Catalogs add-on, which lists what\'s popular on each service.</string>
     <string name="top10_card_title">Top 10 on your streaming services</string>
+    <string name="top10_movies">Top 10 Movies</string>
+    <string name="top10_shows">Top 10 TV Shows</string>
     <string name="top10_suggestion">Top 10 suggestion</string>
     <string name="top10_suggestion_desc">The card on Home that offers Top 10 rows</string>
     <string name="trailer">Trailer</string>

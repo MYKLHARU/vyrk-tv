@@ -407,5 +407,7 @@
     "skip_opening": "Pular abertura",
     "skip_ending": "Pular encerramento",
     "skipped_opening": "Abertura pulada",
-    "skipped_ending": "Encerramento pulado"
+    "skipped_ending": "Encerramento pulado",
+    "top10_movies": "Top 10 filmes",
+    "top10_shows": "Top 10 séries"
 }

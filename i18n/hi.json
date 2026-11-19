@@ -407,5 +407,7 @@
     "skip_opening": "ओपनिंग छोड़ें",
     "skip_ending": "एंडिंग छोड़ें",
     "skipped_opening": "ओपनिंग छोड़ी गई",
-    "skipped_ending": "एंडिंग छोड़ी गई"
+    "skipped_ending": "एंडिंग छोड़ी गई",
+    "top10_movies": "टॉप 10 फ़िल्में",
+    "top10_shows": "टॉप 10 टीवी शो"
 }

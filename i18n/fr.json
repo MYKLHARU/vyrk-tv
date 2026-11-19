@@ -407,5 +407,7 @@
     "skip_opening": "Passer l'opening",
     "skip_ending": "Passer l'ending",
     "skipped_opening": "Opening passé",
-    "skipped_ending": "Ending passé"
+    "skipped_ending": "Ending passé",
+    "top10_movies": "Top 10 films",
+    "top10_shows": "Top 10 séries"
 }

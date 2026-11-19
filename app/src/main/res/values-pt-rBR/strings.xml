@@ -344,6 +344,8 @@
     <string name="top10_add">Adicionar linhas Top 10</string>
     <string name="top10_card_body">Adiciona o complemento gratuito de terceiros Streaming Catalogs, que mostra o que está em alta em cada serviço.</string>
     <string name="top10_card_title">Top 10 dos seus serviços de streaming</string>
+    <string name="top10_movies">Top 10 filmes</string>
+    <string name="top10_shows">Top 10 séries</string>
     <string name="top10_suggestion">Sugestão do Top 10</string>
     <string name="top10_suggestion_desc">O cartão no Início que oferece as fileiras do Top 10</string>
     <string name="trailer">Trailer</string>
