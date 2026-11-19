@@ -284,11 +284,15 @@
     <string name="size_medium">Médio</string>
     <string name="size_small">Pequeno</string>
     <string name="skip_automatic">Pular automaticamente</string>
+    <string name="skip_ending">Pular encerramento</string>
     <string name="skip_intro">Pular abertura</string>
     <string name="skip_intro_hint">Usa tempos da comunidade IntroDB para aberturas e resumos.</string>
+    <string name="skip_opening">Pular abertura</string>
     <string name="skip_recap">Pular resumo</string>
     <string name="skip_show_button">Mostrar botão</string>
+    <string name="skipped_ending">Encerramento pulado</string>
     <string name="skipped_intro">Abertura pulada</string>
+    <string name="skipped_opening">Abertura pulada</string>
     <string name="skipped_recap">Resumo pulado</string>
     <string name="sleep">Timer</string>
     <string name="sleep_60">Em 60 minutos</string>

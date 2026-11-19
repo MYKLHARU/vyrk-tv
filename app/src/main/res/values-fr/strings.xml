@@ -284,11 +284,15 @@
     <string name="size_medium">Moyenne</string>
     <string name="size_small">Petite</string>
     <string name="skip_automatic">Passer automatiquement</string>
+    <string name="skip_ending">Passer l\'ending</string>
     <string name="skip_intro">Passer le générique</string>
     <string name="skip_intro_hint">Utilise les horaires communautaires d\'IntroDB pour les génériques et résumés.</string>
+    <string name="skip_opening">Passer l\'opening</string>
     <string name="skip_recap">Passer le résumé</string>
     <string name="skip_show_button">Afficher un bouton</string>
+    <string name="skipped_ending">Ending passé</string>
     <string name="skipped_intro">Générique passé</string>
+    <string name="skipped_opening">Opening passé</string>
     <string name="skipped_recap">Résumé passé</string>
     <string name="sleep">Minuterie</string>
     <string name="sleep_60">Dans 60 minutes</string>

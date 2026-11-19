@@ -284,11 +284,15 @@
     <string name="size_medium">मध्यम</string>
     <string name="size_small">छोटा</string>
     <string name="skip_automatic">अपने-आप छोड़ें</string>
+    <string name="skip_ending">एंडिंग छोड़ें</string>
     <string name="skip_intro">इंट्रो छोड़ें</string>
     <string name="skip_intro_hint">इंट्रो और रीकैप के लिए IntroDB समुदाय के समय इस्तेमाल करता है।</string>
+    <string name="skip_opening">ओपनिंग छोड़ें</string>
     <string name="skip_recap">रीकैप छोड़ें</string>
     <string name="skip_show_button">बटन दिखाएँ</string>
+    <string name="skipped_ending">एंडिंग छोड़ी गई</string>
     <string name="skipped_intro">इंट्रो छोड़ा गया</string>
+    <string name="skipped_opening">ओपनिंग छोड़ी गई</string>
     <string name="skipped_recap">रीकैप छोड़ा गया</string>
     <string name="sleep">स्लीप टाइमर</string>
     <string name="sleep_60">60 मिनट में</string>

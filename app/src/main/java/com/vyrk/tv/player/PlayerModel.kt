@@ -213,7 +213,7 @@ class PlayerModel(
         stallPrompt = false; stallPromptDue = false
         panel = Panel.NONE
         resetTimeline()
-        scope.launch { loadSegments(req.meta.type, req.meta.id, vid, generation) }
+        scope.launch { loadSegments(req.meta.type, req.meta.id, vid, generation, m?.malId) }
         item = session.itemFor(req.meta)
         watchedAddedDuringPlayback = false
         previouslyWatched = m?.videos?.let { item?.watchedBitField(it)?.getVideo(vid) } == true
@@ -328,10 +328,11 @@ class PlayerModel(
         skipOffer = SkipOffer(emptyList()); skipSegment = null; scrubber.cancel(); failedAudio.clear()
     }
 
-    /** IntroDB community timings for this episode or film (IMDb IDs only). */
-    private suspend fun loadSegments(type: String, metaId: String, videoId: String, generation: Int) {
+    /** IntroDB community timings for this episode or film (IMDb IDs); AniSkip openings and endings for anime (Kitsu and MAL IDs). */
+    private suspend fun loadSegments(type: String, metaId: String, videoId: String, generation: Int, malHint: String? = null) {
         if (settings.skipIntro == SkipIntroMode.OFF && !settings.chapterMarkers) return
-        val url = IntroDb.url(type, metaId, videoId) ?: return
+        val url = IntroDb.url(type, metaId, videoId)
+        if (url == null) { loadAniSkip(metaId, videoId, generation, malHint); return }
         val res = runCatching { graph.transport.get(url, timeoutMs = 8_000) }.getOrNull() ?: return
         if (!res.isSuccess) return
         val found = IntroDb.parse(res.body)
@@ -341,6 +342,30 @@ class PlayerModel(
         rebuildMarkers()
         Diagnostics.log("player", "introdb: ${found.size} segment(s)")
         vyrkEvent("introdb_segments ${found.size}")
+    }
+
+    private suspend fun loadAniSkip(metaId: String, videoId: String, generation: Int, malHint: String?) {
+        val ep = com.vyrk.core.anime.AniSkip.episode(metaId, videoId, malHint) ?: return
+        val mal = graph.animeIds.mal(ep) ?: return
+        val res = runCatching { graph.transport.get(com.vyrk.core.anime.AniSkip.url(mal, ep.episode), timeoutMs = 8_000) }.getOrNull() ?: return
+        if (!res.isSuccess) return
+        // Timings are for a particular cut: wait for the file's length to check they fit.
+        var waited = 0
+        while (duration <= 0 && waited < 120 && generation == loadGeneration) { kotlinx.coroutines.delay(500); waited++ }
+        val found = com.vyrk.core.anime.AniSkip.parse(res.body, duration)
+        if (generation != loadGeneration) return
+        segments = found
+        skipOffer = SkipOffer(found)
+        rebuildMarkers()
+        Diagnostics.log("player", "aniskip: ${found.size} segment(s) for mal $mal ep ${ep.episode}")
+        vyrkEvent("aniskip_segments ${found.size}")
+    }
+
+    /** The label for a skip button: opening and ending for anime, otherwise intro and recap. */
+    fun skipLabel(seg: Segment): Int = when (seg.kind) {
+        SegmentKind.RECAP -> com.vyrk.tv.R.string.skip_recap
+        SegmentKind.OUTRO -> com.vyrk.tv.R.string.skip_ending
+        else -> if (seg.anime) com.vyrk.tv.R.string.skip_opening else com.vyrk.tv.R.string.skip_intro
     }
 
     /** Matroska chapters from the playing file, read with HTTP range requests. */
@@ -844,12 +869,12 @@ class PlayerModel(
             if (markers.isNotEmpty() && duration > 0 && n % 20 == 0) rebuildMarkers()
             // Skip intro / recap from IntroDB timings.
             if (firstFrame && !isLive && settings.skipIntro != SkipIntroMode.OFF) {
-                val seg = skipOffer.at(position)
+                val seg = skipOffer.at(position, duration)
                 when {
                     seg == null -> skipSegment = null
                     settings.skipIntro == SkipIntroMode.AUTOMATIC -> {
                         skipSegment = seg; skipNow()
-                        showNotice(s(if (seg.kind == SegmentKind.RECAP) com.vyrk.tv.R.string.skipped_recap else com.vyrk.tv.R.string.skipped_intro))
+                        showNotice(s(when { seg.kind == SegmentKind.RECAP -> com.vyrk.tv.R.string.skipped_recap; seg.kind == SegmentKind.OUTRO -> com.vyrk.tv.R.string.skipped_ending; seg.anime -> com.vyrk.tv.R.string.skipped_opening; else -> com.vyrk.tv.R.string.skipped_intro }))
                     }
                     seg != skipSegment -> { skipSegment = seg; skipShownAt = clock; vyrkEvent("skip_offered ${seg.kind}") }
                     clock - skipShownAt > 10_000 -> { skipOffer.dismiss(seg); skipSegment = null } // shown 10 s and left alone
@@ -863,7 +888,7 @@ class PlayerModel(
                 incompleteReason == null && (!isEpisode || !episodeGuard.isShort(duration)) &&
                 settings.autoplayNext && !upNextDismissed && sleep != SleepMode.END_OF_EPISODE) {
                 // Credits start from IntroDB when known, otherwise the last 30 s or past 90%.
-                val credits = skipOffer.creditsStartMs
+                val credits = skipOffer.creditsStart(duration)
                 val near = episodeGuard.upNextDue(position, duration, credits)
                 if (!near) { upNext = false; upNextCountdown = 10 }
                 if (near && !upNext && playing) { upNext = true; upNextCountdown = 10; vyrkEvent("upnext_offered ${video?.id}") }

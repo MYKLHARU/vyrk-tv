@@ -112,7 +112,14 @@ fun PhoneSearch(session: ProfileSession) {
     LaunchedEffect(Unit) {
         val preset = app.searchQuery
         app.searchQuery = ""
-        if (preset.isBlank()) { delay(150); runCatching { focus.requestFocus() }; keyboard?.show() }
+        if (preset.isBlank() && !app.startVoice) { delay(150); runCatching { focus.requestFocus() }; keyboard?.show() }
+    }
+    // A query handed over while Search is open (Assistant) replaces the current one.
+    LaunchedEffect(app.searchQuery) { if (app.searchQuery.isNotBlank()) { query = app.searchQuery; app.searchQuery = "" } }
+    LaunchedEffect(app.startVoice) {
+        if (!app.startVoice) return@LaunchedEffect
+        app.startVoice = false
+        if (hasVoice) runCatching { voice.launch(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)) }
     }
     LaunchedEffect(query) {
         val q = query.trim()

@@ -10,7 +10,8 @@ import kotlinx.serialization.json.longOrNull
 
 enum class SegmentKind { INTRO, RECAP, OUTRO, POST_CREDITS }
 
-data class Segment(val kind: SegmentKind, val startMs: Long, val endMs: Long, val confidence: Double = 1.0) {
+/** [anime]: an AniSkip opening or ending, labelled "Skip opening" / "Skip ending". */
+data class Segment(val kind: SegmentKind, val startMs: Long, val endMs: Long, val confidence: Double = 1.0, val anime: Boolean = false) {
     val lengthMs: Long get() = endMs - startMs
 }
 
@@ -68,11 +69,16 @@ object IntroDb {
 class SkipOffer(private val segments: List<Segment>) {
     private val done = mutableSetOf<Segment>()
 
-    /** The segment to offer at [positionMs], or null. */
-    fun at(positionMs: Long): Segment? = segments.firstOrNull { s ->
-        (s.kind == SegmentKind.INTRO || s.kind == SegmentKind.RECAP) && s !in done &&
+    /**
+     * The segment to offer at [positionMs], or null. An ending is offered only when something
+     * follows it (an anime's after-credits scene or preview): otherwise Up Next covers it.
+     */
+    fun at(positionMs: Long, durationMs: Long = 0): Segment? = segments.firstOrNull { s ->
+        (s.kind == SegmentKind.INTRO || s.kind == SegmentKind.RECAP || (s.kind == SegmentKind.OUTRO && hasAfter(s, durationMs))) && s !in done &&
             positionMs >= s.startMs && positionMs < s.endMs - 2_000 && s.lengthMs >= 5_000
     }
+
+    private fun hasAfter(s: Segment, durationMs: Long) = durationMs > 0 && s.endMs < durationMs - AFTER_CREDITS_MS
 
     fun dismiss(s: Segment) { done += s }
 
@@ -81,4 +87,10 @@ class SkipOffer(private val segments: List<Segment>) {
 
     /** Credits start, when known: Up Next appears there rather than at a guess. */
     val creditsStartMs: Long? get() = segments.firstOrNull { it.kind == SegmentKind.OUTRO }?.startMs
+
+    /** Where Up Next should appear: the credits, unless a scene follows them (then the usual end guess). */
+    fun creditsStart(durationMs: Long): Long? =
+        segments.firstOrNull { it.kind == SegmentKind.OUTRO }?.takeIf { !hasAfter(it, durationMs) }?.startMs
+
+    private companion object { const val AFTER_CREDITS_MS = 10_000L }
 }

@@ -19,6 +19,11 @@ class MainActivity : ComponentActivity() {
 
     data class IncomingLink(val uri: String, val external: Boolean, val nonce: Long = System.nanoTime())
 
+    /** A search from Google Assistant, the system's search or the remote's Search key; [voice] starts listening. */
+    val incomingSearch = MutableStateFlow<SearchRequest?>(null)
+
+    data class SearchRequest(val query: String, val voice: Boolean = false, val nonce: Long = System.nanoTime())
+
     override fun attachBaseContext(base: Context) = super.attachBaseContext(AppLocale.wrap(base))
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +66,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
+        // "Search for Frieren on VYRK" (Assistant) and the system's search hand over a query.
+        if (intent?.action == Intent.ACTION_SEARCH || intent?.action == "com.google.android.gms.actions.SEARCH_ACTION") {
+            val q = intent.getStringExtra(android.app.SearchManager.QUERY).orEmpty().trim()
+            incomingSearch.value = SearchRequest(q, voice = false)
+            return
+        }
         val data = intent?.data?.toString() ?: return
         if (intent.action != Intent.ACTION_VIEW) return
         // Links from other apps (and adb) are external: they always show a confirmation first.
@@ -68,6 +79,11 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // The remote's Search key opens Search and starts listening.
+        if (event.keyCode == KeyEvent.KEYCODE_SEARCH) {
+            if (event.action == KeyEvent.ACTION_UP) incomingSearch.value = SearchRequest("", voice = true)
+            return true
+        }
         if (KeyBus.onKey(event)) return true
         return super.dispatchKeyEvent(event)
     }

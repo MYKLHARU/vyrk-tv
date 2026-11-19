@@ -8,6 +8,7 @@ class AppGraph(val transport: HttpTransport) {
     val tmdb = com.vyrk.core.tmdb.TmdbClient(transport, "")
     val addonClient = AddonClient(transport)
     val metaCache = MetaCache(addonClient)
+    val animeIds = com.vyrk.core.anime.AnimeIds(transport)
     val deviceSettings = MutableStateFlow(DeviceSettings())
     fun updateDevice(f: (DeviceSettings) -> DeviceSettings) { deviceSettings.value = f(deviceSettings.value) }
     val device = AuditDevice()

@@ -284,11 +284,15 @@
     <string name="size_medium">Medium</string>
     <string name="size_small">Small</string>
     <string name="skip_automatic">Skip automatically</string>
+    <string name="skip_ending">Skip ending</string>
     <string name="skip_intro">Skip intro</string>
     <string name="skip_intro_hint">Uses community timings from IntroDB for intros and recaps.</string>
+    <string name="skip_opening">Skip opening</string>
     <string name="skip_recap">Skip recap</string>
     <string name="skip_show_button">Show button</string>
+    <string name="skipped_ending">Skipped ending</string>
     <string name="skipped_intro">Skipped intro</string>
+    <string name="skipped_opening">Skipped opening</string>
     <string name="skipped_recap">Skipped recap</string>
     <string name="sleep">Sleep</string>
     <string name="sleep_60">In 60 minutes</string>

@@ -284,11 +284,15 @@
     <string name="size_medium">Mittel</string>
     <string name="size_small">Klein</string>
     <string name="skip_automatic">Automatisch überspringen</string>
+    <string name="skip_ending">Ending überspringen</string>
     <string name="skip_intro">Intro überspringen</string>
     <string name="skip_intro_hint">Nutzt Zeitangaben der IntroDB-Community für Intros und Rückblicke.</string>
+    <string name="skip_opening">Opening überspringen</string>
     <string name="skip_recap">Rückblick überspringen</string>
     <string name="skip_show_button">Knopf anzeigen</string>
+    <string name="skipped_ending">Ending übersprungen</string>
     <string name="skipped_intro">Intro übersprungen</string>
+    <string name="skipped_opening">Opening übersprungen</string>
     <string name="skipped_recap">Rückblick übersprungen</string>
     <string name="sleep">Sleep-Timer</string>
     <string name="sleep_60">In 60 Minuten</string>

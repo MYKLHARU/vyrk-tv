@@ -284,11 +284,15 @@
     <string name="size_medium">Media</string>
     <string name="size_small">Piccola</string>
     <string name="skip_automatic">Salta automaticamente</string>
+    <string name="skip_ending">Salta ending</string>
     <string name="skip_intro">Salta sigla</string>
     <string name="skip_intro_hint">Usa i tempi della community IntroDB per sigle e riassunti.</string>
+    <string name="skip_opening">Salta opening</string>
     <string name="skip_recap">Salta riassunto</string>
     <string name="skip_show_button">Mostra pulsante</string>
+    <string name="skipped_ending">Ending saltata</string>
     <string name="skipped_intro">Sigla saltata</string>
+    <string name="skipped_opening">Opening saltata</string>
     <string name="skipped_recap">Riassunto saltato</string>
     <string name="sleep">Timer</string>
     <string name="sleep_60">Tra 60 minuti</string>

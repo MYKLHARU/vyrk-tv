@@ -284,11 +284,15 @@
     <string name="size_medium">Mediano</string>
     <string name="size_small">Pequeño</string>
     <string name="skip_automatic">Saltar automáticamente</string>
+    <string name="skip_ending">Saltar ending</string>
     <string name="skip_intro">Saltar intro</string>
     <string name="skip_intro_hint">Usa tiempos de la comunidad de IntroDB para intros y resúmenes.</string>
+    <string name="skip_opening">Saltar opening</string>
     <string name="skip_recap">Saltar resumen</string>
     <string name="skip_show_button">Mostrar botón</string>
+    <string name="skipped_ending">Ending saltado</string>
     <string name="skipped_intro">Intro saltada</string>
+    <string name="skipped_opening">Opening saltado</string>
     <string name="skipped_recap">Resumen saltado</string>
     <string name="sleep">Temporizador</string>
     <string name="sleep_60">En 60 minutos</string>

@@ -103,30 +103,37 @@ wait_focus() {
   return 1
 }
 
-# On-screen keyboard: rows a-g, h-n, o-u (7 columns), v-z (5), then 123 / Space / Delete / Clear.
-# Focus moves geometrically, so row 3 clamps the column to 4.
+# On-screen keyboard (QWERTY, left-aligned): q-p (10 keys), a-l (9), z-m (7), then 123 / Space /
+# Delete / Clear. Focus moves geometrically, so going down clamps the column to the shorter row.
 KB_ROW=0; KB_COL=0
 kb_move() {
   local row=$1 col=$2
-  while (( KB_ROW < row )); do key KEYCODE_DPAD_DOWN 0.6; KB_ROW=$((KB_ROW + 1)); (( KB_ROW == 3 && KB_COL > 4 )) && KB_COL=4; done
+  while (( KB_ROW < row )); do
+    key KEYCODE_DPAD_DOWN 0.6; KB_ROW=$((KB_ROW + 1))
+    (( KB_ROW == 1 && KB_COL > 8 )) && KB_COL=8
+    (( KB_ROW == 2 && KB_COL > 6 )) && KB_COL=6
+  done
   while (( KB_ROW > row )); do key KEYCODE_DPAD_UP 0.6; KB_ROW=$((KB_ROW - 1)); done
   while (( KB_COL < col )); do key KEYCODE_DPAD_RIGHT 0.6; KB_COL=$((KB_COL + 1)); done
   while (( KB_COL > col )); do key KEYCODE_DPAD_LEFT 0.6; KB_COL=$((KB_COL - 1)); done
 }
+KB_ROWS=(qwertyuiop asdfghjkl zxcvbnm)
 type_letter() {
-  local ch=$1 idx
-  idx=$(( $(printf '%d' "'$ch") - 97 ))
-  kb_move $((idx / 7)) $((idx % 7))
+  local ch=$1 r rest
+  for r in 0 1 2; do
+    rest=${KB_ROWS[$r]%%"$ch"*}
+    if [[ "$rest" != "${KB_ROWS[$r]}" ]]; then kb_move "$r" "${#rest}"; break; fi
+  done
   key KEYCODE_DPAD_CENTER 0.8 "type $ch"
 }
-# Space: from "v" go down to "123", right to Space, press, then up lands on "x".
+# Space: from "z" go down to "123", right to Space, press, then up lands on "v".
 type_space() {
-  kb_move 3 0
+  kb_move 2 0
   key KEYCODE_DPAD_DOWN 0.6
   key KEYCODE_DPAD_RIGHT 0.6
   key KEYCODE_DPAD_CENTER 0.8 "type space"
   key KEYCODE_DPAD_UP 0.6
-  KB_ROW=3; KB_COL=2
+  KB_ROW=2; KB_COL=3
 }
 # Leave the player: press Back only while PlayerActivity is in front.
 back_from_player() {

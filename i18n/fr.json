@@ -418,5 +418,9 @@
     "row_added": "Rangée ajoutée",
     "row_genres": "Genres",
     "row_genres_hint": "Cochez un genre pour ajouter sa rangée à l'onglet ; décochez-le pour la retirer.",
-    "row_whole_catalogue": "Catalogue entier"
+    "row_whole_catalogue": "Catalogue entier",
+    "skip_opening": "Passer l'opening",
+    "skip_ending": "Passer l'ending",
+    "skipped_opening": "Opening passé",
+    "skipped_ending": "Ending passé"
 }

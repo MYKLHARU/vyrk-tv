@@ -76,6 +76,8 @@ class AppGraph(val context: Context) {
     val watchNext = WatchNext(context)
     /** VYRK's row on the launcher's home screen (TVs only). */
     val homeChannel = HomeChannel(context)
+    /** Kitsu → MyAnimeList ids, for AniSkip and the airing calendar. */
+    val animeIds = com.vyrk.core.anime.AnimeIds(transport)
     private var watchNextJob: kotlinx.coroutines.Job? = null
 
     /** Watch Next follows the active session's Continue Watching. */
