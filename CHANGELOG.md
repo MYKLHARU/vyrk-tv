@@ -5,6 +5,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 ## v0.1.48
 
 - Anime openings and endings: Skip opening and Skip ending, from AniSkip's community timings (by MyAnimeList id; Kitsu titles are looked up). Skip ending appears only when something follows the ending (an after-credits scene or preview); otherwise Up Next comes up at the ending. With Skip intro set to Automatic they're skipped for you. Timings made for a different cut of the episode are ignored.
+- Anime airing calendar: the Anime tab opens with "New episodes" (episodes from the last week of the anime you follow that you haven't reached yet, badged New on the poster and in the episode list) and "Airing this week" (each poster shows when, e.g. "Sat 15:00 · Ep 8"). Followed means in your library or watched in the last 60 days; schedules come from AniList and refresh every half hour.
 - Search keyboard is QWERTY now.
 - "Search for … on VYRK" from Google Assistant or the system's search opens VYRK's Search with the words, and the remote's Search key opens Search and starts listening.
 

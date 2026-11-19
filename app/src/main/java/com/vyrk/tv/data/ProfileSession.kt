@@ -423,7 +423,8 @@ class ProfileSession(
                 if (ids.isNotEmpty()) result[preview.id] = ids
             }
         }
-        updateState { it.copy(newEpisodes = result, newEpisodesCheckedMs = now) }
+        // Anime new episodes come from the airing schedule (Anime tab); keep them.
+        updateState { s -> s.copy(newEpisodes = s.newEpisodes.filterKeys { k -> k !in result && (k.startsWith("kitsu:") || k.startsWith("mal:")) } + result, newEpisodesCheckedMs = now) }
     }
 
     fun newEpisodeIds(itemId: String): Set<String> = _state.value.newEpisodes[itemId].orEmpty()

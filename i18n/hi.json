@@ -422,5 +422,10 @@
     "skip_opening": "ओपनिंग छोड़ें",
     "skip_ending": "एंडिंग छोड़ें",
     "skipped_opening": "ओपनिंग छोड़ी गई",
-    "skipped_ending": "एंडिंग छोड़ी गई"
+    "skipped_ending": "एंडिंग छोड़ी गई",
+    "new_episodes": "नए एपिसोड",
+    "airing_this_week": "इस हफ़्ते प्रसारित",
+    "today": "आज",
+    "tomorrow": "कल",
+    "episode_short": "एपि. %1$d"
 }

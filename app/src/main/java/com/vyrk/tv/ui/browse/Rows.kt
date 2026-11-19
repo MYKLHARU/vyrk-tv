@@ -86,13 +86,14 @@ import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
 
 /** What a poster shows from the live library. */
-data class PosterState(val progress: Float, val watched: Boolean, val isNew: Boolean)
+data class PosterState(val progress: Float, val watched: Boolean, val isNew: Boolean, val label: String? = null)
 
-fun posterState(item: LibraryItem?, newIds: Set<String>): PosterState =
+fun posterState(item: LibraryItem?, newIds: Set<String>, label: String? = null): PosterState =
     PosterState(
         progress = if (item?.isInContinueWatching == true) item.progress else 0f,
         watched = item?.watched == true,
         isNew = newIds.isNotEmpty(),
+        label = label,
     )
 
 class PosterCallbacks(
@@ -169,6 +170,11 @@ fun Poster(
         if (url != null) {
             AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
         } else fallback()
+        state.label?.let { l ->
+            Box(Modifier.align(Alignment.BottomStart).padding(start = 6.dp, end = 6.dp, bottom = 12.dp).background(Color.Black.copy(alpha = 0.72f), RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                Text(l, style = Vyrk.type.labelS, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
         if (state.isNew) {
             Box(Modifier.align(Alignment.TopStart).padding(6.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                 Text(newLabel, style = Vyrk.type.labelS, color = c.onAccent)
@@ -373,7 +379,7 @@ fun BrowseRow(
                             Poster(
                                 meta = meta,
                                 width = posterWidth,
-                                state = posterState(library[meta.id], newEpisodes[meta.id].orEmpty()),
+                                state = posterState(library[meta.id], newEpisodes[meta.id].orEmpty(), row.labels[meta.id]),
                                 modifier = (if (top10) Modifier.padding(start = rankW * 0.86f) else Modifier)
                                     .then(req).onFocusChanged { if (it.isFocused) callbacks.onFocused(meta, i) },
                                 onClick = { callbacks.onClick(meta, i) },

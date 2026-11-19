@@ -17,6 +17,7 @@
     <string name="addon_refreshed">ऐड-ऑन रीफ़्रेश हुआ</string>
     <string name="addon_url">ऐड-ऑन URL</string>
     <string name="addons_pending_sync">इस टीवी पर सहेजा गया। खाते से सिंक होना बाकी है।</string>
+    <string name="airing_this_week">इस हफ़्ते प्रसारित</string>
     <string name="airs_on">%1$s को प्रसारित होगा</string>
     <string name="always_show_sources">स्रोत हमेशा दिखाएँ</string>
     <string name="anime_all_genres">सभी शैलियाँ</string>
@@ -94,6 +95,7 @@
     <string name="download_install">डाउनलोड करके इंस्टॉल करें</string>
     <string name="encode">एनकोड</string>
     <string name="ends_at">%1$s पर समाप्त</string>
+    <string name="episode_short">एपि. %1$d</string>
     <string name="episodes">एपिसोड</string>
     <string name="excl_codec">यह टीवी वीडियो फ़ॉर्मैट डिकोड नहीं कर सकता</string>
     <string name="excl_decoder">टीवी के डिकोडर से ज़्यादा रिज़ॉल्यूशन</string>
@@ -163,6 +165,7 @@
     <string name="move_down">नीचे ले जाएँ</string>
     <string name="move_up">ऊपर ले जाएँ</string>
     <string name="needs_streaming_server">इसके लिए Stremio का लोकल स्ट्रीमिंग सर्वर चाहिए, जो VYRK में नहीं है। इसे छोड़ दिया गया है।</string>
+    <string name="new_episodes">नए एपिसोड</string>
     <string name="next">आगे</string>
     <string name="next_episode">अगला एपिसोड</string>
     <string name="no_account">साइन इन नहीं है। आपकी लाइब्रेरी इस टीवी पर सहेजी जाती है।</string>
@@ -353,6 +356,8 @@
     <string name="time_left">%1$s बाकी</string>
     <string name="time_m">%1$d मि</string>
     <string name="timeline_hint">◀ ▶ खिसकाएँ · ▲ अध्याय · OK जाएँ</string>
+    <string name="today">आज</string>
+    <string name="tomorrow">कल</string>
     <string name="top10_add">Top 10 पंक्तियाँ जोड़ें</string>
     <string name="top10_card_body">मुफ़्त तृतीय-पक्ष Streaming Catalogs ऐड-ऑन जोड़ता है, जो हर सेवा पर लोकप्रिय टाइटल दिखाता है।</string>
     <string name="top10_card_title">आपकी स्ट्रीमिंग सेवाओं के Top 10</string>

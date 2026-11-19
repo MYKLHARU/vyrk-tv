@@ -422,5 +422,10 @@
     "skip_opening": "Saltar opening",
     "skip_ending": "Saltar ending",
     "skipped_opening": "Opening saltado",
-    "skipped_ending": "Ending saltado"
+    "skipped_ending": "Ending saltado",
+    "new_episodes": "Episodios nuevos",
+    "airing_this_week": "En emisión esta semana",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "episode_short": "Ep. %1$d"
 }

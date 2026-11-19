@@ -422,5 +422,10 @@
     "skip_opening": "Passer l'opening",
     "skip_ending": "Passer l'ending",
     "skipped_opening": "Opening passé",
-    "skipped_ending": "Ending passé"
+    "skipped_ending": "Ending passé",
+    "new_episodes": "Nouveaux épisodes",
+    "airing_this_week": "Diffusé cette semaine",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain",
+    "episode_short": "Ép. %1$d"
 }
