@@ -68,14 +68,6 @@ key KEYCODE_DPAD_CENTER 3 "install"
 probe "after install"
 expect '^hero:watch$' "focus back on hero after install"
 
-# ---------------------------------------------------------------- dismiss the Top 10 card
-key KEYCODE_DPAD_DOWN 1.3 "to top10 card"
-expect '^top10card:add$' "Top 10 card focused"
-shot top10-card
-key KEYCODE_DPAD_RIGHT 1.0
-expect '^top10card:not_now$' "Not now"
-key KEYCODE_DPAD_CENTER 1.5 "dismiss card"
-expect '^hero:watch$' "focus returns to hero after Not now"
 
 # Handle only the specific recovery prompt shown by the slow software decoder.
 # Exercise the real remote choice instead of letting a media shortcut bypass it.

@@ -344,6 +344,8 @@
     <string name="top10_add">Top 10 पंक्तियाँ जोड़ें</string>
     <string name="top10_card_body">मुफ़्त तृतीय-पक्ष Streaming Catalogs ऐड-ऑन जोड़ता है, जो हर सेवा पर लोकप्रिय टाइटल दिखाता है।</string>
     <string name="top10_card_title">आपकी स्ट्रीमिंग सेवाओं के Top 10</string>
+    <string name="top10_movies">टॉप 10 फ़िल्में</string>
+    <string name="top10_shows">टॉप 10 टीवी शो</string>
     <string name="top10_suggestion">टॉप 10 सुझाव</string>
     <string name="top10_suggestion_desc">होम पर वह कार्ड जो टॉप 10 पंक्तियाँ जोड़ने का सुझाव देता है</string>
     <string name="trailer">ट्रेलर</string>

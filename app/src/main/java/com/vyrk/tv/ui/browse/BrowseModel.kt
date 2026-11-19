@@ -111,7 +111,8 @@ class BrowseModel(
         val catalogs: List<Pair<CatalogRef, RowKind>> = when (tab) {
             // The regular Home never shows anime: no anime catalogues, and anime titles are dropped
             // from the rest. (In anime mode Home is anime only, filtered above.)
-            Tab.HOME -> top.filter { animeOnly || !CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.TOP10 } +
+            // Home's Top 10 rows are VYRK's own (Top10.kt); streaming-service catalogues are ordinary rows.
+            Tab.HOME -> top.filter { animeOnly || !CatalogRules.isAnimeCatalog(it) }.map { it to RowKind.CATALOG } +
                 rest.filter { it.catalog.type != "tv" && it.catalog.type != "channel" && (animeOnly || !CatalogRules.isAnimeCatalog(it)) }.map { it to RowKind.CATALOG }
             Tab.MOVIES -> (top + rest).filter { it.catalog.type == "movie" || animeOnly && it.catalog.type == "anime" }.map { it to RowKind.CATALOG }
             Tab.SERIES -> (top + rest).filter { it.catalog.type == "series" || animeOnly && it.catalog.type == "anime" }.map { it to RowKind.CATALOG }

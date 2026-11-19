@@ -194,6 +194,12 @@ class TmdbClient(
         return get(path)?.let { parseRecommendations(it, if (mediaType == "tv") "series" else "movie") }.orEmpty()
     }
 
+    /** This week's most popular films ([mediaType] "movie") or shows ("tv") on TMDB, most popular first. */
+    suspend fun trending(mediaType: String): List<TmdbTitle> {
+        val path = if (mediaType == "tv") "/trending/tv/week" else "/trending/movie/week"
+        return get(path)?.let { parseTitles(it, if (mediaType == "tv") "series" else "movie", minVotes = 0) }.orEmpty()
+    }
+
     /** IMDb id of a film or show, so VYRK can open it through the user's add-ons. */
     suspend fun imdbId(tmdbId: Long, type: String): String? {
         val path = if (type == "series") "/tv/$tmdbId/external_ids" else "/movie/$tmdbId/external_ids"
@@ -293,7 +299,10 @@ class TmdbClient(
          * `/recommendations` results. Entries without a title or poster are dropped (they would show
          * as blank cards), and so are ones with too few votes to be worth suggesting.
          */
-        fun parseRecommendations(o: JsonObject, defaultType: String): List<TmdbTitle> = o.arr("results").mapNotNull { r ->
+        fun parseRecommendations(o: JsonObject, defaultType: String): List<TmdbTitle> = parseTitles(o, defaultType, minVotes = 20)
+
+        /** A `results` list of films and shows; entries without a title or poster are dropped. */
+        fun parseTitles(o: JsonObject, defaultType: String, minVotes: Int): List<TmdbTitle> = o.arr("results").mapNotNull { r ->
             val type = when (r.s("media_type")) { "movie" -> "movie"; "tv" -> "series"; null -> defaultType; else -> return@mapNotNull null }
             TmdbTitle(
                 tmdbId = r.l("id") ?: return@mapNotNull null, type = type,
@@ -304,7 +313,7 @@ class TmdbClient(
                 genreIds = (r["genre_ids"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.intOrNull }.orEmpty(),
                 originalLanguage = r.s("original_language"),
             )
-        }.filter { it.voteCount >= 20 }.distinctBy { it.type + it.tmdbId }
+        }.filter { it.voteCount >= minVotes }.distinctBy { it.type + it.tmdbId }
 
         /** Films and shows, most notable first, one entry per title (acting roles win over crew jobs). */
         fun parsePersonCredits(o: JsonObject): List<PersonCredit> {

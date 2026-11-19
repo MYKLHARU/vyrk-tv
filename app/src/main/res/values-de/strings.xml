@@ -344,6 +344,8 @@
     <string name="top10_add">Top-10-Reihen hinzufügen</string>
     <string name="top10_card_body">Fügt das kostenlose Drittanbieter-Add-on Streaming Catalogs hinzu, das zeigt, was auf jedem Dienst beliebt ist.</string>
     <string name="top10_card_title">Top 10 deiner Streamingdienste</string>
+    <string name="top10_movies">Top 10 Filme</string>
+    <string name="top10_shows">Top 10 Serien</string>
     <string name="top10_suggestion">Top-10-Vorschlag</string>
     <string name="top10_suggestion_desc">Die Karte auf Start, die Top-10-Reihen anbietet</string>
     <string name="trailer">Trailer</string>

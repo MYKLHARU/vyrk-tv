@@ -192,7 +192,8 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
     LaunchedEffect(heroCandidates.map { it.id }) { model.lockHero(heroCandidates) }
     val heroItems = model.heroItems.ifEmpty { heroCandidates }
     val heroOn = settings.heroEnabled && model.tab != Tab.LIVE
-    val showTop10Card = isHome && !model.hasTop10Catalogs && !settings.top10CardDismissed && BuildConfig.TOP10_ADDON_URL.isNotBlank()
+    val showTop10Card = false
+    val top10Rows = com.vyrk.tv.ui.browse.rememberTop10Rows(session, enabled = isHome && !model.animeOnly)
 
     val recRows = com.vyrk.tv.ui.browse.rememberRecommendationRows(session, enabled = isHome)
     val bottom = bottomContentPadding()
@@ -231,7 +232,7 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
         if (model.built && model.rows.isEmpty()) item(key = "empty") {
             Text(str(R.string.row_empty), style = Vyrk.type.bodyL, color = Vyrk.colors.textMuted, modifier = Modifier.padding(PhoneMargin))
         }
-        items(model.rows.take(2) + recRows + model.rows.drop(2), key = { it.key }) { row ->
+        items(top10Rows + model.rows.take(2) + recRows + model.rows.drop(2), key = { it.key }) { row ->
             LaunchedEffect(row) { model.ensureLoaded(row) }
             CatalogueRow(row, model, library, sstate.newEpisodes)
         }
