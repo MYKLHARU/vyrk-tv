@@ -11,13 +11,11 @@
     <string name="accent_pink">Rosa</string>
     <string name="accent_teal">Turquesa</string>
     <string name="accent_violet">Violeta</string>
-    <string name="add_a_row">Adicionar uma fileira</string>
     <string name="add_to_library">Adicionar à biblioteca</string>
     <string name="addon_not_encrypted">Usa http, não https: outras pessoas na rede podem ler este endereço, incluindo qualquer login contido nele.</string>
     <string name="addon_refreshed">Complemento atualizado</string>
     <string name="addon_url">URL do complemento</string>
     <string name="addons_pending_sync">Salvo nesta TV. Sincronização da conta pendente.</string>
-    <string name="airing_this_week">No ar esta semana</string>
     <string name="airs_on">Vai ao ar em %1$s</string>
     <string name="always_show_sources">Sempre mostrar fontes</string>
     <string name="anime_all_genres">Todos os gêneros</string>
@@ -72,10 +70,6 @@
     <string name="continue_watching">Continuar assistindo</string>
     <string name="copy_diagnostics">Copiar diagnóstico</string>
     <string name="country">País</string>
-    <string name="custom_row_missing">O complemento dela não está instalado</string>
-    <string name="custom_row_on">Em %1$s · %2$s</string>
-    <string name="custom_rows_empty">Você ainda não tem fileiras próprias. Escolha um catálogo e um gênero abaixo.</string>
-    <string name="custom_rows_no_catalogues">Instale um complemento com catálogos para criar fileiras.</string>
     <string name="default_profile_name">Eu</string>
     <string name="default_tab">Aba inicial</string>
     <string name="default_tab_desc">A aba em que o VYRK abre</string>
@@ -95,7 +89,6 @@
     <string name="download_install">Baixar e instalar</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Termina às %1$s</string>
-    <string name="episode_short">Ep. %1$d</string>
     <string name="episodes">Episódios</string>
     <string name="excl_codec">esta TV não decodifica o formato de vídeo</string>
     <string name="excl_decoder">resolução acima do decodificador desta TV</string>
@@ -165,7 +158,6 @@
     <string name="move_down">Mover para baixo</string>
     <string name="move_up">Mover para cima</string>
     <string name="needs_streaming_server">Precisa do servidor de streaming local do Stremio, que o VYRK não inclui. Ele é ignorado.</string>
-    <string name="new_episodes">Episódios novos</string>
     <string name="next">Próximo</string>
     <string name="next_episode">Próximo episódio</string>
     <string name="no_account">Sem login. Sua biblioteca fica salva nesta TV.</string>
@@ -241,13 +233,8 @@
     <string name="restore_rows">Restaurar %1$d linhas</string>
     <string name="resume">Retomar</string>
     <string name="retry">Tentar de novo</string>
-    <string name="row_catalogue">Catálogo</string>
     <string name="row_empty">Nada aqui ainda.</string>
     <string name="row_error">Esta linha não carregou.</string>
-    <string name="row_genres">Gêneros</string>
-    <string name="row_genres_hint">Marque um gênero para adicionar a fileira à aba; desmarque para removê-la.</string>
-    <string name="row_tab">Mostrar em</string>
-    <string name="row_whole_catalogue">Catálogo inteiro</string>
     <string name="save_to_account">Salvar na conta</string>
     <string name="saved_on_device">Salvo só neste dispositivo</string>
     <string name="saved_to_account">Complementos salvos na sua conta</string>
@@ -273,8 +260,6 @@
     <string name="settings_previews_sub">Trailers enquanto você navega</string>
     <string name="settings_profile">Perfil e aparência</string>
     <string name="settings_profile_sub">Início, abas e a aparência do VYRK</string>
-    <string name="settings_rows">Fileiras</string>
-    <string name="settings_rows_sub">Suas próprias fileiras de catálogos e gêneros dos complementos</string>
     <string name="settings_streams">Streams</string>
     <string name="settings_streams_sub">Quais fontes tocam e o que acontece depois</string>
     <string name="settings_subtitles">Legendas</string>
@@ -356,8 +341,6 @@
     <string name="time_left">Faltam %1$s</string>
     <string name="time_m">%1$d min</string>
     <string name="timeline_hint">◀ ▶ Navegar · ▲ Capítulos · OK Ir</string>
-    <string name="today">Hoje</string>
-    <string name="tomorrow">Amanhã</string>
     <string name="top10_add">Adicionar linhas Top 10</string>
     <string name="top10_card_body">Adiciona o complemento gratuito de terceiros Streaming Catalogs, que mostra o que está em alta em cada serviço.</string>
     <string name="top10_card_title">Top 10 dos seus serviços de streaming</string>

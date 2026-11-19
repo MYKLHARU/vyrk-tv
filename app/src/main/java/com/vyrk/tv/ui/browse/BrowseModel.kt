@@ -34,8 +34,6 @@ class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initial
     var error by mutableStateOf<String?>(null)
     var hasMore by mutableStateOf(true)
     var loadedOnce by mutableStateOf(false)
-    /** A short line per title on its poster, e.g. when its next episode airs. */
-    var labels by mutableStateOf<Map<String, String>>(emptyMap())
     internal var job: Job? = null
 }
 
@@ -52,13 +50,6 @@ class RowStore {
         rows[key]?.takeIf { it.ref?.addon?.transportUrl == ref.addon.transportUrl }?.let { return it }
         val title = if (kind == RowKind.TOP10) CatalogRules.top10Title(ref) ?: CatalogRules.rowTitle(ref) else CatalogRules.rowTitle(ref)
         return RowState(key, kind, ref, title, animeOnly, browseType, genre, noAnime).also { rows[key] = it }
-    }
-
-    /** A row the user made: its own key, title and genre, asked of the add-on. */
-    fun custom(row: com.vyrk.core.catalog.CustomRow, ref: CatalogRef, noAnime: Boolean): RowState {
-        val key = com.vyrk.core.catalog.CustomRows.key(row) + ":" + row.genre + ":" + ref.key
-        rows[key]?.takeIf { it.ref?.addon?.transportUrl == ref.addon.transportUrl }?.let { return it }
-        return RowState(key, RowKind.CATALOG, ref, com.vyrk.core.catalog.CustomRows.title(row, ref), genre = row.genre, noAnime = noAnime).also { rows[key] = it }
     }
 }
 
@@ -102,11 +93,11 @@ class BrowseModel(
         if (heroItems.isEmpty() || heroItems.none { it.id in ids }) { heroItems = candidates; heroIndex = 0 }
     }
 
-    private var builtFrom: Triple<List<Descriptor>, Set<String>, List<com.vyrk.core.catalog.CustomRow>>? = null
+    private var builtFrom: Pair<List<Descriptor>, Set<String>>? = null
 
-    fun rebuild(addons: List<Descriptor>, hiddenRows: Set<String>, customRows: List<com.vyrk.core.catalog.CustomRow> = emptyList()) {
+    fun rebuild(addons: List<Descriptor>, hiddenRows: Set<String>) {
         // The page asks again when it first shows; same add-ons and hidden rows mean same rows.
-        val input = Triple(addons, hiddenRows, customRows)
+        val input = addons to hiddenRows
         if (built && input == builtFrom) return
         builtFrom = input
         val (allTop, allRest) = CatalogRules.homeRows(addons)
@@ -129,16 +120,10 @@ class BrowseModel(
             else -> emptyList()
         }
         val visible = catalogs.filter { it.first.key !in hiddenRows }
-        // The user's own rows come first on their tab, after any Top 10 rows.
-        val mine = com.vyrk.core.catalog.CustomRows.forTab(customRows, tab.key, addons)
-        val sig = visible.joinToString("|") { it.first.key + it.second } + "#" + mine.joinToString("|") { it.first.toString() } +
-            "#" + addons.joinToString { it.transportUrl.hashCode().toString() }
+        val sig = visible.joinToString("|") { it.first.key + it.second } + "#" + addons.joinToString { it.transportUrl.hashCode().toString() }
         if (sig == signature) { built = true; return }
         signature = sig
-        val catalogRows = visible.map { (ref, kind) -> store.row(ref, kind, animeOnly, when (tab) { Tab.MOVIES -> "movie"; Tab.SERIES -> "series"; else -> null }, genre, noAnime = tab == Tab.HOME && !animeOnly) }
-        val customStates = mine.map { (row, ref) -> store.custom(row, ref, noAnime = tab == Tab.HOME && !animeOnly) }
-        val tops = catalogRows.takeWhile { it.kind == RowKind.TOP10 }
-        rows = tops + customStates + catalogRows.drop(tops.size)
+        rows = visible.map { (ref, kind) -> store.row(ref, kind, animeOnly, when (tab) { Tab.MOVIES -> "movie"; Tab.SERIES -> "series"; else -> null }, genre, noAnime = tab == Tab.HOME && !animeOnly) }
         built = true
     }
 

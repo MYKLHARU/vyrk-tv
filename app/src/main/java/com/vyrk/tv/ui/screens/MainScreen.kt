@@ -123,11 +123,11 @@ fun MainScreen(session: ProfileSession) {
 
     // Build every catalogue tab as soon as the add-ons are known and start its first rows,
     // the open tab first, so switching to Movies or Series finds them already loaded.
-    LaunchedEffect(addons, settings.hiddenRows, settings.customRows, tabs, false, settings.animeGenre) {
+    LaunchedEffect(addons, settings.hiddenRows, tabs, false, settings.animeGenre) {
         val list = session.effectiveAddons()
         (listOf(app.tab) + tabs).distinct()
             .filter { it == Tab.HOME || it == Tab.MOVIES || it == Tab.SERIES || it == Tab.ANIME || it == Tab.LIVE }
-            .forEach { t -> model(t).rebuild(list, settings.hiddenRows, settings.customRows); model(t).prefetch(if (t == app.tab) com.vyrk.tv.ui.browse.HERO_SOURCE_ROWS else 3) }
+            .forEach { t -> model(t).rebuild(list, settings.hiddenRows); model(t).prefetch(if (t == app.tab) com.vyrk.tv.ui.browse.HERO_SOURCE_ROWS else 3) }
     }
 
 

@@ -86,7 +86,6 @@ private enum class PhoneGroup(val title: Int, val icon: Int, val subtitle: Int?)
     SUBTITLES(R.string.settings_subtitles, R.drawable.ic_subtitles, R.string.settings_subtitles_sub),
     LANGUAGES(R.string.settings_languages, R.drawable.ic_globe, R.string.settings_languages_sub),
     APPEARANCE(R.string.settings_profile, R.drawable.ic_profile, R.string.settings_profile_sub),
-    ROWS(R.string.settings_rows, R.drawable.ic_rows, R.string.settings_rows_sub),
     // Phones have none of the TV picture options (interface size, frame rate): sound only.
     SOUND(R.string.settings_picture, R.drawable.ic_audio, null),
     ABOUT(R.string.settings_about, R.drawable.ic_info, R.string.settings_about_sub),
@@ -296,68 +295,10 @@ private fun ColumnScope.GroupPage(session: ProfileSession, group: PhoneGroup, on
             PhoneToggle(str(R.string.clear_dialogue), d.clearDialogue, { v -> graph.updateDevice { it.copy(clearDialogue = v) } }, hint = str(R.string.clear_dialogue_hint))
             PhoneToggle(str(R.string.software_audio), d.softwareAudio, { v -> graph.updateDevice { it.copy(softwareAudio = v) } })
         }
-        PhoneGroup.ROWS -> PhoneCustomRows(session)
         PhoneGroup.ABOUT -> AboutPage(session)
     }
 }
 
-/** The rows you made, with up, down and remove, then the builder for a new one. */
-@Composable
-private fun PhoneCustomRows(session: ProfileSession) {
-    val s by session.settings.collectAsState()
-    val addons by session.addons.collectAsState()
-    val list = remember(addons) { session.effectiveAddons() }
-    val catalogs = remember(list) { com.vyrk.core.catalog.CustomRows.catalogs(list) }
-    val c = Vyrk.colors
-    fun upd(f: (com.vyrk.tv.data.ProfileSettings) -> com.vyrk.tv.data.ProfileSettings) = session.updateSettings(f)
-    val tabNames = Tab.entries.associate { it.key to tabLabel(it) }
-    fun tabName(key: String) = tabNames[key] ?: key
-    val rows = s.customRows
-    PhoneCard(title = str(R.string.settings_rows)) {
-        if (rows.isEmpty()) Text(str(R.string.custom_rows_empty), style = Vyrk.type.bodyM, color = c.textSecondary)
-        rows.forEachIndexed { i, r ->
-            val ref = com.vyrk.core.catalog.CustomRows.resolve(r, list)
-            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(ref?.let { com.vyrk.core.catalog.CustomRows.title(r, it) } ?: r.catalogId, style = Vyrk.type.titleM, color = c.text, maxLines = 2)
-                    Text(if (ref == null) str(R.string.custom_row_missing) else str(R.string.custom_row_on, tabName(r.tab), ref.addon.manifest.name), style = Vyrk.type.bodyS, color = c.textMuted)
-                }
-                if (i > 0) PhoneIconButton(R.drawable.ic_up, str(R.string.move_up), { upd { it.copy(customRows = com.vyrk.core.catalog.CustomRows.move(it.customRows, r.id, -1)) } })
-                if (i < rows.lastIndex) PhoneIconButton(R.drawable.ic_down, str(R.string.move_down), { upd { it.copy(customRows = com.vyrk.core.catalog.CustomRows.move(it.customRows, r.id, 1)) } })
-                PhoneIconButton(R.drawable.ic_trash, str(R.string.remove), { upd { it.copy(customRows = it.customRows.filterNot { x -> x.id == r.id }) } })
-            }
-        }
-    }
-    if (catalogs.isEmpty()) return
-    var refKey by remember { mutableStateOf<String?>(null) }
-    val ref = catalogs.firstOrNull { it.key == refKey } ?: catalogs.first()
-    val genres = remember(ref.key) { com.vyrk.core.catalog.CustomRows.genres(ref) }
-    val allowsAll = com.vyrk.core.catalog.CustomRows.allowsAll(ref)
-    val tabs = com.vyrk.core.catalog.CustomRows.tabs(ref)
-    var tab by remember(ref.key) { mutableStateOf(tabs.first()) }
-    val ordered = remember(catalogs) { catalogs.sortedByDescending { com.vyrk.core.catalog.CatalogRules.isAnimeCatalog(it) } }
-    fun tick(g: String?) = upd { it.copy(customRows = com.vyrk.core.catalog.CustomRows.toggle(it.customRows, ref, g, tab, java.util.UUID.randomUUID().toString())) }
-    PhoneCard(title = str(R.string.add_a_row)) {
-        PhoneChoice(str(R.string.row_catalogue), ordered.map { it.key to "${it.name} · ${com.vyrk.core.catalog.CatalogRules.typeLabel(it.catalog.type)}" }, ref.key, { refKey = it },
-            hint = ref.addon.manifest.name, tag = "rows:catalogue")
-        if (tabs.size > 1) PhoneChoice(str(R.string.row_tab), tabs.map { it to tabName(it) }, tab, { tab = it }, tag = "rows:tab")
-        Column(Modifier.padding(vertical = 8.dp)) {
-            Text(str(R.string.row_genres), style = Vyrk.type.titleM, color = c.text)
-            Text(str(R.string.row_genres_hint), style = Vyrk.type.bodyS, color = c.textMuted)
-            Spacer(Modifier.height(8.dp))
-            ChipFlow {
-                if (allowsAll) {
-                    val on = com.vyrk.core.catalog.CustomRows.has(rows, ref, null, tab)
-                    PhoneChip(str(R.string.row_whole_catalogue), on, { tick(null) }, icon = if (on) R.drawable.ic_check else null, tag = "rows:genre:all")
-                }
-                genres.forEach { g ->
-                    val on = com.vyrk.core.catalog.CustomRows.has(rows, ref, g, tab)
-                    PhoneChip(com.vyrk.core.catalog.CustomRows.label(g), on, { tick(g) }, icon = if (on) R.drawable.ic_check else null, tag = "rows:genre:${g.lowercase()}")
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun LanguageChecks(label: String, chosen: List<String>, hint: String? = null, onToggle: (String) -> Unit) {

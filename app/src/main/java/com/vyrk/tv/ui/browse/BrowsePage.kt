@@ -99,7 +99,7 @@ fun BrowsePage(
     val top10Req = remember { FocusRequester() }
     val isHome = model.tab == Tab.HOME
 
-    LaunchedEffect(addons, settings.hiddenRows, settings.customRows) { model.rebuild(session.effectiveAddons(), settings.hiddenRows, settings.customRows); model.prefetch(HERO_SOURCE_ROWS) }
+    LaunchedEffect(addons, settings.hiddenRows) { model.rebuild(session.effectiveAddons(), settings.hiddenRows); model.prefetch(HERO_SOURCE_ROWS) }
 
     // Continue Watching follows the live library at once. Library entries carry only a name and a
     // poster, and entries written by other apps can have neither (Game of Thrones showed a blank
@@ -147,11 +147,8 @@ fun BrowsePage(
     val recRows = rememberRecommendationRows(session, enabled = isHome && !model.animeOnly) { picks ->
         if (com.vyrk.tv.ui.phone.FormFactor.isTv(graph.context)) session.scope.launch { graph.homeChannel.publish(picks) }
     }
-    // Anime: what came out this week and what's coming, for the shows you follow.
-    val airingRows = rememberAiringRows(session, enabled = model.tab == Tab.ANIME || (isHome && model.animeOnly))
     val rows = buildList {
         if (isHome && cwItems.isNotEmpty()) add(cwRow)
-        addAll(airingRows)
         addAll(model.rows.take(2))
         addAll(recRows)
         addAll(model.rows.drop(2))
