@@ -11,7 +11,6 @@
     <string name="accent_pink">Rosa</string>
     <string name="accent_teal">Turchese</string>
     <string name="accent_violet">Viola</string>
-    <string name="add_a_row">Aggiungi una riga</string>
     <string name="add_to_library">Aggiungi alla libreria</string>
     <string name="addon_not_encrypted">Usa http, non https: altri sulla rete possono leggere questo indirizzo, incluse le credenziali che contiene.</string>
     <string name="addon_refreshed">Componente aggiornato</string>
@@ -71,10 +70,6 @@
     <string name="continue_watching">Continua a guardare</string>
     <string name="copy_diagnostics">Copia diagnostica</string>
     <string name="country">Paese</string>
-    <string name="custom_row_missing">Il suo componente aggiuntivo non è installato</string>
-    <string name="custom_row_on">In %1$s · %2$s</string>
-    <string name="custom_rows_empty">Ancora nessuna riga personale. Scegli un catalogo e un genere qui sotto.</string>
-    <string name="custom_rows_no_catalogues">Installa un componente aggiuntivo con cataloghi per creare righe.</string>
     <string name="default_profile_name">Io</string>
     <string name="default_tab">Scheda iniziale</string>
     <string name="default_tab_desc">La scheda con cui si apre VYRK</string>
@@ -238,13 +233,8 @@
     <string name="restore_rows">Ripristina %1$d righe</string>
     <string name="resume">Riprendi</string>
     <string name="retry">Riprova</string>
-    <string name="row_catalogue">Catalogo</string>
     <string name="row_empty">Ancora niente qui.</string>
     <string name="row_error">Questa riga non è stata caricata.</string>
-    <string name="row_genres">Generi</string>
-    <string name="row_genres_hint">Spunta un genere per aggiungere la sua riga alla scheda; togli la spunta per rimuoverla.</string>
-    <string name="row_tab">Mostra in</string>
-    <string name="row_whole_catalogue">Catalogo completo</string>
     <string name="save_to_account">Salva nell\'account</string>
     <string name="saved_on_device">Salvato solo su questo dispositivo</string>
     <string name="saved_to_account">Componenti salvati nel tuo account</string>
@@ -270,8 +260,6 @@
     <string name="settings_previews_sub">Anteprime dei trailer durante la navigazione</string>
     <string name="settings_profile">Profilo e aspetto</string>
     <string name="settings_profile_sub">Home, schede e aspetto di VYRK</string>
-    <string name="settings_rows">Righe</string>
-    <string name="settings_rows_sub">Le tue righe da cataloghi e generi dei componenti aggiuntivi</string>
     <string name="settings_streams">Stream</string>
     <string name="settings_streams_sub">Quali fonti riprodurre e cosa succede dopo</string>
     <string name="settings_subtitles">Sottotitoli</string>

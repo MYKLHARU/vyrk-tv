@@ -5,6 +5,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 ## v0.1.49
 
 - Removed the "New episodes" and "Airing this week" rows from the Anime tab.
+- Removed custom rows (Settings › Rows) and any rows made with it.
 
 ## v0.1.48
 

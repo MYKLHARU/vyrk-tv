@@ -11,7 +11,6 @@
     <string name="accent_pink">Rose</string>
     <string name="accent_teal">Turquoise</string>
     <string name="accent_violet">Violet</string>
-    <string name="add_a_row">Ajouter une rangée</string>
     <string name="add_to_library">Ajouter à la bibliothèque</string>
     <string name="addon_not_encrypted">Utilise http, pas https : d\'autres personnes sur le réseau peuvent lire cette adresse, y compris les identifiants qu\'elle contient.</string>
     <string name="addon_refreshed">Module actualisé</string>
@@ -71,10 +70,6 @@
     <string name="continue_watching">Reprendre la lecture</string>
     <string name="copy_diagnostics">Copier le diagnostic</string>
     <string name="country">Pays</string>
-    <string name="custom_row_missing">Son add-on n\'est pas installé</string>
-    <string name="custom_row_on">Dans %1$s · %2$s</string>
-    <string name="custom_rows_empty">Aucune rangée personnelle pour l\'instant. Choisissez un catalogue et un genre ci-dessous.</string>
-    <string name="custom_rows_no_catalogues">Installez un add-on avec des catalogues pour créer des rangées.</string>
     <string name="default_profile_name">Moi</string>
     <string name="default_tab">Onglet par défaut</string>
     <string name="default_tab_desc">L\'onglet à l\'ouverture de VYRK</string>
@@ -238,13 +233,8 @@
     <string name="restore_rows">Restaurer %1$d rangées</string>
     <string name="resume">Reprendre</string>
     <string name="retry">Réessayer</string>
-    <string name="row_catalogue">Catalogue</string>
     <string name="row_empty">Rien ici pour l\'instant.</string>
     <string name="row_error">Cette rangée n\'a pas chargé.</string>
-    <string name="row_genres">Genres</string>
-    <string name="row_genres_hint">Cochez un genre pour ajouter sa rangée à l\'onglet ; décochez-le pour la retirer.</string>
-    <string name="row_tab">Afficher dans</string>
-    <string name="row_whole_catalogue">Catalogue entier</string>
     <string name="save_to_account">Enregistrer dans le compte</string>
     <string name="saved_on_device">Enregistré sur cet appareil uniquement</string>
     <string name="saved_to_account">Modules enregistrés dans votre compte</string>
@@ -270,8 +260,6 @@
     <string name="settings_previews_sub">Bandes-annonces pendant la navigation</string>
     <string name="settings_profile">Profil et apparence</string>
     <string name="settings_profile_sub">Accueil, onglets et apparence de VYRK</string>
-    <string name="settings_rows">Rangées</string>
-    <string name="settings_rows_sub">Vos propres rangées à partir des catalogues et genres des add-ons</string>
     <string name="settings_streams">Flux</string>
     <string name="settings_streams_sub">Quelles sources sont lues, et la suite</string>
     <string name="settings_subtitles">Sous-titres</string>

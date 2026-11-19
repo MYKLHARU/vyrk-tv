@@ -99,7 +99,7 @@ fun BrowsePage(
     val top10Req = remember { FocusRequester() }
     val isHome = model.tab == Tab.HOME
 
-    LaunchedEffect(addons, settings.hiddenRows, settings.customRows) { model.rebuild(session.effectiveAddons(), settings.hiddenRows, settings.customRows); model.prefetch(HERO_SOURCE_ROWS) }
+    LaunchedEffect(addons, settings.hiddenRows) { model.rebuild(session.effectiveAddons(), settings.hiddenRows); model.prefetch(HERO_SOURCE_ROWS) }
 
     // Continue Watching follows the live library at once. Library entries carry only a name and a
     // poster, and entries written by other apps can have neither (Game of Thrones showed a blank

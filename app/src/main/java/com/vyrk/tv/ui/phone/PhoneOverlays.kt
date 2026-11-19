@@ -122,7 +122,7 @@ private fun PhoneItemMenu(o: Overlay.ItemMenu, close: () -> Unit) {
         val rowKey = o.origin?.rowKey
         if (rowKey != null && rowKey != com.vyrk.tv.ui.browse.CW_ROW) PhoneListRow(str(R.string.hide_row), {
             val catalogKey = rowKey.removeSuffix(RowKind.CATALOG.name).removeSuffix(RowKind.TOP10.name)
-            session.updateSettings { if (rowKey.startsWith(com.vyrk.core.catalog.CustomRows.KEY_PREFIX)) it.copy(customRows = it.customRows.filterNot { r -> rowKey.startsWith(com.vyrk.core.catalog.CustomRows.key(r) + ":") }) else it.copy(hiddenRows = it.hiddenRows + catalogKey) }; close()
+            session.updateSettings { it.copy(hiddenRows = it.hiddenRows + catalogKey) }; close()
         }, icon = R.drawable.ic_eye_off, tag = "menu:hide_row")
     }
 }

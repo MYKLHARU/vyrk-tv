@@ -49,8 +49,6 @@ data class ProfileSettings(
     val reduceMotion: Boolean = false,
     val blurUnwatched: Boolean = false,
     val hiddenRows: Set<String> = emptySet(),
-    /** Rows the user made from add-on catalogues and genres (Settings › Rows). */
-    val customRows: List<com.vyrk.core.catalog.CustomRow> = emptyList(),
     val top10CardDismissed: Boolean = false,
     val preset: Preset = Preset.BALANCED,
     val maxResolution: Int? = null,

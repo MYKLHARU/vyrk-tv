@@ -119,10 +119,10 @@ fun PhoneMain(session: ProfileSession) {
     val rowStore = remember(session) { RowStore() }
     val models = remember(session, settings.animeGenre) { mutableMapOf<Tab, BrowseModel>() }
     fun model(t: Tab) = models.getOrPut(t) { BrowseModel(graph.addonClient, t, session.scope, rowStore, false, null) }
-    LaunchedEffect(addons, settings.hiddenRows, settings.customRows, browseTabs) {
+    LaunchedEffect(addons, settings.hiddenRows, browseTabs) {
         val list = session.effectiveAddons()
         (listOf(app.tab) + browseTabs).distinct().filter { it != Tab.DISCOVER && it != Tab.LIBRARY }.forEach { t ->
-            model(t).rebuild(list, settings.hiddenRows, settings.customRows)
+            model(t).rebuild(list, settings.hiddenRows)
             model(t).prefetch(if (t == app.tab) com.vyrk.tv.ui.browse.HERO_SOURCE_ROWS else 3)
         }
     }

@@ -190,7 +190,7 @@ private fun ItemMenu(o: Overlay.ItemMenu) {
             val rowKey = o.origin?.rowKey
             if (rowKey != null && rowKey != CW_ROW) VyrkButton(str(R.string.hide_row), modifier = full.traceFocus("menu:hide_row"), onClick = {
                 val catalogKey = rowKey.removeSuffix(RowKind.CATALOG.name).removeSuffix(RowKind.TOP10.name)
-                session.updateSettings { if (rowKey.startsWith(com.vyrk.core.catalog.CustomRows.KEY_PREFIX)) it.copy(customRows = it.customRows.filterNot { r -> rowKey.startsWith(com.vyrk.core.catalog.CustomRows.key(r) + ":") }) else it.copy(hiddenRows = it.hiddenRows + catalogKey) }
+                session.updateSettings { it.copy(hiddenRows = it.hiddenRows + catalogKey) }
                 app.overlays.remove(o)
             })
             VyrkButton(str(R.string.close), modifier = full.traceFocus("menu:close"), onClick = { closeOverlay(app, o) })
