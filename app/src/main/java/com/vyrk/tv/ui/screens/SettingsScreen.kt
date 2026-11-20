@@ -466,6 +466,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
             }
             Group.PICTURE -> {
                 Choice(str(R.string.interface_size), listOf("SMALL" to str(R.string.size_small), "MEDIUM" to str(R.string.size_medium), "LARGE" to str(R.string.size_large)), d.interfaceSize, "set:ui_size") { v -> graph.updateDevice { it.copy(interfaceSize = v) } }
+                Toggle(str(R.string.intro_sound), d.introSound, "set:intro_sound", str(R.string.intro_sound_desc), R.drawable.ic_audio) { v -> graph.updateDevice { it.copy(introSound = v) } }
                 Toggle(str(R.string.nav_sounds), d.navSounds, "set:nav_sounds", str(R.string.nav_sounds_desc), R.drawable.ic_audio) { v -> graph.updateDevice { it.copy(navSounds = v) } }
                 Toggle(str(R.string.frame_rate_matching), d.frameRateMatching, "set:frame_rate") { v -> graph.updateDevice { it.copy(frameRateMatching = v) } }
                 Toggle(str(R.string.passthrough), d.passthrough, "set:passthrough", str(R.string.passthrough_hint)) { v -> graph.updateDevice { it.copy(passthrough = v) } }
