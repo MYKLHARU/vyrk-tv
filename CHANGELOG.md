@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.53
+
+- Smoother on SHIELD and other TV boxes: the opening animation no longer waits on its sound loading and draws far less per frame; the artwork colour glow waits until you settle on a title or tab and draws only where it shows; all loading placeholders share one shimmer that runs only while one is on screen; posters track their place more cheaply.
+
 ## v0.1.52
 
 - A cinematic opening: on black, the gold V lights up and a sheen runs across it, then the camera dives into the V and it bursts into ribbons of gold and white light that sweep out and fade into VYRK, with VYRK's own sound (Settings › Picture & sound › Opening sound; silent on phones). About 2.6 seconds, once per launch; Reduce motion skips it.

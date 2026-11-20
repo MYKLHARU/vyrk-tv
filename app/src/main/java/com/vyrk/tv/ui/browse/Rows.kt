@@ -43,7 +43,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
@@ -139,7 +139,7 @@ fun Poster(
         onClick = { com.vyrk.tv.ui.components.OpenOrigin.from(coords[0]); onClick() },
         onLongClick = onLongClick,
         modifier = modifier.focusHalo()
-            .onGloballyPositioned { coords[0] = it }
+            .onPlaced { coords[0] = it }
             .size(shownWidth, height)
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = desc }
@@ -481,7 +481,7 @@ fun ContinueCard(
         onClick = { com.vyrk.tv.ui.components.OpenOrigin.from(coords[0]); onClick() },
         onLongClick = onLongClick,
         modifier = modifier.focusHalo()
-            .onGloballyPositioned { coords[0] = it }
+            .onPlaced { coords[0] = it }
             .size(width, height)
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = desc }

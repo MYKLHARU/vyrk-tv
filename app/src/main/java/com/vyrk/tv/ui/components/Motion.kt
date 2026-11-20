@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.unit.dp
 import com.vyrk.tv.ui.theme.LocalReduceMotion
 import com.vyrk.tv.ui.theme.Vyrk
+import kotlinx.coroutines.launch
 
 /** Where the last title was opened from (its card's centre, as a fraction of the screen), for the title page to grow out of. */
 object OpenOrigin {
@@ -78,8 +79,12 @@ fun LaunchIntro(sound: Boolean = false) {
     val dive = remember { Animatable(0f) }
     val fade = remember { Animatable(1f) }
     LaunchedEffect(Unit) {
-        val player = if (sound) runCatching { android.media.MediaPlayer.create(context, com.vyrk.tv.R.raw.intro)?.apply { setVolume(0.8f, 0.8f); start() } }.getOrNull() else null
-        player?.setOnCompletionListener { it.release() }
+        // The sound is prepared off the main thread, so the animation's first frames aren't held up.
+        if (sound) kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            runCatching { android.media.MediaPlayer.create(context.applicationContext, com.vyrk.tv.R.raw.intro)?.apply {
+                setVolume(0.8f, 0.8f); setOnCompletionListener { it.release() }; start()
+            } }
+        }
         appear.animateTo(1f, tween(450, easing = FastOutSlowInEasing))
         sheen.animateTo(1f, tween(650, easing = androidx.compose.animation.core.LinearEasing))
         dive.animateTo(1f, tween(1_050, easing = androidx.compose.animation.core.CubicBezierEasing(0.55f, 0f, 0.85f, 0.6f)))
@@ -88,9 +93,13 @@ fun LaunchIntro(sound: Boolean = false) {
         visible = false
     }
     val gold = Vyrk.colors.gold
-    val ribbons = remember { Ribbon.make(72) }
+    val ribbons = remember(gold) { Ribbon.make(44, gold) }
     Box(Modifier.fillMaxSize().graphicsLayer { alpha = fade.value }.background(androidx.compose.ui.graphics.Color.Black), contentAlignment = Alignment.Center) {
         // The light ribbons, spreading out from the V's centre as the camera dives in.
+        val fadeEnds = remember {
+            androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Black, 0.22f to androidx.compose.ui.graphics.Color.Transparent,
+                0.78f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black)
+        }
         androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
             val d = dive.value
             if (d <= 0f) return@Canvas
@@ -103,14 +112,11 @@ fun LaunchIntro(sound: Boolean = false) {
                 if (a <= 0f) continue
                 val top = h * (0.5f - (0.08f + d * 0.7f) * r.reach)
                 val bottom = h * (0.5f + (0.08f + d * 0.7f) * r.reach)
-                drawRect(
-                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                        listOf(androidx.compose.ui.graphics.Color.Transparent, r.color(gold).copy(alpha = a), r.color(gold).copy(alpha = a), androidx.compose.ui.graphics.Color.Transparent),
-                        startY = top, endY = bottom,
-                    ),
-                    topLeft = Offset(x - bw / 2f, top), size = androidx.compose.ui.geometry.Size(bw, bottom - top),
-                )
+                // Plain bars (no per-frame gradients); the soft ends come from the vignette below.
+                drawRect(r.color, topLeft = Offset(x - bw / 2f, top), size = androidx.compose.ui.geometry.Size(bw, bottom - top), alpha = a)
             }
+            // Fade the ribbons' ends into black, top and bottom.
+            drawRect(fadeEnds)
             // A white core flaring at the centre as the dive peaks.
             val flare = (d - 0.55f).coerceAtLeast(0f) * 2.2f
             if (flare > 0f) drawRect(androidx.compose.ui.graphics.Brush.radialGradient(
@@ -121,10 +127,11 @@ fun LaunchIntro(sound: Boolean = false) {
         VyrkMark(150.dp, accent = gold, modifier = Modifier
             .graphicsLayer {
                 val a = appear.value; val d = dive.value
-                val s = (0.86f + 0.14f * a) * (1f + d * d * 14f)
+                val s = (0.86f + 0.14f * a) * (1f + d * d * 9f)
                 scaleX = s; scaleY = s
                 alpha = a * (1f - ((d - 0.45f).coerceAtLeast(0f) * 2.4f)).coerceIn(0f, 1f)
-                compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
+                // An offscreen layer only while the sheen needs it; scaling one up during the dive is costly.
+                compositingStrategy = if (sheen.value < 1f) androidx.compose.ui.graphics.CompositingStrategy.Offscreen else androidx.compose.ui.graphics.CompositingStrategy.Auto
             }
             .drawWithContent {
                 drawContent()
@@ -142,21 +149,15 @@ fun LaunchIntro(sound: Boolean = false) {
 }
 
 /** One light ribbon: where it sits across the burst, how wide, bright and tall, and its shade. */
-private class Ribbon(val offset: Float, val width: Float, val alpha: Float, val reach: Float, private val shade: Int) {
-    fun color(gold: androidx.compose.ui.graphics.Color) = when (shade) {
-        0 -> gold
-        1 -> androidx.compose.ui.graphics.Color(0xFFF3DEB0)
-        2 -> androidx.compose.ui.graphics.Color(0xFFB07A2E)
-        3 -> androidx.compose.ui.graphics.Color.White
-        else -> androidx.compose.ui.graphics.Color(0xFFE8B86A)
-    }
-
+private class Ribbon(val offset: Float, val width: Float, val alpha: Float, val reach: Float, val color: androidx.compose.ui.graphics.Color) {
     companion object {
-        fun make(n: Int): List<Ribbon> {
+        fun make(n: Int, gold: androidx.compose.ui.graphics.Color): List<Ribbon> {
+            val shades = listOf(gold, androidx.compose.ui.graphics.Color(0xFFF3DEB0), androidx.compose.ui.graphics.Color(0xFFB07A2E),
+                androidx.compose.ui.graphics.Color.White, androidx.compose.ui.graphics.Color(0xFFE8B86A))
             val rnd = java.util.Random(4)
             return List(n) {
                 val o = (rnd.nextGaussian() * 0.45).toFloat().coerceIn(-1.2f, 1.2f)
-                Ribbon(o, 0.002f + rnd.nextFloat() * 0.012f, 0.35f + rnd.nextFloat() * 0.65f, 0.55f + rnd.nextFloat() * 0.6f, rnd.nextInt(5))
+                Ribbon(o, 0.003f + rnd.nextFloat() * 0.014f, 0.35f + rnd.nextFloat() * 0.65f, 0.55f + rnd.nextFloat() * 0.6f, shades[rnd.nextInt(shades.size)])
             }
         }
     }
