@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.52
+
+- A cinematic opening: on black, the gold V lights up and a sheen runs across it, then the camera dives into the V and it bursts into ribbons of gold and white light that sweep out and fade into VYRK, with VYRK's own sound (Settings › Picture & sound › Opening sound; silent on phones). About 2.6 seconds, once per launch; Reduce motion skips it.
+
 ## v0.1.51
 
 - Colour that follows the artwork: the background glows softly in the colours of the title on screen, on Home and the title page (phones too).

@@ -133,6 +133,8 @@
     <string name="install_from_url">URL से इंस्टॉल करें</string>
     <string name="installed_addon">%1$s इंस्टॉल हुआ</string>
     <string name="interface_size">इंटरफ़ेस का आकार</string>
+    <string name="intro_sound">शुरुआती ध्वनि</string>
+    <string name="intro_sound_desc">शुरुआती एनिमेशन के साथ VYRK की ध्वनि चलाएँ</string>
     <string name="keep_trying">कोशिश जारी रखें</string>
     <string name="key_backspace">मिटाएँ</string>
     <string name="key_clear">साफ़</string>

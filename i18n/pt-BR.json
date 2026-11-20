@@ -413,5 +413,7 @@
     "expanding_cards": "Cartões expansíveis",
     "expanding_cards_desc": "O pôster em foco se expande com a arte do título",
     "nav_sounds": "Sons de navegação",
-    "nav_sounds_desc": "Cliques suaves ao navegar e selecionar com o controle"
+    "nav_sounds_desc": "Cliques suaves ao navegar e selecionar com o controle",
+    "intro_sound": "Som de abertura",
+    "intro_sound_desc": "Toca o som do VYRK com a animação de abertura"
 }

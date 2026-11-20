@@ -413,5 +413,7 @@
     "expanding_cards": "Schede espandibili",
     "expanding_cards_desc": "La locandina selezionata si allarga con l'immagine del titolo",
     "nav_sounds": "Suoni di navigazione",
-    "nav_sounds_desc": "Clic leggeri quando ti muovi e selezioni con il telecomando"
+    "nav_sounds_desc": "Clic leggeri quando ti muovi e selezioni con il telecomando",
+    "intro_sound": "Suono di apertura",
+    "intro_sound_desc": "Riproduce il suono di VYRK con l'animazione iniziale"
 }

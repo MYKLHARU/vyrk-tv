@@ -133,6 +133,8 @@
     <string name="install_from_url">Instalar por URL</string>
     <string name="installed_addon">%1$s instalado</string>
     <string name="interface_size">Tamanho da interface</string>
+    <string name="intro_sound">Som de abertura</string>
+    <string name="intro_sound_desc">Toca o som do VYRK com a animação de abertura</string>
     <string name="keep_trying">Continuar tentando</string>
     <string name="key_backspace">Apagar</string>
     <string name="key_clear">Limpar</string>

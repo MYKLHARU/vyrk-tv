@@ -413,5 +413,7 @@
     "expanding_cards": "Tarjetas expandibles",
     "expanding_cards_desc": "El póster enfocado se amplía con la imagen del título",
     "nav_sounds": "Sonidos de navegación",
-    "nav_sounds_desc": "Clics suaves al moverte y seleccionar con el mando"
+    "nav_sounds_desc": "Clics suaves al moverte y seleccionar con el mando",
+    "intro_sound": "Sonido de apertura",
+    "intro_sound_desc": "Reproduce el sonido de VYRK con la animación de inicio"
 }

@@ -150,7 +150,7 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
             androidx.compose.runtime.CompositionLocalProvider(
                 LocalApp provides app, LocalGraph provides graph, LocalSession provides session, LocalActivity provides activity,
             ) { com.vyrk.tv.ui.phone.PhoneRoot(session) }
-            com.vyrk.tv.ui.components.LaunchIntro()
+            com.vyrk.tv.ui.components.LaunchIntro(sound = false)
             return@VyrkTheme
         }
         FittedCanvas(size) {
@@ -166,7 +166,7 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
                     }
                     Overlays()
                     ToastHost(app)
-                    com.vyrk.tv.ui.components.LaunchIntro()
+                    com.vyrk.tv.ui.components.LaunchIntro(sound = device.introSound)
                 }
             }
         }

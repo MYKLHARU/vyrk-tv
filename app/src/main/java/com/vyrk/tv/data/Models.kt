@@ -84,6 +84,8 @@ data class DeviceSettings(
     val interfaceSize: String = "MEDIUM",
     /** Soft clicks when moving and selecting with the remote. */
     val navSounds: Boolean = false,
+    /** The sound with VYRK's opening animation. */
+    val introSound: Boolean = true,
     val frameRateMatching: Boolean = false,
     val passthrough: Boolean = false,
     val tvSpeakerMode: Boolean = false,

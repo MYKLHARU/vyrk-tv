@@ -62,32 +62,102 @@ fun OpenTransition(content: @Composable () -> Unit) {
 }
 
 /**
- * The opening moment: the gold V draws itself from top to bottom, the wordmark fades in under it,
- * then it all fades away. Once per launch; skipped with Reduce motion.
+ * The opening: on black, the gold V lights up and a sheen runs across it; then the camera dives
+ * into the V and it bursts into ribbons of gold and white light that sweep out to the edges and
+ * fade into VYRK. About 2.6 s, once per launch, with VYRK's own sound ([sound]); skipped with
+ * Reduce motion.
  */
 @Composable
-fun LaunchIntro() {
+fun LaunchIntro(sound: Boolean = false) {
     if (LaunchIntroState.done || LocalReduceMotion.current) return
     var visible by remember { mutableStateOf(true) }
     if (!visible) return
-    val draw = remember { Animatable(0f) }
-    val word = remember { Animatable(0f) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val appear = remember { Animatable(0f) }
+    val sheen = remember { Animatable(0f) }
+    val dive = remember { Animatable(0f) }
     val fade = remember { Animatable(1f) }
     LaunchedEffect(Unit) {
-        draw.animateTo(1f, tween(800, easing = FastOutSlowInEasing))
-        word.animateTo(1f, tween(300))
-        kotlinx.coroutines.delay(250)
-        fade.animateTo(0f, tween(380))
+        val player = if (sound) runCatching { android.media.MediaPlayer.create(context, com.vyrk.tv.R.raw.intro)?.apply { setVolume(0.8f, 0.8f); start() } }.getOrNull() else null
+        player?.setOnCompletionListener { it.release() }
+        appear.animateTo(1f, tween(450, easing = FastOutSlowInEasing))
+        sheen.animateTo(1f, tween(650, easing = androidx.compose.animation.core.LinearEasing))
+        dive.animateTo(1f, tween(1_050, easing = androidx.compose.animation.core.CubicBezierEasing(0.55f, 0f, 0.85f, 0.6f)))
+        fade.animateTo(0f, tween(420))
         LaunchIntroState.done = true
         visible = false
     }
-    Box(Modifier.fillMaxSize().graphicsLayer { alpha = fade.value }.background(Vyrk.colors.background), contentAlignment = Alignment.Center) {
-        AmbientBackground()
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            VyrkMark(120.dp, accent = Vyrk.colors.gold, modifier = Modifier
-                .graphicsLayer { val s = 0.9f + 0.1f * draw.value; scaleX = s; scaleY = s }
-                .drawWithContent { clipRect(bottom = size.height * draw.value) { this@drawWithContent.drawContent() } })
-            Box(Modifier.graphicsLayer { alpha = word.value; translationY = (1f - word.value) * 12f }) { Wordmark(28.dp) }
+    val gold = Vyrk.colors.gold
+    val ribbons = remember { Ribbon.make(72) }
+    Box(Modifier.fillMaxSize().graphicsLayer { alpha = fade.value }.background(androidx.compose.ui.graphics.Color.Black), contentAlignment = Alignment.Center) {
+        // The light ribbons, spreading out from the V's centre as the camera dives in.
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            val d = dive.value
+            if (d <= 0f) return@Canvas
+            val w = size.width; val h = size.height; val cx = w / 2f
+            val spread = d * d
+            for (r in ribbons) {
+                val x = cx + r.offset * spread * w * 0.75f
+                val bw = w * r.width * (0.4f + spread * 2.2f)
+                val a = (r.alpha * (0.25f + d) * (1f - (spread - 0.7f).coerceAtLeast(0f) * 2.2f)).coerceIn(0f, 1f)
+                if (a <= 0f) continue
+                val top = h * (0.5f - (0.08f + d * 0.7f) * r.reach)
+                val bottom = h * (0.5f + (0.08f + d * 0.7f) * r.reach)
+                drawRect(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(androidx.compose.ui.graphics.Color.Transparent, r.color(gold).copy(alpha = a), r.color(gold).copy(alpha = a), androidx.compose.ui.graphics.Color.Transparent),
+                        startY = top, endY = bottom,
+                    ),
+                    topLeft = Offset(x - bw / 2f, top), size = androidx.compose.ui.geometry.Size(bw, bottom - top),
+                )
+            }
+            // A white core flaring at the centre as the dive peaks.
+            val flare = (d - 0.55f).coerceAtLeast(0f) * 2.2f
+            if (flare > 0f) drawRect(androidx.compose.ui.graphics.Brush.radialGradient(
+                listOf(androidx.compose.ui.graphics.Color.White.copy(alpha = (flare * 0.9f).coerceAtMost(0.9f)), androidx.compose.ui.graphics.Color.Transparent),
+                center = Offset(cx, h / 2f), radius = w * (0.1f + flare * 0.5f)))
+        }
+        // The V: lights up, catches a sheen, then fills the screen as the camera passes through it.
+        VyrkMark(150.dp, accent = gold, modifier = Modifier
+            .graphicsLayer {
+                val a = appear.value; val d = dive.value
+                val s = (0.86f + 0.14f * a) * (1f + d * d * 14f)
+                scaleX = s; scaleY = s
+                alpha = a * (1f - ((d - 0.45f).coerceAtLeast(0f) * 2.4f)).coerceIn(0f, 1f)
+                compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
+            }
+            .drawWithContent {
+                drawContent()
+                // The sheen: a bright diagonal band crossing the mark once.
+                val x = size.width * (-0.4f + sheen.value * 1.8f)
+                if (sheen.value in 0.001f..0.999f) drawRect(
+                    androidx.compose.ui.graphics.Brush.linearGradient(
+                        listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f), androidx.compose.ui.graphics.Color.Transparent),
+                        start = Offset(x - size.width * 0.25f, 0f), end = Offset(x + size.width * 0.05f, size.height),
+                    ),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.SrcAtop,
+                )
+            })
+    }
+}
+
+/** One light ribbon: where it sits across the burst, how wide, bright and tall, and its shade. */
+private class Ribbon(val offset: Float, val width: Float, val alpha: Float, val reach: Float, private val shade: Int) {
+    fun color(gold: androidx.compose.ui.graphics.Color) = when (shade) {
+        0 -> gold
+        1 -> androidx.compose.ui.graphics.Color(0xFFF3DEB0)
+        2 -> androidx.compose.ui.graphics.Color(0xFFB07A2E)
+        3 -> androidx.compose.ui.graphics.Color.White
+        else -> androidx.compose.ui.graphics.Color(0xFFE8B86A)
+    }
+
+    companion object {
+        fun make(n: Int): List<Ribbon> {
+            val rnd = java.util.Random(4)
+            return List(n) {
+                val o = (rnd.nextGaussian() * 0.45).toFloat().coerceIn(-1.2f, 1.2f)
+                Ribbon(o, 0.002f + rnd.nextFloat() * 0.012f, 0.35f + rnd.nextFloat() * 0.65f, 0.55f + rnd.nextFloat() * 0.6f, rnd.nextInt(5))
+            }
         }
     }
 }
