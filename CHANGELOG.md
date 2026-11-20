@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.54
+
+- Christmas Movies on Home, from 1 November to 6 January: well-known Christmas films (TMDB's "christmas" keyword, most popular first), right after the Top 10 rows. Hide row hides it.
+
 ## v0.1.53
 
 - Smoother on SHIELD and other TV boxes: the opening animation no longer waits on its sound loading and draws far less per frame; the artwork colour glow waits until you settle on a title or tab and draws only where it shows; all loading placeholders share one shimmer that runs only while one is on screen; posters track their place more cheaply.

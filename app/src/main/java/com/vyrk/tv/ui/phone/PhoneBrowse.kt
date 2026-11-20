@@ -195,6 +195,7 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
     val heroOn = settings.heroEnabled && model.tab != Tab.LIVE
     val showTop10Card = false
     val top10Rows = com.vyrk.tv.ui.browse.rememberTop10Rows(session, enabled = isHome && !model.animeOnly)
+    val seasonalRows = com.vyrk.tv.ui.browse.rememberSeasonalRows(session, enabled = isHome && !model.animeOnly)
 
     val recRows = com.vyrk.tv.ui.browse.rememberRecommendationRows(session, enabled = isHome)
     val bottom = bottomContentPadding()
@@ -233,7 +234,7 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
         if (model.built && model.rows.isEmpty()) item(key = "empty") {
             Text(str(R.string.row_empty), style = Vyrk.type.bodyL, color = Vyrk.colors.textMuted, modifier = Modifier.padding(PhoneMargin))
         }
-        items(top10Rows + model.rows.take(2) + recRows + model.rows.drop(2), key = { it.key }) { row ->
+        items(top10Rows + seasonalRows + model.rows.take(2) + recRows + model.rows.drop(2), key = { it.key }) { row ->
             LaunchedEffect(row) { model.ensureLoaded(row) }
             CatalogueRow(row, model, library, sstate.newEpisodes)
         }
