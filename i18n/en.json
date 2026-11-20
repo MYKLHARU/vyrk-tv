@@ -409,5 +409,9 @@
     "skipped_opening": "Skipped opening",
     "skipped_ending": "Skipped ending",
     "top10_movies": "Top 10 Movies",
-    "top10_shows": "Top 10 TV Shows"
+    "top10_shows": "Top 10 TV Shows",
+    "expanding_cards": "Expanding cards",
+    "expanding_cards_desc": "The focused poster widens into the title's artwork",
+    "nav_sounds": "Navigation sounds",
+    "nav_sounds_desc": "Soft clicks when you move and select with the remote"
 }

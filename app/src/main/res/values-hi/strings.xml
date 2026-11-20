@@ -102,6 +102,8 @@
     <string name="excl_uncached">सेवा पर तैयार नहीं</string>
     <string name="excl_unknown">अज्ञात स्रोत प्रकार</string>
     <string name="exit">बाहर निकलें</string>
+    <string name="expanding_cards">फैलने वाले कार्ड</string>
+    <string name="expanding_cards_desc">फ़ोकस किया गया पोस्टर टाइटल की तस्वीर में फैल जाता है</string>
     <string name="featured_hero">फ़ीचर्ड हीरो</string>
     <string name="featured_hero_desc">होम के ऊपर बड़े फ़ीचर्ड टाइटल</string>
     <string name="filter_all">सभी</string>
@@ -157,6 +159,8 @@
     <string name="more_info">और जानकारी</string>
     <string name="move_down">नीचे ले जाएँ</string>
     <string name="move_up">ऊपर ले जाएँ</string>
+    <string name="nav_sounds">नेविगेशन ध्वनियाँ</string>
+    <string name="nav_sounds_desc">रिमोट से चलने और चुनने पर हल्की क्लिक</string>
     <string name="needs_streaming_server">इसके लिए Stremio का लोकल स्ट्रीमिंग सर्वर चाहिए, जो VYRK में नहीं है। इसे छोड़ दिया गया है।</string>
     <string name="next">आगे</string>
     <string name="next_episode">अगला एपिसोड</string>

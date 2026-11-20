@@ -102,6 +102,8 @@
     <string name="excl_uncached">not ready on the service</string>
     <string name="excl_unknown">unknown source type</string>
     <string name="exit">Exit</string>
+    <string name="expanding_cards">Expanding cards</string>
+    <string name="expanding_cards_desc">The focused poster widens into the title\'s artwork</string>
     <string name="featured_hero">Featured hero</string>
     <string name="featured_hero_desc">Large featured titles at the top of Home</string>
     <string name="filter_all">All</string>
@@ -157,6 +159,8 @@
     <string name="more_info">More info</string>
     <string name="move_down">Move down</string>
     <string name="move_up">Move up</string>
+    <string name="nav_sounds">Navigation sounds</string>
+    <string name="nav_sounds_desc">Soft clicks when you move and select with the remote</string>
     <string name="needs_streaming_server">Needs Stremio\'s local streaming server, which VYRK doesn\'t include. It is skipped.</string>
     <string name="next">Next</string>
     <string name="next_episode">Next episode</string>

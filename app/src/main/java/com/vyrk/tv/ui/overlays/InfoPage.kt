@@ -222,6 +222,11 @@ fun InfoPage(o: Overlay.Info) {
                 }
                 Spacer(Modifier.height(14.dp))
                 TitleFacts(meta, full)
+                // Films: the picture and sound of the source VYRK would play, once sources are in.
+                if (!isSeries) {
+                    val badges = (sources as? SourcesState.Ready)?.ranked?.let { com.vyrk.core.stream.QualityBadges.best(it) }.orEmpty()
+                    Box(Modifier.padding(top = 8.dp).height(20.dp)) { com.vyrk.tv.ui.components.QualityBadgeRow(badges) }
+                }
                 Spacer(Modifier.height(10.dp))
                 Text(synopsis, style = Vyrk.type.bodyL, color = c.text.copy(alpha = 0.92f), minLines = 3, maxLines = 3, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(14.dp))
@@ -311,6 +316,8 @@ private fun TitleBackdrop(urls: List<String>) {
             if (u != null) AsyncImage(u, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                 onSuccess = { if (shown == null) shown = u }, onError = { failed = failed + u })
         }
+        val context = androidx.compose.ui.platform.LocalContext.current
+        LaunchedEffect(shown) { shown?.let { com.vyrk.tv.ui.components.AmbientTint.follow(context, it) } }
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
             0f to shade.copy(alpha = 0.92f), 0.30f to shade.copy(alpha = 0.78f), 0.55f to shade.copy(alpha = 0.28f), 0.78f to Color.Transparent,
         )))
@@ -320,6 +327,8 @@ private fun TitleBackdrop(urls: List<String>) {
         // A soft obsidian pool low on the left, where the title and actions sit.
         Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(shade.copy(alpha = 0.55f), Color.Transparent),
             center = androidx.compose.ui.geometry.Offset(0f, Float.POSITIVE_INFINITY), radius = 1400f)))
+        // The title's own colour, low on the left and high on the right.
+        com.vyrk.tv.ui.components.AmbientTintGlow(strength = 1.3f)
         com.vyrk.tv.ui.components.RunePillar(Modifier.offset(x = 17.dp).padding(top = 72.dp, bottom = 28.dp))
     }
 }
@@ -714,7 +723,9 @@ private fun EpisodeCard(
 private fun InfoSourceCard(r: Ranked, recommended: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val c = Vyrk.colors
     val i = r.info
-    val parts = listOf(i.releaseType.label, i.codec.label, i.hdr.joinToString("/") { it.label }, i.audio.joinToString(" ") { it.label }, i.channels.orEmpty(),
+    // Picture and sound as badges; the rest as text.
+    val badges = com.vyrk.core.stream.QualityBadges.of(i).filter { it != com.vyrk.core.stream.QualityBadge.UHD && it != com.vyrk.core.stream.QualityBadge.FHD }
+    val parts = listOf(i.releaseType.label, i.codec.label, i.audio.filterNot { it == com.vyrk.core.stream.AudioFormat.ATMOS || it == com.vyrk.core.stream.AudioFormat.DTS_X }.joinToString(" ") { it.label },
         i.sizeBytes?.let { "%.1f GB".format(it / 1e9) }.orEmpty()).filter { it.isNotBlank() }
     val langs = i.languages.joinToString(", ") { Languages.label(it) }
     val uhd = (i.resolution ?: 0) >= 2160
@@ -745,7 +756,10 @@ private fun InfoSourceCard(r: Ranked, recommended: Boolean, modifier: Modifier =
                     Text(r.candidate.addonName, style = Vyrk.type.titleS, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     if (recommended) Tag(str(R.string.recommended), color = c.onAccent, background = c.accent)
                 }
-                Text(parts.joinToString("  ·  ").ifEmpty { "—" }, style = Vyrk.type.labelM, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+                Row(Modifier.padding(top = 3.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (badges.isNotEmpty()) com.vyrk.tv.ui.components.QualityBadgeRow(badges)
+                    Text(parts.joinToString("  ·  ").ifEmpty { if (badges.isEmpty()) "—" else "" }, style = Vyrk.type.labelM, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
                 if (langs.isNotEmpty()) Text(langs, style = Vyrk.type.labelS, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }

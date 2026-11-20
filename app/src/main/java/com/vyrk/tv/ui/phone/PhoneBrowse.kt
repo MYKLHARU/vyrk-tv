@@ -84,6 +84,7 @@ import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Vyrk
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.components.shimmer
 
 /** Poster width in rows on phones. */
 private val PosterW = 112.dp
@@ -349,7 +350,7 @@ private fun CatalogueRow(row: RowState, model: BrowseModel, library: Map<String,
             row.items.isEmpty() && row.loadedOnce && !row.loading ->
                 Text(str(R.string.row_empty), style = Vyrk.type.bodyM, color = c.textMuted, modifier = Modifier.padding(horizontal = PhoneMargin))
             row.items.isEmpty() -> LazyRow(contentPadding = PaddingValues(horizontal = PhoneMargin), horizontalArrangement = Arrangement.spacedBy(10.dp), userScrollEnabled = false) {
-                items(6) { Box(Modifier.width(PosterW).height(PosterW * 1.5f).clip(RoundedCornerShape(10.dp)).background(c.raised.copy(alpha = 0.6f))) }
+                items(6) { Box(Modifier.width(PosterW).height(PosterW * 1.5f).clip(RoundedCornerShape(10.dp)).shimmer()) }
             }
             else -> {
                 val state = rememberLazyListState()

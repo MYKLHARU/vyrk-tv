@@ -83,7 +83,7 @@ fun Overlays() {
         androidx.compose.runtime.key(o) {
             OverlayWindow(onDismiss = { closeOverlay(app, o) }) {
                 when (o) {
-                    is Overlay.Info -> InfoPage(o)
+                    is Overlay.Info -> com.vyrk.tv.ui.components.OpenTransition { InfoPage(o) }
                     is Overlay.ItemMenu -> com.vyrk.tv.ui.components.MenuColors { ItemMenu(o) }
                     is Overlay.InstallConfirm -> com.vyrk.tv.ui.components.MenuColors { InstallConfirm(o) }
                     is Overlay.AddonQr -> com.vyrk.tv.ui.components.MenuColors { AddonQr(o) }

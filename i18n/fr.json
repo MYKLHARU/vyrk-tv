@@ -409,5 +409,9 @@
     "skipped_opening": "Opening passé",
     "skipped_ending": "Ending passé",
     "top10_movies": "Top 10 films",
-    "top10_shows": "Top 10 séries"
+    "top10_shows": "Top 10 séries",
+    "expanding_cards": "Cartes extensibles",
+    "expanding_cards_desc": "L'affiche sélectionnée s'élargit avec l'image du titre",
+    "nav_sounds": "Sons de navigation",
+    "nav_sounds_desc": "Des clics doux quand vous naviguez et validez avec la télécommande"
 }

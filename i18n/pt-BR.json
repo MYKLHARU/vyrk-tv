@@ -409,5 +409,9 @@
     "skipped_opening": "Abertura pulada",
     "skipped_ending": "Encerramento pulado",
     "top10_movies": "Top 10 filmes",
-    "top10_shows": "Top 10 séries"
+    "top10_shows": "Top 10 séries",
+    "expanding_cards": "Cartões expansíveis",
+    "expanding_cards_desc": "O pôster em foco se expande com a arte do título",
+    "nav_sounds": "Sons de navegação",
+    "nav_sounds_desc": "Cliques suaves ao navegar e selecionar com o controle"
 }

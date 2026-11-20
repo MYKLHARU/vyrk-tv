@@ -111,6 +111,8 @@ fun Wallpaper(titleKey: String, urls: List<String>, modifier: Modifier = Modifie
         if (result is coil3.request.SuccessResult) shown = target
         else if (urls.getOrNull(attempt) == target) { shown = null; attempt += 1 }
     }
+    // The page's glow takes this artwork's colour.
+    androidx.compose.runtime.LaunchedEffect(shown) { shown?.let { com.vyrk.tv.ui.components.AmbientTint.follow(context, it) } }
     Box(modifier) {
         // The app's own background (navy, violet low on the left, teal high on the right), as on
         // Library and Settings: what the picture blends into at the bottom.

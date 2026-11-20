@@ -61,6 +61,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import com.vyrk.tv.ui.components.shimmer
 
 const val CW_ROW = "cw"
 /** Rows fetched as soon as a tab is built; the hero takes its titles from these. */
@@ -357,7 +361,7 @@ fun BrowsePage(
                 contentPadding = PaddingValues(bottom = 200.dp),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Dimens.rowGap),
             ) {
-                if (heroPending) item(key = "hero") { Box(Modifier.fillMaxWidth().height(heroH)) }
+                if (heroPending) item(key = "hero") { HeroSkeleton(heroH) }
                 if (heroEnabled) item(key = "hero") {
                     Hero(
                         items = heroItems, index = heroIndex.coerceAtMost(heroItems.lastIndex), full = heroFull, art = heroArt, height = heroH,
@@ -404,6 +408,7 @@ fun BrowsePage(
                     BrowseRow(
                         row = row,
                         posterWidth = settings.posterSize.dp,
+                        expandCards = settings.expandCards,
                         library = library,
                         newEpisodes = newEpisodes,
                         // One instance per row, reading live values when called, so rows can skip
@@ -568,4 +573,23 @@ private fun prefetchImage(context: android.content.Context, model: BrowseModel, 
     val b = coil3.request.ImageRequest.Builder(context).data(url)
     if (w != null && h != null && w > 0 && h > 0) b.size(w, h)
     coil3.SingletonImageLoader.get(context).enqueue(b.build())
+}
+
+/** The featured title's shape while it loads: logo, facts, synopsis and Watch now, shimmering. */
+@Composable
+private fun HeroSkeleton(height: androidx.compose.ui.unit.Dp) {
+    Box(Modifier.fillMaxWidth().height(height)) {
+        androidx.compose.foundation.layout.Column(
+            Modifier.align(Alignment.BottomStart).padding(start = Dimens.screenMargin, bottom = 30.dp),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+        ) {
+            fun Modifier.bone(w: androidx.compose.ui.unit.Dp, h: androidx.compose.ui.unit.Dp, r: androidx.compose.ui.unit.Dp = 6.dp) =
+                this.size(w, h).clip(androidx.compose.foundation.shape.RoundedCornerShape(r)).shimmer()
+            Box(Modifier.bone(110.dp, 12.dp))
+            Box(Modifier.bone(340.dp, 72.dp, 10.dp))
+            Box(Modifier.bone(260.dp, 14.dp))
+            Box(Modifier.bone(460.dp, 12.dp)); Box(Modifier.bone(400.dp, 12.dp))
+            Box(Modifier.padding(top = 6.dp).bone(170.dp, 44.dp, 22.dp))
+        }
+    }
 }

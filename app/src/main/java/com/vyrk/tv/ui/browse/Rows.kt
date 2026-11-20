@@ -43,6 +43,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
@@ -84,6 +85,7 @@ import com.vyrk.tv.ui.theme.Jakarta
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.components.shimmer
 
 /** What a poster shows from the live library. */
 data class PosterState(val progress: Float, val watched: Boolean, val isNew: Boolean)
@@ -112,9 +114,17 @@ fun Poster(
     onLongClick: () -> Unit,
     onPlayPause: () -> Unit,
     traceLabel: String,
+    /** Expanding cards (Settings): with focus, the poster widens into the title's backdrop. */
+    expand: Boolean = false,
+    /** Shown on the expanded card: where you are ("S2 E5 · 12m left"), else year and rating. */
+    detail: String? = null,
 ) {
     val c = Vyrk.colors
     val height = width * 1.5f
+    var focused by remember { mutableStateOf(false) }
+    val wide = expand && focused
+    val shownWidth by androidx.compose.animation.core.animateDpAsState(if (wide) height * (16f / 9f) else width,
+        com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.STANDARD), label = "poster-width")
     val year = meta.releaseInfo?.take(4).orEmpty()
     val pct = (state.progress * 100).toInt()
     val newLabel = str(R.string.badge_new)
@@ -124,11 +134,14 @@ fun Poster(
         if (state.watched) append(", ✓")
         if (state.isNew) append(", ").append(newLabel)
     }
+    val coords = remember { arrayOfNulls<androidx.compose.ui.layout.LayoutCoordinates>(1) }
     Surface(
-        onClick = onClick,
+        onClick = { com.vyrk.tv.ui.components.OpenOrigin.from(coords[0]); onClick() },
         onLongClick = onLongClick,
         modifier = modifier.focusHalo()
-            .size(width, height)
+            .onGloballyPositioned { coords[0] = it }
+            .size(shownWidth, height)
+            .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = desc }
             .traceFocus(traceLabel)
             .onPreviewKeyEvent { e ->
@@ -169,6 +182,11 @@ fun Poster(
         if (url != null) {
             AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
         } else fallback()
+        if (expand) {
+            val show by androidx.compose.animation.core.animateFloatAsState(if (wide) 1f else 0f,
+                com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.STANDARD), label = "poster-expand")
+            if (show > 0f) ExpandedArt(meta, height * (16f / 9f), height, detail, Modifier.fillMaxSize().graphicsLayer { alpha = show })
+        }
         if (state.isNew) {
             Box(Modifier.align(Alignment.TopStart).padding(6.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                 Text(newLabel, style = Vyrk.type.labelS, color = c.onAccent)
@@ -281,6 +299,7 @@ fun BrowseRow(
     restoreIndex: Int?,
     onRestored: () -> Unit,
     listState: LazyListState = rememberLazyListState(),
+    expandCards: Boolean = false,
 ) {
     val c = Vyrk.colors
     val scope = rememberCoroutineScope()
@@ -324,7 +343,7 @@ fun BrowseRow(
                     modifier = Modifier.traceFocus("row:${row.key}:more"))
             }
             row.items.isEmpty() -> Row(Modifier.padding(start = Dimens.screenMargin), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                repeat(7) { Box(Modifier.size(posterWidth, height).clip(Dimens.posterShape).background(c.raised.copy(alpha = 0.6f))) }
+                repeat(7) { Box(Modifier.size(posterWidth, height).clip(Dimens.posterShape).shimmer()) }
             }
             else -> CompositionLocalProvider(LocalBringIntoViewSpec provides ComfortZoneSpec) {
                 LazyRow(
@@ -380,6 +399,8 @@ fun BrowseRow(
                                 onLongClick = { callbacks.onLongClick(meta, i) },
                                 onPlayPause = { callbacks.onPlayPause(meta, i) },
                                 traceLabel = "poster:${row.key}#$i",
+                                expand = expandCards,
+                                detail = if (expandCards) continueLabel(library[meta.id]?.takeIf { it.isInContinueWatching }) else null,
                             )
                         }
                     }
@@ -397,6 +418,29 @@ fun BrowseRow(
                 }
             }
         }
+    }
+}
+
+/** The expanded card's face: backdrop, logo and one line of detail over a soft shade. */
+@Composable
+private fun ExpandedArt(meta: MetaPreview, width: Dp, height: Dp, detail: String?, modifier: Modifier) {
+    val c = Vyrk.colors
+    Box(modifier.background(c.raised)) {
+        val candidates = remember(meta.id, meta.background, meta.poster) {
+            listOfNotNull(com.vyrk.core.art.Artwork.forBackdrop(meta.background, "w780"), com.vyrk.core.art.Artwork.metahubBackground(meta.id), meta.poster).distinct()
+        }
+        var attempt by remember(candidates) { mutableIntStateOf(0) }
+        val url = candidates.getOrNull(attempt)
+        if (url != null) AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.6f to Color.Transparent)))
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to c.shade.copy(alpha = 0.9f))))
+        Box(Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 12.dp).width(width * 0.52f).height(height * 0.42f), contentAlignment = Alignment.BottomStart) {
+            val logos = remember(meta.type, meta.id, meta.logo, meta.imdbId) { com.vyrk.core.art.Artwork.logos(meta, null, null) }
+            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.52f, height * 0.42f, Vyrk.type.titleL, Modifier.fillMaxHeight())
+        }
+        val line = detail ?: listOfNotNull(meta.releaseInfo?.take(4)?.takeIf { it.isNotBlank() }, meta.imdbRating?.takeIf { it.isNotBlank() }?.let { "★ $it" }).joinToString("  ·  ")
+        if (line.isNotEmpty()) Text(line, style = Vyrk.type.labelL, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = 12.dp, end = 12.dp, bottom = 12.dp))
     }
 }
 
@@ -432,10 +476,12 @@ fun ContinueCard(
     val label = continueLabel(item)
     val desc = listOfNotNull(meta.name.takeIf { it.isNotBlank() }, label).joinToString(", ")
     var focused by remember { mutableStateOf(false) }
+    val coords = remember { arrayOfNulls<androidx.compose.ui.layout.LayoutCoordinates>(1) }
     Surface(
-        onClick = onClick,
+        onClick = { com.vyrk.tv.ui.components.OpenOrigin.from(coords[0]); onClick() },
         onLongClick = onLongClick,
         modifier = modifier.focusHalo()
+            .onGloballyPositioned { coords[0] = it }
             .size(width, height)
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = desc }
