@@ -102,6 +102,8 @@
     <string name="excl_uncached">non pronto sul servizio</string>
     <string name="excl_unknown">tipo di fonte sconosciuto</string>
     <string name="exit">Esci</string>
+    <string name="expanding_cards">Schede espandibili</string>
+    <string name="expanding_cards_desc">La locandina selezionata si allarga con l\'immagine del titolo</string>
     <string name="featured_hero">Titolo in evidenza</string>
     <string name="featured_hero_desc">Grandi titoli in evidenza in cima alla Home</string>
     <string name="filter_all">Tutti</string>
@@ -157,6 +159,8 @@
     <string name="more_info">Altre informazioni</string>
     <string name="move_down">Sposta giù</string>
     <string name="move_up">Sposta su</string>
+    <string name="nav_sounds">Suoni di navigazione</string>
+    <string name="nav_sounds_desc">Clic leggeri quando ti muovi e selezioni con il telecomando</string>
     <string name="needs_streaming_server">Richiede il server di streaming locale di Stremio, che VYRK non include. Viene ignorato.</string>
     <string name="next">Avanti</string>
     <string name="next_episode">Episodio successivo</string>

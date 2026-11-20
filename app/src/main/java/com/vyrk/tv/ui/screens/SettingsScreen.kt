@@ -439,6 +439,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                         ColorSwatch(a.color, a.onColor, accentName(a), s.accent == a.name, { upd { it.copy(accent = a.name) } }, "set:accent:$i")
                     }
                 }
+                Toggle(str(R.string.expanding_cards), s.expandCards, "set:expand_cards", str(R.string.expanding_cards_desc), R.drawable.ic_image) { v -> upd { it.copy(expandCards = v) } }
                 Toggle(str(R.string.reduce_motion), s.reduceMotion, "set:reduce_motion", str(R.string.reduce_motion_desc), R.drawable.ic_motion) { v -> upd { it.copy(reduceMotion = v) } }
                 Toggle(str(R.string.blur_unwatched), s.blurUnwatched, "set:blur", str(R.string.blur_unwatched_desc), R.drawable.ic_blur) { v -> upd { it.copy(blurUnwatched = v) } }
                 Setting(str(R.string.hidden_rows), str(R.string.hidden_rows_desc), R.drawable.ic_rows) {
@@ -465,6 +466,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
             }
             Group.PICTURE -> {
                 Choice(str(R.string.interface_size), listOf("SMALL" to str(R.string.size_small), "MEDIUM" to str(R.string.size_medium), "LARGE" to str(R.string.size_large)), d.interfaceSize, "set:ui_size") { v -> graph.updateDevice { it.copy(interfaceSize = v) } }
+                Toggle(str(R.string.nav_sounds), d.navSounds, "set:nav_sounds", str(R.string.nav_sounds_desc), R.drawable.ic_audio) { v -> graph.updateDevice { it.copy(navSounds = v) } }
                 Toggle(str(R.string.frame_rate_matching), d.frameRateMatching, "set:frame_rate") { v -> graph.updateDevice { it.copy(frameRateMatching = v) } }
                 Toggle(str(R.string.passthrough), d.passthrough, "set:passthrough", str(R.string.passthrough_hint)) { v -> graph.updateDevice { it.copy(passthrough = v) } }
                 Toggle(str(R.string.tv_speaker_mode), d.tvSpeakerMode, "set:tv_speaker") { v -> graph.updateDevice { it.copy(tvSpeakerMode = v) } }

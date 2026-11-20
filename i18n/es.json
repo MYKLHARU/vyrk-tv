@@ -409,5 +409,9 @@
     "skipped_opening": "Opening saltado",
     "skipped_ending": "Ending saltado",
     "top10_movies": "Top 10 películas",
-    "top10_shows": "Top 10 series"
+    "top10_shows": "Top 10 series",
+    "expanding_cards": "Tarjetas expandibles",
+    "expanding_cards_desc": "El póster enfocado se amplía con la imagen del título",
+    "nav_sounds": "Sonidos de navegación",
+    "nav_sounds_desc": "Clics suaves al moverte y seleccionar con el mando"
 }

@@ -83,7 +83,7 @@ fun AmbientBackground(modifier: Modifier = Modifier) {
                 drawPath(ridge, ridgeFill)
             }
         },
-    )
+    ) { AmbientTintGlow() }
 }
 
 /**

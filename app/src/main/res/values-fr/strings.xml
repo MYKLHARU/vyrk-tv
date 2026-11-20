@@ -102,6 +102,8 @@
     <string name="excl_uncached">pas prêt sur le service</string>
     <string name="excl_unknown">type de source inconnu</string>
     <string name="exit">Quitter</string>
+    <string name="expanding_cards">Cartes extensibles</string>
+    <string name="expanding_cards_desc">L\'affiche sélectionnée s\'élargit avec l\'image du titre</string>
     <string name="featured_hero">Mise en avant</string>
     <string name="featured_hero_desc">Grands titres mis en avant en haut de l\'Accueil</string>
     <string name="filter_all">Tout</string>
@@ -157,6 +159,8 @@
     <string name="more_info">Plus d\'infos</string>
     <string name="move_down">Descendre</string>
     <string name="move_up">Monter</string>
+    <string name="nav_sounds">Sons de navigation</string>
+    <string name="nav_sounds_desc">Des clics doux quand vous naviguez et validez avec la télécommande</string>
     <string name="needs_streaming_server">Nécessite le serveur de streaming local de Stremio, que VYRK n\'inclut pas. Il est ignoré.</string>
     <string name="next">Suivant</string>
     <string name="next_episode">Épisode suivant</string>

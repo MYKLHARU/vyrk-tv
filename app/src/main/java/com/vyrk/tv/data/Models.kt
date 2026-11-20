@@ -47,6 +47,8 @@ data class ProfileSettings(
     // Stored under a new key so everyone moved to the gold default once (the old key held FROST).
     @kotlinx.serialization.SerialName("accentColour") val accent: String = "GOLD",
     val reduceMotion: Boolean = false,
+    /** Expanding cards: the focused poster widens into the title's backdrop. */
+    val expandCards: Boolean = false,
     val blurUnwatched: Boolean = false,
     val hiddenRows: Set<String> = emptySet(),
     val top10CardDismissed: Boolean = false,
@@ -80,6 +82,8 @@ data class ProfileSettings(
 @Serializable
 data class DeviceSettings(
     val interfaceSize: String = "MEDIUM",
+    /** Soft clicks when moving and selecting with the remote. */
+    val navSounds: Boolean = false,
     val frameRateMatching: Boolean = false,
     val passthrough: Boolean = false,
     val tvSpeakerMode: Boolean = false,

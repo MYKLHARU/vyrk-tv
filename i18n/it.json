@@ -409,5 +409,9 @@
     "skipped_opening": "Opening saltata",
     "skipped_ending": "Ending saltata",
     "top10_movies": "Top 10 film",
-    "top10_shows": "Top 10 serie TV"
+    "top10_shows": "Top 10 serie TV",
+    "expanding_cards": "Schede espandibili",
+    "expanding_cards_desc": "La locandina selezionata si allarga con l'immagine del titolo",
+    "nav_sounds": "Suoni di navigazione",
+    "nav_sounds_desc": "Clic leggeri quando ti muovi e selezioni con il telecomando"
 }

@@ -409,5 +409,9 @@
     "skipped_opening": "Opening übersprungen",
     "skipped_ending": "Ending übersprungen",
     "top10_movies": "Top 10 Filme",
-    "top10_shows": "Top 10 Serien"
+    "top10_shows": "Top 10 Serien",
+    "expanding_cards": "Aufklappende Karten",
+    "expanding_cards_desc": "Das fokussierte Poster wird zum Titelbild",
+    "nav_sounds": "Navigationstöne",
+    "nav_sounds_desc": "Sanfte Klicks beim Bewegen und Auswählen mit der Fernbedienung"
 }

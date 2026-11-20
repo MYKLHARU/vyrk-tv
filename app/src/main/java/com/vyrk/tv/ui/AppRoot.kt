@@ -139,12 +139,18 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
     }
 
     val phone = remember { com.vyrk.tv.ui.phone.FormFactor.isPhone(activity) }
+    // Remote clicks (Settings › Picture & sound); not on phones.
+    LaunchedEffect(device.navSounds, phone) {
+        NavSounds.enabled = device.navSounds && !phone
+        if (NavSounds.enabled) NavSounds.init(activity.applicationContext)
+    }
     VyrkTheme(accent, reduceMotion = settings?.reduceMotion == true) {
         // Phones and tablets: the touch interface, at the device's own density.
         if (phone) {
             androidx.compose.runtime.CompositionLocalProvider(
                 LocalApp provides app, LocalGraph provides graph, LocalSession provides session, LocalActivity provides activity,
             ) { com.vyrk.tv.ui.phone.PhoneRoot(session) }
+            com.vyrk.tv.ui.components.LaunchIntro()
             return@VyrkTheme
         }
         FittedCanvas(size) {
@@ -160,6 +166,7 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
                     }
                     Overlays()
                     ToastHost(app)
+                    com.vyrk.tv.ui.components.LaunchIntro()
                 }
             }
         }

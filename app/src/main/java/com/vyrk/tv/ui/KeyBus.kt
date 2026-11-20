@@ -44,6 +44,7 @@ object KeyBus {
 
     fun onKey(event: KeyEvent): Boolean {
         Perf.onKey(event)
+        NavSounds.onKey(event)
         // Focus trace for the test journeys, off unless switched on with
         // `adb shell setprop log.tag.VyrkFocus DEBUG`.
         if (event.action == KeyEvent.ACTION_UP && Log.isLoggable("VyrkFocus", Log.DEBUG)) {

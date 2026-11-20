@@ -152,6 +152,7 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
     var episodeMenu by remember { mutableStateOf<Video?>(null) }
 
     Box(Modifier.fillMaxSize().background(c.background)) {
+        com.vyrk.tv.ui.components.AmbientTintGlow(strength = 1.2f)
         LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 32.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())) {
             item(key = "art") { InfoHeader(meta, full, art.backdrops, art.logos, art.logosLoading, name) }
             item(key = "actions") {
@@ -238,7 +239,9 @@ private fun InfoHeader(meta: MetaPreview, full: MetaItem?, backdrops: List<Strin
             val urls = (backdrops + listOfNotNull(meta.poster)).distinct()
             var attempt by remember(urls) { mutableIntStateOf(0) }
             urls.getOrNull(attempt)?.let { u ->
-                AsyncImage(u, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (urls.getOrNull(attempt) == u) attempt += 1 })
+                val context = androidx.compose.ui.platform.LocalContext.current
+                AsyncImage(u, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (urls.getOrNull(attempt) == u) attempt += 1 },
+                    onSuccess = { kotlinx.coroutines.MainScope().launch { com.vyrk.tv.ui.components.AmbientTint.follow(context, u) } })
             }
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
                 0f to c.shade.copy(alpha = 0.6f), 0.2f to Color.Transparent, 0.5f to Color.Transparent, 0.82f to c.background.copy(alpha = 0.9f), 1f to c.background,
@@ -518,7 +521,8 @@ private fun SourceList(ready: Sources.Ready, onPick: (Ranked) -> Unit) {
 fun SourceCard(r: Ranked, recommended: Boolean, expanded: Boolean, tag: String, onClick: () -> Unit, onLongClick: () -> Unit, current: Boolean = false) {
     val c = Vyrk.colors
     val i = r.info
-    val parts = listOf(i.releaseType.label, i.codec.label, i.hdr.joinToString("/") { it.label }, i.audio.joinToString(" ") { it.label }, i.channels.orEmpty(),
+    val badges = com.vyrk.core.stream.QualityBadges.of(i).filter { it != com.vyrk.core.stream.QualityBadge.UHD && it != com.vyrk.core.stream.QualityBadge.FHD }
+    val parts = listOf(i.releaseType.label, i.codec.label, i.audio.filterNot { it == com.vyrk.core.stream.AudioFormat.ATMOS || it == com.vyrk.core.stream.AudioFormat.DTS_X }.joinToString(" ") { it.label },
         i.sizeBytes?.let { "%.1f GB".format(it / 1e9) }.orEmpty()).filter { it.isNotBlank() }
     val langs = i.languages.joinToString(", ") { Languages.label(it) }
     val uhd = (i.resolution ?: 0) >= 2160
@@ -543,7 +547,8 @@ fun SourceCard(r: Ranked, recommended: Boolean, expanded: Boolean, tag: String, 
                     if (recommended) Tag(str(R.string.recommended), color = c.onAccent, background = c.accent)
                     if (current) Icon(R.drawable.ic_check, null, Modifier.size(16.dp), tint = c.gold)
                 }
-                Text(parts.joinToString("  ·  ").ifEmpty { "—" }, style = Vyrk.type.labelM, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+                if (badges.isNotEmpty()) com.vyrk.tv.ui.components.QualityBadgeRow(badges, Modifier.padding(top = 4.dp))
+                Text(parts.joinToString("  ·  ").ifEmpty { if (badges.isEmpty()) "—" else "" }, style = Vyrk.type.labelM, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
                 if (langs.isNotEmpty()) Text(langs, style = Vyrk.type.labelS, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }

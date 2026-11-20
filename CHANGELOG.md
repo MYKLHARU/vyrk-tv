@@ -2,6 +2,16 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.51
+
+- Colour that follows the artwork: the background glows softly in the colours of the title on screen, on Home and the title page (phones too).
+- Loading placeholders: rows, posters and the featured title shimmer in their own shapes while add-ons load.
+- Expanding cards (Settings › Profile & appearance, off by default): the focused poster widens into the title's artwork with its logo and where you are ("S2 E5 · 12m left") or year and rating.
+- Quality badges: 4K / HD, Dolby Vision / HDR10+ / HDR, Atmos / DTS:X and 5.1 / 7.1 on each source, and on a film's title page for the source VYRK would play.
+- The title page grows out of the poster you opened it from (Reduce motion turns it off).
+- An opening moment: the gold V draws itself as VYRK starts.
+- Navigation sounds (Settings › Picture & sound, off by default): soft clicks for moving, selecting and going back with the remote.
+
 ## v0.1.50
 
 - Home has two Top 10 rows: Top 10 Movies and Top 10 TV Shows, this week's most popular on TMDB (no anime), right after Continue Watching. Each shows when an installed add-on can open IMDb titles (Cinemeta does). Streaming-service catalogues (Netflix, Disney+ …) are ordinary rows now, and the card suggesting a Top 10 add-on is gone.
