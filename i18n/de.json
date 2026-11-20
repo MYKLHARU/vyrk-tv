@@ -415,5 +415,6 @@
     "nav_sounds": "Navigationstöne",
     "nav_sounds_desc": "Sanfte Klicks beim Bewegen und Auswählen mit der Fernbedienung",
     "intro_sound": "Eröffnungston",
-    "intro_sound_desc": "Spielt den VYRK-Sound zur Startanimation"
+    "intro_sound_desc": "Spielt den VYRK-Sound zur Startanimation",
+    "christmas_movies": "Weihnachtsfilme"
 }

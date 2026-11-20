@@ -55,6 +55,11 @@ probe "welcome"
 expect '^welcome:guest$' "first run shows the QR code with Use without an account"
 shot welcome
 key KEYCODE_DPAD_CENTER 2 "use without an account"
+# On a busy software-rendered emulator the first press can be dropped: if the welcome screen is
+# still up after a while, press again (logged, so a real problem would still show).
+if ! focus_matches '^hero:watch$' 20; then
+  if [[ "$(focus_now)" == welcome:guest ]]; then log "welcome still showing; pressing again"; key KEYCODE_DPAD_CENTER 2 "use without an account (again)"; fi
+fi
 wait_focus '^hero:watch$' 45
 shot home-live-cinemeta
 

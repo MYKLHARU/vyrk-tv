@@ -148,6 +148,7 @@ fun BrowsePage(
     // VYRK has its own Top 10 rows now, so the card suggesting a Top 10 add-on is gone.
     val showTop10Card = false
     val top10Rows = rememberTop10Rows(session, enabled = isHome && !model.animeOnly)
+    val seasonalRows = rememberSeasonalRows(session, enabled = isHome && !model.animeOnly)
     // "Because you watched …" on the regular Home, after its first two catalogue rows; on a TV the
     // same titles fill VYRK's row on the launcher.
     val recRows = rememberRecommendationRows(session, enabled = isHome && !model.animeOnly) { picks ->
@@ -156,6 +157,7 @@ fun BrowsePage(
     val rows = buildList {
         if (isHome && cwItems.isNotEmpty()) add(cwRow)
         addAll(top10Rows)
+        addAll(seasonalRows)
         addAll(model.rows.take(2))
         addAll(recRows)
         addAll(model.rows.drop(2))

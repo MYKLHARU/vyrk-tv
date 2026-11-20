@@ -415,5 +415,6 @@
     "nav_sounds": "Sons de navigation",
     "nav_sounds_desc": "Des clics doux quand vous naviguez et validez avec la télécommande",
     "intro_sound": "Son d'ouverture",
-    "intro_sound_desc": "Joue le son de VYRK avec l'animation d'ouverture"
+    "intro_sound_desc": "Joue le son de VYRK avec l'animation d'ouverture",
+    "christmas_movies": "Films de Noël"
 }

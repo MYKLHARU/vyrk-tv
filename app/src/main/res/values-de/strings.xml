@@ -54,6 +54,7 @@
     <string name="chapter_n">Kapitel %1$d</string>
     <string name="chapter_recap">Rückblick</string>
     <string name="check_for_updates">Nach Updates suchen</string>
+    <string name="christmas_movies">Weihnachtsfilme</string>
     <string name="clear">Löschen</string>
     <string name="clear_dialogue">Klare Dialoge</string>
     <string name="clear_dialogue_hint">Macht Sprache leichter verständlich. Nur PCM-Audio, nie mit Passthrough.</string>

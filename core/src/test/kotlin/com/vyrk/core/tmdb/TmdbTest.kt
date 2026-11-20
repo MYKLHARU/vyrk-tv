@@ -185,4 +185,10 @@ class TmdbTest {
         kotlin.test.assertEquals(listOf(false, true), t.map { it.looksAnime })
         kotlin.test.assertEquals(listOf(3L), TmdbClient.parseRecommendations(o, "movie").map { it.tmdbId })
     }
+
+    @Test fun keywordIdIsAnExactNameMatch() {
+        val o = kotlinx.serialization.json.Json.parseToJsonElement("""{"results":[{"id":9,"name":"christmas party"},{"id":207317,"name":"christmas"}]}""") as kotlinx.serialization.json.JsonObject
+        kotlin.test.assertEquals(207317L, TmdbClient.keywordId(o, "Christmas"))
+        kotlin.test.assertEquals(null, TmdbClient.keywordId(o, "xmas"))
+    }
 }

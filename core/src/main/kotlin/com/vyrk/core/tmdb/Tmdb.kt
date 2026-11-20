@@ -200,6 +200,19 @@ class TmdbClient(
         return get(path)?.let { parseTitles(it, if (mediaType == "tv") "series" else "movie", minVotes = 0) }.orEmpty()
     }
 
+    /**
+     * Well-known films tagged with a TMDB keyword ([keyword], e.g. "christmas"), most popular first.
+     * The keyword's id is looked up by name (exact match), so no ids are hard-coded.
+     */
+    suspend fun moviesWithKeyword(keyword: String, minVotes: Int = 150): List<TmdbTitle> {
+        val id = get("/search/keyword", "query=${AddonUrls.encodeComponent(keyword)}")?.let { keywordId(it, keyword) } ?: return emptyList()
+        val all = (1..2).flatMap { page ->
+            get("/discover/movie", "with_keywords=$id&sort_by=popularity.desc&vote_count.gte=$minVotes&include_adult=false&page=$page")
+                ?.let { parseTitles(it, "movie", minVotes) }.orEmpty()
+        }
+        return all.distinctBy { it.tmdbId }
+    }
+
     /** IMDb id of a film or show, so VYRK can open it through the user's add-ons. */
     suspend fun imdbId(tmdbId: Long, type: String): String? {
         val path = if (type == "series") "/tv/$tmdbId/external_ids" else "/movie/$tmdbId/external_ids"
@@ -300,6 +313,10 @@ class TmdbClient(
          * as blank cards), and so are ones with too few votes to be worth suggesting.
          */
         fun parseRecommendations(o: JsonObject, defaultType: String): List<TmdbTitle> = parseTitles(o, defaultType, minVotes = 20)
+
+        /** The id of the keyword named exactly [name] (any case) in a /search/keyword answer. */
+        fun keywordId(o: JsonObject, name: String): Long? =
+            o.arr("results").firstOrNull { (it["name"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.equals(name, ignoreCase = true) == true }?.l("id")
 
         /** A `results` list of films and shows; entries without a title or poster are dropped. */
         fun parseTitles(o: JsonObject, defaultType: String, minVotes: Int): List<TmdbTitle> = o.arr("results").mapNotNull { r ->
