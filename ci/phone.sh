@@ -185,6 +185,15 @@ for _ in 1 2 3; do
 done
 sleep 1
 [[ "$(resumed_now)" == *PlayerActivity* ]] && fail "Back didn't leave the player"
+# Back on the title page, Play can sit off screen (the page scrolled while the player was up,
+# or it laid out in landscape first). Note what is showing, scroll to the top and look again.
+if ! find_el id info:play 10 >/dev/null; then
+  log "info:play not found; on screen: $(grep -o 'resource-id="[^"]*"' "$OUT/ui.xml" 2>/dev/null | sed 's/resource-id=//' | sort -u | head -25 | tr '\n' ' ')"
+  log "resumed: $(resumed_now)"
+  read -r W H < <(adb_run shell wm size | grep -o '[0-9]*x[0-9]*' | tail -1 | tr 'x' ' ')
+  adb_run shell input swipe $((W / 2)) $((H / 3)) $((W / 2)) $((H * 4 / 5)) 250; sleep 1
+  adb_run shell input swipe $((W / 2)) $((H / 3)) $((W / 2)) $((H * 4 / 5)) 250; sleep 1
+fi
 expect_el id info:play 10 "leaving the player returns to the title page"
 adbs input keyevent KEYCODE_BACK
 sleep 2
