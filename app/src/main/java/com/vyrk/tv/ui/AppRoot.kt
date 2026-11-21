@@ -51,6 +51,10 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
     val accent = runCatching { AccentChoice.valueOf(settings?.accent ?: "GOLD") }.getOrDefault(AccentChoice.GOLD)
     val size = runCatching { InterfaceSize.valueOf(device.interfaceSize) }.getOrDefault(InterfaceSize.MEDIUM)
     val scope = rememberCoroutineScope()
+    // The opening plays before these settings load; it reads this copy of them next time.
+    LaunchedEffect(settings?.reduceMotion, device.introSound) {
+        if (settings != null) com.vyrk.tv.ui.components.IntroPrefs.mirror(activity, settings.reduceMotion, device.introSound)
+    }
 
     // Startup routing.
     LaunchedEffect(ready) {
@@ -151,7 +155,6 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
                 LocalApp provides app, LocalGraph provides graph, LocalSession provides session, LocalActivity provides activity,
             ) { com.vyrk.tv.ui.phone.PhoneRoot(session) }
             com.vyrk.tv.ui.components.ShimmerHost()
-            com.vyrk.tv.ui.components.LaunchIntro(sound = false)
             return@VyrkTheme
         }
         FittedCanvas(size) {
@@ -168,7 +171,6 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
                     Overlays()
                     ToastHost(app)
                     com.vyrk.tv.ui.components.ShimmerHost()
-                    com.vyrk.tv.ui.components.LaunchIntro(sound = device.introSound)
                 }
             }
         }

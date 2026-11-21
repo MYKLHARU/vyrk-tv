@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.57
+
+- The opening is smooth now: it's drawn as an animated vector that Android plays on its render thread, so the app starting up underneath can't make it stutter. The camera now dives through the V straight into Home (already showing its featured title's picture) instead of a copy of the picture; there's no fade at the end.
+- Expanding cards: title logos are sharp (they were decoded at the card's size, then lost their transparent margins and got scaled up). Logos on the hero benefit too.
+
 ## v0.1.56
 
 - The opening now opens onto your film: as the camera dives into the gold V, the V becomes a window onto the title Home is featuring, the picture opens out to fill the screen, and Home starts on that same title with its picture already behind it. (On the very first run, before Home has featured anything, the V bursts into gold light as before.)
