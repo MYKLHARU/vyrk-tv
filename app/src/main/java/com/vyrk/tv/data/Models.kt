@@ -87,6 +87,10 @@ data class DeviceSettings(
     /** The sound with VYRK's opening animation. */
     val introSound: Boolean = true,
     val frameRateMatching: Boolean = false,
+    /** Play Dolby Vision files with an HDR10 base as HDR10 (more stable on some boxes). */
+    val dolbyVisionAsHdr10: Boolean = false,
+    /** Play in another app by default: its package, or "" for VYRK's own player. */
+    val externalPlayer: String = "",
     val passthrough: Boolean = false,
     val tvSpeakerMode: Boolean = false,
     val softwareAudio: Boolean = false,

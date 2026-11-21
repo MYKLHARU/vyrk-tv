@@ -416,5 +416,21 @@
     "nav_sounds_desc": "Soft clicks when you move and select with the remote",
     "intro_sound": "Opening sound",
     "intro_sound_desc": "Play VYRK's sound with the opening animation",
-    "christmas_movies": "Christmas Movies"
+    "christmas_movies": "Christmas Movies",
+    "no_picture_trying_next": "No picture from this source. Trying the next one.",
+    "excl_froze_here": "Froze this TV before",
+    "play_with": "Play with",
+    "play_with_app": "Play with %1$s",
+    "play_with_other_app": "Another app…",
+    "external_player_missing": "Couldn't open that player.",
+    "dv_as_hdr10": "Play Dolby Vision as HDR10",
+    "dv_as_hdr10_desc": "Uses the HDR10 picture inside Dolby Vision files. Try this if Dolby Vision films go black or freeze (SHIELD and profile 7 remuxes).",
+    "default_player": "Default player",
+    "default_player_hint": "Open streams in another installed player. You can also pick one from Sources while watching.",
+    "ask_each_time": "Ask each time",
+    "frozen_sources": "Sources that froze this TV",
+    "frozen_sources_desc": "%1$d skipped from now on",
+    "frozen_forgotten": "Frozen sources forgotten",
+    "forget": "Forget",
+    "freeze_notice": "The TV froze last time while starting %1$s (%2$s). VYRK will skip that source from now on."
 }

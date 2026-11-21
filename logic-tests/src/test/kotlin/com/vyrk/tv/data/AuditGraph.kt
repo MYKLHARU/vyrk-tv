@@ -12,6 +12,7 @@ class AppGraph(val transport: HttpTransport) {
     val deviceSettings = MutableStateFlow(DeviceSettings())
     fun updateDevice(f: (DeviceSettings) -> DeviceSettings) { deviceSettings.value = f(deviceSettings.value) }
     val device = AuditDevice()
+    fun playbackCaps() = device.caps(deviceSettings.value.measuredBps)
 }
 class AuditDevice {
     fun caps(speed: Double?) = DeviceCaps(measuredBps = speed)

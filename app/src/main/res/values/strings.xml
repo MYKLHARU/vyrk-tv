@@ -24,6 +24,7 @@
     <string name="anime_no_matches">No matching titles in this catalogue page. Genre results depend on the tags supplied by your add-on.</string>
     <string name="any">Any</string>
     <string name="app_language">App language</string>
+    <string name="ask_each_time">Ask each time</string>
     <string name="ask_still_watching">Ask if I\'m still watching</string>
     <string name="audio">Audio</string>
     <string name="audio_formats">Audio formats</string>
@@ -71,6 +72,8 @@
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_diagnostics">Copy diagnostics</string>
     <string name="country">Country</string>
+    <string name="default_player">Default player</string>
+    <string name="default_player_hint">Open streams in another installed player. You can also pick one from Sources while watching.</string>
     <string name="default_profile_name">Me</string>
     <string name="default_tab">Default tab</string>
     <string name="default_tab_desc">The tab VYRK opens on</string>
@@ -88,6 +91,8 @@
     <string name="dolby_vision_decoder">Dolby Vision decoder</string>
     <string name="done">Done</string>
     <string name="download_install">Download and install</string>
+    <string name="dv_as_hdr10">Play Dolby Vision as HDR10</string>
+    <string name="dv_as_hdr10_desc">Uses the HDR10 picture inside Dolby Vision files. Try this if Dolby Vision films go black or freeze (SHIELD and profile 7 remuxes).</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Ends at %1$s</string>
     <string name="episodes">Episodes</string>
@@ -96,6 +101,7 @@
     <string name="excl_dolby_vision">Dolby Vision only, which this TV can\'t decode</string>
     <string name="excl_external">opens outside the app</string>
     <string name="excl_failed_here">this kind of file failed to play on this TV</string>
+    <string name="excl_froze_here">Froze this TV before</string>
     <string name="excl_max_res">over your maximum resolution</string>
     <string name="excl_max_size">over your maximum file size</string>
     <string name="excl_ten_bit">10-bit or HDR video this TV\'s decoder can\'t play</string>
@@ -105,12 +111,18 @@
     <string name="exit">Exit</string>
     <string name="expanding_cards">Expanding cards</string>
     <string name="expanding_cards_desc">The focused poster widens into the title\'s artwork</string>
+    <string name="external_player_missing">Couldn\'t open that player.</string>
     <string name="featured_hero">Featured hero</string>
     <string name="featured_hero_desc">Large featured titles at the top of Home</string>
     <string name="filter_all">All</string>
     <string name="finding_sources">Finding sources…</string>
+    <string name="forget">Forget</string>
     <string name="forward_10">Forward 10 seconds</string>
     <string name="frame_rate_matching">Frame-rate matching</string>
+    <string name="freeze_notice">The TV froze last time while starting %1$s (%2$s). VYRK will skip that source from now on.</string>
+    <string name="frozen_forgotten">Frozen sources forgotten</string>
+    <string name="frozen_sources">Sources that froze this TV</string>
+    <string name="frozen_sources_desc">%1$d skipped from now on</string>
     <string name="header_hint">OK Details · Hold OK or ☰ Options · ⏯ Preview</string>
     <string name="hero_rotation">Hero rotation</string>
     <string name="hero_rotation_desc">Move to the next featured title automatically</string>
@@ -170,6 +182,7 @@
     <string name="no_account">Not signed in. Your library is saved on this TV.</string>
     <string name="no_episodes">No add-on returned episodes for this title.</string>
     <string name="no_hidden">Nothing hidden.</string>
+    <string name="no_picture_trying_next">No picture from this source. Trying the next one.</string>
     <string name="no_results">No results for \"%1$s\"</string>
     <string name="no_sources_found">No add-on found a source for this title.</string>
     <string name="no_sources_playable">Sources were found, but none can play on this TV.</string>
@@ -207,6 +220,9 @@
     <string name="picture_zoom">Zoom</string>
     <string name="play">Play</string>
     <string name="play_now">Play now</string>
+    <string name="play_with">Play with</string>
+    <string name="play_with_app">Play with %1$s</string>
+    <string name="play_with_other_app">Another app…</string>
     <string name="poster_size">Poster size</string>
     <string name="poster_size_desc">Size of the posters in rows</string>
     <string name="preferred_format">Preferred format</string>

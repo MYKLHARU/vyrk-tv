@@ -180,7 +180,7 @@ fun InfoPage(o: Overlay.Info) {
                 rememberedKey = mem.pickedKey, lastBingeGroup = mem.bingeGroup, lastReleaseGroup = mem.releaseGroup,
                 runtimeMinutes = RuntimeText.minutes(full?.runtime),
             )
-            sources = SourcesState.Ready(StreamRanker.rank(cands, graph.device.caps(graph.deviceSettings.value.measuredBps), prefs), results.count { it.second is AddonResult.Failed }, results.size)
+            sources = SourcesState.Ready(StreamRanker.rank(cands, graph.playbackCaps(), prefs), results.count { it.second is AddonResult.Failed }, results.size)
         }
     }
     // Focus moves once the tab's content has been laid out.

@@ -100,6 +100,11 @@ import kotlinx.coroutines.flow.first
 
 @OptIn(UnstableApi::class)
 class PlayerActivity : ComponentActivity() {
+    companion object {
+        const val REQ_EXTERNAL = 4207
+        /** Let Android ask which app. */
+        const val ASK = "ask"
+    }
     private lateinit var graph: AppGraph
     private var model: PlayerModel? = null
     private var mediaSession: MediaSession? = null
@@ -118,11 +123,21 @@ class PlayerActivity : ComponentActivity() {
         originalModeId = window.attributes.preferredDisplayModeId
         val dev = graph.deviceSettings.value
         val engine = PlayerEngine(this, graph.http, dev.passthrough, dev.softwareAudio,
-            onBandwidth = { bps -> graph.updateDevice { it.copy(measuredBps = bps) } }, live = com.vyrk.core.addon.isLiveType(req.meta.type))
+            onBandwidth = { bps -> graph.updateDevice { it.copy(measuredBps = bps) } }, live = com.vyrk.core.addon.isLiveType(req.meta.type),
+            dolbyVisionAsHdr10 = dev.dolbyVisionAsHdr10)
         engine.dialogue.clearDialogue = dev.clearDialogue && !dev.passthrough
         engine.dialogue.tvSpeaker = dev.tvSpeakerMode && !dev.passthrough
         val m = PlayerModel(graph, session, lifecycleScope, engine, req) { id, args -> getString(id, *args) }
         model = m
+        // The freeze guard notes each source as it starts and clears it once it settles.
+        m.onSourceStarting = { r ->
+            graph.freezeGuard.starting(r.candidate.key, com.vyrk.core.stream.StreamRanker.freezeKind(r.info), req.meta.name,
+                listOf(r.info.resolutionLabel, if (com.vyrk.core.stream.Hdr.DOLBY_VISION in r.info.hdr) "Dolby Vision" else "", r.info.releaseType.label)
+                    .filter { it.isNotBlank() }.joinToString(" · ") + " · " + r.candidate.addonName)
+        }
+        m.onSourceSettled = { graph.freezeGuard.settled() }
+        // Another app as the default player (Settings › Picture & sound).
+        m.handOff = { r, pos -> dev.externalPlayer.isNotEmpty() && playExternally(r, dev.externalPlayer, pos) }
         mediaSession = MediaSession.Builder(this, engine.player).build()
         engine.player.addListener(object : Player.Listener {
             override fun onRenderedFirstFrame() {
@@ -239,8 +254,51 @@ class PlayerActivity : ComponentActivity() {
         model?.let { it.saveProgress(); it.engine.player.pause(); it.close() }
     }
 
+    /**
+     * Hands [r] to another app ([pkg], or "ask" to let Android ask) from [positionMs]; VYRK's
+     * player pauses, saves where the other app stopped when it reports it, then closes.
+     */
+    fun playExternally(r: Ranked, pkg: String, positionMs: Long): Boolean {
+        val url = r.candidate.stream.url ?: return false
+        val m = model ?: return false
+        val headers = r.candidate.stream.behaviorHints.proxyHeaders?.request.orEmpty()
+        val title = m.request.meta.name + (m.video?.let { v -> if (v.season != null && v.episode != null) " · S${v.season} E${v.episode}" else "" } ?: "")
+        m.engine.player.pause()
+        graph.freezeGuard.settled()
+        val ok = ExternalPlayers.launch(this, ExternalPlayers.intent(pkg.takeIf { it != ASK }, url, title, positionMs, headers), REQ_EXTERNAL)
+        if (ok) {
+            m.engine.player.stop()
+            android.util.Log.i("VYRK", "external_player $pkg")
+        }
+        return ok
+    }
+
+    /** "Play with …" from the sources panel: the source on screen (or the best one) from where you are. */
+    fun playExternallyNow(pkg: String) {
+        val m = model ?: return
+        val r = m.current ?: m.candidates.firstOrNull() ?: return
+        val pos = m.engine.player.currentPosition.takeIf { m.phase == Phase.PLAYING && it > 0 } ?: m.resumePosition()
+        if (!playExternally(r, pkg, pos)) m.showNotice(getString(R.string.external_player_missing))
+    }
+
+    @Deprecated("Activity results")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQ_EXTERNAL) return
+        ExternalPlayers.result(data)?.let { (pos, dur) ->
+            val m = model ?: return@let
+            // Continue Watching, then Trakt (80%+ marks it watched there).
+            val total = m.saveExternalProgress(pos, dur) ?: return@let
+            trakt.onPlaying(m.traktItem, true, pos, total)
+            trakt.close(pos, total)
+        }
+        finish()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        if (::graph.isInitialized) graph.freezeGuard.settled()
         FocusTrace.exit(PLAYER_LAYER)
         if (originalModeId != 0 || window.attributes.preferredDisplayModeId != 0) window.attributes = window.attributes.apply { preferredDisplayModeId = originalModeId }
         mediaSession?.release()
@@ -750,7 +808,24 @@ private fun SourcesPanel(m: PlayerModel) {
             items(m.excluded, key = { "x" + it.candidate.key + it.candidate.addonId }) { r ->
                 Text("${r.candidate.addonName} · ${r.info.resolutionLabel} — ${exclusionText(r)}", style = Vyrk.type.bodyS, color = Vyrk.colors.textMuted)
             }
+            // Another player for this source, from where you are.
+            item { PlayWithOtherApps(Modifier.padding(top = 10.dp)) }
         }
+    }
+}
+
+@Composable
+fun PlayWithOtherApps(modifier: Modifier = Modifier) {
+    val activity = androidx.compose.ui.platform.LocalContext.current as? PlayerActivity ?: return
+    val apps = remember { ExternalPlayers.installed(activity) }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.play_with), style = Vyrk.type.labelL, color = Vyrk.colors.textMuted)
+        apps.take(4).forEach { app ->
+            VyrkChip(stringResource(R.string.play_with_app, app.label), false, { activity.playExternallyNow(app.pkg) },
+                Modifier.fillMaxWidth().traceFocus("player:external:${app.pkg}"))
+        }
+        VyrkChip(stringResource(R.string.play_with_other_app), false, { activity.playExternallyNow(PlayerActivity.ASK) },
+            Modifier.fillMaxWidth().traceFocus("player:external:ask"))
     }
 }
 
@@ -767,6 +842,7 @@ fun exclusionText(r: Ranked): String = when (r.exclusion) {
     com.vyrk.core.stream.Exclusion.TEN_BIT_UNSUPPORTED -> stringResource(R.string.excl_ten_bit)
     com.vyrk.core.stream.Exclusion.DOLBY_VISION_UNSUPPORTED -> stringResource(R.string.excl_dolby_vision)
     com.vyrk.core.stream.Exclusion.FAILED_ON_THIS_TV -> stringResource(R.string.excl_failed_here)
+    com.vyrk.core.stream.Exclusion.FROZE_THIS_TV -> stringResource(R.string.excl_froze_here)
     null -> ""
 }
 

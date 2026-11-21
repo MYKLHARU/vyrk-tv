@@ -416,5 +416,21 @@
     "nav_sounds_desc": "Des clics doux quand vous naviguez et validez avec la télécommande",
     "intro_sound": "Son d'ouverture",
     "intro_sound_desc": "Joue le son de VYRK avec l'animation d'ouverture",
-    "christmas_movies": "Films de Noël"
+    "christmas_movies": "Films de Noël",
+    "no_picture_trying_next": "Aucune image avec cette source. Essai de la suivante.",
+    "excl_froze_here": "A déjà figé cette TV",
+    "play_with": "Lire avec",
+    "play_with_app": "Lire avec %1$s",
+    "play_with_other_app": "Une autre app…",
+    "external_player_missing": "Impossible d'ouvrir ce lecteur.",
+    "dv_as_hdr10": "Lire le Dolby Vision en HDR10",
+    "dv_as_hdr10_desc": "Utilise l'image HDR10 contenue dans les fichiers Dolby Vision. À essayer si les films Dolby Vision restent noirs ou figent (SHIELD et remux profil 7).",
+    "default_player": "Lecteur par défaut",
+    "default_player_hint": "Ouvre les flux dans un autre lecteur installé. Vous pouvez aussi en choisir un dans Sources pendant la lecture.",
+    "ask_each_time": "Demander à chaque fois",
+    "frozen_sources": "Sources qui ont figé cette TV",
+    "frozen_sources_desc": "%1$d ignorée(s) désormais",
+    "frozen_forgotten": "Sources figées oubliées",
+    "forget": "Oublier",
+    "freeze_notice": "La TV s'est figée la dernière fois au lancement de %1$s (%2$s). VYRK ignorera désormais cette source."
 }

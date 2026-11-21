@@ -28,4 +28,5 @@ const val skip_opening = 24
 const val skip_ending = 25
 const val skipped_opening = 26
 const val skipped_ending = 27
+const val no_picture_trying_next = 28
 } }

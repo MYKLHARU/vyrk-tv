@@ -416,5 +416,21 @@
     "nav_sounds_desc": "Clic leggeri quando ti muovi e selezioni con il telecomando",
     "intro_sound": "Suono di apertura",
     "intro_sound_desc": "Riproduce il suono di VYRK con l'animazione iniziale",
-    "christmas_movies": "Film di Natale"
+    "christmas_movies": "Film di Natale",
+    "no_picture_trying_next": "Nessuna immagine da questa fonte. Provo la successiva.",
+    "excl_froze_here": "Ha già bloccato questa TV",
+    "play_with": "Riproduci con",
+    "play_with_app": "Riproduci con %1$s",
+    "play_with_other_app": "Un'altra app…",
+    "external_player_missing": "Impossibile aprire quel lettore.",
+    "dv_as_hdr10": "Riproduci Dolby Vision come HDR10",
+    "dv_as_hdr10_desc": "Usa l'immagine HDR10 contenuta nei file Dolby Vision. Provalo se i film Dolby Vision restano neri o si bloccano (SHIELD e remux profilo 7).",
+    "default_player": "Lettore predefinito",
+    "default_player_hint": "Apre gli stream in un altro lettore installato. Puoi sceglierne uno anche da Fonti durante la visione.",
+    "ask_each_time": "Chiedi ogni volta",
+    "frozen_sources": "Fonti che hanno bloccato questa TV",
+    "frozen_sources_desc": "%1$d saltate d'ora in poi",
+    "frozen_forgotten": "Fonti bloccate dimenticate",
+    "forget": "Dimentica",
+    "freeze_notice": "L'ultima volta la TV si è bloccata avviando %1$s (%2$s). D'ora in poi VYRK salterà quella fonte."
 }

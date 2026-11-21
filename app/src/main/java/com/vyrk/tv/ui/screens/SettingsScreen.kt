@@ -469,6 +469,22 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                 Toggle(str(R.string.intro_sound), d.introSound, "set:intro_sound", str(R.string.intro_sound_desc), R.drawable.ic_audio) { v -> graph.updateDevice { it.copy(introSound = v) } }
                 Toggle(str(R.string.nav_sounds), d.navSounds, "set:nav_sounds", str(R.string.nav_sounds_desc), R.drawable.ic_audio) { v -> graph.updateDevice { it.copy(navSounds = v) } }
                 Toggle(str(R.string.frame_rate_matching), d.frameRateMatching, "set:frame_rate") { v -> graph.updateDevice { it.copy(frameRateMatching = v) } }
+                Toggle(str(R.string.dv_as_hdr10), d.dolbyVisionAsHdr10, "set:dv_hdr10", str(R.string.dv_as_hdr10_desc)) { v -> graph.updateDevice { it.copy(dolbyVisionAsHdr10 = v) } }
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val players = remember { com.vyrk.tv.player.ExternalPlayers.installed(ctx) }
+                val playerChoices = listOf("" to "VYRK") + players.take(4).map { it.pkg to it.label } + listOf(com.vyrk.tv.player.PlayerActivity.ASK to str(R.string.ask_each_time))
+                Choice(str(R.string.default_player), playerChoices, d.externalPlayer.takeIf { v -> playerChoices.any { it.first == v } } ?: "", "set:default_player", str(R.string.default_player_hint), R.drawable.ic_play) { v ->
+                    graph.updateDevice { it.copy(externalPlayer = v) }
+                }
+                // Sources that froze this TV are skipped; keep the row (and focus) until the page closes.
+                val hadFrozen = remember { graph.freezeGuard.count > 0 }
+                var frozen by remember { androidx.compose.runtime.mutableIntStateOf(graph.freezeGuard.count) }
+                if (hadFrozen) {
+                    val forgotten = str(R.string.frozen_forgotten)
+                    SettingRow(str(R.string.frozen_sources), str(R.string.frozen_sources_desc, frozen), Modifier.settingTile().leftToSidebar()) {
+                        VyrkButton(str(R.string.forget), onClick = { graph.freezeGuard.clear(); frozen = 0; app.showToast(forgotten) }, modifier = Modifier.traceFocus("set:forget_frozen"))
+                    }
+                }
                 Toggle(str(R.string.passthrough), d.passthrough, "set:passthrough", str(R.string.passthrough_hint)) { v -> graph.updateDevice { it.copy(passthrough = v) } }
                 Toggle(str(R.string.tv_speaker_mode), d.tvSpeakerMode, "set:tv_speaker") { v -> graph.updateDevice { it.copy(tvSpeakerMode = v) } }
                 Toggle(str(R.string.software_audio), d.softwareAudio, "set:software_audio") { v -> graph.updateDevice { it.copy(softwareAudio = v) } }

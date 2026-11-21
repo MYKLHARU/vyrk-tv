@@ -24,6 +24,7 @@
     <string name="anime_no_matches">इस पेज पर कोई मिलता-जुलता शीर्षक नहीं है। शैलियाँ ऐड-ऑन के टैग पर निर्भर करती हैं।</string>
     <string name="any">कोई भी</string>
     <string name="app_language">ऐप की भाषा</string>
+    <string name="ask_each_time">हर बार पूछें</string>
     <string name="ask_still_watching">पूछें कि क्या मैं अब भी देख रहा हूँ</string>
     <string name="audio">ऑडियो</string>
     <string name="audio_formats">ऑडियो फ़ॉर्मैट</string>
@@ -71,6 +72,8 @@
     <string name="continue_watching">देखना जारी रखें</string>
     <string name="copy_diagnostics">डायग्नोस्टिक्स कॉपी करें</string>
     <string name="country">देश</string>
+    <string name="default_player">डिफ़ॉल्ट प्लेयर</string>
+    <string name="default_player_hint">स्ट्रीम को किसी दूसरे इंस्टॉल किए प्लेयर में खोलें। देखते समय सोर्स में से भी चुन सकते हैं।</string>
     <string name="default_profile_name">मैं</string>
     <string name="default_tab">डिफ़ॉल्ट टैब</string>
     <string name="default_tab_desc">VYRK जिस टैब पर खुलता है</string>
@@ -88,6 +91,8 @@
     <string name="dolby_vision_decoder">Dolby Vision डिकोडर</string>
     <string name="done">हो गया</string>
     <string name="download_install">डाउनलोड करके इंस्टॉल करें</string>
+    <string name="dv_as_hdr10">Dolby Vision को HDR10 की तरह चलाएँ</string>
+    <string name="dv_as_hdr10_desc">Dolby Vision फ़ाइलों के अंदर की HDR10 तस्वीर इस्तेमाल करता है। अगर Dolby Vision फ़िल्में काली हो जाएँ या फ़्रीज़ हों तो इसे आज़माएँ (SHIELD और प्रोफ़ाइल 7 रीमक्स)।</string>
     <string name="encode">एनकोड</string>
     <string name="ends_at">%1$s पर समाप्त</string>
     <string name="episodes">एपिसोड</string>
@@ -96,6 +101,7 @@
     <string name="excl_dolby_vision">सिर्फ़ Dolby Vision, जिसे यह टीवी डिकोड नहीं करता</string>
     <string name="excl_external">ऐप के बाहर खुलता है</string>
     <string name="excl_failed_here">इस तरह की फ़ाइल इस टीवी पर नहीं चली</string>
+    <string name="excl_froze_here">इस टीवी को पहले फ़्रीज़ कर चुका है</string>
     <string name="excl_max_res">आपके अधिकतम रिज़ॉल्यूशन से ज़्यादा</string>
     <string name="excl_max_size">आपके अधिकतम फ़ाइल आकार से ज़्यादा</string>
     <string name="excl_ten_bit">10-बिट या HDR वीडियो, जिसे टीवी का डिकोडर नहीं चला सकता</string>
@@ -105,12 +111,18 @@
     <string name="exit">बाहर निकलें</string>
     <string name="expanding_cards">फैलने वाले कार्ड</string>
     <string name="expanding_cards_desc">फ़ोकस किया गया पोस्टर टाइटल की तस्वीर में फैल जाता है</string>
+    <string name="external_player_missing">वह प्लेयर नहीं खुल सका।</string>
     <string name="featured_hero">फ़ीचर्ड हीरो</string>
     <string name="featured_hero_desc">होम के ऊपर बड़े फ़ीचर्ड टाइटल</string>
     <string name="filter_all">सभी</string>
     <string name="finding_sources">स्रोत खोजे जा रहे हैं…</string>
+    <string name="forget">भूल जाएँ</string>
     <string name="forward_10">10 सेकंड आगे</string>
     <string name="frame_rate_matching">फ़्रेम रेट मिलाएँ</string>
+    <string name="freeze_notice">पिछली बार %1$s (%2$s) शुरू करते समय टीवी फ़्रीज़ हो गया था। VYRK अब से वह सोर्स छोड़ देगा।</string>
+    <string name="frozen_forgotten">फ़्रीज़ हुए सोर्स भुला दिए गए</string>
+    <string name="frozen_sources">सोर्स जिन्होंने इस टीवी को फ़्रीज़ किया</string>
+    <string name="frozen_sources_desc">अब से %1$d छोड़े जाएँगे</string>
     <string name="header_hint">OK विवरण · OK दबाए रखें या ☰ विकल्प · ⏯ प्रीव्यू</string>
     <string name="hero_rotation">हीरो घुमाव</string>
     <string name="hero_rotation_desc">अगले फ़ीचर्ड टाइटल पर अपने आप जाएँ</string>
@@ -170,6 +182,7 @@
     <string name="no_account">साइन इन नहीं है। आपकी लाइब्रेरी इस टीवी पर सहेजी जाती है।</string>
     <string name="no_episodes">किसी ऐड-ऑन ने इस टाइटल के एपिसोड नहीं दिए।</string>
     <string name="no_hidden">कुछ भी छिपा नहीं है।</string>
+    <string name="no_picture_trying_next">इस सोर्स से तस्वीर नहीं आई। अगला आज़मा रहे हैं।</string>
     <string name="no_results">\"%1$s\" के लिए कोई नतीजा नहीं</string>
     <string name="no_sources_found">किसी ऐड-ऑन को इस टाइटल का स्रोत नहीं मिला।</string>
     <string name="no_sources_playable">स्रोत मिले, लेकिन कोई भी इस टीवी पर नहीं चलता।</string>
@@ -207,6 +220,9 @@
     <string name="picture_zoom">ज़ूम</string>
     <string name="play">चलाएँ</string>
     <string name="play_now">अभी चलाएँ</string>
+    <string name="play_with">इससे चलाएँ</string>
+    <string name="play_with_app">%1$s से चलाएँ</string>
+    <string name="play_with_other_app">दूसरा ऐप…</string>
     <string name="poster_size">पोस्टर का आकार</string>
     <string name="poster_size_desc">पंक्तियों में पोस्टर का आकार</string>
     <string name="preferred_format">पसंदीदा फ़ॉर्मैट</string>

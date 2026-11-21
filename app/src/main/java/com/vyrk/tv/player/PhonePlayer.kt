@@ -432,4 +432,20 @@ private fun Sources(m: PlayerModel) {
     }
     if (m.excluded.isNotEmpty()) Text(stringResource(R.string.not_playable_here), style = Vyrk.type.labelL, color = c.textMuted, modifier = Modifier.padding(top = 10.dp))
     m.excluded.forEach { r -> Text("${r.candidate.addonName} · ${r.info.resolutionLabel} — ${exclusionText(r)}", style = Vyrk.type.bodyS, color = c.textMuted) }
+    PhonePlayWith()
+}
+
+/** "Play with VLC …" on phones: installed players, then Android's own app picker. */
+@Composable
+private fun PhonePlayWith() {
+    val activity = androidx.compose.ui.platform.LocalContext.current as? PlayerActivity ?: return
+    val apps = remember { ExternalPlayers.installed(activity) }
+    Text(stringResource(R.string.play_with), style = Vyrk.type.labelL, color = Vyrk.colors.textMuted, modifier = Modifier.padding(top = 14.dp, bottom = 6.dp))
+    apps.take(4).forEach { app ->
+        com.vyrk.tv.ui.phone.PhoneButton(stringResource(R.string.play_with_app, app.label), { activity.playExternallyNow(app.pkg) },
+            style = com.vyrk.tv.ui.phone.PhoneButtonStyle.OUTLINE, tag = "player:external:${app.pkg}")
+        Spacer(Modifier.height(6.dp))
+    }
+    com.vyrk.tv.ui.phone.PhoneButton(stringResource(R.string.play_with_other_app), { activity.playExternallyNow(PlayerActivity.ASK) },
+        style = com.vyrk.tv.ui.phone.PhoneButtonStyle.OUTLINE, tag = "player:external:ask")
 }

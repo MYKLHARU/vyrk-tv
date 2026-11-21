@@ -137,7 +137,7 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
                 rememberedKey = mem.pickedKey, lastBingeGroup = mem.bingeGroup, lastReleaseGroup = mem.releaseGroup,
                 runtimeMinutes = RuntimeText.minutes(full?.runtime),
             )
-            sources = Sources.Ready(StreamRanker.rank(cands, graph.device.caps(graph.deviceSettings.value.measuredBps), prefs),
+            sources = Sources.Ready(StreamRanker.rank(cands, graph.playbackCaps(), prefs),
                 results.count { it.second is AddonResult.Failed }, results.size)
         }
     }

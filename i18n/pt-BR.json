@@ -416,5 +416,21 @@
     "nav_sounds_desc": "Cliques suaves ao navegar e selecionar com o controle",
     "intro_sound": "Som de abertura",
     "intro_sound_desc": "Toca o som do VYRK com a animação de abertura",
-    "christmas_movies": "Filmes de Natal"
+    "christmas_movies": "Filmes de Natal",
+    "no_picture_trying_next": "Esta fonte não mostra imagem. Tentando a próxima.",
+    "excl_froze_here": "Já travou esta TV",
+    "play_with": "Reproduzir com",
+    "play_with_app": "Reproduzir com %1$s",
+    "play_with_other_app": "Outro app…",
+    "external_player_missing": "Não foi possível abrir esse player.",
+    "dv_as_hdr10": "Reproduzir Dolby Vision como HDR10",
+    "dv_as_hdr10_desc": "Usa a imagem HDR10 que vem nos arquivos Dolby Vision. Tente se filmes em Dolby Vision ficarem pretos ou travarem (SHIELD e remuxes perfil 7).",
+    "default_player": "Player padrão",
+    "default_player_hint": "Abre os streams em outro player instalado. Você também pode escolher um em Fontes enquanto assiste.",
+    "ask_each_time": "Perguntar sempre",
+    "frozen_sources": "Fontes que travaram esta TV",
+    "frozen_sources_desc": "%1$d serão puladas daqui em diante",
+    "frozen_forgotten": "Fontes travadas esquecidas",
+    "forget": "Esquecer",
+    "freeze_notice": "Na última vez a TV travou ao iniciar %1$s (%2$s). O VYRK vai pular essa fonte daqui em diante."
 }

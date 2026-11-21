@@ -60,6 +60,22 @@ class StreamRankerTest {
     }
 
     @Test
+    fun theFileThisTvFrozeOnIsSkippedAndItsKindGoesLast() {
+        val remux = c("Remux", remuxDv)
+        val web = c("Web", webDl1080)
+        val kind = StreamRanker.freezeKind(StreamParser.parse(remux.stream))
+        assertEquals("HEVC/10bit/4k/dv", kind)
+        val caps = tv4kHdr.copy(hevc10 = true, frozeKeys = setOf(remux.key), frozeKinds = setOf(kind))
+        val ranked = StreamRanker.rank(listOf(remux, web), caps, RankPrefs())
+        assertEquals(Exclusion.FROZE_THIS_TV, ranked.first { it.candidate.key == remux.key }.exclusion)
+        // Another file of the same kind still plays, but after everything else.
+        val other = c("Other", remuxDv)
+        val withOther = StreamRanker.rank(listOf(other, web), tv4kHdr.copy(hevc10 = true, frozeKinds = setOf(kind)), RankPrefs())
+        assertEquals(web.key, withOther.first().candidate.key)
+        assertTrue(withOther.all { it.playable })
+    }
+
+    @Test
     fun parsesCommonReleaseNames() {
         val i = StreamParser.parse(Stream(url = "https://x", name = "[RD+] Torrentio\n4K", title =
             "Movie.2023.2160p.UHD.BluRay.REMUX.DV.HDR10.HEVC.TrueHD.Atmos.7.1-GRP.mkv\n👤 12 💾 54.3 GB ⚙️ X\nMulti Audio ENG ITA"))

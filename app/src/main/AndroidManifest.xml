@@ -24,6 +24,14 @@
         </intent>
     </queries>
 
+    <!-- "Play with …": find the video players installed (Android 11+ hides other apps otherwise). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="video/*" />
+        </intent>
+    </queries>
+
     <application
         android:name=".VyrkApp"
         android:allowBackup="false"

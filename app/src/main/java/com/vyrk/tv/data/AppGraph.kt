@@ -76,6 +76,22 @@ class AppGraph(val context: Context) {
     val watchNext = WatchNext(context)
     /** VYRK's row on the launcher's home screen (TVs only). */
     val homeChannel = HomeChannel(context)
+    /** Sources that were starting when this TV froze (see [FreezeGuard]). */
+    val freezeGuard = FreezeGuard(context)
+
+    /**
+     * What the stream ranker should assume about this TV for playback: its decoders and display,
+     * minus what froze or failed here, and with Dolby Vision treated as HDR10 when that's on.
+     */
+    fun playbackCaps(): com.vyrk.core.stream.DeviceCaps {
+        val d = deviceSettings.value
+        val base = device.caps(d.measuredBps)
+        return base.copy(
+            frozeKeys = freezeGuard.frozenKeys(),
+            frozeKinds = freezeGuard.frozenKinds(),
+            displayDolbyVision = if (d.dolbyVisionAsHdr10) false else base.displayDolbyVision,
+        )
+    }
     /** Kitsu → MyAnimeList ids, for AniSkip and the airing calendar. */
     val animeIds = com.vyrk.core.anime.AnimeIds(transport)
     private var watchNextJob: kotlinx.coroutines.Job? = null

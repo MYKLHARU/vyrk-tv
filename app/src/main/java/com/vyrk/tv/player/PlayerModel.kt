@@ -59,6 +59,9 @@ enum class SleepMode { OFF, END_OF_EPISODE, MINUTES_60 }
 
 data class ExternalSub(val id: String, val lang: String, val label: String, val source: String, val url: String)
 
+/** How long after the first frame a hard freeze still counts against the source. */
+private const val FREEZE_GRACE_MS = 15_000L
+
 /** Player state and logic, kept apart from the activity so it is easy to follow. */
 class PlayerModel(
     private val graph: AppGraph,
@@ -148,6 +151,16 @@ class PlayerModel(
     val traktItem get() = com.vyrk.core.trakt.TraktItem.of(request.meta.type, request.meta.id, playingVideoId ?: request.videoId)
     private var firstFrame = false
     private var firstFrameJob: Job? = null
+
+    /** Told just before each source starts (the freeze guard notes it down). */
+    var onSourceStarting: ((Ranked) -> Unit)? = null
+    /** Told when the picture appears or the source fails cleanly. */
+    var onSourceSettled: (() -> Unit)? = null
+    /**
+     * Offered the best source before VYRK plays it (with the start position). Returns true when it
+     * played it somewhere else (another app), and VYRK's player steps aside.
+     */
+    var handOff: ((Ranked, Long) -> Boolean)? = null
     private var lastPushMs = SystemClock.elapsedRealtime()
     private val stall = StallDetector()
     private var autoplayedInRow = 0
@@ -247,10 +260,12 @@ class PlayerModel(
         }
         policy = RecoveryPolicy(playable.size, userPicked)
         index = 0
-        playCandidate(LibraryRules.resumeMs(item, vid))
+        val startAt = LibraryRules.resumeMs(item, vid)
+        if (handOff?.invoke(playable.first(), startAt) == true) return
+        playCandidate(startAt)
     }
 
-    fun caps() = graph.device.caps(graph.deviceSettings.value.measuredBps)
+    fun caps() = graph.playbackCaps()
 
     fun prefs(titleId: String): RankPrefs {
         val mem = session.titleMemory(titleId)
@@ -290,19 +305,58 @@ class PlayerModel(
         playingVideoId = video?.id ?: request.videoId ?: request.meta.id
         Diagnostics.log("player", "candidate ${index + 1}/${candidates.size} from ${r.candidate.addonId}")
         vyrkEvent("play_start $playingVideoId $startMs")
+        onSourceStarting?.invoke(r)
         engine.prepare(r.candidate.stream, startMs, preserveAudio = audioOverride != null)
         resetProgressClock()
         scope.launch { loadSubtitles(playingVideoId!!, r, generation) }
         firstFrameJob?.cancel()
         firstFrameJob = scope.launch {
             delay(maxOf(policy.firstFrameTimeoutMs, com.vyrk.core.playback.PlaybackBuffering.startupTimeoutMs(isLive, r.info)))
-            if (!firstFrame) handle(policy.onFirstFrameTimeout())
+            if (!firstFrame) noPicture(r)
         }
+    }
+
+    /**
+     * The picture didn't come up in time. If the file had loaded (the player was ready, or sound
+     * was playing) the decoder is what failed: count it against this kind of file, so the next
+     * source tried is a different kind, and say what's happening. Then move on.
+     */
+    private fun noPicture(r: Ranked) {
+        val p = engine.player
+        val loaded = p.playbackState == Player.STATE_READY || p.isPlaying
+        Diagnostics.log("player", "no picture after start (loaded=$loaded)")
+        vyrkEvent("no_picture $loaded")
+        onSourceSettled?.invoke()
+        if (loaded) {
+            decoderFailedOn(r)
+            if (index + 1 <= candidates.lastIndex) showNotice(s(com.vyrk.tv.R.string.no_picture_trying_next))
+        }
+        handle(policy.onFirstFrameTimeout())
+    }
+
+    /** Where you stopped in another app, saved like VYRK's own progress. */
+    fun saveExternalProgress(positionMs: Long, durationMs: Long): Long? {
+        if (isLive || positionMs <= 0) return null
+        val vid = playingVideoId ?: video?.id ?: request.videoId ?: request.meta.id
+        val base = session.item(request.meta.id) ?: item ?: session.itemFor(request.meta)
+        // Not every player reports the length; the listed runtime ("118 min") stands in.
+        val dur = durationMs.takeIf { it > 0 } ?: meta?.runtime?.let { Regex("""\d+""").find(it)?.value?.toLongOrNull()?.times(60_000) } ?: return null
+        val wb = meta?.takeIf { it.videos.isNotEmpty() }?.let { base.watchedBitField(it.videos) }
+        var (next, _) = LibraryRules.onTimeChanged(base, vid, positionMs, dur, now, wb, allowCompletion = true, playedMs = positionMs)
+        if (positionMs >= dur * 0.9) next = LibraryRules.onPlaybackEnded(next, nextVideo, allowCompletion = true)
+        item = next
+        session.putItem(next, pushSoon = false)
+        session.pushNow()
+        return dur
     }
 
     fun onFirstFrame() {
         if (firstFrame) return
         firstFrame = true
+        // Some TVs lock up a few seconds after the picture starts (a display-mode switch), so the
+        // freeze guard stays armed briefly — unless another source has started since.
+        val settling = current
+        scope.launch { delay(FREEZE_GRACE_MS); if (current === settling && firstFrame) onSourceSettled?.invoke() }
         Diagnostics.log("player", "first frame ${engine.bufferDiagnostics()}")
         resetProgressClock()
         firstFrameJob?.cancel()
@@ -421,6 +475,7 @@ class PlayerModel(
     }
 
     fun onError(e: PlaybackException) {
+        onSourceSettled?.invoke()
         val cls = engine.classify(e)
         Diagnostics.log("player", "error ${e.errorCodeName} class=$cls")
         firstFrameJob?.cancel()
@@ -501,6 +556,8 @@ class PlayerModel(
     }
 
     private fun startPositionFallback(): Long = video?.id?.let { LibraryRules.resumeMs(item, it) } ?: 0L
+    /** Where this title would resume. */
+    fun resumePosition(): Long = startPositionFallback()
 
     /** Asks the same add-on for a fresh link to the same file, then resumes. */
     private suspend fun refreshLink(pos: Long) {

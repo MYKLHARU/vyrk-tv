@@ -11,6 +11,7 @@ class AuditPlayer {
     var bufferedPosition = 0L
     var isPlaying = true
     var playWhenReady = true
+    var playbackState = 2
     fun pause() { isPlaying = false }
     fun play() { isPlaying = true }
     fun prepare() {}
