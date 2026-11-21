@@ -189,7 +189,11 @@ fun BrowsePage(
             }
         }
     }
-    LaunchedEffect(heroCandidates.map { it.id }) { model.lockHero(heroCandidates) }
+    val introContext = androidx.compose.ui.platform.LocalContext.current
+    // Home starts on the title the opening's V showed (the one it featured last time).
+    LaunchedEffect(heroCandidates.map { it.id }) {
+        model.lockHero(if (isHome) com.vyrk.tv.ui.components.IntroPrefs.preferFeatured(introContext, heroCandidates) { it.id } else heroCandidates)
+    }
     val heroItems = model.heroItems.ifEmpty { heroCandidates }
     val heroIndex = model.heroIndex.coerceIn(0, (heroItems.size - 1).coerceAtLeast(0))
     var heroFocused by remember { mutableStateOf(false) }
@@ -205,6 +209,12 @@ fun BrowsePage(
     val heroEnabled = settings.heroEnabled && heroItems.isNotEmpty() && model.tab != Tab.LIVE
     // Settings draws the artwork you were last looking at, blurred, behind its glass panels.
     val shownBackdrop = (if (heroEnabled) heroArt else headerArt).backdrops.firstOrNull()
+    // Remember Home's featured title and its picture for the next opening.
+    val heroBackdrop = heroArt.backdrops.firstOrNull()
+    LaunchedEffect(isHome, active, heroEnabled, heroMeta?.id, heroBackdrop) {
+        if (isHome && active && heroEnabled && heroMeta != null && heroBackdrop != null)
+            com.vyrk.tv.ui.components.IntroPrefs.setFeatured(introContext, heroMeta.id, com.vyrk.core.art.Artwork.titleKey(heroMeta.type, heroMeta.id), heroBackdrop)
+    }
     LaunchedEffect(active, shownBackdrop) { if (active && shownBackdrop != null) app.backdrop = shownBackdrop }
     // The hero keeps its slot while its titles load. Inserting it later above rows that are
     // already on screen left it scrolled out of view (lazy lists keep the first visible item in
@@ -339,8 +349,14 @@ fun BrowsePage(
         // page's: a plain height() was, which left the bottom bar-height of the screen uncovered with
         // a hard edge above the last row.
         val wallpaperMeta = if (headerShown) focusedPoster else heroMeta
-        if (active && wallpaper.isNotEmpty() && wallpaperMeta != null) Wallpaper(
-            com.vyrk.core.art.Artwork.titleKey(wallpaperMeta.type, wallpaperMeta.id), wallpaper,
+        // While Home's titles load, keep the picture the opening ended on behind it; it's the same
+        // title Home then starts on, so the wallpaper simply stays.
+        val introPicture = remember { com.vyrk.tv.ui.components.IntroPrefs.featured(introContext) }
+        val introWall = introPicture?.takeIf { isHome && heroPending && wallpaperMeta == null }
+        val wallKey = introWall?.key ?: wallpaperMeta?.let { com.vyrk.core.art.Artwork.titleKey(it.type, it.id) }
+        val wallUrls = introWall?.let { listOf(it.backdrop) } ?: wallpaper
+        if (active && wallUrls.isNotEmpty() && wallKey != null) Wallpaper(
+            wallKey, wallUrls,
             Modifier.offset(y = -Dimens.navHeight).fillMaxWidth()
                 .wrapContentHeight(androidx.compose.ui.Alignment.Top, unbounded = true).height(screenH),
         )
