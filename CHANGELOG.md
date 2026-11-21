@@ -2,6 +2,12 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.56
+
+- The opening now opens onto your film: as the camera dives into the gold V, the V becomes a window onto the title Home is featuring, the picture opens out to fill the screen, and Home starts on that same title with its picture already behind it. (On the very first run, before Home has featured anything, the V bursts into gold light as before.)
+- A sound logo: three rising notes, struck like bronze, the last landing with a deep hit as the camera dives in.
+- The full opening (about 2.8 s) plays on the first launch of the day; later launches get a 1-second sting with a short version of the sound logo.
+
 ## v0.1.54
 
 - Christmas Movies on Home, from 1 November to 6 January: well-known Christmas films (TMDB's "christmas" keyword, most popular first), right after the Top 10 rows. Hide row hides it.
