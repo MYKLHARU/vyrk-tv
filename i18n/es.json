@@ -416,5 +416,21 @@
     "nav_sounds_desc": "Clics suaves al moverte y seleccionar con el mando",
     "intro_sound": "Sonido de apertura",
     "intro_sound_desc": "Reproduce el sonido de VYRK con la animación de inicio",
-    "christmas_movies": "Películas de Navidad"
+    "christmas_movies": "Películas de Navidad",
+    "no_picture_trying_next": "Esta fuente no muestra imagen. Probando la siguiente.",
+    "excl_froze_here": "Ya congeló esta TV",
+    "play_with": "Reproducir con",
+    "play_with_app": "Reproducir con %1$s",
+    "play_with_other_app": "Otra app…",
+    "external_player_missing": "No se pudo abrir ese reproductor.",
+    "dv_as_hdr10": "Reproducir Dolby Vision como HDR10",
+    "dv_as_hdr10_desc": "Usa la imagen HDR10 que llevan los archivos Dolby Vision. Pruébalo si las películas en Dolby Vision se ven en negro o se congelan (SHIELD y remuxes de perfil 7).",
+    "default_player": "Reproductor predeterminado",
+    "default_player_hint": "Abre los streams en otro reproductor instalado. También puedes elegir uno en Fuentes mientras ves algo.",
+    "ask_each_time": "Preguntar cada vez",
+    "frozen_sources": "Fuentes que congelaron esta TV",
+    "frozen_sources_desc": "%1$d se omitirán a partir de ahora",
+    "frozen_forgotten": "Fuentes congeladas olvidadas",
+    "forget": "Olvidar",
+    "freeze_notice": "La última vez la TV se congeló al iniciar %1$s (%2$s). VYRK omitirá esa fuente a partir de ahora."
 }

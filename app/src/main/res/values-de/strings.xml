@@ -24,6 +24,7 @@
     <string name="anime_no_matches">Keine passenden Titel auf dieser Seite. Genres hängen von den Angaben des Add-ons ab.</string>
     <string name="any">Beliebig</string>
     <string name="app_language">App-Sprache</string>
+    <string name="ask_each_time">Jedes Mal fragen</string>
     <string name="ask_still_watching">Fragen, ob ich noch schaue</string>
     <string name="audio">Audio</string>
     <string name="audio_formats">Audioformate</string>
@@ -71,6 +72,8 @@
     <string name="continue_watching">Weiterschauen</string>
     <string name="copy_diagnostics">Diagnose kopieren</string>
     <string name="country">Land</string>
+    <string name="default_player">Standard-Player</string>
+    <string name="default_player_hint">Öffnet Streams in einem anderen installierten Player. Du kannst beim Schauen auch unter Quellen einen wählen.</string>
     <string name="default_profile_name">Ich</string>
     <string name="default_tab">Start-Tab</string>
     <string name="default_tab_desc">Der Tab, mit dem VYRK startet</string>
@@ -88,6 +91,8 @@
     <string name="dolby_vision_decoder">Dolby-Vision-Decoder</string>
     <string name="done">Fertig</string>
     <string name="download_install">Herunterladen und installieren</string>
+    <string name="dv_as_hdr10">Dolby Vision als HDR10 abspielen</string>
+    <string name="dv_as_hdr10_desc">Nutzt das HDR10-Bild in Dolby-Vision-Dateien. Probier das, wenn Dolby-Vision-Filme schwarz bleiben oder einfrieren (SHIELD und Profil-7-Remuxe).</string>
     <string name="encode">Encode</string>
     <string name="ends_at">Endet um %1$s</string>
     <string name="episodes">Folgen</string>
@@ -96,6 +101,7 @@
     <string name="excl_dolby_vision">nur Dolby Vision, das dieser Fernseher nicht dekodiert</string>
     <string name="excl_external">öffnet sich außerhalb der App</string>
     <string name="excl_failed_here">diese Art Datei ist auf diesem Fernseher gescheitert</string>
+    <string name="excl_froze_here">Hat diesen Fernseher schon eingefroren</string>
     <string name="excl_max_res">über deiner maximalen Auflösung</string>
     <string name="excl_max_size">über deiner maximalen Dateigröße</string>
     <string name="excl_ten_bit">10-Bit- oder HDR-Video, das der Decoder des Fernsehers nicht abspielt</string>
@@ -105,12 +111,18 @@
     <string name="exit">Beenden</string>
     <string name="expanding_cards">Aufklappende Karten</string>
     <string name="expanding_cards_desc">Das fokussierte Poster wird zum Titelbild</string>
+    <string name="external_player_missing">Dieser Player ließ sich nicht öffnen.</string>
     <string name="featured_hero">Hervorgehobener Titel</string>
     <string name="featured_hero_desc">Große hervorgehobene Titel oben auf Start</string>
     <string name="filter_all">Alle</string>
     <string name="finding_sources">Quellen werden gesucht…</string>
+    <string name="forget">Vergessen</string>
     <string name="forward_10">10 Sekunden vor</string>
     <string name="frame_rate_matching">Bildrate anpassen</string>
+    <string name="freeze_notice">Der Fernseher ist zuletzt beim Starten von %1$s (%2$s) eingefroren. VYRK überspringt diese Quelle ab jetzt.</string>
+    <string name="frozen_forgotten">Eingefrorene Quellen vergessen</string>
+    <string name="frozen_sources">Quellen, die diesen Fernseher eingefroren haben</string>
+    <string name="frozen_sources_desc">%1$d werden ab jetzt übersprungen</string>
     <string name="header_hint">OK Details · OK halten oder ☰ Optionen · ⏯ Vorschau</string>
     <string name="hero_rotation">Wechsel des hervorgehobenen Titels</string>
     <string name="hero_rotation_desc">Automatisch zum nächsten hervorgehobenen Titel wechseln</string>
@@ -170,6 +182,7 @@
     <string name="no_account">Nicht angemeldet. Deine Mediathek wird auf diesem Fernseher gespeichert.</string>
     <string name="no_episodes">Kein Add-on hat Folgen für diesen Titel geliefert.</string>
     <string name="no_hidden">Nichts ausgeblendet.</string>
+    <string name="no_picture_trying_next">Kein Bild von dieser Quelle. Nächste wird versucht.</string>
     <string name="no_results">Keine Ergebnisse für „%1$s“</string>
     <string name="no_sources_found">Kein Add-on hat eine Quelle für diesen Titel gefunden.</string>
     <string name="no_sources_playable">Es wurden Quellen gefunden, aber keine läuft auf diesem Fernseher.</string>
@@ -207,6 +220,9 @@
     <string name="picture_zoom">Zoom</string>
     <string name="play">Abspielen</string>
     <string name="play_now">Jetzt abspielen</string>
+    <string name="play_with">Abspielen mit</string>
+    <string name="play_with_app">Mit %1$s abspielen</string>
+    <string name="play_with_other_app">Andere App…</string>
     <string name="poster_size">Postergröße</string>
     <string name="poster_size_desc">Größe der Poster in den Reihen</string>
     <string name="preferred_format">Bevorzugtes Format</string>

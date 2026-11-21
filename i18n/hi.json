@@ -416,5 +416,21 @@
     "nav_sounds_desc": "रिमोट से चलने और चुनने पर हल्की क्लिक",
     "intro_sound": "शुरुआती ध्वनि",
     "intro_sound_desc": "शुरुआती एनिमेशन के साथ VYRK की ध्वनि चलाएँ",
-    "christmas_movies": "क्रिसमस फ़िल्में"
+    "christmas_movies": "क्रिसमस फ़िल्में",
+    "no_picture_trying_next": "इस सोर्स से तस्वीर नहीं आई। अगला आज़मा रहे हैं।",
+    "excl_froze_here": "इस टीवी को पहले फ़्रीज़ कर चुका है",
+    "play_with": "इससे चलाएँ",
+    "play_with_app": "%1$s से चलाएँ",
+    "play_with_other_app": "दूसरा ऐप…",
+    "external_player_missing": "वह प्लेयर नहीं खुल सका।",
+    "dv_as_hdr10": "Dolby Vision को HDR10 की तरह चलाएँ",
+    "dv_as_hdr10_desc": "Dolby Vision फ़ाइलों के अंदर की HDR10 तस्वीर इस्तेमाल करता है। अगर Dolby Vision फ़िल्में काली हो जाएँ या फ़्रीज़ हों तो इसे आज़माएँ (SHIELD और प्रोफ़ाइल 7 रीमक्स)।",
+    "default_player": "डिफ़ॉल्ट प्लेयर",
+    "default_player_hint": "स्ट्रीम को किसी दूसरे इंस्टॉल किए प्लेयर में खोलें। देखते समय सोर्स में से भी चुन सकते हैं।",
+    "ask_each_time": "हर बार पूछें",
+    "frozen_sources": "सोर्स जिन्होंने इस टीवी को फ़्रीज़ किया",
+    "frozen_sources_desc": "अब से %1$d छोड़े जाएँगे",
+    "frozen_forgotten": "फ़्रीज़ हुए सोर्स भुला दिए गए",
+    "forget": "भूल जाएँ",
+    "freeze_notice": "पिछली बार %1$s (%2$s) शुरू करते समय टीवी फ़्रीज़ हो गया था। VYRK अब से वह सोर्स छोड़ देगा।"
 }

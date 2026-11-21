@@ -416,5 +416,21 @@
     "nav_sounds_desc": "Sanfte Klicks beim Bewegen und Auswählen mit der Fernbedienung",
     "intro_sound": "Eröffnungston",
     "intro_sound_desc": "Spielt den VYRK-Sound zur Startanimation",
-    "christmas_movies": "Weihnachtsfilme"
+    "christmas_movies": "Weihnachtsfilme",
+    "no_picture_trying_next": "Kein Bild von dieser Quelle. Nächste wird versucht.",
+    "excl_froze_here": "Hat diesen Fernseher schon eingefroren",
+    "play_with": "Abspielen mit",
+    "play_with_app": "Mit %1$s abspielen",
+    "play_with_other_app": "Andere App…",
+    "external_player_missing": "Dieser Player ließ sich nicht öffnen.",
+    "dv_as_hdr10": "Dolby Vision als HDR10 abspielen",
+    "dv_as_hdr10_desc": "Nutzt das HDR10-Bild in Dolby-Vision-Dateien. Probier das, wenn Dolby-Vision-Filme schwarz bleiben oder einfrieren (SHIELD und Profil-7-Remuxe).",
+    "default_player": "Standard-Player",
+    "default_player_hint": "Öffnet Streams in einem anderen installierten Player. Du kannst beim Schauen auch unter Quellen einen wählen.",
+    "ask_each_time": "Jedes Mal fragen",
+    "frozen_sources": "Quellen, die diesen Fernseher eingefroren haben",
+    "frozen_sources_desc": "%1$d werden ab jetzt übersprungen",
+    "frozen_forgotten": "Eingefrorene Quellen vergessen",
+    "forget": "Vergessen",
+    "freeze_notice": "Der Fernseher ist zuletzt beim Starten von %1$s (%2$s) eingefroren. VYRK überspringt diese Quelle ab jetzt."
 }

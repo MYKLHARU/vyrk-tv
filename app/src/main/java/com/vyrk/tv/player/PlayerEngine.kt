@@ -45,6 +45,8 @@ class PlayerEngine(
     preferFfmpeg: Boolean,
     private val onBandwidth: (Double) -> Unit,
     live: Boolean = false,
+    /** Play Dolby Vision files with an HDR10 base through the HEVC decoder ([Hdr10VideoRenderer]). */
+    dolbyVisionAsHdr10: Boolean = false,
 ) {
     val dialogue = DialogueProcessor()
     private val bandwidth = BandwidthMeter()
@@ -67,6 +69,27 @@ class PlayerEngine(
             @Suppress("DEPRECATION")
             if (!passthrough) b.setAudioCapabilities(AudioCapabilities.DEFAULT_AUDIO_CAPABILITIES)
             return b.build()
+        }
+
+        override fun buildVideoRenderers(
+            context: Context, extensionRendererMode: Int, mediaCodecSelector: androidx.media3.exoplayer.mediacodec.MediaCodecSelector,
+            enableDecoderFallback: Boolean, eventHandler: Handler, eventListener: androidx.media3.exoplayer.video.VideoRendererEventListener,
+            allowedVideoJoiningTimeMs: Long, out: ArrayList<androidx.media3.exoplayer.Renderer>,
+        ) {
+            super.buildVideoRenderers(context, extensionRendererMode, mediaCodecSelector, enableDecoderFallback, eventHandler, eventListener, allowedVideoJoiningTimeMs, out)
+            if (!dolbyVisionAsHdr10) return
+            val i = out.indexOfFirst { it is androidx.media3.exoplayer.video.MediaCodecVideoRenderer }
+            if (i < 0) return
+            out[i] = Hdr10VideoRenderer(
+                androidx.media3.exoplayer.video.MediaCodecVideoRenderer.Builder(context)
+                    .setCodecAdapterFactory(getCodecAdapterFactory())
+                    .setMediaCodecSelector(mediaCodecSelector)
+                    .setAllowedJoiningTimeMs(allowedVideoJoiningTimeMs)
+                    .setEnableDecoderFallback(enableDecoderFallback)
+                    .setEventHandler(eventHandler)
+                    .setEventListener(eventListener)
+                    .setMaxDroppedFramesToNotify(DefaultRenderersFactory.MAX_DROPPED_VIDEO_FRAME_COUNT_TO_NOTIFY),
+            )
         }
     }.setExtensionRendererMode(if (preferFfmpeg) DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER else DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
         .setEnableDecoderFallback(true)

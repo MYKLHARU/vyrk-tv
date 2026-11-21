@@ -2,6 +2,14 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.58
+
+- If the TV ever freezes while a source is starting (or in the first seconds of the picture), VYRK notices when you're back: it says which source it was, skips that file from now on (marked "Froze this TV before" in Sources) and puts files of the same kind (for example 4K Dolby Vision remuxes) at the bottom of the list. Settings › Picture & sound › Sources that froze this TV › Forget clears this.
+- Play Dolby Vision as HDR10 (Settings › Picture & sound): plays the HDR10 picture inside Dolby Vision files instead. On SHIELD, Dolby Vision profile 7 remuxes are the usual cause of a black screen or lock-up; turn this on if that happens.
+- No picture: if a source loads but no picture appears, VYRK now says so, remembers that the file failed on this TV, and moves on to the next one.
+- Play with another app: Sources (on TV and phone) lists the video players you have installed — VLC, Just Player, MX Player, mpv, Kodi — plus "Another app…". Settings › Picture & sound › Default player can open everything in one of them, or ask each time. Your place is saved when you come back, so Continue Watching and Trakt stay up to date.
+- Player engine updated (Media3 1.11.1): newer decoder and HDR fixes.
+
 ## v0.1.57
 
 - The opening is smooth now: it's drawn as an animated vector that Android plays on its render thread, so the app starting up underneath can't make it stutter. The camera now dives through the V straight into Home (already showing its featured title's picture) instead of a copy of the picture; there's no fade at the end.

@@ -110,6 +110,15 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
         com.vyrk.tv.data.Updater.events.value = null
     }
 
+    // The TV froze while a source was starting last time: say which, once; it's skipped from now on.
+    LaunchedEffect(app.screen, session) {
+        if (app.screen != Screen.Main || session == null) return@LaunchedEffect
+        val f = graph.freezeGuard.foundAtLaunch ?: return@LaunchedEffect
+        kotlinx.coroutines.delay(1_500)
+        app.showToast(activity.getString(R.string.freeze_notice, f.title, f.label))
+        graph.freezeGuard.noticeShown()
+    }
+
     // Searches from Assistant or the Search key: open Search (once the app is ready) with the words.
     val search by activity.incomingSearch.collectAsState()
     LaunchedEffect(search, app.screen, session) {

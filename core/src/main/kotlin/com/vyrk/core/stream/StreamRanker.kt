@@ -18,6 +18,10 @@ data class DeviceCaps(
     val dolbyVisionDecoder: Boolean? = null,
     /** [StreamRanker.formatGroup]s whose decoding failed on this TV in this session. */
     val failedFormats: Set<String> = emptySet(),
+    /** [Candidate.key]s that were starting when this TV last froze (it restarted before the picture came up). */
+    val frozeKeys: Set<String> = emptySet(),
+    /** [StreamRanker.freezeKind]s of those files: others of the same kind are tried last. */
+    val frozeKinds: Set<String> = emptySet(),
     val displayHdr10: Boolean? = null,
     val displayDolbyVision: Boolean? = null,
     val display4k: Boolean? = null,
@@ -69,6 +73,7 @@ enum class Exclusion(val code: String) {
     TEN_BIT_UNSUPPORTED("ten_bit_unsupported"),
     DOLBY_VISION_UNSUPPORTED("dolby_vision_unsupported"),
     FAILED_ON_THIS_TV("failed_on_this_tv"),
+    FROZE_THIS_TV("froze_this_tv"),
 }
 
 data class Reason(val code: String, val points: Int)
@@ -138,11 +143,16 @@ object StreamRanker {
         if ((info.resolution ?: 0) >= 2160) "4k" else "hd",
     ).joinToString("/")
 
+    /** The kind of file for the freeze guard: its format group, and whether it's Dolby Vision. */
+    fun freezeKind(info: StreamInfo): String = formatGroup(info) + if (Hdr.DOLBY_VISION in info.hdr) "/dv" else ""
+
     fun score(c: Candidate, caps: DeviceCaps, prefs: RankPrefs): Ranked {
         val info = StreamParser.parse(c.stream)
         val reasons = mutableListOf<Reason>()
         fun add(code: String, pts: Int) { if (pts != 0) reasons += Reason(code, pts) }
-        val excl = exclusion(info, caps, prefs)
+        // The file this TV froze on is never picked again by itself; files of the same kind go last.
+        val excl = if (c.key in caps.frozeKeys) Exclusion.FROZE_THIS_TV else exclusion(info, caps, prefs)
+        if (freezeKind(info) in caps.frozeKinds) add("froze_kind", -300)
         val res = info.resolution ?: 0
         val hdrCapable = caps.displayHdr10 == true || caps.displayDolbyVision == true
         val gb = info.sizeBytes?.let { it / 1e9 }
