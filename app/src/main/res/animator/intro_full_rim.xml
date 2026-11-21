@@ -4,9 +4,9 @@
     <propertyValuesHolder android:propertyName="strokeAlpha" android:valueType="floatType">
             <keyframe android:fraction="0.0000" android:value="0" />
             <keyframe android:fraction="0.5132" android:value="0" />
-            <keyframe android:fraction="0.5957" android:value="0.9" />
-            <keyframe android:fraction="0.7021" android:value="0.9" />
-            <keyframe android:fraction="0.8511" android:value="0" />
+            <keyframe android:fraction="0.5745" android:value="0.9" />
+            <keyframe android:fraction="0.6596" android:value="0.9" />
+            <keyframe android:fraction="0.7447" android:value="0" />
             <keyframe android:fraction="1.0000" android:value="0" />
     </propertyValuesHolder>
 </objectAnimator>
