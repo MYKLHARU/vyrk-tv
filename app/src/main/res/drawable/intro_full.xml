@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android" android:drawable="@drawable/intro_vector">
+    <target android:name="appear" android:animation="@animator/intro_full_appear" />
+    <target android:name="goldLeft" android:animation="@animator/intro_full_gold" />
+    <target android:name="goldRight" android:animation="@animator/intro_full_gold" />
+    <target android:name="rune" android:animation="@animator/intro_full_rune" />
+    <target android:name="veil" android:animation="@animator/intro_full_veil" />
+    <target android:name="rim" android:animation="@animator/intro_full_rim" />
+    <target android:name="sheen" android:animation="@animator/intro_full_sheen" />
+    <target android:name="zoom" android:animation="@animator/intro_full_zoom" />
+</animated-vector>

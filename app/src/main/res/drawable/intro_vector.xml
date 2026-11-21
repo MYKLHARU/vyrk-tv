@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- VYRK's opening, drawn as a vector so it animates on the render thread (smooth even while the
+     app starts up underneath). A black screen with a V-shaped hole: the hole is covered by the gold
+     V at first; then the gold fades and the camera dives through the hole into the app. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="1920dp" android:height="1080dp"
+    android:viewportWidth="1920" android:viewportHeight="1080">
+    <group android:name="zoom" android:pivotX="930" android:pivotY="555">
+        <group android:translateX="810" android:translateY="390" android:scaleX="3" android:scaleY="3">
+            <group android:name="appear" android:pivotX="50" android:pivotY="50" android:scaleX="0.86" android:scaleY="0.86">
+                <path android:name="mask" android:fillType="evenOdd" android:fillColor="#FF000000"
+                    android:pathData="M-5000,-5000 L5100,-5000 L5100,5100 L-5000,5100 Z M8,14 L50,88 L54,70 L30,14 Z M92,14 L70,14 L56,47 L63,63 Z" />
+                <path android:name="veil" android:fillColor="#FF000000" android:pathData="M8,14 L30,14 L54,70 L50,88 Z M92,14 L70,14 L56,47 L63,63 Z" />
+                <path android:name="goldLeft" android:fillColor="#FFD4A65A" android:fillAlpha="0" android:pathData="M8,14 L30,14 L54,70 L50,88 Z" />
+                <path android:name="goldRight" android:fillColor="#FFF3DEB0" android:fillAlpha="0" android:pathData="M92,14 L70,14 L56,47 L63,63 Z" />
+                <path android:name="rune" android:fillColor="#FFB0843E" android:fillAlpha="0" android:pathData="M40,14 L60,14 L50,36 Z" />
+                <group android:name="sheenClip">
+                    <clip-path android:pathData="M8,14 L30,14 L54,70 L50,88 Z M92,14 L70,14 L56,47 L63,63 Z" />
+                    <group android:name="sheen" android:translateX="-45">
+                        <path android:fillColor="#FFFFFFFF" android:fillAlpha="0.75" android:pathData="M-10,-10 L8,-10 L38,110 L20,110 Z" />
+                    </group>
+                </group>
+                <path android:name="rim" android:strokeColor="#FFD4A65A" android:strokeWidth="0.7" android:strokeAlpha="0"
+                    android:strokeLineJoin="miter" android:pathData="M8,14 L30,14 L54,70 L50,88 Z M92,14 L70,14 L56,47 L63,63 Z" />
+            </group>
+        </group>
+    </group>
+</vector>

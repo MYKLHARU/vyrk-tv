@@ -186,7 +186,9 @@ fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, m
     }
     val context = androidx.compose.ui.platform.LocalContext.current
     val request = remember(url) {
-        coil3.request.ImageRequest.Builder(context).data(url)
+        // Decoded large: logos come with transparent margins that are trimmed off, and a copy sized to
+        // the slot came out smaller than the slot once trimmed, then got scaled up (blurry).
+        coil3.request.ImageRequest.Builder(context).data(url).size(1280, 640)
             .transformations(com.vyrk.tv.ui.components.TrimTransparent()).build()
     }
     var loaded by remember(titleId, url) { androidx.compose.runtime.mutableStateOf(false) }

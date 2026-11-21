@@ -58,6 +58,8 @@ class MainActivity : ComponentActivity() {
             val ready by graph.ready.collectAsState()
             AppRoot(graph = graph, ready = ready, activity = this)
         }
+        // The opening, laid over the app; an opening that can't play is simply skipped.
+        if (savedInstanceState == null) runCatching { com.vyrk.tv.ui.components.LaunchIntro.play(this, phone = com.vyrk.tv.ui.phone.FormFactor.isPhone(this)) }
     }
 
     override fun onNewIntent(intent: Intent) {
