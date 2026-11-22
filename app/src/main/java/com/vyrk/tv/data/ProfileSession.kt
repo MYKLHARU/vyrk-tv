@@ -163,12 +163,26 @@ class ProfileSession(
 
     // ---- Add-ons ----
 
+    /**
+     * The add-ons a profile without an account starts with. Both are fetched at once, each with a time
+     * limit and one more try: a slow add-on server used to leave "Use without an account" waiting.
+     */
     private suspend fun installDefaults() {
-        val defaults = listOf(DEFAULT_CINEMETA, DEFAULT_OPENSUBTITLES)
-        val list = mutableListOf<Descriptor>()
-        for (url in defaults) {
-            runCatching { addonClient.manifest(url) }.onSuccess { list += Descriptor(it, url, DescriptorFlags(official = true)) }
-                .onFailure { Diagnostics.log("addons", "default add-on failed: ${it.message}") }
+        val list = kotlinx.coroutines.coroutineScope {
+            listOf(DEFAULT_CINEMETA, DEFAULT_OPENSUBTITLES).map { url ->
+                kotlinx.coroutines.async {
+                    repeat(2) { attempt ->
+                        val manifest = kotlinx.coroutines.withTimeoutOrNull(DEFAULT_ADDON_TIMEOUT_MS) {
+                            try { addonClient.manifest(url) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
+                                Diagnostics.log("addons", "default add-on failed: ${e.message}"); null
+                            }
+                        }
+                        if (manifest != null) return@async Descriptor(manifest, url, DescriptorFlags(official = true))
+                        if (attempt == 0) Diagnostics.log("addons", "default add-on slow or failed, trying again: ${Redact.url(url)}")
+                    }
+                    null
+                }
+            }.map { it.await() }.filterNotNull()
         }
         if (list.isNotEmpty()) setAddons(push = false) { list }
     }
@@ -431,5 +445,7 @@ class ProfileSession(
     companion object {
         const val DEFAULT_CINEMETA = "https://v3-cinemeta.strem.io/manifest.json"
         const val DEFAULT_OPENSUBTITLES = "https://opensubtitles-v3.strem.io/manifest.json"
+        /** How long each try at a default add-on's manifest may take. */
+        const val DEFAULT_ADDON_TIMEOUT_MS = 12_000L
     }
 }
