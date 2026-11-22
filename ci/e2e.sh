@@ -59,6 +59,12 @@ key KEYCODE_DPAD_CENTER 2 "use without an account"
 # still up after a while, press again (logged, so a real problem would still show).
 if ! focus_matches '^hero:watch$' 20; then
   if [[ "$(focus_now)" == welcome:guest ]]; then log "welcome still showing; pressing again"; key KEYCODE_DPAD_CENTER 2 "use without an account (again)"; fi
+  # Still stuck after the second press: say why in the log (window focus, recent keys, errors).
+  if ! focus_matches '^hero:watch$' 15; then
+    log "still on welcome: $(adbs dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | head -n 2 | tr -s ' ' | tr '\n' ' ')"
+    o=$(adb_run logcat -d -v time 2>/dev/null || true)
+    printf '%s\n' "$o" | grep -E 'VyrkFocus|VyrkEvent|AndroidRuntime|ANR in|com\.vyrk' | tail -n 30 | sed 's/^/[e2e]   /'
+  fi
 fi
 wait_focus '^hero:watch$' 45
 shot home-live-cinemeta
