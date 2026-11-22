@@ -109,13 +109,16 @@ class ProfileSession(
     }
 
     suspend fun load() {
+        Diagnostics.trace("profile load: flush")
         AtomicFiles.flush()
+        Diagnostics.trace("profile load: files")
         _settings.value = (AtomicFiles.readText(settingsFile)?.let { runCatching { AppJson.decodeFromString(ProfileSettings.serializer(), it) }.getOrNull() } ?: ProfileSettings()).upgraded()
         _state.value = AtomicFiles.readText(stateFile)?.let { runCatching { AppJson.decodeFromString(SessionState.serializer(), it) }.getOrNull() } ?: SessionState()
         _library.value = AtomicFiles.readText(libraryFile)?.let { txt ->
             runCatching { (ProtocolJson.parseToJsonElement(txt) as JsonArray).mapNotNull { el -> runCatching { LibraryItem.fromJson(el) }.getOrNull() } }.getOrNull()
         }?.associateBy { it.id } ?: emptyMap()
         pending.restore(_state.value.pendingIds)
+        Diagnostics.trace("profile load: vault")
         val storedAddons = vault.readSecret(addonsFile)?.let {
             runCatching { ProtocolJson.decodeFromString(ListSerializer(Descriptor.serializer()), it) }.getOrNull()
         }
@@ -125,8 +128,10 @@ class ProfileSession(
             profile.accountEmail != null && !_state.value.signedOut -> AccountState.Expired(profile.accountEmail)
             else -> AccountState.None
         }
+        Diagnostics.trace("profile load: add-ons")
         if (storedAddons != null) _addons.value = storedAddons
         else if (authKey == null) installDefaults()
+        Diagnostics.trace("profile load: done")
         _loaded.value = true
         if (authKey != null) scope.launch { syncNow() }
         scope.launch { refreshNewEpisodes(force = false) }
