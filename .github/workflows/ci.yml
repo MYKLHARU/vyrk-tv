@@ -82,6 +82,10 @@ jobs:
           ls -l dist
           # The baseline profile's size shows whether VYRK's own rules made it through R8.
           unzip -l "dist/vyrk-$V-universal.apk" | grep dexopt || true
+          # TEMP: where do VYRK's own profile rules go?
+          for f in $(find app/build/intermediates -type f \( -path '*art_profile*' -o -path '*ArtProfile*' -o -name '*.prof*' -o -name 'baseline-prof*.txt' \) | sort); do
+            echo "== $f $(wc -c < "$f") bytes, $(grep -ac 'com/vyrk' "$f" || true) com/vyrk lines"; head -c 300 "$f" | tr -c '[:print:]\n' '.'; echo
+          done
 
       - uses: actions/upload-artifact@v5
         with:
