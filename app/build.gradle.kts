@@ -1,8 +1,4 @@
-import java.io.DataInputStream
-import java.io.File as JFile
 import java.util.Properties
-import java.util.TreeSet
-import java.util.zip.ZipFile
 
 plugins {
     alias(libs.plugins.android.application)
@@ -151,80 +147,6 @@ androidComponents {
             val abi = output.filters.find { it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI }?.identifier
             val base = abiCodes[abi] ?: 0
             output.versionCode.set(verCode * 10 + base)
-        }
-    }
-    // Baseline profile rules for every method of VYRK's own code, by exact name, so R8 can carry them
-    // over to the names it gives the classes (wildcard rules for our packages don't survive renaming).
-    onVariants(selector().withBuildType("release")) { variant ->
-        val task = tasks.register<VyrkProfileRules>("${variant.name}VyrkProfileRules")
-        variant.artifacts.forScope(com.android.build.api.variant.ScopedArtifacts.Scope.ALL)
-            .use(task)
-            .toGet(com.android.build.api.artifact.ScopedArtifact.CLASSES, VyrkProfileRules::allJars, VyrkProfileRules::allDirectories)
-        variant.sources.baselineProfiles?.addGeneratedSourceDirectory(task, VyrkProfileRules::outputDir)
-    }
-}
-
-/**
- * Writes "HSPL<class>;-><method><descriptor>" for every concrete method in com.vyrk.*, plus each
- * class, read straight from the compiled class files (before R8).
- */
-abstract class VyrkProfileRules : DefaultTask() {
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val allJars: ListProperty<RegularFile>
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val allDirectories: ListProperty<Directory>
-    @get:OutputDirectory abstract val outputDir: DirectoryProperty
-
-    @TaskAction fun write() {
-        val rules = TreeSet<String>()
-        allDirectories.get().forEach { dir ->
-            dir.asFile.walkTopDown().filter { it.isFile && it.name.endsWith(".class") }.forEach { readClass(it.readBytes(), rules) }
-        }
-        allJars.get().forEach { jar ->
-            ZipFile(jar.asFile).use { zip ->
-                zip.entries().asSequence().filter { it.name.startsWith("com/vyrk/") && it.name.endsWith(".class") }
-                    .forEach { readClass(zip.getInputStream(it).readBytes(), rules) }
-            }
-        }
-        val out = outputDir.get().asFile
-        out.mkdirs()
-        JFile(out, "vyrk-code.txt").writeText(rules.joinToString("\n", postfix = "\n"))
-        logger.lifecycle("VYRK baseline profile: ${rules.size} rules for its own code")
-    }
-
-    /** The class file format's constant pool, this class and its methods; nothing else is needed. */
-    private fun readClass(bytes: ByteArray, rules: MutableSet<String>) {
-        val input = DataInputStream(bytes.inputStream())
-        if (input.readInt() != -0x35014542) return  // 0xCAFEBABE
-        input.readUnsignedShort(); input.readUnsignedShort()
-        val count = input.readUnsignedShort()
-        val utf8 = arrayOfNulls<String>(count)
-        val classRef = IntArray(count)
-        var i = 1
-        while (i < count) {
-            when (input.readUnsignedByte()) {
-                1 -> utf8[i] = input.readUTF()
-                7 -> classRef[i] = input.readUnsignedShort()
-                8, 16, 19, 20 -> input.skipBytes(2)
-                15 -> input.skipBytes(3)
-                3, 4, 9, 10, 11, 12, 17, 18 -> input.skipBytes(4)
-                5, 6 -> { input.skipBytes(8); i++ }
-                else -> return
-            }
-            i++
-        }
-        input.readUnsignedShort()
-        val name = utf8[classRef[input.readUnsignedShort()]] ?: return
-        if (!name.startsWith("com/vyrk/")) return
-        input.readUnsignedShort()
-        repeat(input.readUnsignedShort()) { input.readUnsignedShort() }
-        fun skipAttributes() = repeat(input.readUnsignedShort()) { input.readUnsignedShort(); input.skipBytes(input.readInt()) }
-        repeat(input.readUnsignedShort()) { input.skipBytes(6); skipAttributes() }
-        rules += "L$name;"
-        repeat(input.readUnsignedShort()) {
-            val access = input.readUnsignedShort()
-            val method = utf8[input.readUnsignedShort()]
-            val desc = utf8[input.readUnsignedShort()]
-            skipAttributes()
-            if (access and 0x0500 == 0 && method != null && desc != null) rules += "HSPL$name;->$method$desc"
         }
     }
 }
