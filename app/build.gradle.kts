@@ -1,4 +1,8 @@
+import java.io.DataInputStream
+import java.io.File as JFile
 import java.util.Properties
+import java.util.TreeSet
+import java.util.zip.ZipFile
 
 plugins {
     alias(libs.plugins.android.application)
@@ -170,26 +174,26 @@ abstract class VyrkProfileRules : DefaultTask() {
     @get:OutputDirectory abstract val outputDir: DirectoryProperty
 
     @TaskAction fun write() {
-        val rules = java.util.TreeSet<String>()
+        val rules = TreeSet<String>()
         allDirectories.get().forEach { dir ->
             dir.asFile.walkTopDown().filter { it.isFile && it.name.endsWith(".class") }.forEach { readClass(it.readBytes(), rules) }
         }
         allJars.get().forEach { jar ->
-            java.util.zip.ZipFile(jar.asFile).use { zip ->
+            ZipFile(jar.asFile).use { zip ->
                 zip.entries().asSequence().filter { it.name.startsWith("com/vyrk/") && it.name.endsWith(".class") }
                     .forEach { readClass(zip.getInputStream(it).readBytes(), rules) }
             }
         }
         val out = outputDir.get().asFile
         out.mkdirs()
-        java.io.File(out, "vyrk-code.txt").writeText(rules.joinToString("\n", postfix = "\n"))
+        JFile(out, "vyrk-code.txt").writeText(rules.joinToString("\n", postfix = "\n"))
         logger.lifecycle("VYRK baseline profile: ${rules.size} rules for its own code")
     }
 
     /** The class file format's constant pool, this class and its methods; nothing else is needed. */
     private fun readClass(bytes: ByteArray, rules: MutableSet<String>) {
-        val input = java.io.DataInputStream(bytes.inputStream())
-        if (input.readInt() != 0xCAFEBABE.toInt()) return
+        val input = DataInputStream(bytes.inputStream())
+        if (input.readInt() != -0x35014542) return  // 0xCAFEBABE
         input.readUnsignedShort(); input.readUnsignedShort()
         val count = input.readUnsignedShort()
         val utf8 = arrayOfNulls<String>(count)
