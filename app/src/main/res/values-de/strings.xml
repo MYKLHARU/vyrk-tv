@@ -381,6 +381,7 @@
     <string name="trakt_disconnect">Trennen</string>
     <string name="trakt_expired">Der Code ist abgelaufen. Versuch es noch einmal.</string>
     <string name="trakt_failed">Verbindung zu Trakt fehlgeschlagen. Versuch es noch einmal.</string>
+    <string name="trakt_not_allowed">Trakt hat dieses Konto nicht zugelassen. Bestätige den Code mit dem Trakt-Konto, das diese App angelegt hat, oder füge dein Konto auf developer.trakt.tv zu den Nutzern der App hinzu.</string>
     <string name="trakt_open_site">trakt.tv öffnen</string>
     <string name="trakt_waiting">Warte auf deine Bestätigung bei Trakt…</string>
     <string name="try_again">Erneut versuchen</string>

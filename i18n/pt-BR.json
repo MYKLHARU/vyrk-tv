@@ -432,5 +432,6 @@
     "frozen_sources_desc": "%1$d serão puladas daqui em diante",
     "frozen_forgotten": "Fontes travadas esquecidas",
     "forget": "Esquecer",
-    "freeze_notice": "Na última vez a TV travou ao iniciar %1$s (%2$s). O VYRK vai pular essa fonte daqui em diante."
+    "freeze_notice": "Na última vez a TV travou ao iniciar %1$s (%2$s). O VYRK vai pular essa fonte daqui em diante.",
+    "trakt_not_allowed": "O Trakt não permitiu essa conta. Aprove o código com a conta do Trakt que criou este app ou adicione sua conta aos usuários do app em developer.trakt.tv."
 }

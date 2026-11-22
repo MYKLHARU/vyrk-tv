@@ -81,6 +81,7 @@ fun TraktCodePanel(step: TraktAccount.SignIn?, qr: Boolean, modifier: Modifier =
         }
         TraktAccount.SignIn.Expired -> Text(str(R.string.trakt_expired), style = Vyrk.type.bodyM, color = c.warning, modifier = modifier)
         TraktAccount.SignIn.Failed -> Text(str(R.string.trakt_failed), style = Vyrk.type.bodyM, color = c.warning, modifier = modifier)
+        TraktAccount.SignIn.NotAllowed -> Text(str(R.string.trakt_not_allowed), style = Vyrk.type.bodyM, color = c.warning, modifier = modifier)
         else -> Unit
     }
 }

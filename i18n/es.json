@@ -432,5 +432,6 @@
     "frozen_sources_desc": "%1$d se omitirán a partir de ahora",
     "frozen_forgotten": "Fuentes congeladas olvidadas",
     "forget": "Olvidar",
-    "freeze_notice": "La última vez la TV se congeló al iniciar %1$s (%2$s). VYRK omitirá esa fuente a partir de ahora."
+    "freeze_notice": "La última vez la TV se congeló al iniciar %1$s (%2$s). VYRK omitirá esa fuente a partir de ahora.",
+    "trakt_not_allowed": "Trakt no permitió esa cuenta. Aprueba el código con la cuenta de Trakt que creó esta app, o añade tu cuenta a los usuarios de la app en developer.trakt.tv."
 }

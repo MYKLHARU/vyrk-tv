@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.59
+
+- Trakt works with Trakt's new apps, which have a Client ID and no secret: sign-in is still the code you enter at trakt.tv/activate, now secured with PKCE. Sign-in calls go to auth.trakt.tv (Trakt requires it from February 2027). Older apps with a secret keep working.
+- If the code is approved with a Trakt account the app doesn't allow (Development apps allow only their owner and the users added to them), VYRK says so instead of a plain "Couldn't connect".
+
 ## v0.1.58
 
 - If the TV ever freezes while a source is starting (or in the first seconds of the picture), VYRK notices when you're back: it says which source it was, skips that file from now on (marked "Froze this TV before" in Sources) and puts files of the same kind (for example 4K Dolby Vision remuxes) at the bottom of the list. Settings › Picture & sound › Sources that froze this TV › Forget clears this.
