@@ -62,13 +62,14 @@ object IntroPrefs {
  * sound) plays on the first launch of the day: gold hairlines draw a ring, the Elder Futhark is
  * inscribed round it, the two blades of the V slide in and lock with a strike, a glint runs round the
  * runes and VYRK is drawn beneath; then the V becomes a window onto Home and the camera dives through.
- * Later launches get a 1-second sting of the V alone. Skipped with Reduce motion.
+ * Later launches get a 1-second sting of the V alone. Skipped with Reduce motion, and when Android's
+ * own animations are off.
  */
 object LaunchIntro {
     private var played = false
 
     fun play(activity: android.app.Activity, phone: Boolean) {
-        if (played || reduceMotionOff(activity)) return
+        if (played || reduceMotionOff(activity) || !systemAnimationsOn(activity)) return
         played = true
         val full = IntroPrefs.firstLaunchToday(activity)
         val avd = activity.getDrawable(if (full) com.vyrk.tv.R.drawable.intro_full else com.vyrk.tv.R.drawable.intro_sting)
@@ -100,4 +101,9 @@ object LaunchIntro {
     }
 
     private fun reduceMotionOff(context: Context) = IntroPrefs.reduceMotion(context)
+
+    /** Android's own "Remove animations" (Accessibility) or animator scale off (Developer options). */
+    private fun systemAnimationsOn(context: Context): Boolean = runCatching {
+        android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+    }.getOrDefault(true)
 }

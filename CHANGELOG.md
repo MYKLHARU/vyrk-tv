@@ -5,6 +5,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 ## v0.1.60
 
 - New opening on the first launch of the day: gold hairlines draw a ring, the Elder Futhark is inscribed round it in its three ættir, the two blades of the V slide in and lock with a deep strike, a glint of light runs round the runes and VYRK is drawn beneath, then the V opens onto Home and the camera dives through. New sound to match: a low drone, a lur horn call, the strike with a ringing metal overtone and a rush of air for the dive. Still drawn on the render thread, so it stays smooth on SHIELD; later launches keep the 1-second sting.
+- The opening is skipped when Android's animations are turned off (Accessibility › Remove animations, or Developer options), as well as with VYRK's Reduce motion.
 
 ## v0.1.59
 
