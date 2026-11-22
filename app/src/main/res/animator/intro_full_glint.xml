@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <objectAnimator android:propertyName="trimPathOffset" android:valueFrom="0" android:valueTo="0.93" android:valueType="floatType"
+        android:duration="900" android:startOffset="1250" android:interpolator="@android:interpolator/accelerate_decelerate" />
+    <objectAnimator android:duration="3750" android:interpolator="@android:interpolator/linear">
+        <propertyValuesHolder android:propertyName="strokeAlpha" android:valueType="floatType">
+            <keyframe android:fraction="0.0000" android:value="0" />
+            <keyframe android:fraction="0.3333" android:value="0" />
+            <keyframe android:fraction="0.3600" android:value="1" />
+            <keyframe android:fraction="0.5333" android:value="1" />
+            <keyframe android:fraction="0.5733" android:value="0" />
+            <keyframe android:fraction="1.0000" android:value="0" />
+        </propertyValuesHolder>
+    </objectAnimator>
+</set>

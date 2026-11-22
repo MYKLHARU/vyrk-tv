@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="2350" android:interpolator="@android:interpolator/linear">
-    <propertyValuesHolder android:propertyName="strokeAlpha" android:valueType="floatType">
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <objectAnimator android:duration="3750" android:interpolator="@android:interpolator/linear">
+        <propertyValuesHolder android:propertyName="strokeAlpha" android:valueType="floatType">
             <keyframe android:fraction="0.0000" android:value="0" />
-            <keyframe android:fraction="0.5132" android:value="0" />
-            <keyframe android:fraction="0.5745" android:value="0.9" />
-            <keyframe android:fraction="0.6596" android:value="0.9" />
-            <keyframe android:fraction="0.7447" android:value="0" />
+            <keyframe android:fraction="0.3467" android:value="0" />
+            <keyframe android:fraction="0.3680" android:value="0.9" />
+            <keyframe android:fraction="0.4000" android:value="0.9" />
+            <keyframe android:fraction="0.4933" android:value="0" />
             <keyframe android:fraction="1.0000" android:value="0" />
-    </propertyValuesHolder>
-</objectAnimator>
+        </propertyValuesHolder>
+    </objectAnimator>
+</set>
