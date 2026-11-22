@@ -2,9 +2,8 @@
 # at first. Shipped in the APK; Android applies it the next time it optimises apps in the background
 # (on a TV, usually while it's asleep). Compose and the AndroidX libraries ship rules of their own.
 #
-# All of VYRK's own code (app and core): every screen, the add-on protocol, stream ranking.
-HSPLcom/vyrk/**;->**(**)**
-Lcom/vyrk/**;
+# VYRK's own code (app and core) gets exact rules for every method, generated at build time from the
+# compiled classes (the VyrkProfileRules task in app/build.gradle.kts), so R8 can follow its renaming.
 # JSON (every catalogue and title page), coroutines, image loading and networking.
 HSPLkotlinx/serialization/**;->**(**)**
 HSPLkotlinx/coroutines/**;->**(**)**
