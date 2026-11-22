@@ -22,7 +22,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.JsonArray
 import java.io.File
@@ -168,11 +171,11 @@ class ProfileSession(
      * limit and one more try: a slow add-on server used to leave "Use without an account" waiting.
      */
     private suspend fun installDefaults() {
-        val list = kotlinx.coroutines.coroutineScope {
+        val list = coroutineScope {
             listOf(DEFAULT_CINEMETA, DEFAULT_OPENSUBTITLES).map { url ->
-                kotlinx.coroutines.async {
+                async {
                     repeat(2) { attempt ->
-                        val manifest = kotlinx.coroutines.withTimeoutOrNull(DEFAULT_ADDON_TIMEOUT_MS) {
+                        val manifest = withTimeoutOrNull(DEFAULT_ADDON_TIMEOUT_MS) {
                             try { addonClient.manifest(url) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
                                 Diagnostics.log("addons", "default add-on failed: ${e.message}"); null
                             }
