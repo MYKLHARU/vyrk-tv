@@ -1,0 +1,14 @@
+# VYRK's baseline profile: the code Android should compile ahead of time instead of interpreting it
+# at first. Shipped in the APK; Android applies it the next time it optimises apps in the background
+# (on a TV, usually while it's asleep). Compose and the AndroidX libraries ship rules of their own.
+#
+# All of VYRK's own code (app and core). The build expands these wildcards against the classes before
+# R8 renames them, and R8 carries the rules over to the new names (about 19,000 rules in all).
+HSPLcom/vyrk/**;->**(**)**
+Lcom/vyrk/**;
+# JSON (every catalogue and title page), coroutines, image loading and networking.
+HSPLkotlinx/serialization/**;->**(**)**
+HSPLkotlinx/coroutines/**;->**(**)**
+HSPLcoil3/**;->**(**)**
+HSPLokhttp3/**;->**(**)**
+HSPLokio/**;->**(**)**

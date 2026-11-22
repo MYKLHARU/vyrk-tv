@@ -72,11 +72,22 @@ data class ProfileSettings(
     val subtitleSize: Int = 100,
     val subtitleColor: String = "WHITE",
     val subtitleBackground: String = "SHADOW",
-    val previews: PreviewMode = PreviewMode.AUTOMATIC,
+    val previews: PreviewMode = PreviewMode.MANUAL,
     val previewSound: Boolean = false,
     val shareStreamAddons: Boolean = false,
     val useSharedAddons: Boolean = false,
+    /** Which of [ProfileSettings.upgraded]'s one-time changes these settings have had. */
+    val revision: Int = 0,
 )
+
+/** One-time changes to saved settings when a default changes for everyone. */
+fun ProfileSettings.upgraded(): ProfileSettings {
+    var s = this
+    // 1 (v0.1.61): trailers that start by themselves while browsing cost the TV a web page each;
+    // previews are Manual by default now, for profiles saved before too (Automatic is still there).
+    if (s.revision < 1 && s.previews == PreviewMode.AUTOMATIC) s = s.copy(previews = PreviewMode.MANUAL)
+    return if (s.revision < 1) s.copy(revision = 1) else s
+}
 
 /** TV-wide settings. */
 @Serializable

@@ -129,9 +129,13 @@ fun PairingScreen(profileId: String?, firstRun: Boolean = false) {
                         onClick = {
                             busy = true
                             scope.launch {
+                                com.vyrk.tv.data.Diagnostics.trace("guest: profile")
                                 val p = graph.profiles.value.firstOrNull() ?: graph.createProfile(graph.context.getString(R.string.default_profile_name), 0)!!
+                                com.vyrk.tv.data.Diagnostics.trace("guest: device settings")
                                 graph.updateDevice { it.copy(firstRunDone = true) }
+                                com.vyrk.tv.data.Diagnostics.trace("guest: opening profile")
                                 graph.openProfile(p)
+                                com.vyrk.tv.data.Diagnostics.trace("guest: home")
                                 app.screen = Screen.Main
                             }
                         },

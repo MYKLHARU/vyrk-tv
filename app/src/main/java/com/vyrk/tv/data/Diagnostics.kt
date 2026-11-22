@@ -19,4 +19,9 @@ object Diagnostics {
 
     @Synchronized
     fun dump(): List<String> = events.toList()
+
+    /** A step for the test journeys, off unless switched on with `adb shell setprop log.tag.VyrkEvent DEBUG`. */
+    fun trace(message: String) {
+        if (android.util.Log.isLoggable("VyrkEvent", android.util.Log.DEBUG)) android.util.Log.i("VyrkEvent", message)
+    }
 }

@@ -22,7 +22,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.JsonArray
 import java.io.File
@@ -106,13 +109,16 @@ class ProfileSession(
     }
 
     suspend fun load() {
+        Diagnostics.trace("profile load: flush")
         AtomicFiles.flush()
-        _settings.value = AtomicFiles.readText(settingsFile)?.let { runCatching { AppJson.decodeFromString(ProfileSettings.serializer(), it) }.getOrNull() } ?: ProfileSettings()
+        Diagnostics.trace("profile load: files")
+        _settings.value = (AtomicFiles.readText(settingsFile)?.let { runCatching { AppJson.decodeFromString(ProfileSettings.serializer(), it) }.getOrNull() } ?: ProfileSettings()).upgraded()
         _state.value = AtomicFiles.readText(stateFile)?.let { runCatching { AppJson.decodeFromString(SessionState.serializer(), it) }.getOrNull() } ?: SessionState()
         _library.value = AtomicFiles.readText(libraryFile)?.let { txt ->
             runCatching { (ProtocolJson.parseToJsonElement(txt) as JsonArray).mapNotNull { el -> runCatching { LibraryItem.fromJson(el) }.getOrNull() } }.getOrNull()
         }?.associateBy { it.id } ?: emptyMap()
         pending.restore(_state.value.pendingIds)
+        Diagnostics.trace("profile load: vault")
         val storedAddons = vault.readSecret(addonsFile)?.let {
             runCatching { ProtocolJson.decodeFromString(ListSerializer(Descriptor.serializer()), it) }.getOrNull()
         }
@@ -122,8 +128,10 @@ class ProfileSession(
             profile.accountEmail != null && !_state.value.signedOut -> AccountState.Expired(profile.accountEmail)
             else -> AccountState.None
         }
+        Diagnostics.trace("profile load: add-ons")
         if (storedAddons != null) _addons.value = storedAddons
         else if (authKey == null) installDefaults()
+        Diagnostics.trace("profile load: done")
         _loaded.value = true
         if (authKey != null) scope.launch { syncNow() }
         scope.launch { refreshNewEpisodes(force = false) }
@@ -163,12 +171,26 @@ class ProfileSession(
 
     // ---- Add-ons ----
 
+    /**
+     * The add-ons a profile without an account starts with. Both are fetched at once, each with a time
+     * limit and one more try: a slow add-on server used to leave "Use without an account" waiting.
+     */
     private suspend fun installDefaults() {
-        val defaults = listOf(DEFAULT_CINEMETA, DEFAULT_OPENSUBTITLES)
-        val list = mutableListOf<Descriptor>()
-        for (url in defaults) {
-            runCatching { addonClient.manifest(url) }.onSuccess { list += Descriptor(it, url, DescriptorFlags(official = true)) }
-                .onFailure { Diagnostics.log("addons", "default add-on failed: ${it.message}") }
+        val list = coroutineScope {
+            listOf(DEFAULT_CINEMETA, DEFAULT_OPENSUBTITLES).map { url ->
+                async {
+                    repeat(2) { attempt ->
+                        val manifest = withTimeoutOrNull(DEFAULT_ADDON_TIMEOUT_MS) {
+                            try { addonClient.manifest(url) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
+                                Diagnostics.log("addons", "default add-on failed: ${e.message}"); null
+                            }
+                        }
+                        if (manifest != null) return@async Descriptor(manifest, url, DescriptorFlags(official = true))
+                        if (attempt == 0) Diagnostics.log("addons", "default add-on slow or failed, trying again: ${Redact.url(url)}")
+                    }
+                    null
+                }
+            }.map { it.await() }.filterNotNull()
         }
         if (list.isNotEmpty()) setAddons(push = false) { list }
     }
@@ -431,5 +453,7 @@ class ProfileSession(
     companion object {
         const val DEFAULT_CINEMETA = "https://v3-cinemeta.strem.io/manifest.json"
         const val DEFAULT_OPENSUBTITLES = "https://opensubtitles-v3.strem.io/manifest.json"
+        /** How long each try at a default add-on's manifest may take. */
+        const val DEFAULT_ADDON_TIMEOUT_MS = 12_000L
     }
 }

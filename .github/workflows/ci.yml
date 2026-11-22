@@ -80,6 +80,8 @@ jobs:
           cp app/build/outputs/mapping/release/mapping.txt "dist/vyrk-$V-mapping.txt"
           (cd dist && sha256sum * > SHA256SUMS.txt)
           ls -l dist
+          # How many baseline profile rules R8 carried over (VYRK's own code included).
+          echo "baseline profile: $(wc -l < app/build/intermediates/r8_art_profile/release/minifyReleaseWithR8/baseline-prof.txt 2>/dev/null || echo '?') rules"
 
       - uses: actions/upload-artifact@v5
         with:
