@@ -432,5 +432,6 @@
     "frozen_sources_desc": "%1$d werden ab jetzt übersprungen",
     "frozen_forgotten": "Eingefrorene Quellen vergessen",
     "forget": "Vergessen",
-    "freeze_notice": "Der Fernseher ist zuletzt beim Starten von %1$s (%2$s) eingefroren. VYRK überspringt diese Quelle ab jetzt."
+    "freeze_notice": "Der Fernseher ist zuletzt beim Starten von %1$s (%2$s) eingefroren. VYRK überspringt diese Quelle ab jetzt.",
+    "trakt_not_allowed": "Trakt hat dieses Konto nicht zugelassen. Bestätige den Code mit dem Trakt-Konto, das diese App angelegt hat, oder füge dein Konto auf developer.trakt.tv zu den Nutzern der App hinzu."
 }

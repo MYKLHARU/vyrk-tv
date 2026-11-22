@@ -381,6 +381,7 @@
     <string name="trakt_disconnect">Desconectar</string>
     <string name="trakt_expired">O código expirou. Tente novamente.</string>
     <string name="trakt_failed">Não foi possível conectar ao Trakt. Tente novamente.</string>
+    <string name="trakt_not_allowed">O Trakt não permitiu essa conta. Aprove o código com a conta do Trakt que criou este app ou adicione sua conta aos usuários do app em developer.trakt.tv.</string>
     <string name="trakt_open_site">Abrir trakt.tv</string>
     <string name="trakt_waiting">Aguardando sua aprovação no Trakt…</string>
     <string name="try_again">Tentar de novo</string>

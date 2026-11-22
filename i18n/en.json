@@ -432,5 +432,6 @@
     "frozen_sources_desc": "%1$d skipped from now on",
     "frozen_forgotten": "Frozen sources forgotten",
     "forget": "Forget",
-    "freeze_notice": "The TV froze last time while starting %1$s (%2$s). VYRK will skip that source from now on."
+    "freeze_notice": "The TV froze last time while starting %1$s (%2$s). VYRK will skip that source from now on.",
+    "trakt_not_allowed": "Trakt didn't allow that account. Approve the code while signed in to the Trakt account that made this app, or add your account to the app's users at developer.trakt.tv."
 }

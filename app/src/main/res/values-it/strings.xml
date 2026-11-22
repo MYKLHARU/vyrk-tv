@@ -381,6 +381,7 @@
     <string name="trakt_disconnect">Scollega</string>
     <string name="trakt_expired">Il codice è scaduto. Riprova.</string>
     <string name="trakt_failed">Impossibile collegarsi a Trakt. Riprova.</string>
+    <string name="trakt_not_allowed">Trakt non ha consentito quell\'account. Approva il codice con l\'account Trakt che ha creato questa app, oppure aggiungi il tuo account agli utenti dell\'app su developer.trakt.tv.</string>
     <string name="trakt_open_site">Apri trakt.tv</string>
     <string name="trakt_waiting">In attesa della tua approvazione su Trakt…</string>
     <string name="try_again">Riprova</string>

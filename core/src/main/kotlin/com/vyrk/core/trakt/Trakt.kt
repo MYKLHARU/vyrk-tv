@@ -15,8 +15,37 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
-/** A Trakt sign-in in progress: the code to enter at [verificationUrl]. */
-data class DeviceCode(val deviceCode: String, val userCode: String, val verificationUrl: String, val expiresInSec: Int, val intervalSec: Int)
+/** A Trakt sign-in in progress: the code to enter at [verificationUrl]; [codeVerifier] is this sign-in's PKCE secret. */
+data class DeviceCode(
+    val deviceCode: String, val userCode: String, val verificationUrl: String, val expiresInSec: Int, val intervalSec: Int,
+    val codeVerifier: String = "",
+)
+
+/** PKCE (RFC 7636, S256): a random verifier kept on the TV, and its hash sent with the device-code request. */
+object Pkce {
+    private const val UNRESERVED = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+    private const val B64URL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+    fun verifier(random: java.security.SecureRandom = java.security.SecureRandom()): String =
+        String(CharArray(64) { UNRESERVED[random.nextInt(UNRESERVED.length)] })
+
+    fun challenge(verifier: String): String =
+        base64Url(java.security.MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.US_ASCII)))
+
+    /** Base64url without padding (java.util.Base64 needs API 26; VYRK runs on 23). */
+    fun base64Url(bytes: ByteArray): String = buildString {
+        var i = 0
+        while (i < bytes.size) {
+            val b0 = bytes[i].toInt() and 0xff
+            val b1 = if (i + 1 < bytes.size) bytes[i + 1].toInt() and 0xff else 0
+            val b2 = if (i + 2 < bytes.size) bytes[i + 2].toInt() and 0xff else 0
+            append(B64URL[b0 shr 2]); append(B64URL[((b0 and 3) shl 4) or (b1 shr 4)])
+            if (i + 1 < bytes.size) append(B64URL[((b1 and 15) shl 2) or (b2 shr 6)])
+            if (i + 2 < bytes.size) append(B64URL[b2 and 63])
+            i += 3
+        }
+    }
+}
 
 /** Trakt access, kept encrypted on the device. */
 @Serializable
@@ -29,6 +58,8 @@ sealed interface TokenPoll {
     /** Asking too often: wait longer. */
     data object SlowDown : TokenPoll
     data object Denied : TokenPoll
+    /** Approved by an account the Trakt app doesn't allow (Development apps: the owner and up to 16 added users). */
+    data object NotAllowed : TokenPoll
     data object Expired : TokenPoll
     data class Failed(val code: Int) : TokenPoll
 }
@@ -53,11 +84,14 @@ sealed interface TraktItem {
 }
 
 /**
- * Trakt API v2 (https://trakt.docs.apiary.io): device sign-in, token refresh, scrobbling and
- * history. [clientId] and [clientSecret] come from the build; without them Trakt is off.
+ * Trakt API v2 (https://developer.trakt.tv): device sign-in, token refresh, scrobbling and
+ * history. [clientId] comes from the build; without it Trakt is off. Apps made since October 2026
+ * have no client secret and sign in with the device code plus PKCE; [clientSecret] is only for
+ * older apps that still have one.
  */
-class TraktClient(private val http: HttpTransport, private val clientId: String, private val clientSecret: String) {
-    val enabled: Boolean get() = clientId.isNotBlank() && clientSecret.isNotBlank()
+class TraktClient(private val http: HttpTransport, private val clientId: String, private val clientSecret: String = "") {
+    val enabled: Boolean get() = clientId.isNotBlank()
+    private val hasSecret get() = clientSecret.isNotBlank()
 
     private fun headers(token: String? = null) = buildMap {
         put("Content-Type", "application/json")
@@ -66,31 +100,45 @@ class TraktClient(private val http: HttpTransport, private val clientId: String,
         if (token != null) put("Authorization", "Bearer $token")
     }
 
-    private suspend fun post(path: String, body: JsonObject, token: String? = null): HttpResult? =
-        runCatching { http.post("$BASE$path", body.toString(), headers(token), 15_000) }.getOrNull()
+    private suspend fun post(path: String, body: JsonObject, token: String? = null, host: String = BASE): HttpResult? =
+        runCatching { http.post("$host$path", body.toString(), headers(token), 15_000) }.getOrNull()
 
-    suspend fun deviceCode(): DeviceCode? {
-        val r = post("/oauth/device/code", buildJsonObject { put("client_id", clientId) }) ?: return null
-        return if (r.isSuccess) parseDeviceCode(r.body) else null
+    /** Sign-in calls go to auth.trakt.tv (required from February 2027); api.trakt.tv if that can't be reached. */
+    private suspend fun oauth(path: String, body: JsonObject): HttpResult? {
+        val r = post(path, body, host = AUTH)
+        return if (r == null || r.code >= 500) post(path, body) ?: r else r
     }
 
-    suspend fun pollToken(deviceCode: String, nowMs: Long): TokenPoll {
-        val r = post("/oauth/device/token", buildJsonObject {
-            put("code", deviceCode); put("client_id", clientId); put("client_secret", clientSecret)
+    suspend fun deviceCode(): DeviceCode? {
+        val verifier = Pkce.verifier()
+        val r = oauth("/oauth/device/code", buildJsonObject {
+            put("client_id", clientId); put("code_challenge", Pkce.challenge(verifier)); put("code_challenge_method", "S256")
+        }) ?: return null
+        return if (r.isSuccess) parseDeviceCode(r.body)?.copy(codeVerifier = verifier) else null
+    }
+
+    suspend fun pollToken(code: DeviceCode, nowMs: Long): TokenPoll {
+        val r = oauth("/oauth/device/token", buildJsonObject {
+            put("code", code.deviceCode); put("client_id", clientId)
+            if (code.codeVerifier.isNotEmpty()) put("code_verifier", code.codeVerifier)
+            if (hasSecret) put("client_secret", clientSecret)
         }) ?: return TokenPoll.Failed(0)
         return parseTokenPoll(r, nowMs)
     }
 
     suspend fun refresh(tokens: TraktTokens, nowMs: Long): TraktTokens? {
-        val r = post("/oauth/token", buildJsonObject {
-            put("refresh_token", tokens.refreshToken); put("client_id", clientId); put("client_secret", clientSecret)
-            put("redirect_uri", "urn:ietf:wg:oauth:2.0:oob"); put("grant_type", "refresh_token")
+        val r = oauth("/oauth/token", buildJsonObject {
+            put("refresh_token", tokens.refreshToken); put("client_id", clientId); put("grant_type", "refresh_token")
+            if (hasSecret) { put("client_secret", clientSecret); put("redirect_uri", "urn:ietf:wg:oauth:2.0:oob") }
         }) ?: return null
         return if (r.isSuccess) parseTokens(r.body, nowMs)?.copy(username = tokens.username) else null
     }
 
     suspend fun revoke(token: String) {
-        post("/oauth/revoke", buildJsonObject { put("token", token); put("client_id", clientId); put("client_secret", clientSecret) })
+        oauth("/oauth/revoke", buildJsonObject {
+            put("token", token); put("client_id", clientId)
+            if (hasSecret) put("client_secret", clientSecret)
+        })
     }
 
     /** The signed-in user's name. */
@@ -113,6 +161,7 @@ class TraktClient(private val http: HttpTransport, private val clientId: String,
 
     companion object {
         const val BASE = "https://api.trakt.tv"
+        const val AUTH = "https://auth.trakt.tv"
 
         private fun JsonObject.s(k: String) = (this[k] as? JsonPrimitive)?.contentOrNull
         private fun JsonObject.i(k: String) = (this[k] as? JsonPrimitive)?.intOrNull
@@ -133,13 +182,18 @@ class TraktClient(private val http: HttpTransport, private val clientId: String,
             return TraktTokens(access, refresh, created + expiresIn * 1_000)
         }
 
-        /** Trakt's device-token answers: 200 approved, 400 pending, 404/409/418 refused, 410 expired, 429 slow down. */
+        /**
+         * Trakt's device-token answers: 200 approved, 400 pending, 404/409 refused, 410 expired, 429 slow
+         * down. 418 is a refusal too, and also what a Development app answers when the code was approved
+         * by an account that isn't the app's owner or on its list of users.
+         */
         fun parseTokenPoll(r: HttpResult, nowMs: Long): TokenPoll = when (r.code) {
             200 -> parseTokens(r.body, nowMs)?.let { TokenPoll.Approved(it) } ?: TokenPoll.Failed(200)
             400 -> TokenPoll.Pending
             429 -> TokenPoll.SlowDown
             410 -> TokenPoll.Expired
-            404, 409, 418 -> TokenPoll.Denied
+            418 -> TokenPoll.NotAllowed
+            404, 409 -> TokenPoll.Denied
             else -> TokenPoll.Failed(r.code)
         }
 

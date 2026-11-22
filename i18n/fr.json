@@ -432,5 +432,6 @@
     "frozen_sources_desc": "%1$d ignorée(s) désormais",
     "frozen_forgotten": "Sources figées oubliées",
     "forget": "Oublier",
-    "freeze_notice": "La TV s'est figée la dernière fois au lancement de %1$s (%2$s). VYRK ignorera désormais cette source."
+    "freeze_notice": "La TV s'est figée la dernière fois au lancement de %1$s (%2$s). VYRK ignorera désormais cette source.",
+    "trakt_not_allowed": "Trakt n'a pas autorisé ce compte. Validez le code avec le compte Trakt qui a créé cette app, ou ajoutez votre compte aux utilisateurs de l'app sur developer.trakt.tv."
 }

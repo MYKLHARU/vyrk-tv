@@ -32,6 +32,8 @@ class TraktAccount(private val client: TraktClient, private val vault: SecretVau
         data object Done : SignIn
         data object Expired : SignIn
         data object Failed : SignIn
+        /** Approved with a Trakt account this build's Trakt app doesn't allow. */
+        data object NotAllowed : SignIn
     }
 
     private val _state = MutableStateFlow<State>(if (client.enabled) State.SignedOut else State.Off)
@@ -71,7 +73,7 @@ class TraktAccount(private val client: TraktClient, private val vault: SecretVau
         val deadline = System.currentTimeMillis() + code.expiresInSec * 1_000L
         while (System.currentTimeMillis() < deadline) {
             delay(interval)
-            when (val r = client.pollToken(code.deviceCode, System.currentTimeMillis())) {
+            when (val r = client.pollToken(code, System.currentTimeMillis())) {
                 is TokenPoll.Approved -> {
                     val name = client.username(r.tokens.accessToken)
                     lock.withLock { save(r.tokens.copy(username = name)) }
@@ -80,6 +82,7 @@ class TraktAccount(private val client: TraktClient, private val vault: SecretVau
                 TokenPoll.Pending -> Unit
                 TokenPoll.SlowDown -> interval += 1_000L
                 TokenPoll.Expired -> return report(SignIn.Expired)
+                TokenPoll.NotAllowed -> return report(SignIn.NotAllowed)
                 TokenPoll.Denied, is TokenPoll.Failed -> return report(SignIn.Failed)
             }
         }

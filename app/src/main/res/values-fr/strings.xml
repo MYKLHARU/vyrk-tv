@@ -381,6 +381,7 @@
     <string name="trakt_disconnect">Déconnecter</string>
     <string name="trakt_expired">Le code a expiré. Réessayez.</string>
     <string name="trakt_failed">Impossible de se connecter à Trakt. Réessayez.</string>
+    <string name="trakt_not_allowed">Trakt n\'a pas autorisé ce compte. Validez le code avec le compte Trakt qui a créé cette app, ou ajoutez votre compte aux utilisateurs de l\'app sur developer.trakt.tv.</string>
     <string name="trakt_open_site">Ouvrir trakt.tv</string>
     <string name="trakt_waiting">En attente de votre validation sur Trakt…</string>
     <string name="try_again">Réessayer</string>
