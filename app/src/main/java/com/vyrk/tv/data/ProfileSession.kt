@@ -107,7 +107,7 @@ class ProfileSession(
 
     suspend fun load() {
         AtomicFiles.flush()
-        _settings.value = AtomicFiles.readText(settingsFile)?.let { runCatching { AppJson.decodeFromString(ProfileSettings.serializer(), it) }.getOrNull() } ?: ProfileSettings()
+        _settings.value = (AtomicFiles.readText(settingsFile)?.let { runCatching { AppJson.decodeFromString(ProfileSettings.serializer(), it) }.getOrNull() } ?: ProfileSettings()).upgraded()
         _state.value = AtomicFiles.readText(stateFile)?.let { runCatching { AppJson.decodeFromString(SessionState.serializer(), it) }.getOrNull() } ?: SessionState()
         _library.value = AtomicFiles.readText(libraryFile)?.let { txt ->
             runCatching { (ProtocolJson.parseToJsonElement(txt) as JsonArray).mapNotNull { el -> runCatching { LibraryItem.fromJson(el) }.getOrNull() } }.getOrNull()

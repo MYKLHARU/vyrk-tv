@@ -201,11 +201,14 @@ fun BrowsePage(
     var focusedRowKey by model::focusedRowKey
     val heroMeta = heroItems.getOrNull(heroIndex)
     val heroDetails = produceMeta(session, heroMeta)
-    val headerDetails = produceMeta(session, focusedPoster, debounceMs = 250)
+    // While you step quickly along a row, the heavy parts (details, artwork, the full-screen picture,
+    // a trailer) wait until you stop; a single step still shows them as before.
+    val settledPoster = rememberSettled(focusedPoster)
+    val headerDetails = produceMeta(session, settledPoster, debounceMs = 250)
     val heroFull by heroDetails
     val headerFull by headerDetails
     val heroArt = rememberTitleArt(heroMeta, heroFull, metadataLoading = heroDetails.loading)
-    val headerArt = rememberTitleArt(focusedPoster, headerFull, debounceMs = 300, metadataLoading = headerDetails.loading)
+    val headerArt = rememberTitleArt(settledPoster, headerFull, debounceMs = 300, metadataLoading = headerDetails.loading)
     val heroEnabled = settings.heroEnabled && heroItems.isNotEmpty() && model.tab != Tab.LIVE
     // Settings draws the artwork you were last looking at, blurred, behind its glass panels.
     val shownBackdrop = (if (heroEnabled) heroArt else headerArt).backdrops.firstOrNull()
@@ -348,7 +351,7 @@ fun BrowsePage(
         // Taller than this page (it reaches up behind the bar), so its height must not be capped to the
         // page's: a plain height() was, which left the bottom bar-height of the screen uncovered with
         // a hard edge above the last row.
-        val wallpaperMeta = if (headerShown) focusedPoster else heroMeta
+        val wallpaperMeta = if (headerShown) settledPoster else heroMeta
         // While Home's titles load, keep the picture the opening ended on behind it; it's the same
         // title Home then starts on, so the wallpaper simply stays.
         val introPicture = remember { com.vyrk.tv.ui.components.IntroPrefs.featured(introContext) }
@@ -475,7 +478,7 @@ fun BrowsePage(
             com.vyrk.tv.ui.preview.PreviewCard(pm, sound = settings.previewSound, modifier = Modifier.padding(top = 12.dp, end = Dimens.screenMargin))
         }
         // Title header over the wallpaper while a poster has focus.
-        val fp = focusedPoster
+        val fp = settledPoster
         if (fp != null && headerShown) {
             Box(Modifier.offset(y = -Dimens.navHeight).fillMaxWidth().height(headerH + Dimens.navHeight)) {
                 TitleHeader(fp, headerFull, headerArt, headerH, trailerPlaying = false, pageLabel = pageLabel)
@@ -583,6 +586,30 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
             logosLoading = logosLoading,
         )
     }
+}
+
+/** Within this long of the previous focus move, a move counts as part of a quick run of steps. */
+private const val QUICK_STEP_MS = 450L
+/** How long focus must rest after a quick run before the title header and its picture catch up. */
+private const val SETTLE_AFTER_QUICK_MS = 380L
+
+/**
+ * [meta], once focus has come to rest on it: straight away after a lone step, but only once a quick
+ * run of steps stops, so held or rapid presses don't load a picture and details for every title passed.
+ */
+@Composable
+private fun rememberSettled(meta: MetaPreview?): MetaPreview? {
+    val lastMove = remember { longArrayOf(0L) }
+    var settled by remember { mutableStateOf(meta) }
+    LaunchedEffect(meta) {
+        val now = android.os.SystemClock.uptimeMillis()
+        val quick = now - lastMove[0] < QUICK_STEP_MS
+        lastMove[0] = now
+        if (meta != null && quick) delay(SETTLE_AFTER_QUICK_MS)
+        settled = meta
+    }
+    // Leaving the rows (to the hero or the tabs) clears it at once, so nothing stale is drawn.
+    return if (meta == null) null else settled
 }
 
 /** Fetches an image into Coil's caches once per model; null size means the image's own size. */

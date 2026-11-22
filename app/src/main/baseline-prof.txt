@@ -1,0 +1,13 @@
+# VYRK's baseline profile: the code Android should compile ahead of time instead of interpreting it
+# at first. Shipped in the APK; Android applies it the next time it optimises apps in the background
+# (on a TV, usually while it's asleep). Compose and the AndroidX libraries ship rules of their own.
+#
+# All of VYRK's own code (app and core): every screen, the add-on protocol, stream ranking.
+HSPLcom/vyrk/**;->**(**)**
+Lcom/vyrk/**;
+# JSON (every catalogue and title page), coroutines, image loading and networking.
+HSPLkotlinx/serialization/**;->**(**)**
+HSPLkotlinx/coroutines/**;->**(**)**
+HSPLcoil3/**;->**(**)**
+HSPLokhttp3/**;->**(**)**
+HSPLokio/**;->**(**)**

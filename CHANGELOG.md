@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.61
+
+- Smoother browsing on the TV:
+  - Stepping quickly along a row no longer loads every title's details and full-screen picture on the way past; the title header and its picture catch up as soon as you stop. A single step still shows them straight away.
+  - Previews are now Manual by default (press Play on a title to see its trailer), including for profiles set up before. A trailer that starts by itself runs a YouTube web page, which was the heaviest thing VYRK did while browsing. Settings › Previews › Automatic brings it back, now after focus rests for 2 seconds, with one player reused from title to title instead of a new one each time.
+  - VYRK now ships a baseline profile for its own code (and its JSON, image and network libraries), so Android compiles it ahead of time instead of interpreting it at first. Android applies it the next time it optimises apps in the background, on a TV usually while it's asleep, so the full benefit arrives after the first night with a new version.
+
 ## v0.1.60
 
 - New opening on the first launch of the day: gold hairlines draw a ring, the Elder Futhark is inscribed round it in its three ættir, the two blades of the V slide in and lock with a deep strike, a glint of light runs round the runes and VYRK is drawn beneath, then the V opens onto Home and the camera dives through. New sound to match: a low drone, a lur horn call, the strike with a ringing metal overtone and a rush of air for the dive. Still drawn on the render thread, so it stays smooth on SHIELD; later launches keep the 1-second sting.
