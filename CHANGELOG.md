@@ -2,6 +2,12 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.62
+
+- Trailers are freed as soon as you move on. Each trailer played used to stay in memory, a whole YouTube web page, until VYRK closed, so a long session with trailers kept getting heavier.
+- Phone: a series page opens at the season of the next episode to watch when the episode you last played is no longer in the add-on's list (the TV already did this), instead of at season 1.
+- Updates: leaving the screen during a download no longer reports "Download failed", a download that fails says so straight away instead of after another 3 seconds, and the percentage no longer passes 100% when a download resumes from a server that doesn't give its size.
+
 ## v0.1.61
 
 - Smoother browsing on the TV:
