@@ -194,14 +194,19 @@ class ProfileSession(
             listOf(DEFAULT_CINEMETA, DEFAULT_OPENSUBTITLES).map { url ->
                 async {
                     repeat(2) { attempt ->
+                        Diagnostics.trace("default add-on ${Redact.url(url)}: try ${attempt + 1}")
                         val manifest = withTimeoutOrNull(DEFAULT_ADDON_TIMEOUT_MS) {
                             try { addonClient.manifest(url) } catch (e: CancellationException) { throw e } catch (e: Exception) {
                                 Diagnostics.log("addons", "default add-on failed: ${e.message}"); null
                             }
                         }
-                        if (manifest != null) return@async Descriptor(manifest, url, DescriptorFlags(official = true))
+                        if (manifest != null) {
+                            Diagnostics.trace("default add-on ${Redact.url(url)}: ready")
+                            return@async Descriptor(manifest, url, DescriptorFlags(official = true))
+                        }
                         if (attempt == 0) Diagnostics.log("addons", "default add-on slow or failed, trying again: ${Redact.url(url)}")
                     }
+                    Diagnostics.trace("default add-on ${Redact.url(url)}: gave up")
                     null
                 }
             }.map { it.await() }.filterNotNull()
