@@ -33,8 +33,6 @@ class PageFocusFlags {
     val top10CardFocused = AtomicBoolean(false)
     /** Distance from the list's top to where the focused poster's top should sit. */
     val posterTarget = AtomicReference(0f)
-    /** True when the next bring-into-view should keep the page at the top. */
-    val keepTop = AtomicBoolean(false)
 }
 
 /**

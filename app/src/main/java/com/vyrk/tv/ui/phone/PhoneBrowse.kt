@@ -55,6 +55,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.vyrk.core.addon.MetaPreview
+import com.vyrk.core.catalog.CatalogRules
 import com.vyrk.core.library.LibraryItem
 import com.vyrk.core.library.LibraryRules
 import com.vyrk.tv.BuildConfig
@@ -73,6 +74,7 @@ import com.vyrk.tv.ui.browse.HeroLogo
 import com.vyrk.tv.ui.browse.RankNumber
 import com.vyrk.tv.ui.browse.RowKind
 import com.vyrk.tv.ui.browse.RowState
+import com.vyrk.tv.ui.browse.firstRowWithArt
 import com.vyrk.tv.ui.browse.posterState
 import com.vyrk.tv.ui.browse.produceMeta
 import com.vyrk.tv.ui.browse.rememberTitleArt
@@ -81,6 +83,7 @@ import com.vyrk.tv.ui.components.Wordmark
 import com.vyrk.tv.ui.screens.tabIcon
 import com.vyrk.tv.ui.screens.tabLabel
 import com.vyrk.tv.ui.str
+import com.vyrk.tv.ui.overlays.continueLabel
 import com.vyrk.tv.ui.theme.Vyrk
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -175,19 +178,9 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
     // Featured titles: on Home a mix taken in turn from the first rows, elsewhere the first row with artwork.
     val heroCandidates by remember(model.rows) {
         derivedStateOf {
-            fun art(r: RowState) = r.items.filter { it.background != null }
-            if (!isHome) model.rows.firstOrNull { art(it).isNotEmpty() }?.let { art(it).take(HERO_COUNT) }.orEmpty()
+            if (!isHome) firstRowWithArt(model.rows)
             else if (!model.rows.take(HERO_SOURCE_ROWS).all { it.loadedOnce }) emptyList()
-            else {
-                val pools = model.rows.map(::art).filter { it.isNotEmpty() }
-                val picked = LinkedHashMap<String, MetaPreview>()
-                var i = 0
-                while (picked.size < HERO_COUNT && pools.any { i < it.size }) {
-                    pools.forEach { p -> p.getOrNull(i)?.let { m -> if (picked.size < HERO_COUNT) picked.putIfAbsent(m.id, m) } }
-                    i++
-                }
-                picked.values.toList()
-            }
+            else CatalogRules.heroMix(model.rows.map { it.withArt }, HERO_COUNT)
         }
     }
     LaunchedEffect(heroCandidates.map { it.id }) { model.lockHero(heroCandidates) }
@@ -399,12 +392,8 @@ private fun ContinueCard(meta: MetaPreview, item: LibraryItem?, tag: String, onC
         Box(Modifier.align(Alignment.Center).size(40.dp).background(c.shade.copy(alpha = 0.55f), CircleShape).border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape), contentAlignment = Alignment.Center) {
             Icon(R.drawable.ic_play, null, Modifier.padding(start = 2.dp).size(16.dp), tint = Color.White)
         }
-        val st = item?.state
-        val episode = st?.let { LibraryRules.episodeLabel(item.id, it.videoId) }
-        val leftMin = if (st != null && st.duration > 0 && st.duration > st.timeOffset) ((st.duration - st.timeOffset) / 60_000L).toInt() else null
-        val left = leftMin?.takeIf { it > 0 }?.let { m -> str(R.string.time_left, if (m < 60) "${m}m" else "${m / 60}h ${m % 60}m") }
         Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 9.dp)) {
-            listOfNotNull(episode, left).joinToString(" · ").takeIf { it.isNotEmpty() }?.let {
+            continueLabel(item)?.let {
                 Text(it, style = Vyrk.type.labelM, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             val progress = if (item?.isInContinueWatching == true) item.progress else 0f

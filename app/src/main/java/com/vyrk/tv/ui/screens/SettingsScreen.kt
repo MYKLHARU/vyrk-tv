@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,16 +78,13 @@ import com.vyrk.tv.ui.Overlay
 import com.vyrk.tv.ui.Screen
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.VyrkButton
-import com.vyrk.tv.ui.components.VyrkChip
 import com.vyrk.tv.ui.components.ChoicePill
 import androidx.compose.foundation.layout.size
-import com.vyrk.tv.ui.components.glassPanel
 import com.vyrk.tv.ui.components.ColorSwatch
 import com.vyrk.tv.ui.components.CheckChip
 import com.vyrk.tv.ui.components.SegmentedControl
 import com.vyrk.tv.ui.components.OnOffControl
 import com.vyrk.tv.ui.components.ColumnDivider
-import com.vyrk.tv.ui.components.RowDivider
 import com.vyrk.tv.ui.components.SettingRow
 import com.vyrk.tv.ui.components.WrapRow
 import com.vyrk.tv.ui.str
@@ -97,6 +93,7 @@ import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.tryRequestFocus
 
 private enum class Group(val title: Int, val icon: Int, val subtitle: Int) {
     PROFILE(R.string.settings_profile, R.drawable.ic_profile, R.string.settings_profile_sub),
@@ -115,7 +112,7 @@ fun SettingsScreen(session: ProfileSession) {
     // One requester per group, so Left from any setting returns to the group it belongs to.
     val groupReqs = remember { Group.entries.associateWith { FocusRequester() } }
     val contentReq = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { groupReqs.getValue(group).requestFocus() } }
+    LaunchedEffect(Unit) { groupReqs.getValue(group).tryRequestFocus() }
     val addons by session.addons.collectAsState()
     var typing by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(group) { typing = null }
@@ -162,7 +159,7 @@ fun SettingsScreen(session: ProfileSession) {
             .focusProperties {
                 onExit = {
                     when (requestedFocusDirection) {
-                        FocusDirection.Left -> runCatching { groupReqs.getValue(group).requestFocus() }
+                        FocusDirection.Left -> groupReqs.getValue(group).tryRequestFocus()
                         // Down past the last setting would land on a sidebar entry below and open that group.
                         FocusDirection.Down -> cancelFocusChange()
                         else -> {}
@@ -203,7 +200,7 @@ private val LocalGroupReq = androidx.compose.runtime.staticCompositionLocalOf<Fo
 private fun Modifier.leftToSidebar(): Modifier {
     val req = LocalGroupReq.current ?: return this
     return this
-        .focusProperties { onExit = { if (requestedFocusDirection == FocusDirection.Left) runCatching { req.requestFocus() } } }
+        .focusProperties { onExit = { if (requestedFocusDirection == FocusDirection.Left) req.tryRequestFocus() } }
         .focusGroup()
 }
 

@@ -59,11 +59,11 @@ import com.vyrk.tv.ui.Section
 import com.vyrk.tv.ui.components.VyrkButton
 import com.vyrk.tv.ui.components.VyrkChip
 import com.vyrk.tv.ui.components.WrapRow
-import com.vyrk.tv.ui.components.focusGlow
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.tryRequestFocus
 
 /** Round photo with the person's initials when TMDB has no picture. */
 @Composable
@@ -162,7 +162,7 @@ fun PersonPage(o: Overlay.Person) {
         credits = graph.tmdb.personCredits(o.id)
         failed = person == null
     }
-    LaunchedEffect(credits != null) { if (credits != null) runCatching { first.requestFocus() } }
+    LaunchedEffect(credits != null) { if (credits != null) first.tryRequestFocus() }
     val c = Vyrk.colors
     Row(Modifier.fillMaxSize().background(c.background).padding(horizontal = 48.dp, vertical = 30.dp), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
         Column(Modifier.width(300.dp)) {

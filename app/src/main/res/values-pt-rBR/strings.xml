@@ -361,8 +361,10 @@
     <string name="third_party_notices">Avisos de terceiros</string>
     <string name="this_tv">Esta TV</string>
     <string name="time_hm">%1$d h %2$d min</string>
+    <string name="time_hm_short">%1$dh %2$dm</string>
     <string name="time_left">Faltam %1$s</string>
     <string name="time_m">%1$d min</string>
+    <string name="time_m_short">%1$dm</string>
     <string name="timeline_hint">◀ ▶ Navegar · ▲ Capítulos · OK Ir</string>
     <string name="top10_add">Adicionar linhas Top 10</string>
     <string name="top10_card_body">Adiciona o complemento gratuito de terceiros Streaming Catalogs, que mostra o que está em alta em cada serviço.</string>

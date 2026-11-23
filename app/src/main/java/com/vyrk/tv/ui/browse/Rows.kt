@@ -46,7 +46,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
@@ -59,14 +58,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Surface
@@ -78,14 +72,14 @@ import com.vyrk.tv.R
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.Icon
 import com.vyrk.tv.ui.components.VyrkButton
-import com.vyrk.tv.ui.components.focusGlow
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
-import com.vyrk.tv.ui.theme.Jakarta
+import com.vyrk.tv.ui.overlays.continueLabel
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
 import com.vyrk.tv.ui.components.shimmer
+import com.vyrk.tv.ui.tryRequestFocus
 
 /** What a poster shows from the live library. */
 data class PosterState(val progress: Float, val watched: Boolean, val isNew: Boolean)
@@ -360,7 +354,7 @@ fun BrowseRow(
                         .focusProperties {
                             onEnter = {
                                 if (restoreIndex == null && (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down)) {
-                                    if (listState.firstVisibleItemIndex == 0) runCatching { firstReq.requestFocus() }
+                                    if (listState.firstVisibleItemIndex == 0) firstReq.tryRequestFocus()
                                 }
                             }
                         }
@@ -406,7 +400,7 @@ fun BrowseRow(
                     }
                     // See all needs a catalogue to page through ("Because you watched" rows have none).
                     if (row.kind == RowKind.CATALOG && row.ref != null && (row.items.size >= 10 ||
-                        row.animeOnly && row.ref?.catalog?.supportsExtra("skip") == true)) item(key = "catalog-action") {
+                        row.animeOnly && row.ref.catalog.supportsExtra("skip"))) item(key = "catalog-action") {
                         Box(Modifier.size(posterWidth, height), contentAlignment = Alignment.Center) {
                             val more = row.animeOnly && row.hasMore
                             VyrkButton(str(if (more) R.string.anime_load_more else R.string.see_all),
@@ -444,15 +438,6 @@ private fun ExpandedArt(meta: MetaPreview, width: Dp, height: Dp, detail: String
     }
 }
 
-/** "S5 E4 · 28m left", "28m left" or "S1 E3"; null when the library knows neither. */
-@Composable
-private fun continueLabel(item: LibraryItem?): String? {
-    val st = item?.state ?: return null
-    val episode = com.vyrk.core.library.LibraryRules.episodeLabel(item.id, st.videoId)
-    val leftMin = if (st.duration > 0 && st.duration > st.timeOffset) ((st.duration - st.timeOffset) / 60_000L).toInt() else null
-    val left = leftMin?.takeIf { it > 0 }?.let { m -> str(R.string.time_left, if (m < 60) "${m}m" else "${m / 60}h ${m % 60}m") }
-    return listOfNotNull(episode, left).joinToString(" · ").ifEmpty { null }
-}
 
 /**
  * Continue Watching card, landscape: the title's backdrop with its logo, a play button, a slim

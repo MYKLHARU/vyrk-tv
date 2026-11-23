@@ -1,6 +1,9 @@
 package com.vyrk.core.stream
 
+import com.vyrk.core.addon.AddonResult
+import com.vyrk.core.addon.Descriptor
 import com.vyrk.core.addon.Stream
+import com.vyrk.core.addon.StreamsResponse
 import com.vyrk.core.lang.Languages
 
 enum class Preset { BALANCED, BEST_PICTURE, FAST_START, ADDON_ORDER }
@@ -93,6 +96,12 @@ data class Ranked(
  * removed is recorded as a [Reason]. Ties break on add-on order, then the add-on's own order.
  */
 object StreamRanker {
+
+    /** Every stream the add-ons returned, tagged with its add-on and both orders. Failed add-ons add none. */
+    fun candidates(results: List<Pair<Descriptor, AddonResult<StreamsResponse>>>): List<Candidate> =
+        results.flatMapIndexed { order, (addon, result) ->
+            (result as? AddonResult.Ok)?.value?.streams.orEmpty().mapIndexed { i, s -> Candidate(s, addon.manifest.id, addon.manifest.name, order, i) }
+        }
 
     fun rank(candidates: List<Candidate>, caps: DeviceCaps, prefs: RankPrefs): List<Ranked> {
         val ranked = candidates.map { score(it, caps, prefs) }

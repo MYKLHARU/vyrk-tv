@@ -51,9 +51,6 @@ data class StremioUser(
     val avatar: String? = null,
 )
 
-@Serializable
-private data class CollectionResult(val addons: List<Descriptor> = emptyList(), val lastModified: String? = null)
-
 /** A library item's id and its remote modification time in epoch milliseconds. */
 data class RemoteMeta(val id: String, val mtimeMs: Long)
 

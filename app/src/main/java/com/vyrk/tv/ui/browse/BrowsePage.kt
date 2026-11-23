@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,6 +42,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.vyrk.core.addon.MetaPreview
+import com.vyrk.core.catalog.CatalogRules
 import com.vyrk.core.library.LibraryRules
 import com.vyrk.tv.BuildConfig
 import com.vyrk.tv.data.FocusMemory
@@ -65,6 +64,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.clip
 import com.vyrk.tv.ui.components.shimmer
+import com.vyrk.tv.ui.tryRequestFocus
 
 const val CW_ROW = "cw"
 /** Rows fetched as soon as a tab is built; the hero takes its titles from these. */
@@ -169,22 +169,14 @@ fun BrowsePage(
     // the rows fetched up front, so the lineup it locks is the full mix.
     val heroCandidates by remember(model.rows) {
         derivedStateOf {
-            fun art(r: RowState) = r.items.filter { it.background != null }
-            fun firstWithArt(rows: List<RowState>) = rows.firstOrNull { art(it).isNotEmpty() }?.let { art(it).take(HERO_COUNT) }.orEmpty()
             when {
-                !isHome -> firstWithArt(model.rows)
+                !isHome -> firstRowWithArt(model.rows)
                 !model.rows.take(HERO_SOURCE_ROWS).all { it.loadedOnce } -> emptyList()
                 else -> {
-                    val elsewhere = (firstWithArt(model.rows.filter { it.ref?.catalog?.type == "movie" }) +
-                        firstWithArt(model.rows.filter { it.ref?.catalog?.type == "series" })).mapTo(HashSet()) { it.id }
-                    val pools = model.rows.map { r -> art(r).filter { it.id !in elsewhere } }.filter { it.isNotEmpty() }
-                    val picked = LinkedHashMap<String, MetaPreview>()
-                    var i = 0
-                    while (picked.size < HERO_COUNT && pools.any { i < it.size }) {
-                        pools.forEach { pool -> pool.getOrNull(i)?.let { m -> if (picked.size < HERO_COUNT) picked.putIfAbsent(m.id, m) } }
-                        i++
-                    }
-                    picked.values.toList().ifEmpty { firstWithArt(model.rows) }
+                    val elsewhere = (firstRowWithArt(model.rows.filter { it.ref?.catalog?.type == "movie" }) +
+                        firstRowWithArt(model.rows.filter { it.ref?.catalog?.type == "series" })).mapTo(HashSet()) { it.id }
+                    CatalogRules.heroMix(model.rows.map { r -> r.withArt.filter { it.id !in elsewhere } }, HERO_COUNT)
+                        .ifEmpty { firstRowWithArt(model.rows) }
                 }
             }
         }
@@ -255,9 +247,9 @@ fun BrowsePage(
         when {
             mem != null && rows.any { it.key == mem.rowKey && it.items.isNotEmpty() } ->
                 restoreTarget = Origin(tabKey, mem.rowKey, mem.index, mem.itemId ?: "")
-            heroEnabled -> { listState.scrollToItem(0); delay(60); runCatching { watchReq.requestFocus() } }
+            heroEnabled -> { listState.scrollToItem(0); delay(60); watchReq.tryRequestFocus() }
             rows.firstOrNull()?.items?.isNotEmpty() == true -> restoreTarget = Origin(tabKey, rows.first().key, 0, "")
-            showTop10Card -> { delay(60); runCatching { top10Req.requestFocus() } }
+            showTop10Card -> { delay(60); top10Req.tryRequestFocus() }
             else -> app.focusTabsTick++
         }
     }    // Restores requested by overlays and playback.
@@ -277,14 +269,14 @@ fun BrowsePage(
         if (!showTop10Card && flags.top10CardFocused.getAndSet(false)) {
             androidx.compose.runtime.snapshotFlow { windowInfoForCard.isWindowFocused }.first { it }
             listState.scrollToItem(0); delay(150)
-            if (!runCatching { watchReq.requestFocus() }.isSuccess || !heroEnabled) restoreTarget = rows.firstOrNull()?.let { Origin(tabKey, it.key, 0, "") }
+            if (!watchReq.tryRequestFocus() || !heroEnabled) restoreTarget = rows.firstOrNull()?.let { Origin(tabKey, it.key, 0, "") }
         }
     }
     // Only requests made while this page is open: a page built later (another tab) must not act
     // on an old request now that its hero can be ready on the first frame.
     val heroTickAtStart = remember { app.focusHeroTick }
     LaunchedEffect(app.focusHeroTick) {
-        if (app.focusHeroTick > heroTickAtStart && heroEnabled && active) { listState.scrollToItem(0); runCatching { watchReq.requestFocus() } }
+        if (app.focusHeroTick > heroTickAtStart && heroEnabled && active) { listState.scrollToItem(0); watchReq.tryRequestFocus() }
     }
     // Resolve a restore to a row index, falling back to a neighbour or the hero.
     LaunchedEffect(restoreTarget, rows.map { it.key to it.items.size }) {
@@ -294,7 +286,7 @@ fun BrowsePage(
         if (row == null || row.items.isEmpty()) {
             if (row != null && !row.loadedOnce) return@LaunchedEffect // wait for data
             restoreTarget = null
-            if (heroEnabled) { listState.scrollToItem(0); delay(30); runCatching { watchReq.requestFocus() } }
+            if (heroEnabled) { listState.scrollToItem(0); delay(30); watchReq.tryRequestFocus() }
             return@LaunchedEffect
         }
         val headerItems = (if (heroEnabled) 1 else 0) + (if (showTop10Card) 1 else 0)
@@ -416,7 +408,7 @@ fun BrowsePage(
                                 if (top is Overlay.InstallConfirm && top.input == url) app.replaceTop(top.copy(descriptor = d.getOrNull(), error = d.exceptionOrNull()?.let { "fetch" }))
                             }
                         },
-                        onNotNow = { session.updateSettings { it.copy(top10CardDismissed = true) }; runCatching { watchReq.requestFocus() } },
+                        onNotNow = { session.updateSettings { it.copy(top10CardDismissed = true) }; watchReq.tryRequestFocus() },
                         onFocus = { f ->
                             // Cleared only when something else on the page takes focus, so removal of the
                             // card while focused is still known.
@@ -562,7 +554,7 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
     }
     val fanartLogos = fanart.takeIf { it.first == titleKey }?.second.orEmpty()
     val prequel = meta?.let { com.vyrk.core.art.SeasonLogos.prequel(it, safeFull) }
-    val inherit = prequel != null && lookupId == null && meta?.logo.isNullOrBlank() && safeFull?.logo.isNullOrBlank()
+    val inherit = prequel != null && lookupId == null && meta.logo.isNullOrBlank() && safeFull?.logo.isNullOrBlank()
     val seasonLogos by androidx.compose.runtime.produceState<Pair<String?, List<String>?>>(null to null, titleKey, inherit, prequel, safeFull) {
         value = titleKey to if (inherit) null else emptyList()
         val m = meta ?: return@produceState

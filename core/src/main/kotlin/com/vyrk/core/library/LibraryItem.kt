@@ -60,8 +60,6 @@ data class LibraryItem(
         get() = !state.noNotif && !isLive && type != "other" && type != "movie" &&
             behaviorHints.defaultVideoId == null && !removed && !temp
 
-    fun eqNoMtime(o: LibraryItem): Boolean = copy(mtimeMs = 0) == o.copy(mtimeMs = 0)
-
     fun watchedBitField(videos: List<Video>): WatchedBitField = state.watchedBitField(videos)
 
     fun toJson(): JsonObject = buildJsonObject {

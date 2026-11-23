@@ -19,9 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
@@ -53,17 +51,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
-import com.vyrk.core.addon.AddonResult
 import com.vyrk.core.addon.MetaItem
 import com.vyrk.core.addon.MetaPreview
 import com.vyrk.core.addon.RuntimeText
 import com.vyrk.core.addon.Video
 import com.vyrk.core.lang.Languages
+import com.vyrk.core.library.EpisodeGuide
 import com.vyrk.core.library.LibraryItem
 import com.vyrk.core.library.LibraryRules
-import com.vyrk.core.stream.Candidate
 import com.vyrk.core.stream.Ranked
-import com.vyrk.core.stream.StreamRanker
+import com.vyrk.core.stream.SourceFilters
+import com.vyrk.core.stream.SourceSummary
 import com.vyrk.core.tmdb.Credits
 import com.vyrk.tv.R
 import com.vyrk.tv.data.ProfileSession
@@ -81,16 +79,15 @@ import com.vyrk.tv.ui.browse.rememberTitleArt
 import com.vyrk.tv.ui.components.Icon
 import com.vyrk.tv.ui.components.Tag
 import com.vyrk.tv.ui.overlays.PersonPhoto
+import com.vyrk.tv.ui.overlays.SourcesState
+import com.vyrk.tv.ui.overlays.loadTitleSources
+import com.vyrk.tv.ui.overlays.rememberTmdbCredits
+import com.vyrk.tv.ui.overlays.sourcesMessage
+import com.vyrk.tv.ui.overlays.timeLeftLabel
 import com.vyrk.tv.ui.preview.openInYouTube
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Vyrk
 import kotlinx.coroutines.launch
-
-private sealed interface Sources {
-    data object Idle : Sources
-    data object Loading : Sources
-    data class Ready(val ranked: List<Ranked>, val failedAddons: Int, val addonCount: Int) : Sources
-}
 
 /**
  * The title page on a phone, one scrolling column: the artwork with the logo and facts, Play,
@@ -111,37 +108,16 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
     val meta = o.meta
     val details = produceMeta(session, meta)
     val full by details
-    var credits by remember { mutableStateOf<Credits?>(null) }
-    LaunchedEffect(meta.id) {
-        if (!graph.tmdb.enabled || !meta.id.startsWith("tt")) return@LaunchedEffect
-        val found = graph.tmdb.findByImdb(meta.id.substringBefore(':'), preferTv = meta.type == "series") ?: return@LaunchedEffect
-        credits = graph.tmdb.credits(found.first, found.second)
-    }
+    val credits = rememberTmdbCredits(graph, meta)
     val item: LibraryItem? = library[meta.id]
     val isSeries = meta.type == "series" && (full?.videos?.isNotEmpty() ?: true)
     val showSources = !isSeries && (settings.sourcesOnInfoPage || o.showSources)
-    var sources by remember { mutableStateOf<Sources>(Sources.Idle) }
+    var sources by remember { mutableStateOf<SourcesState>(SourcesState.Idle) }
     fun loadSources() {
-        val vid = meta.behaviorHints.defaultVideoId ?: meta.id
-        sources = Sources.Loading
-        scope.launch {
-            val addons = session.effectiveAddons()
-            val results = graph.addonClient.allStreams(addons, meta.type, vid)
-            val cands = results.flatMapIndexed { order, (a, r) ->
-                (r as? AddonResult.Ok)?.value?.streams.orEmpty().mapIndexed { i, s -> Candidate(s, a.manifest.id, a.manifest.name, order, i) }
-            }
-            val mem = session.titleMemory(meta.id)
-            val prefs = com.vyrk.core.stream.RankPrefs(
-                preset = settings.preset, maxResolution = settings.maxResolution, maxSizeBytes = settings.maxSizeGb?.let { it * 1_000_000_000L },
-                format = settings.format, hdr = settings.hdr, audioLanguages = settings.audioLanguages,
-                rememberedKey = mem.pickedKey, lastBingeGroup = mem.bingeGroup, lastReleaseGroup = mem.releaseGroup,
-                runtimeMinutes = RuntimeText.minutes(full?.runtime),
-            )
-            sources = Sources.Ready(StreamRanker.rank(cands, graph.playbackCaps(), prefs),
-                results.count { it.second is AddonResult.Failed }, results.size)
-        }
+        sources = SourcesState.Loading
+        scope.launch { sources = loadTitleSources(graph, session, meta, RuntimeText.minutes(full?.runtime)) }
     }
-    LaunchedEffect(meta.id, showSources) { if (showSources && (settings.loadSourcesOnOpen || o.showSources) && sources is Sources.Idle) loadSources() }
+    LaunchedEffect(meta.id, showSources) { if (showSources && (settings.loadSourcesOnOpen || o.showSources) && sources is SourcesState.Idle) loadSources() }
 
     val c = Vyrk.colors
     val art = rememberTitleArt(meta, full, metadataLoading = details.loading)
@@ -158,12 +134,12 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
             item(key = "actions") {
                 Column(Modifier.padding(horizontal = PhoneMargin)) {
                     val inCw = item?.isInContinueWatching == true
-                    val resumeEp = if (inCw && isSeries) item?.let { LibraryRules.episodeLabel(it.id, it.state.videoId) } else null
+                    val resumeEp = if (inCw && isSeries) LibraryRules.episodeLabel(item.id, item.state.videoId) else null
                     PhoneButton(str(if (inCw) R.string.resume else R.string.play) + (resumeEp?.let { "  ·  $it" } ?: ""), {
-                        val ranked = (sources as? Sources.Ready)?.ranked
+                        val ranked = (sources as? SourcesState.Ready)?.ranked
                         Playback.start(activity, graph, session, meta, ranked = if (isSeries) null else ranked)
                     }, icon = R.drawable.ic_play, style = PhoneButtonStyle.PRIMARY, modifier = Modifier.fillMaxWidth(), height = 52.dp, tag = "info:play")
-                    if (inCw && item != null && item.progress > 0f) {
+                    if (inCw && item.progress > 0f) {
                         Spacer(Modifier.height(10.dp))
                         ResumeLine(item)
                     }
@@ -181,8 +157,8 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
                         InfoAction(R.drawable.ic_eye, str(if (watched) R.string.watched else R.string.mark_watched), watched, "info:watched") {
                             session.markWatched(meta, !watched)
                         }
-                        if (!isSeries) InfoAction(R.drawable.ic_sources, str(R.string.sources), sources !is Sources.Idle, "info:sources") {
-                            if (sources is Sources.Idle) loadSources()
+                        if (!isSeries) InfoAction(R.drawable.ic_sources, str(R.string.sources), sources !is SourcesState.Idle, "info:sources") {
+                            if (sources is SourcesState.Idle) loadSources()
                             scope.launch { listState.animateScrollToItem(4) }
                         }
                     }
@@ -201,7 +177,7 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
                 onMenu = { v -> episodeMenu = v },
                 onMarkSeason = { eps -> full?.let { session.markVideos(it, eps, true) } })
             else if (showSources) sourcesSection(this, sources, onRefresh = { loadSources() }, onPick = { r ->
-                Playback.start(activity, graph, session, meta, picked = r, ranked = (sources as? Sources.Ready)?.ranked)
+                Playback.start(activity, graph, session, meta, picked = r, ranked = (sources as? SourcesState.Ready)?.ranked)
             })
             item(key = "credits") { CreditsBlock(full) }
         }
@@ -303,8 +279,7 @@ private fun InfoAction(icon: Int, label: String, active: Boolean, tag: String, o
 private fun ResumeLine(item: LibraryItem) {
     val c = Vyrk.colors
     val st = item.state
-    val leftMin = if (st.duration > 0 && st.duration > st.timeOffset) ((st.duration - st.timeOffset) / 60_000L).toInt() else null
-    val left = leftMin?.takeIf { it > 0 }?.let { m -> str(R.string.time_left, if (m < 60) "${m}m" else "${m / 60}h ${m % 60}m") }
+    val left = timeLeftLabel(st)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(Modifier.weight(1f).height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.2f))) {
             Box(Modifier.fillMaxWidth(item.progress.coerceIn(0.03f, 1f)).fillMaxHeight().background(c.accent))
@@ -366,20 +341,11 @@ private fun episodes(
 @Composable
 private fun SeasonGuide(meta: MetaItem, item: LibraryItem?, newIds: Set<String>, blur: Boolean, onPlay: (Video) -> Unit, onMenu: (Video) -> Unit, onMarkSeason: (List<Video>) -> Unit) {
     val c = Vyrk.colors
-    val seasons = meta.videos.mapNotNull { it.season }.distinct().sortedWith(compareBy { if (it == 0) Int.MAX_VALUE else it })
+    val seasons = EpisodeGuide.seasons(meta.videos)
     val wb = item?.watchedBitField(meta.videos)
     val now = System.currentTimeMillis()
-    fun releasedAt(v: Video) = v.released?.let { LibraryItem.parseTime(kotlinx.serialization.json.JsonPrimitive(it)) }
-    val upNextId = remember(meta.id, item, wb) {
-        val ordered = meta.videos.filter { (it.season ?: 0) > 0 }.sortedWith(compareBy({ it.season ?: 0 }, { it.episode ?: 0 }))
-        item?.state?.videoId?.takeIf { id -> item.isInContinueWatching && ordered.any { it.id == id } }
-            ?: run {
-                val last = ordered.indexOfLast { wb?.getVideo(it.id) == true }
-                if (last < 0) null else ordered.drop(last + 1).firstOrNull { wb?.getVideo(it.id) != true && (releasedAt(it) ?: 0L) <= now }?.id
-            }
-    }
-    val startSeason = (item?.state?.videoId ?: upNextId)?.let { id -> meta.videos.firstOrNull { it.id == id }?.season }
-    var season by remember(meta.id) { mutableStateOf(startSeason ?: seasons.firstOrNull { it > 0 } ?: seasons.firstOrNull() ?: 1) }
+    val upNextId = remember(meta.id, item, wb) { EpisodeGuide.upNextId(meta.videos, item, wb, now) }
+    var season by remember(meta.id) { mutableStateOf(EpisodeGuide.startSeason(meta.videos, item, upNextId)) }
     val eps = meta.videos.filter { it.season == season }.sortedBy { it.episode ?: 0 }
     val seasonRow = rememberLazyListState()
     LaunchedEffect(meta.id) { seasons.indexOf(season).takeIf { it > 0 }?.let { seasonRow.scrollToItem(it) } }
@@ -394,7 +360,7 @@ private fun SeasonGuide(meta: MetaItem, item: LibraryItem?, newIds: Set<String>,
         Column(Modifier.padding(horizontal = PhoneMargin), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             eps.forEach { v ->
                 val watched = wb?.getVideo(v.id) == true
-                val released = releasedAt(v)
+                val released = EpisodeGuide.releasedAt(v)
                 val future = released != null && released > now
                 val progress = if (item?.state?.videoId == v.id && item.isInContinueWatching) item.progress else 0f
                 val date = released?.let { java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM).format(java.util.Date(it)) }
@@ -451,10 +417,10 @@ private fun EpisodeRow(v: Video, watched: Boolean, progress: Float, upNext: Bool
 }
 
 /** A film's sources: how many, a quality and language filter, and each source as a card. */
-private fun sourcesSection(scope: LazyListScope, state: Sources, onRefresh: () -> Unit, onPick: (Ranked) -> Unit) = with(scope) {
+private fun sourcesSection(scope: LazyListScope, state: SourcesState, onRefresh: () -> Unit, onPick: (Ranked) -> Unit) = with(scope) {
     item(key = "sources-head") {
         val c = Vyrk.colors
-        val ready = state as? Sources.Ready
+        val ready = state as? SourcesState.Ready
         val playable = ready?.ranked?.filter { it.playable }.orEmpty()
         Column(Modifier.padding(top = 22.dp)) {
             Row(Modifier.padding(start = PhoneMargin, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -464,46 +430,30 @@ private fun sourcesSection(scope: LazyListScope, state: Sources, onRefresh: () -
                 }
                 PhoneIconButton(R.drawable.ic_refresh, str(R.string.refresh), onRefresh, filled = false, tag = "sources:refresh")
             }
-            val msg = when {
-                state is Sources.Idle -> str(R.string.press_sources)
-                state is Sources.Loading -> str(R.string.finding_sources)
-                ready != null && ready.addonCount == 0 -> str(R.string.no_stream_addons)
-                ready != null && ready.ranked.isEmpty() && ready.failedAddons > 0 -> str(R.string.sources_addons_failed)
-                ready != null && ready.ranked.isEmpty() -> str(R.string.no_sources_found)
-                else -> null
-            }
+            val msg = sourcesMessage(state)
             if (msg != null) Text(msg, style = Vyrk.type.bodyM, color = c.textMuted, modifier = Modifier.padding(horizontal = PhoneMargin, vertical = 8.dp))
         }
     }
-    val ready = state as? Sources.Ready ?: return@with
+    val ready = state as? SourcesState.Ready ?: return@with
     if (ready.ranked.isEmpty()) return@with
     item(key = "sources-list") { SourceList(ready, onPick) }
 }
 
 @Composable
-private fun SourceList(ready: Sources.Ready, onPick: (Ranked) -> Unit) {
+private fun SourceList(ready: SourcesState.Ready, onPick: (Ranked) -> Unit) {
     val c = Vyrk.colors
-    var filter by remember { mutableStateOf("all") }
+    var filter by remember { mutableStateOf(SourceFilters.ALL) }
     var expanded by remember { mutableStateOf<String?>(null) }
     val playable = ready.ranked.filter { it.playable }
-    val langs = playable.flatMap { it.info.languages }.distinct()
-    val filters = listOf("all", "4K", "1080p", "720p", "480p") + langs
+    val langs = SourceFilters.languages(playable)
+    val filters = SourceFilters.of(playable)
     Column {
         LazyRow(contentPadding = PaddingValues(horizontal = PhoneMargin, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(filters) { f ->
-                PhoneChip(if (f == "all") str(R.string.filter_all) else if (f in langs) Languages.name(f) else f, filter == f, { filter = f }, tag = "sources:filter:$f")
+                PhoneChip(if (f == SourceFilters.ALL) str(R.string.filter_all) else if (f in langs) Languages.name(f) else f, filter == f, { filter = f }, tag = "sources:filter:$f")
             }
         }
-        val shown = ready.ranked.filter { r ->
-            when (filter) {
-                "all" -> true
-                "4K" -> (r.info.resolution ?: 0) >= 2160
-                "1080p" -> r.info.resolution == 1080
-                "720p" -> r.info.resolution == 720
-                "480p" -> (r.info.resolution ?: 0) in 1..576
-                else -> filter in r.info.languages
-            }
-        }
+        val shown = ready.ranked.filter { SourceFilters.matches(it, filter) }
         val topKey = playable.firstOrNull()?.candidate?.key
         Column(Modifier.padding(horizontal = PhoneMargin), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             shown.forEachIndexed { i, r ->
@@ -521,11 +471,8 @@ private fun SourceList(ready: Sources.Ready, onPick: (Ranked) -> Unit) {
 fun SourceCard(r: Ranked, recommended: Boolean, expanded: Boolean, tag: String, onClick: () -> Unit, onLongClick: () -> Unit, current: Boolean = false) {
     val c = Vyrk.colors
     val i = r.info
-    val badges = com.vyrk.core.stream.QualityBadges.of(i).filter { it != com.vyrk.core.stream.QualityBadge.UHD && it != com.vyrk.core.stream.QualityBadge.FHD }
-    val parts = listOf(i.releaseType.label, i.codec.label, i.audio.filterNot { it == com.vyrk.core.stream.AudioFormat.ATMOS || it == com.vyrk.core.stream.AudioFormat.DTS_X }.joinToString(" ") { it.label },
-        i.sizeBytes?.let { "%.1f GB".format(it / 1e9) }.orEmpty()).filter { it.isNotBlank() }
-    val langs = i.languages.joinToString(", ") { Languages.label(it) }
-    val uhd = (i.resolution ?: 0) >= 2160
+    val sum = remember(r) { SourceSummary.of(i) }
+    val uhd = sum.uhd
     val shape = RoundedCornerShape(12.dp)
     val lit = recommended || current
     Column(
@@ -547,9 +494,9 @@ fun SourceCard(r: Ranked, recommended: Boolean, expanded: Boolean, tag: String, 
                     if (recommended) Tag(str(R.string.recommended), color = c.onAccent, background = c.accent)
                     if (current) Icon(R.drawable.ic_check, null, Modifier.size(16.dp), tint = c.gold)
                 }
-                if (badges.isNotEmpty()) com.vyrk.tv.ui.components.QualityBadgeRow(badges, Modifier.padding(top = 4.dp))
-                Text(parts.joinToString("  ·  ").ifEmpty { if (badges.isEmpty()) "—" else "" }, style = Vyrk.type.labelM, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
-                if (langs.isNotEmpty()) Text(langs, style = Vyrk.type.labelS, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (sum.badges.isNotEmpty()) com.vyrk.tv.ui.components.QualityBadgeRow(sum.badges, Modifier.padding(top = 4.dp))
+                Text(sum.details, style = Vyrk.type.labelM, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
+                if (sum.languages.isNotEmpty()) Text(sum.languages, style = Vyrk.type.labelS, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         if (expanded) Text(r.candidate.stream.text, style = Vyrk.type.bodyS, color = c.textSecondary, modifier = Modifier.padding(top = 8.dp))

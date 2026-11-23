@@ -48,6 +48,7 @@ import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.tryRequestFocus
 
 /** First run: straight to the Stremio sign-in QR code, with a small way to start without an account. */
 @Composable
@@ -71,7 +72,7 @@ fun PairingScreen(profileId: String?, firstRun: Boolean = false) {
     val errNetwork = str(R.string.pairing_error)
 
     BackHandler(enabled = !firstRun) { app.screen = Screen.Main }
-    LaunchedEffect(Unit) { runCatching { action.requestFocus() } }
+    LaunchedEffect(Unit) { action.tryRequestFocus() }
     LaunchedEffect(attempt) {
         error = null; link = null
         val code = runCatching { graph.accountApi.createLink() }.getOrElse { error = errNetwork; return@LaunchedEffect }

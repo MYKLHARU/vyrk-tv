@@ -14,13 +14,17 @@ import com.vyrk.core.update.GithubAsset
 import com.vyrk.core.update.GithubRelease
 import com.vyrk.core.update.Updates
 import com.vyrk.tv.BuildConfig
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.RandomAccessFile
 import java.security.MessageDigest
+
+private const val DOWNLOAD_TRIES = 3
 
 /** In-app updates from GitHub Releases. Disabled in store builds. */
 class Updater(private val context: Context, private val http: OkHttpClient) {
@@ -55,7 +59,7 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
         val dir = File(context.cacheDir, "updates").apply { mkdirs() }
         val file = File(dir, asset.name.replace(Regex("[^A-Za-z0-9._-]"), "_"))
         var last: Throwable? = null
-        for (attempt in 1..3) {
+        for (attempt in 1..DOWNLOAD_TRIES) {
             try {
                 fetch(asset, file, onProgress)
                 validate(file).onFailure { file.delete(); throw it }
@@ -63,7 +67,9 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
             } catch (e: java.io.IOException) {
                 last = e
                 android.util.Log.w("VyrkUpdate", "download try $attempt failed", e)
-                kotlinx.coroutines.delay(1_000L * attempt)
+                if (attempt < DOWNLOAD_TRIES) delay(1_000L * attempt)
+            } catch (e: CancellationException) {
+                throw e // Leaving the screen stops the download; that is not a failure to report.
             } catch (e: Throwable) {
                 return@withContext Result.failure(e)
             }
@@ -79,7 +85,9 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
             if (r.code == 416 && have > 0) return // already complete; validation decides
             if (!r.isSuccessful) throw java.io.IOException("HTTP ${r.code}")
             val append = r.code == 206
-            val total = (if (append) have else 0L) + r.body.contentLength()
+            // Unknown length (-1): no progress rather than a fraction past 100%.
+            val length = r.body.contentLength()
+            val total = if (length < 0) -1L else (if (append) have else 0L) + length
             RandomAccessFile(file, "rw").use { raf ->
                 if (!append) raf.setLength(0)
                 raf.seek(if (append) have else 0L)

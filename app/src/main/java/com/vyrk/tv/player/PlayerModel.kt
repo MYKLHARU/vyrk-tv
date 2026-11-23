@@ -34,7 +34,6 @@ import com.vyrk.core.playback.StallDetector
 import com.vyrk.core.playback.SubtitlePrefs
 import com.vyrk.core.playback.TextTrack
 import com.vyrk.core.playback.TrackSelector
-import com.vyrk.core.stream.Candidate
 import com.vyrk.core.stream.Delivery
 import com.vyrk.core.stream.RankPrefs
 import com.vyrk.core.stream.Ranked
@@ -234,12 +233,9 @@ class PlayerModel(
         val streamType = req.meta.type
         val ranked: List<Ranked> = req.ranked ?: run {
             val results = graph.addonClient.allStreams(addons, streamType, vid)
-            val cands = results.flatMapIndexed { order, (addon, r) ->
-                (r as? AddonResult.Ok)?.value?.streams.orEmpty().mapIndexed { i, st -> Candidate(st, addon.manifest.id, addon.manifest.name, order, i) }
-            }
             if (generation != loadGeneration) return
             if (results.isEmpty()) { fail(Phase.NO_SOURCES, s(com.vyrk.tv.R.string.no_stream_addons)); return }
-            StreamRanker.rank(cands, caps(), prefs(req.meta.id))
+            StreamRanker.rank(StreamRanker.candidates(results), caps(), prefs(req.meta.id))
         }
         if (generation != loadGeneration) return
         progressTo(0.42f)
@@ -267,16 +263,9 @@ class PlayerModel(
 
     fun caps() = graph.playbackCaps()
 
-    fun prefs(titleId: String): RankPrefs {
-        val mem = session.titleMemory(titleId)
-        val st = settings
-        return RankPrefs(
-            preset = st.preset, maxResolution = st.maxResolution, maxSizeBytes = st.maxSizeGb?.let { it * 1_000_000_000L },
-            format = st.format, hdr = st.hdr, audioLanguages = st.audioLanguages,
-            rememberedKey = mem.pickedKey, lastBingeGroup = mem.bingeGroup, lastReleaseGroup = mem.releaseGroup,
-            runtimeMinutes = graph.metaCache.peek(request.meta.type, request.meta.id)?.runtime?.let { com.vyrk.core.addon.RuntimeText.minutes(it) },
-        )
-    }
+    fun prefs(titleId: String): RankPrefs = session.rankPrefs(
+        titleId, runtimeMinutes = graph.metaCache.peek(request.meta.type, request.meta.id)?.runtime?.let { com.vyrk.core.addon.RuntimeText.minutes(it) },
+    )
 
     private fun quality(r: Ranked) = listOf(r.info.resolutionLabel, r.info.releaseType.label).filter { it.isNotEmpty() }.joinToString(" ")
 

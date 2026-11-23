@@ -63,6 +63,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import com.vyrk.tv.ui.tryRequestFocus
 
 /** QWERTY keyboard: rows q–p, a–l and z–m (left-aligned, so Up and Down keep the column), then 123, space, backspace and clear. */
 @Composable
@@ -76,7 +77,7 @@ fun AlphaKeyboard(
 ) {
     var digits by remember { mutableStateOf(digitsOnly) }
     LaunchedEffect(digitsOnly) { digits = digitsOnly }
-    LaunchedEffect(requestInitialFocus) { if (requestInitialFocus) runCatching { firstKey.requestFocus() } }
+    LaunchedEffect(requestInitialFocus) { if (requestInitialFocus) firstKey.tryRequestFocus() }
     val rows = if (digits) listOf("1234567890") else QWERTY
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         rows.forEachIndexed { r, row ->
@@ -114,7 +115,7 @@ fun SearchScreen(session: ProfileSession) {
     }
     val hasVoice = remember { graph.context.packageManager.queryIntentActivities(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0).isNotEmpty() }
 
-    LaunchedEffect(Unit) { runCatching { firstKey.requestFocus() } }
+    LaunchedEffect(Unit) { firstKey.tryRequestFocus() }
     // A query handed over while Search is open (Assistant, a cast name) replaces the current one.
     LaunchedEffect(app.searchQuery) { if (app.searchQuery.isNotBlank()) query = app.searchQuery; app.searchQuery = "" }
     LaunchedEffect(app.startVoice) {

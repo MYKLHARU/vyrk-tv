@@ -18,7 +18,6 @@ data class GithubRelease(
 )
 
 object Updates {
-    const val CHECK_EVERY_MS = 4L * 3600 * 1000
     /** Opening the app checks again once this long has passed since the last check. */
     const val OPEN_CHECK_GAP_MS = 10L * 60 * 1000
 
@@ -59,7 +58,4 @@ object Updates {
         for (abi in abis) apks.firstOrNull { it.name.contains(abi) }?.let { return it }
         return apks.firstOrNull { it.name.contains("universal") }
     }
-
-    fun shouldCheck(lastCheckMs: Long?, nowMs: Long, automatic: Boolean): Boolean =
-        automatic && (lastCheckMs == null || nowMs - lastCheckMs >= CHECK_EVERY_MS)
 }

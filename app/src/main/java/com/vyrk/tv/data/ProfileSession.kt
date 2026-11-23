@@ -18,7 +18,9 @@ import com.vyrk.core.library.LibraryRules
 import com.vyrk.core.library.LibrarySync
 import com.vyrk.core.library.NewEpisodes
 import com.vyrk.core.library.PendingChanges
+import com.vyrk.core.stream.RankPrefs
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -166,6 +168,18 @@ class ProfileSession(
     fun rememberFocus(tab: String, memory: FocusMemory) = updateState { it.copy(focus = it.focus + (tab to memory)) }
 
     fun titleMemory(id: String): TitleMemory = _state.value.titleMemory[id] ?: TitleMemory()
+
+    /** How to rank a title's sources: the profile's quality settings plus what was picked for it before. */
+    fun rankPrefs(titleId: String, runtimeMinutes: Int?): RankPrefs {
+        val mem = titleMemory(titleId)
+        val st = settings.value
+        return RankPrefs(
+            preset = st.preset, maxResolution = st.maxResolution, maxSizeBytes = st.maxSizeGb?.let { it * 1_000_000_000L },
+            format = st.format, hdr = st.hdr, audioLanguages = st.audioLanguages,
+            rememberedKey = mem.pickedKey, lastBingeGroup = mem.bingeGroup, lastReleaseGroup = mem.releaseGroup,
+            runtimeMinutes = runtimeMinutes,
+        )
+    }
     fun updateTitleMemory(id: String, f: (TitleMemory) -> TitleMemory) =
         updateState { s -> s.copy(titleMemory = s.titleMemory + (id to f(s.titleMemory[id] ?: TitleMemory()))) }
 
@@ -181,7 +195,7 @@ class ProfileSession(
                 async {
                     repeat(2) { attempt ->
                         val manifest = withTimeoutOrNull(DEFAULT_ADDON_TIMEOUT_MS) {
-                            try { addonClient.manifest(url) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
+                            try { addonClient.manifest(url) } catch (e: CancellationException) { throw e } catch (e: Exception) {
                                 Diagnostics.log("addons", "default add-on failed: ${e.message}"); null
                             }
                         }
@@ -198,7 +212,7 @@ class ProfileSession(
     suspend fun fetchManifest(input: String): Result<Descriptor> = try {
         val url = AddonUrls.normaliseInstallUrl(input) ?: error("not an add-on URL")
         Result.success(Descriptor(addonClient.manifest(url), url))
-    } catch (e: kotlinx.coroutines.CancellationException) {
+    } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
         Diagnostics.log("addons", "manifest fetch failed: ${e.message}")
@@ -261,6 +275,8 @@ class ProfileSession(
             true
         } catch (e: ApiError) {
             if (e.isSessionExpired && authKey == key) onExpired(); false
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Diagnostics.log("account", "addonCollectionSet failed: ${e.message}"); false
         }
@@ -345,6 +361,8 @@ class ProfileSession(
             pushPending()
         } catch (e: ApiError) {
             if (e.isSessionExpired && authKey == key) onExpired()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Diagnostics.log("sync", "sync failed: ${e.message}")
         } finally {
@@ -362,6 +380,8 @@ class ProfileSession(
             pending.confirm(sent)
         } catch (e: ApiError) {
             if (e.isSessionExpired && authKey == key) onExpired()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Diagnostics.log("sync", "push failed: ${e.message}")
         }
@@ -425,8 +445,6 @@ class ProfileSession(
         putItem(LibraryRules.markVideosWatched(base, meta, videos, watched))
     }
 
-    fun toggleNotifications(id: String) { item(id)?.let { putItem(it.copy(state = it.state.copy(noNotif = !it.state.noNotif))) } }
-
     // ---- New episodes ----
 
     suspend fun refreshNewEpisodes(force: Boolean) {
@@ -447,8 +465,6 @@ class ProfileSession(
         }
         updateState { it.copy(newEpisodes = result, newEpisodesCheckedMs = now) }
     }
-
-    fun newEpisodeIds(itemId: String): Set<String> = _state.value.newEpisodes[itemId].orEmpty()
 
     companion object {
         const val DEFAULT_CINEMETA = "https://v3-cinemeta.strem.io/manifest.json"
