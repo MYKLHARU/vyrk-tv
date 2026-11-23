@@ -20,6 +20,7 @@ import com.vyrk.core.library.NewEpisodes
 import com.vyrk.core.library.PendingChanges
 import com.vyrk.core.stream.RankPrefs
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -194,7 +195,7 @@ class ProfileSession(
                 async {
                     repeat(2) { attempt ->
                         val manifest = withTimeoutOrNull(DEFAULT_ADDON_TIMEOUT_MS) {
-                            try { addonClient.manifest(url) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
+                            try { addonClient.manifest(url) } catch (e: CancellationException) { throw e } catch (e: Exception) {
                                 Diagnostics.log("addons", "default add-on failed: ${e.message}"); null
                             }
                         }
@@ -211,7 +212,7 @@ class ProfileSession(
     suspend fun fetchManifest(input: String): Result<Descriptor> = try {
         val url = AddonUrls.normaliseInstallUrl(input) ?: error("not an add-on URL")
         Result.success(Descriptor(addonClient.manifest(url), url))
-    } catch (e: kotlinx.coroutines.CancellationException) {
+    } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
         Diagnostics.log("addons", "manifest fetch failed: ${e.message}")
@@ -274,6 +275,8 @@ class ProfileSession(
             true
         } catch (e: ApiError) {
             if (e.isSessionExpired && authKey == key) onExpired(); false
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Diagnostics.log("account", "addonCollectionSet failed: ${e.message}"); false
         }
@@ -358,6 +361,8 @@ class ProfileSession(
             pushPending()
         } catch (e: ApiError) {
             if (e.isSessionExpired && authKey == key) onExpired()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Diagnostics.log("sync", "sync failed: ${e.message}")
         } finally {
@@ -375,6 +380,8 @@ class ProfileSession(
             pending.confirm(sent)
         } catch (e: ApiError) {
             if (e.isSessionExpired && authKey == key) onExpired()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Diagnostics.log("sync", "push failed: ${e.message}")
         }

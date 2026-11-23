@@ -1,5 +1,6 @@
 package com.vyrk.tv.ui.preview
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.view.ViewGroup
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
@@ -45,32 +47,44 @@ fun YouTubeTrailer(videoId: String, muted: Boolean, modifier: Modifier = Modifie
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
-            YouTubePlayerView(ctx).apply {
-                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                isFocusable = false
-                isFocusableInTouchMode = false
-                descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
-                enableAutomaticInitialization = false
-                lifecycle.addObserver(this)
-                val opts = IFramePlayerOptions.Builder(ctx).controls(0).rel(0).ivLoadPolicy(3).ccLoadPolicy(0).build()
-                initialize(object : AbstractYouTubePlayerListener() {
-                    override fun onReady(youTubePlayer: YouTubePlayer) {
-                        player = youTubePlayer
-                        if (muted) youTubePlayer.mute() else youTubePlayer.unMute()
-                        youTubePlayer.loadVideo(videoId, 0f)
-                    }
-                    override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
-                        if (state == PlayerConstants.PlayerState.PLAYING) onState(TrailerState.PLAYING)
-                    }
-                    override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
-                        onState(TrailerState.REFUSED)
-                    }
-                }, true, opts)
-            }
+            trailerView(ctx, lifecycle, object : AbstractYouTubePlayerListener() {
+                override fun onReady(youTubePlayer: YouTubePlayer) {
+                    player = youTubePlayer
+                    if (muted) youTubePlayer.mute() else youTubePlayer.unMute()
+                    youTubePlayer.loadVideo(videoId, 0f)
+                }
+                override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
+                    if (state == PlayerConstants.PlayerState.PLAYING) onState(TrailerState.PLAYING)
+                }
+                override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
+                    onState(TrailerState.REFUSED)
+                }
+            })
         },
-        onRelease = { it.release() },
+        onRelease = { releaseTrailerView(it, lifecycle) },
     )
     DisposableEffect(videoId) { onDispose { player?.pause() } }
+}
+
+/**
+ * A YouTube player view without controls that never takes focus. It follows [lifecycle] (pauses
+ * in the background) until [releaseTrailerView].
+ */
+private fun trailerView(ctx: Context, lifecycle: Lifecycle, listener: AbstractYouTubePlayerListener): YouTubePlayerView =
+    YouTubePlayerView(ctx).apply {
+        layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        isFocusable = false
+        isFocusableInTouchMode = false
+        descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+        enableAutomaticInitialization = false
+        lifecycle.addObserver(this)
+        initialize(listener, true, IFramePlayerOptions.Builder(ctx).controls(0).rel(0).ivLoadPolicy(3).ccLoadPolicy(0).build())
+    }
+
+/** Stops observing the screen's lifecycle too: otherwise it keeps every released player (a web page) alive. */
+private fun releaseTrailerView(view: YouTubePlayerView, lifecycle: Lifecycle) {
+    lifecycle.removeObserver(view)
+    view.release()
 }
 
 fun openInYouTube(ctx: android.content.Context, videoId: String) {
@@ -119,26 +133,17 @@ private fun SharedYouTubeTrailer(videoId: String?, muted: Boolean, modifier: Mod
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
-            YouTubePlayerView(ctx).apply {
-                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                isFocusable = false
-                isFocusableInTouchMode = false
-                descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
-                enableAutomaticInitialization = false
-                lifecycle.addObserver(this)
-                val opts = IFramePlayerOptions.Builder(ctx).controls(0).rel(0).ivLoadPolicy(3).ccLoadPolicy(0).build()
-                initialize(object : AbstractYouTubePlayerListener() {
-                    override fun onReady(youTubePlayer: YouTubePlayer) { player = youTubePlayer }
-                    override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
-                        if (state == PlayerConstants.PlayerState.PLAYING) playingNow(current)
-                    }
-                    override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
-                        current?.let(refusedNow)
-                    }
-                }, true, opts)
-            }
+            trailerView(ctx, lifecycle, object : AbstractYouTubePlayerListener() {
+                override fun onReady(youTubePlayer: YouTubePlayer) { player = youTubePlayer }
+                override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
+                    if (state == PlayerConstants.PlayerState.PLAYING) playingNow(current)
+                }
+                override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
+                    current?.let(refusedNow)
+                }
+            })
         },
-        onRelease = { it.release() },
+        onRelease = { releaseTrailerView(it, lifecycle) },
     )
     LaunchedEffect(player, muted) { player?.let { if (muted) it.mute() else it.unMute() } }
     LaunchedEffect(player, videoId) {
