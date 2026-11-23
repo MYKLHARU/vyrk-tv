@@ -32,4 +32,18 @@ class QualityBadgesTest {
         assertEquals("—", summary("Clip").details)
         assertEquals("", SourceSummary.sizeLabel(null))
     }
+
+    @Test fun sourceFiltersOfferResolutionsThenLanguages() {
+        fun ranked(name: String, langs: List<String> = emptyList()) =
+            Ranked(Candidate(Stream(name = name, url = "https://x.test/$name.mkv"), "a", "A", 0, 0),
+                StreamParser.parse(Stream(name = name, url = "https://x.test/v.mkv")).copy(languages = langs), 0, emptyList(), null)
+        val uhd = ranked("2160p", listOf("en", "fr"))
+        val fhd = ranked("1080p", listOf("fr", "de"))
+        val sd = ranked("480p")
+        assertEquals(listOf("all", "4K", "1080p", "720p", "480p", "en", "fr", "de"), SourceFilters.of(listOf(uhd, fhd, sd)))
+        assertEquals(listOf(uhd), listOf(uhd, fhd, sd).filter { SourceFilters.matches(it, "4K") })
+        assertEquals(listOf(sd), listOf(uhd, fhd, sd).filter { SourceFilters.matches(it, "480p") })
+        assertEquals(listOf(uhd, fhd), listOf(uhd, fhd, sd).filter { SourceFilters.matches(it, "fr") })
+        assertEquals(3, listOf(uhd, fhd, sd).count { SourceFilters.matches(it, SourceFilters.ALL) })
+    }
 }

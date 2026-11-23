@@ -60,6 +60,7 @@ import com.vyrk.core.library.EpisodeGuide
 import com.vyrk.core.library.LibraryItem
 import com.vyrk.core.library.LibraryRules
 import com.vyrk.core.stream.Ranked
+import com.vyrk.core.stream.SourceFilters
 import com.vyrk.core.stream.SourceSummary
 import com.vyrk.core.tmdb.Credits
 import com.vyrk.tv.R
@@ -81,6 +82,7 @@ import com.vyrk.tv.ui.overlays.PersonPhoto
 import com.vyrk.tv.ui.overlays.SourcesState
 import com.vyrk.tv.ui.overlays.loadTitleSources
 import com.vyrk.tv.ui.overlays.rememberTmdbCredits
+import com.vyrk.tv.ui.overlays.sourcesMessage
 import com.vyrk.tv.ui.overlays.timeLeftLabel
 import com.vyrk.tv.ui.preview.openInYouTube
 import com.vyrk.tv.ui.str
@@ -428,14 +430,7 @@ private fun sourcesSection(scope: LazyListScope, state: SourcesState, onRefresh:
                 }
                 PhoneIconButton(R.drawable.ic_refresh, str(R.string.refresh), onRefresh, filled = false, tag = "sources:refresh")
             }
-            val msg = when {
-                state is SourcesState.Idle -> str(R.string.press_sources)
-                state is SourcesState.Loading -> str(R.string.finding_sources)
-                ready != null && ready.addonCount == 0 -> str(R.string.no_stream_addons)
-                ready != null && ready.ranked.isEmpty() && ready.failedAddons > 0 -> str(R.string.sources_addons_failed)
-                ready != null && ready.ranked.isEmpty() -> str(R.string.no_sources_found)
-                else -> null
-            }
+            val msg = sourcesMessage(state)
             if (msg != null) Text(msg, style = Vyrk.type.bodyM, color = c.textMuted, modifier = Modifier.padding(horizontal = PhoneMargin, vertical = 8.dp))
         }
     }
@@ -447,27 +442,18 @@ private fun sourcesSection(scope: LazyListScope, state: SourcesState, onRefresh:
 @Composable
 private fun SourceList(ready: SourcesState.Ready, onPick: (Ranked) -> Unit) {
     val c = Vyrk.colors
-    var filter by remember { mutableStateOf("all") }
+    var filter by remember { mutableStateOf(SourceFilters.ALL) }
     var expanded by remember { mutableStateOf<String?>(null) }
     val playable = ready.ranked.filter { it.playable }
-    val langs = playable.flatMap { it.info.languages }.distinct()
-    val filters = listOf("all", "4K", "1080p", "720p", "480p") + langs
+    val langs = SourceFilters.languages(playable)
+    val filters = SourceFilters.of(playable)
     Column {
         LazyRow(contentPadding = PaddingValues(horizontal = PhoneMargin, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(filters) { f ->
-                PhoneChip(if (f == "all") str(R.string.filter_all) else if (f in langs) Languages.name(f) else f, filter == f, { filter = f }, tag = "sources:filter:$f")
+                PhoneChip(if (f == SourceFilters.ALL) str(R.string.filter_all) else if (f in langs) Languages.name(f) else f, filter == f, { filter = f }, tag = "sources:filter:$f")
             }
         }
-        val shown = ready.ranked.filter { r ->
-            when (filter) {
-                "all" -> true
-                "4K" -> (r.info.resolution ?: 0) >= 2160
-                "1080p" -> r.info.resolution == 1080
-                "720p" -> r.info.resolution == 720
-                "480p" -> (r.info.resolution ?: 0) in 1..576
-                else -> filter in r.info.languages
-            }
-        }
+        val shown = ready.ranked.filter { SourceFilters.matches(it, filter) }
         val topKey = playable.firstOrNull()?.candidate?.key
         Column(Modifier.padding(horizontal = PhoneMargin), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             shown.forEachIndexed { i, r ->

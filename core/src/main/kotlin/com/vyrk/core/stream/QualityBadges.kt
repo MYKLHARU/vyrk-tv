@@ -59,3 +59,21 @@ data class SourceSummary(val badges: List<QualityBadge>, val details: String, va
         fun sizeLabel(bytes: Long?): String = bytes?.let { "%.1f GB".format(it / 1e9) }.orEmpty()
     }
 }
+
+/** The filter chips over a source list: everything, four resolution bands, then each language the playable sources offer. */
+object SourceFilters {
+    const val ALL = "all"
+
+    fun languages(playable: List<Ranked>): List<String> = playable.flatMap { it.info.languages }.distinct()
+
+    fun of(playable: List<Ranked>): List<String> = listOf(ALL, "4K", "1080p", "720p", "480p") + languages(playable)
+
+    fun matches(r: Ranked, filter: String): Boolean = when (filter) {
+        ALL -> true
+        "4K" -> (r.info.resolution ?: 0) >= 2160
+        "1080p" -> r.info.resolution == 1080
+        "720p" -> r.info.resolution == 720
+        "480p" -> (r.info.resolution ?: 0) in 1..576
+        else -> filter in r.info.languages
+    }
+}

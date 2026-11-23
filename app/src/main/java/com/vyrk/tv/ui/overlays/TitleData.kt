@@ -25,6 +25,20 @@ sealed interface SourcesState {
     data class Ready(val ranked: List<Ranked>, val failedAddons: Int, val addonCount: Int) : SourcesState
 }
 
+/** What a source list says in place of sources: not loaded, loading, or why there are none. Null when there are sources. */
+@Composable
+fun sourcesMessage(state: SourcesState): String? {
+    val ready = state as? SourcesState.Ready
+    return when {
+        state is SourcesState.Idle -> str(R.string.press_sources)
+        state is SourcesState.Loading -> str(R.string.finding_sources)
+        ready != null && ready.addonCount == 0 -> str(R.string.no_stream_addons)
+        ready != null && ready.ranked.isEmpty() && ready.failedAddons > 0 -> str(R.string.sources_addons_failed)
+        ready != null && ready.ranked.isEmpty() -> str(R.string.no_sources_found)
+        else -> null
+    }
+}
+
 /** Asks every stream add-on for the title's default video and ranks what comes back. */
 suspend fun loadTitleSources(graph: AppGraph, session: ProfileSession, meta: MetaPreview, runtimeMinutes: Int?): SourcesState.Ready {
     val videoId = meta.behaviorHints.defaultVideoId ?: meta.id

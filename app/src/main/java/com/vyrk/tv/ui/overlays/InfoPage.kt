@@ -72,6 +72,7 @@ import com.vyrk.core.library.EpisodeGuide
 import com.vyrk.core.library.LibraryItem
 import com.vyrk.core.library.LibraryRules
 import com.vyrk.core.stream.Ranked
+import com.vyrk.core.stream.SourceFilters
 import com.vyrk.core.stream.SourceSummary
 import com.vyrk.core.tmdb.Credits
 import com.vyrk.tv.R
@@ -449,7 +450,7 @@ private fun Credit(label: String, value: String) {
 @Composable
 private fun SourcesPane(state: SourcesState, firstReq: FocusRequester, onRefresh: () -> Unit, onPick: (Ranked) -> Unit) {
     val c = Vyrk.colors
-    var filter by remember { mutableStateOf("all") }
+    var filter by remember { mutableStateOf(SourceFilters.ALL) }
     var expanded by remember { mutableStateOf<String?>(null) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         com.vyrk.tv.ui.components.RuneGlyph(10.dp, color = c.gold)
@@ -467,31 +468,19 @@ private fun SourcesPane(state: SourcesState, firstReq: FocusRequester, onRefresh
         VyrkIconButton(R.drawable.ic_refresh, str(R.string.refresh), onRefresh, size = 34.dp, modifier = Modifier.traceFocus("sources:refresh"))
     }
     Spacer(Modifier.height(10.dp))
+    val message = sourcesMessage(state)
     when {
-        state is SourcesState.Idle -> Text(str(R.string.press_sources), style = Vyrk.type.bodyM, color = c.textMuted)
-        state is SourcesState.Loading -> Text(str(R.string.finding_sources), style = Vyrk.type.bodyM, color = c.textMuted)
-        ready != null && ready.addonCount == 0 -> Text(str(R.string.no_stream_addons), style = Vyrk.type.bodyM, color = c.textMuted)
-        ready != null && ready.ranked.isEmpty() && ready.failedAddons > 0 -> Text(str(R.string.sources_addons_failed), style = Vyrk.type.bodyM, color = c.textMuted)
-        ready != null && ready.ranked.isEmpty() -> Text(str(R.string.no_sources_found), style = Vyrk.type.bodyM, color = c.textMuted)
+        message != null -> Text(message, style = Vyrk.type.bodyM, color = c.textMuted)
         ready != null -> {
-            val langs = playable.flatMap { it.info.languages }.distinct()
-            val filters = listOf("all", "4K", "1080p", "720p", "480p") + langs
+            val langs = SourceFilters.languages(playable)
+            val filters = SourceFilters.of(playable)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(filters) { f ->
-                    VyrkChip(if (f == "all") str(R.string.filter_all) else if (f in langs) Languages.name(f) else f, filter == f, { filter = f }, Modifier.traceFocus("sources:filter:$f"))
+                    VyrkChip(if (f == SourceFilters.ALL) str(R.string.filter_all) else if (f in langs) Languages.name(f) else f, filter == f, { filter = f }, Modifier.traceFocus("sources:filter:$f"))
                 }
             }
             Spacer(Modifier.height(10.dp))
-            val shown = ready.ranked.filter { r ->
-                when (filter) {
-                    "all" -> true
-                    "4K" -> (r.info.resolution ?: 0) >= 2160
-                    "1080p" -> r.info.resolution == 1080
-                    "720p" -> r.info.resolution == 720
-                    "480p" -> (r.info.resolution ?: 0) in 1..576
-                    else -> filter in r.info.languages
-                }
-            }
+            val shown = ready.ranked.filter { SourceFilters.matches(it, filter) }
             val topKey = playable.firstOrNull()?.candidate?.key
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(shown, key = { it.candidate.addonId + it.candidate.index }) { r ->
