@@ -97,6 +97,20 @@ object CatalogRules {
             animeCatalogId.containsMatchIn(ref.catalog.id) ||
             ref.addon.manifest.idPrefixes?.let { p -> p.isNotEmpty() && p.all { x -> animePrefixes.any { x.startsWith(it) } } } == true
 
+    /**
+     * A featured lineup mixed from several rows: the first title of each row, then the second of
+     * each, and so on, skipping titles already taken, until there are [count].
+     */
+    fun heroMix(pools: List<List<MetaPreview>>, count: Int): List<MetaPreview> {
+        val picked = LinkedHashMap<String, MetaPreview>()
+        var i = 0
+        while (picked.size < count && pools.any { i < it.size }) {
+            pools.forEach { pool -> pool.getOrNull(i)?.let { m -> if (picked.size < count) picked.putIfAbsent(m.id, m) } }
+            i++
+        }
+        return picked.values.toList()
+    }
+
     fun hasLiveCatalogs(addons: List<Descriptor>): Boolean =
         addons.any { d -> d.manifest.catalogs.any { it.type == "tv" || it.type == "channel" } }
 

@@ -33,6 +33,7 @@ import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
+import com.vyrk.tv.ui.tryRequestFocus
 
 /** An add-on catalogue grid. Filters apply on selection, never merely on focus. */
 @Composable
@@ -61,7 +62,7 @@ fun DiscoveryScreen(session: ProfileSession) {
     var returnTo by remember { mutableStateOf<Int?>(null) }
     LaunchedEffect(returnTo, menu) {
         if (menu == null) returnTo?.let { index ->
-            withFrameNanos { }; runCatching { controls[index].requestFocus() }; returnTo = null
+            withFrameNanos { }; controls[index].tryRequestFocus(); returnTo = null
         }
     }
     fun closeMenu() { returnTo = menu; menu = null }
@@ -124,7 +125,7 @@ fun DiscoveryScreen(session: ProfileSession) {
             val first = remember { FocusRequester() }
             val start = values.indexOfFirst { it.first == selected }.coerceAtLeast(0)
             val list = rememberLazyListState(start)
-            LaunchedEffect(Unit) { withFrameNanos { }; runCatching { first.requestFocus() } }
+            LaunchedEffect(Unit) { withFrameNanos { }; first.tryRequestFocus() }
             Box(Modifier.fillMaxSize().background(c.scrim), contentAlignment = Alignment.Center) {
                 Column(Modifier.width(520.dp).heightIn(max = 420.dp).background(c.panel, RoundedCornerShape(22.dp)).padding(24.dp)) {
                     Text(title, style = Vyrk.type.headlineS, color = c.text)

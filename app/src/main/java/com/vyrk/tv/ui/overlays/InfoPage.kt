@@ -97,6 +97,7 @@ import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.tryRequestFocus
 
 private val LOGO_W = 380.dp
 private val LOGO_H = 100.dp
@@ -147,7 +148,7 @@ fun InfoPage(o: Overlay.Info) {
         scope.launch { sources = loadTitleSources(graph, session, meta, RuntimeText.minutes(full?.runtime)) }
     }
     // Focus moves once the tab's content has been laid out.
-    fun focusSoon(req: FocusRequester) = scope.launch { repeat(2) { androidx.compose.runtime.withFrameNanos { } }; runCatching { req.requestFocus() } }
+    fun focusSoon(req: FocusRequester) = scope.launch { repeat(2) { androidx.compose.runtime.withFrameNanos { } }; req.tryRequestFocus() }
     fun toDetails() { panelOpen = true; tab = PanelTab.DETAILS; focusSoon(detailsReq) }
     LaunchedEffect(meta.id) {
         if (!isSeries && settings.loadSourcesOnOpen && showSourcesPanel) loadSources()
@@ -155,7 +156,7 @@ fun InfoPage(o: Overlay.Info) {
             delay(80)
             if (!isSeries && sources is SourcesState.Idle) loadSources()
             focusSoon(tabReq)
-        } else runCatching { playReq.requestFocus() }
+        } else playReq.tryRequestFocus()
     }
 
     // Back with the panel open closes it and returns to Play. Back reaches dialogs through the back
@@ -163,7 +164,7 @@ fun InfoPage(o: Overlay.Info) {
     // before the window's own Back, which closes the page).
     // In the panel, Back returns to Play; a panel the info button opened on a film also closes.
     androidx.activity.compose.BackHandler(enabled = panelFocused || (panelOpen && !panelByDefault)) {
-        runCatching { playReq.requestFocus() }
+        playReq.tryRequestFocus()
         if (!panelByDefault) panelOpen = false
     }
 
@@ -538,7 +539,7 @@ private fun SeasonGuide(meta: MetaItem?, loading: Boolean, item: LibraryItem?, n
     LaunchedEffect(meta.id) { seasons.indexOf(season).takeIf { it > 0 }?.let { seasonRow.scrollToItem(it) } }
     Row(verticalAlignment = Alignment.CenterVertically) {
         LazyRow(
-            Modifier.weight(1f).focusProperties { onEnter = { runCatching { seasonReq.requestFocus() } } }.focusGroup(),
+            Modifier.weight(1f).focusProperties { onEnter = { seasonReq.tryRequestFocus() } }.focusGroup(),
             state = seasonRow, horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(vertical = 4.dp, horizontal = 2.dp),
         ) {
             items(seasons) { s ->

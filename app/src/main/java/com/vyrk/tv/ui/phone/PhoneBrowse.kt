@@ -55,6 +55,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.vyrk.core.addon.MetaPreview
+import com.vyrk.core.catalog.CatalogRules
 import com.vyrk.core.library.LibraryItem
 import com.vyrk.core.library.LibraryRules
 import com.vyrk.tv.BuildConfig
@@ -73,6 +74,7 @@ import com.vyrk.tv.ui.browse.HeroLogo
 import com.vyrk.tv.ui.browse.RankNumber
 import com.vyrk.tv.ui.browse.RowKind
 import com.vyrk.tv.ui.browse.RowState
+import com.vyrk.tv.ui.browse.firstRowWithArt
 import com.vyrk.tv.ui.browse.posterState
 import com.vyrk.tv.ui.browse.produceMeta
 import com.vyrk.tv.ui.browse.rememberTitleArt
@@ -176,19 +178,9 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
     // Featured titles: on Home a mix taken in turn from the first rows, elsewhere the first row with artwork.
     val heroCandidates by remember(model.rows) {
         derivedStateOf {
-            fun art(r: RowState) = r.items.filter { it.background != null }
-            if (!isHome) model.rows.firstOrNull { art(it).isNotEmpty() }?.let { art(it).take(HERO_COUNT) }.orEmpty()
+            if (!isHome) firstRowWithArt(model.rows)
             else if (!model.rows.take(HERO_SOURCE_ROWS).all { it.loadedOnce }) emptyList()
-            else {
-                val pools = model.rows.map(::art).filter { it.isNotEmpty() }
-                val picked = LinkedHashMap<String, MetaPreview>()
-                var i = 0
-                while (picked.size < HERO_COUNT && pools.any { i < it.size }) {
-                    pools.forEach { p -> p.getOrNull(i)?.let { m -> if (picked.size < HERO_COUNT) picked.putIfAbsent(m.id, m) } }
-                    i++
-                }
-                picked.values.toList()
-            }
+            else CatalogRules.heroMix(model.rows.map { it.withArt }, HERO_COUNT)
         }
     }
     LaunchedEffect(heroCandidates.map { it.id }) { model.lockHero(heroCandidates) }

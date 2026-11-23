@@ -33,7 +33,14 @@ class RowState(val key: String, val kind: RowKind, val ref: CatalogRef?, initial
     var hasMore by mutableStateOf(true)
     var loadedOnce by mutableStateOf(false)
     internal var job: Job? = null
+
+    /** The row's titles that have artwork to feature. */
+    val withArt: List<MetaPreview> get() = items.filter { it.background != null }
 }
+
+/** A lineup from one catalogue: the first row with artwork. */
+fun firstRowWithArt(rows: List<RowState>): List<MetaPreview> =
+    rows.firstNotNullOfOrNull { r -> r.withArt.takeIf { it.isNotEmpty() } }?.take(HERO_COUNT).orEmpty()
 
 /**
  * One [RowState] per catalogue for the whole session, shared by every tab. "Popular - Movies"

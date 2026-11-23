@@ -93,6 +93,7 @@ import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.tryRequestFocus
 
 private enum class Group(val title: Int, val icon: Int, val subtitle: Int) {
     PROFILE(R.string.settings_profile, R.drawable.ic_profile, R.string.settings_profile_sub),
@@ -111,7 +112,7 @@ fun SettingsScreen(session: ProfileSession) {
     // One requester per group, so Left from any setting returns to the group it belongs to.
     val groupReqs = remember { Group.entries.associateWith { FocusRequester() } }
     val contentReq = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { groupReqs.getValue(group).requestFocus() } }
+    LaunchedEffect(Unit) { groupReqs.getValue(group).tryRequestFocus() }
     val addons by session.addons.collectAsState()
     var typing by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(group) { typing = null }
@@ -158,7 +159,7 @@ fun SettingsScreen(session: ProfileSession) {
             .focusProperties {
                 onExit = {
                     when (requestedFocusDirection) {
-                        FocusDirection.Left -> runCatching { groupReqs.getValue(group).requestFocus() }
+                        FocusDirection.Left -> groupReqs.getValue(group).tryRequestFocus()
                         // Down past the last setting would land on a sidebar entry below and open that group.
                         FocusDirection.Down -> cancelFocusChange()
                         else -> {}
@@ -199,7 +200,7 @@ private val LocalGroupReq = androidx.compose.runtime.staticCompositionLocalOf<Fo
 private fun Modifier.leftToSidebar(): Modifier {
     val req = LocalGroupReq.current ?: return this
     return this
-        .focusProperties { onExit = { if (requestedFocusDirection == FocusDirection.Left) runCatching { req.requestFocus() } } }
+        .focusProperties { onExit = { if (requestedFocusDirection == FocusDirection.Left) req.tryRequestFocus() } }
         .focusGroup()
 }
 

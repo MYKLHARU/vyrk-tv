@@ -66,6 +66,7 @@ import com.vyrk.tv.ui.theme.ReprovideAppDensity
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.tryRequestFocus
 
 /** Overlays are separate windows so focus can't escape beneath them. */
 @Composable
@@ -147,7 +148,7 @@ private fun ItemMenu(o: Overlay.ItemMenu) {
     val inCw = item?.isInContinueWatching == true
     val inLib = item?.inLibrary == true
     val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    LaunchedEffect(Unit) { first.tryRequestFocus() }
     val removedMsg = str(R.string.removed_from_cw, o.meta.name)
     val c = Vyrk.colors
     Box(Modifier.fillMaxSize().background(c.scrim), contentAlignment = Alignment.CenterEnd) {
@@ -199,7 +200,7 @@ private fun InstallConfirm(o: Overlay.InstallConfirm) {
     val scope = rememberCoroutineScope()
     val first = remember { FocusRequester() }
     val d = o.descriptor
-    LaunchedEffect(d != null, o.error) { kotlinx.coroutines.delay(60); runCatching { first.requestFocus() } }
+    LaunchedEffect(d != null, o.error) { kotlinx.coroutines.delay(60); first.tryRequestFocus() }
     val installedMsg = d?.let { str(R.string.installed_addon, it.manifest.name) }.orEmpty()
     val needsServer = d?.let { CatalogRules.needsStreamingServer(it) } == true
     CenterCard(560.dp) {
@@ -242,7 +243,7 @@ private fun AddonQr(o: Overlay.AddonQr) {
     val app = LocalApp.current
     val url = AddonUrls.configureUrl(o.descriptor.transportUrl) ?: o.descriptor.transportUrl
     val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    LaunchedEffect(Unit) { first.tryRequestFocus() }
     CenterCard(620.dp) {
         Row(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(220.dp).background(androidx.compose.ui.graphics.Color.White, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) { QrCode(url, 204.dp) }
@@ -263,7 +264,7 @@ private fun AddonQr(o: Overlay.AddonQr) {
 private fun MessageBox(o: Overlay.Message) {
     val app = LocalApp.current
     val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    LaunchedEffect(Unit) { first.tryRequestFocus() }
     CenterCard {
         Text(o.title, style = Vyrk.type.headlineM, color = Vyrk.colors.text)
         Spacer(Modifier.height(8.dp))
@@ -284,7 +285,7 @@ private fun SeeAll(o: Overlay.SeeAll) {
     val row = remember { RowState(o.ref.key + "all", RowKind.CATALOG, o.ref, o.title, o.animeOnly, o.browseType, o.genre) }
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { model.ensureLoaded(row) }
-    LaunchedEffect(row.items.isNotEmpty()) { if (row.items.isNotEmpty()) runCatching { first.requestFocus() } }
+    LaunchedEffect(row.items.isNotEmpty()) { if (row.items.isNotEmpty()) first.tryRequestFocus() }
     val c = Vyrk.colors
     Column(Modifier.fillMaxSize().background(c.background).padding(horizontal = 48.dp, vertical = 30.dp)) {
         Text(o.title, style = Vyrk.type.headlineL, color = c.text)

@@ -67,6 +67,7 @@ import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
+import com.vyrk.tv.ui.tryRequestFocus
 
 /** Artwork candidates for one title, best first; the next one is tried when one fails to load. */
 @Immutable
@@ -308,7 +309,7 @@ fun Hero(
         Modifier.fillMaxWidth().height(height).onFocusChanged { onFocusChanged(it.hasFocus) }
             // Coming in from the tabs or the rows always lands on Watch now, not on whichever
             // button (library, info, arrows) happens to sit nearest.
-            .focusProperties { onEnter = { runCatching { watchReq.requestFocus() } } }
+            .focusProperties { onEnter = { watchReq.tryRequestFocus() } }
             .focusGroup()
     ) {
         // Bottom-anchored. Every line below the logo keeps a fixed height, so the logo's share (all

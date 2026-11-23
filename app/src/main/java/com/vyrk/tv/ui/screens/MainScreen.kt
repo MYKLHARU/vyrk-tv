@@ -70,6 +70,7 @@ import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
+import com.vyrk.tv.ui.tryRequestFocus
 
 @Composable
 fun MainScreen(session: ProfileSession) {
@@ -204,7 +205,7 @@ fun MainScreen(session: ProfileSession) {
                             Section.SEARCH -> searchReq; Section.SETTINGS -> settingsReq
                             Section.TABS -> tabReqs.getValue(app.tab)
                         }
-                        runCatching { target.requestFocus() }
+                        target.tryRequestFocus()
                     }
                 }
                 .focusGroup(),

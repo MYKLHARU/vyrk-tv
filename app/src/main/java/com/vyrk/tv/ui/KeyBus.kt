@@ -7,6 +7,7 @@ import android.view.KeyEvent
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import java.util.TreeMap
 
@@ -38,6 +39,12 @@ fun Modifier.traceFocus(label: String): Modifier = composed {
     val layer = LocalTraceLayer.current
     onFocusChanged { if (it.isFocused) FocusTrace.set(layer, label) }
 }
+
+/**
+ * Moves focus here. Compose throws when the requester is not attached to a laid-out element yet
+ * (a row still loading, a tab mid-switch); that is expected, so it is a no-op that returns false.
+ */
+fun FocusRequester.tryRequestFocus(): Boolean = runCatching { requestFocus() }.isSuccess
 
 object KeyBus {
     private val main = Handler(Looper.getMainLooper())

@@ -88,6 +88,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.tryRequestFocus
 
 // ---------------- Search ----------------
 
@@ -112,7 +113,7 @@ fun PhoneSearch(session: ProfileSession) {
     LaunchedEffect(Unit) {
         val preset = app.searchQuery
         app.searchQuery = ""
-        if (preset.isBlank() && !app.startVoice) { delay(150); runCatching { focus.requestFocus() }; keyboard?.show() }
+        if (preset.isBlank() && !app.startVoice) { delay(150); focus.tryRequestFocus(); keyboard?.show() }
     }
     // A query handed over while Search is open (Assistant) replaces the current one.
     LaunchedEffect(app.searchQuery) { if (app.searchQuery.isNotBlank()) { query = app.searchQuery; app.searchQuery = "" } }

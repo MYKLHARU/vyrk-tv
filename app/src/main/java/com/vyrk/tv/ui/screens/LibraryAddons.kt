@@ -59,6 +59,7 @@ import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
+import com.vyrk.tv.ui.tryRequestFocus
 
 private fun LibraryItem.toPreview() = MetaPreview(id = id, type = type, name = name, poster = poster)
 
@@ -138,7 +139,7 @@ fun AddonActions(session: ProfileSession, typing: String?, onTyping: (String?) -
     // When the keyboard closes, its keys leave the screen: give focus back to Install from URL.
     val installReq = remember { FocusRequester() }
     var refocus by remember { mutableStateOf(false) }
-    LaunchedEffect(typing == null) { if (typing == null && refocus) { refocus = false; runCatching { installReq.requestFocus() } } }
+    LaunchedEffect(typing == null) { if (typing == null && refocus) { refocus = false; installReq.tryRequestFocus() } }
     if (typing == null) {
         WrapRow(spacing = 6.dp) {
             VyrkButton(str(R.string.install_from_url), icon = R.drawable.ic_plus, style = ButtonStyle.BRAND, shape = Dimens.pillShape, glow = true, onClick = { refocus = true; onTyping("") },
@@ -231,7 +232,7 @@ fun AddonCard(session: ProfileSession, d: com.vyrk.core.addon.Descriptor, index:
 @Composable
 fun UrlKeyboard(onChar: (Char) -> Unit, onBackspace: () -> Unit, onClear: () -> Unit) {
     val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    LaunchedEffect(Unit) { first.tryRequestFocus() }
     val keys = "abcdefghijklmnopqrstuvwxyz0123456789:/.-_?=&%".toList()
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         keys.chunked(8).forEachIndexed { r, row ->

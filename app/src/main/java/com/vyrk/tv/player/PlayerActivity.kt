@@ -92,6 +92,7 @@ import com.vyrk.tv.ui.traceFocus
 import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.flow.first
+import com.vyrk.tv.ui.tryRequestFocus
 
 @OptIn(UnstableApi::class)
 class PlayerActivity : ComponentActivity() {
@@ -410,7 +411,7 @@ private fun ConnectingView(m: PlayerModel, onExit: () -> Unit) {
     LaunchedEffect(Unit) {
         repeat(20) {
             if (held) return@LaunchedEffect
-            runCatching { holdReq.requestFocus() }
+            holdReq.tryRequestFocus()
             kotlinx.coroutines.delay(150)
         }
     }
@@ -469,7 +470,7 @@ private fun LogoLoader(logo: String?, title: String, progress: Float, descriptio
 private fun MessageView(title: String, body: String, buttons: @Composable (Modifier) -> Unit) {
     val c = Vyrk.colors
     val req = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { req.requestFocus() } }
+    LaunchedEffect(Unit) { req.tryRequestFocus() }
     Box(Modifier.fillMaxSize().background(c.scrim), contentAlignment = Alignment.Center) {
         Column(Modifier.width(520.dp).background(c.panel, RoundedCornerShape(22.dp)).padding(28.dp)) {
             Text(title, style = Vyrk.type.headlineL, color = c.text)
@@ -549,7 +550,7 @@ private fun Controls(m: PlayerModel) {
     val c = Vyrk.colors
     val playReq = remember { FocusRequester() }
     LaunchedEffect(m.stallPrompt, m.stillWatching) {
-        if (!m.stallPrompt && !m.stillWatching) runCatching { playReq.requestFocus() }
+        if (!m.stallPrompt && !m.stillWatching) playReq.tryRequestFocus()
     }
     val meta = m.meta
     val title = meta?.name ?: m.request.meta.name
@@ -786,7 +787,7 @@ fun PlayerModel.sessionSettingsLanguages(): List<String> = VyrkApp.graphOrNull()
 private fun SourcesPanel(m: PlayerModel) {
     val first = remember { FocusRequester() }
     val choices = m.sourceChoices
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    LaunchedEffect(Unit) { first.tryRequestFocus() }
     SidePanel(stringResource(R.string.other_sources)) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(choices, key = { it.candidate.key + it.candidate.addonId }) { r ->
@@ -852,7 +853,7 @@ fun SourceLine(r: Ranked, current: Boolean, modifier: Modifier = Modifier, onCli
 @Composable
 private fun SleepPanel(m: PlayerModel) {
     val first = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    LaunchedEffect(Unit) { first.tryRequestFocus() }
     SidePanel(stringResource(R.string.sleep)) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             VyrkChip(stringResource(R.string.off), m.sleep == SleepMode.OFF, { m.chooseSleep(SleepMode.OFF) }, Modifier.fillMaxWidth().focusRequester(first).traceFocus("sleep:off"))
@@ -866,7 +867,7 @@ private fun SleepPanel(m: PlayerModel) {
 private fun Prompt(text: String, yes: String, onYes: () -> Unit, no: String, onNo: () -> Unit) {
     val c = Vyrk.colors
     val req = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { req.requestFocus() } }
+    LaunchedEffect(Unit) { req.tryRequestFocus() }
     Box(Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.BottomEnd) {
         Column(Modifier.width(380.dp).background(c.panel, RoundedCornerShape(18.dp)).padding(20.dp)
             .focusProperties { onExit = { cancelFocusChange() } }.focusGroup()) {
@@ -889,7 +890,7 @@ private fun UpNext(m: PlayerModel) {
     val nv = m.nextVideo ?: return
     val c = Vyrk.colors
     val req = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { req.requestFocus() } }
+    LaunchedEffect(Unit) { req.tryRequestFocus() }
     val left by androidx.compose.animation.core.animateFloatAsState((m.upNextCountdown / 10f).coerceIn(0f, 1f),
         androidx.compose.animation.core.tween(950, easing = androidx.compose.animation.core.LinearEasing), label = "countdown")
     Box(Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.BottomEnd) {
@@ -938,7 +939,7 @@ private fun EpisodesPanel(m: PlayerModel) {
         val i = eps.indexOfFirst { it.id == currentId }
         if (i > 0) listState.scrollToItem(i)
         kotlinx.coroutines.delay(60)
-        runCatching { if (i >= 0) currentReq.requestFocus() else firstReq.requestFocus() }
+        (if (i >= 0) currentReq else firstReq).tryRequestFocus()
     }
     SidePanel(stringResource(R.string.episodes)) {
         if (seasons.size > 1) {

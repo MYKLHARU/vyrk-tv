@@ -79,6 +79,7 @@ import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
 import com.vyrk.tv.ui.components.shimmer
+import com.vyrk.tv.ui.tryRequestFocus
 
 /** What a poster shows from the live library. */
 data class PosterState(val progress: Float, val watched: Boolean, val isNew: Boolean)
@@ -353,7 +354,7 @@ fun BrowseRow(
                         .focusProperties {
                             onEnter = {
                                 if (restoreIndex == null && (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down)) {
-                                    if (listState.firstVisibleItemIndex == 0) runCatching { firstReq.requestFocus() }
+                                    if (listState.firstVisibleItemIndex == 0) firstReq.tryRequestFocus()
                                 }
                             }
                         }
