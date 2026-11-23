@@ -1,5 +1,7 @@
 package com.vyrk.core.stream
 
+import com.vyrk.core.lang.Languages
+
 /** A picture or sound badge: [premium] ones (4K, Dolby Vision, Atmos) are drawn in gold. */
 enum class QualityBadge(val label: String, val premium: Boolean) {
     UHD("4K", true), FHD("HD", false),
@@ -32,4 +34,28 @@ object QualityBadges {
 
     /** The title's badges: those of the source VYRK would play (the best playable one). */
     fun best(ranked: List<Ranked>): List<QualityBadge> = ranked.firstOrNull { it.playable }?.let { of(it.info) }.orEmpty()
+}
+
+/**
+ * What a source card shows beside its resolution block and add-on name: the picture and sound
+ * badges (resolution is already in the block), the other details as one line, and languages.
+ */
+data class SourceSummary(val badges: List<QualityBadge>, val details: String, val languages: String, val uhd: Boolean) {
+    companion object {
+        fun of(i: StreamInfo): SourceSummary {
+            val badges = QualityBadges.of(i).filter { it != QualityBadge.UHD && it != QualityBadge.FHD }
+            // Atmos and DTS:X already have badges.
+            val audio = i.audio.filterNot { it == AudioFormat.ATMOS || it == AudioFormat.DTS_X }.joinToString(" ") { it.label }
+            val details = listOf(i.releaseType.label, i.codec.label, audio, sizeLabel(i.sizeBytes)).filter { it.isNotBlank() }.joinToString("  ·  ")
+            return SourceSummary(
+                badges = badges,
+                details = details.ifEmpty { if (badges.isEmpty()) "—" else "" },
+                languages = i.languages.joinToString(", ") { Languages.label(it) },
+                uhd = (i.resolution ?: 0) >= 2160,
+            )
+        }
+
+        /** "4.7 GB", or "" when the size is unknown. */
+        fun sizeLabel(bytes: Long?): String = bytes?.let { "%.1f GB".format(it / 1e9) }.orEmpty()
+    }
 }

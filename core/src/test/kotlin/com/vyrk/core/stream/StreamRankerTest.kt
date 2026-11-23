@@ -1,6 +1,10 @@
 package com.vyrk.core.stream
 
+import com.vyrk.core.addon.AddonResult
+import com.vyrk.core.addon.Descriptor
+import com.vyrk.core.addon.Manifest
 import com.vyrk.core.addon.Stream
+import com.vyrk.core.addon.StreamsResponse
 import com.vyrk.core.addon.StreamBehaviorHints
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -218,5 +222,19 @@ class StreamRankerTest {
     fun maxResolutionLimit() {
         val r = StreamRanker.score(c("4K", title = "2160p"), tv4kHdr, RankPrefs(maxResolution = 1080))
         assertEquals(Exclusion.OVER_MAX_RESOLUTION, r.exclusion)
+    }
+
+    @Test
+    fun candidatesKeepAddonAndStreamOrderAndSkipFailedAddons() {
+        fun addon(id: String) = Descriptor(Manifest(id = id, name = "Name $id"), "https://$id.test/manifest.json")
+        val results = listOf(
+            addon("a") to AddonResult.Ok(StreamsResponse(listOf(Stream(url = "https://a/1"), Stream(url = "https://a/2")))),
+            addon("b") to AddonResult.Failed("b", "timeout", timedOut = true),
+            addon("c") to AddonResult.Ok(StreamsResponse(listOf(Stream(url = "https://c/1")))),
+        )
+        val cands = StreamRanker.candidates(results)
+        assertEquals(listOf("a" to 0, "a" to 1, "c" to 0), cands.map { it.addonId to it.index })
+        assertEquals(listOf(0, 0, 2), cands.map { it.addonOrder })
+        assertEquals("Name c", cands.last().addonName)
     }
 }

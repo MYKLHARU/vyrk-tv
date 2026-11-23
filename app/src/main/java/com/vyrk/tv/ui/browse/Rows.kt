@@ -74,6 +74,7 @@ import com.vyrk.tv.ui.components.Icon
 import com.vyrk.tv.ui.components.VyrkButton
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
+import com.vyrk.tv.ui.overlays.continueLabel
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch
@@ -436,15 +437,6 @@ private fun ExpandedArt(meta: MetaPreview, width: Dp, height: Dp, detail: String
     }
 }
 
-/** "S5 E4 · 28m left", "28m left" or "S1 E3"; null when the library knows neither. */
-@Composable
-private fun continueLabel(item: LibraryItem?): String? {
-    val st = item?.state ?: return null
-    val episode = com.vyrk.core.library.LibraryRules.episodeLabel(item.id, st.videoId)
-    val leftMin = if (st.duration > 0 && st.duration > st.timeOffset) ((st.duration - st.timeOffset) / 60_000L).toInt() else null
-    val left = leftMin?.takeIf { it > 0 }?.let { m -> str(R.string.time_left, if (m < 60) "${m}m" else "${m / 60}h ${m % 60}m") }
-    return listOfNotNull(episode, left).joinToString(" · ").ifEmpty { null }
-}
 
 /**
  * Continue Watching card, landscape: the title's backdrop with its logo, a play button, a slim

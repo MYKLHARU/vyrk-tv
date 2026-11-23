@@ -18,6 +18,7 @@ import com.vyrk.core.library.LibraryRules
 import com.vyrk.core.library.LibrarySync
 import com.vyrk.core.library.NewEpisodes
 import com.vyrk.core.library.PendingChanges
+import com.vyrk.core.stream.RankPrefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -166,6 +167,18 @@ class ProfileSession(
     fun rememberFocus(tab: String, memory: FocusMemory) = updateState { it.copy(focus = it.focus + (tab to memory)) }
 
     fun titleMemory(id: String): TitleMemory = _state.value.titleMemory[id] ?: TitleMemory()
+
+    /** How to rank a title's sources: the profile's quality settings plus what was picked for it before. */
+    fun rankPrefs(titleId: String, runtimeMinutes: Int?): RankPrefs {
+        val mem = titleMemory(titleId)
+        val st = settings.value
+        return RankPrefs(
+            preset = st.preset, maxResolution = st.maxResolution, maxSizeBytes = st.maxSizeGb?.let { it * 1_000_000_000L },
+            format = st.format, hdr = st.hdr, audioLanguages = st.audioLanguages,
+            rememberedKey = mem.pickedKey, lastBingeGroup = mem.bingeGroup, lastReleaseGroup = mem.releaseGroup,
+            runtimeMinutes = runtimeMinutes,
+        )
+    }
     fun updateTitleMemory(id: String, f: (TitleMemory) -> TitleMemory) =
         updateState { s -> s.copy(titleMemory = s.titleMemory + (id to f(s.titleMemory[id] ?: TitleMemory()))) }
 

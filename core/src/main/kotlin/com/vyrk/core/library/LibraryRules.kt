@@ -107,6 +107,12 @@ object LibraryRules {
         return s.timeOffset
     }
 
+    /** Whole minutes left in the last played video, or null when less than a minute or nothing is known. */
+    fun minutesLeft(state: LibraryItemState?): Int? {
+        if (state == null || state.duration <= 0 || state.duration <= state.timeOffset) return null
+        return ((state.duration - state.timeOffset) / 60_000L).toInt().takeIf { it > 0 }
+    }
+
     fun advanceToVideo(item: LibraryItem, videoId: String): LibraryItem {
         val s = item.state
         return item.copy(

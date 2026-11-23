@@ -81,6 +81,7 @@ import com.vyrk.tv.ui.components.Wordmark
 import com.vyrk.tv.ui.screens.tabIcon
 import com.vyrk.tv.ui.screens.tabLabel
 import com.vyrk.tv.ui.str
+import com.vyrk.tv.ui.overlays.continueLabel
 import com.vyrk.tv.ui.theme.Vyrk
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -399,12 +400,8 @@ private fun ContinueCard(meta: MetaPreview, item: LibraryItem?, tag: String, onC
         Box(Modifier.align(Alignment.Center).size(40.dp).background(c.shade.copy(alpha = 0.55f), CircleShape).border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape), contentAlignment = Alignment.Center) {
             Icon(R.drawable.ic_play, null, Modifier.padding(start = 2.dp).size(16.dp), tint = Color.White)
         }
-        val st = item?.state
-        val episode = st?.let { LibraryRules.episodeLabel(item.id, it.videoId) }
-        val leftMin = if (st != null && st.duration > 0 && st.duration > st.timeOffset) ((st.duration - st.timeOffset) / 60_000L).toInt() else null
-        val left = leftMin?.takeIf { it > 0 }?.let { m -> str(R.string.time_left, if (m < 60) "${m}m" else "${m / 60}h ${m % 60}m") }
         Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 9.dp)) {
-            listOfNotNull(episode, left).joinToString(" · ").takeIf { it.isNotEmpty() }?.let {
+            continueLabel(item)?.let {
                 Text(it, style = Vyrk.type.labelM, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             val progress = if (item?.isInContinueWatching == true) item.progress else 0f

@@ -361,8 +361,10 @@
     <string name="third_party_notices">Mentions des tiers</string>
     <string name="this_tv">Ce téléviseur</string>
     <string name="time_hm">%1$d h %2$d min</string>
+    <string name="time_hm_short">%1$dh %2$dm</string>
     <string name="time_left">Reste %1$s</string>
     <string name="time_m">%1$d min</string>
+    <string name="time_m_short">%1$dm</string>
     <string name="timeline_hint">◀ ▶ Parcourir · ▲ Chapitres · OK Aller</string>
     <string name="top10_add">Ajouter les rangées Top 10</string>
     <string name="top10_card_body">Ajoute le module tiers gratuit Streaming Catalogs, qui liste les titres populaires de chaque service.</string>
