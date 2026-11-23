@@ -27,6 +27,8 @@ diagnostics_on_exit() {
   if (( ci_exitcode != 0 )); then
     log "journey exited with $ci_exitcode; collecting bounded diagnostics"
     timeout --kill-after=2s 15s "$ADB" logcat -d > "$OUT/logcat-failure.txt" 2>&1 || true
+    # The app's last steps and any crash, here in the job log (artifacts aren't always reachable).
+    grep -E 'VyrkEvent|AndroidRuntime|ANR in' "$OUT/logcat-failure.txt" | tail -n 25 | sed 's/^/[e2e]   /' || true
     timeout --kill-after=2s 10s "$ADB" shell dumpsys activity activities > "$OUT/activity-failure.txt" 2>&1 || true
     timeout --kill-after=2s 10s "$ADB" exec-out screencap -p > "$OUT/failure.png" 2>/dev/null || true
   fi
@@ -62,8 +64,10 @@ if ! focus_matches '^hero:watch$' 20; then
   # Still stuck after the second press: say why in the log (window focus, recent keys, errors).
   if ! focus_matches '^hero:watch$' 15; then
     log "still on welcome: $(adbs dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | head -n 2 | tr -s ' ' | tr '\n' ' ')"
+    # The guest steps and add-on fetches (VyrkEvent) say where it stopped. Leave out the journey's
+    # own focus probes (Shift presses): there are dozens and they pushed everything else out.
     o=$(adb_run logcat -d -v time 2>/dev/null || true)
-    printf '%s\n' "$o" | grep -E 'VyrkFocus|VyrkEvent|AndroidRuntime|ANR in|com\.vyrk' | tail -n 30 | sed 's/^/[e2e]   /'
+    printf '%s\n' "$o" | grep -E 'VyrkFocus|VyrkEvent|AndroidRuntime|ANR in|com\.vyrk' | grep -v 'KEYCODE_SHIFT_LEFT -> ' | tail -n 30 | sed 's/^/[e2e]   /' || true
   fi
 fi
 wait_focus '^hero:watch$' 45
