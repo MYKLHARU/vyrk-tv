@@ -400,7 +400,7 @@ fun BrowseRow(
                     }
                     // See all needs a catalogue to page through ("Because you watched" rows have none).
                     if (row.kind == RowKind.CATALOG && row.ref != null && (row.items.size >= 10 ||
-                        row.animeOnly && row.ref?.catalog?.supportsExtra("skip") == true)) item(key = "catalog-action") {
+                        row.animeOnly && row.ref.catalog.supportsExtra("skip"))) item(key = "catalog-action") {
                         Box(Modifier.size(posterWidth, height), contentAlignment = Alignment.Center) {
                             val more = row.animeOnly && row.hasMore
                             VyrkButton(str(if (more) R.string.anime_load_more else R.string.see_all),

@@ -554,7 +554,7 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
     }
     val fanartLogos = fanart.takeIf { it.first == titleKey }?.second.orEmpty()
     val prequel = meta?.let { com.vyrk.core.art.SeasonLogos.prequel(it, safeFull) }
-    val inherit = prequel != null && lookupId == null && meta?.logo.isNullOrBlank() && safeFull?.logo.isNullOrBlank()
+    val inherit = prequel != null && lookupId == null && meta.logo.isNullOrBlank() && safeFull?.logo.isNullOrBlank()
     val seasonLogos by androidx.compose.runtime.produceState<Pair<String?, List<String>?>>(null to null, titleKey, inherit, prequel, safeFull) {
         value = titleKey to if (inherit) null else emptyList()
         val m = meta ?: return@produceState

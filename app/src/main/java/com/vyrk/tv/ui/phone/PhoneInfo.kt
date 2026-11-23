@@ -134,12 +134,12 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
             item(key = "actions") {
                 Column(Modifier.padding(horizontal = PhoneMargin)) {
                     val inCw = item?.isInContinueWatching == true
-                    val resumeEp = if (inCw && isSeries) item?.let { LibraryRules.episodeLabel(it.id, it.state.videoId) } else null
+                    val resumeEp = if (inCw && isSeries) LibraryRules.episodeLabel(item.id, item.state.videoId) else null
                     PhoneButton(str(if (inCw) R.string.resume else R.string.play) + (resumeEp?.let { "  ·  $it" } ?: ""), {
                         val ranked = (sources as? SourcesState.Ready)?.ranked
                         Playback.start(activity, graph, session, meta, ranked = if (isSeries) null else ranked)
                     }, icon = R.drawable.ic_play, style = PhoneButtonStyle.PRIMARY, modifier = Modifier.fillMaxWidth(), height = 52.dp, tag = "info:play")
-                    if (inCw && item != null && item.progress > 0f) {
+                    if (inCw && item.progress > 0f) {
                         Spacer(Modifier.height(10.dp))
                         ResumeLine(item)
                     }

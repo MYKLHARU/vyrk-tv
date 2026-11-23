@@ -200,7 +200,7 @@ fun InfoPage(o: Overlay.Info) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     val inCw = item?.isInContinueWatching == true
                     // The flagship action, as on Home: a glowing pill; a series names the episode it resumes.
-                    val resumeEp = if (inCw && isSeries) item?.let { com.vyrk.core.library.LibraryRules.episodeLabel(it.id, it.state.videoId) } else null
+                    val resumeEp = if (inCw && isSeries) com.vyrk.core.library.LibraryRules.episodeLabel(item.id, item.state.videoId) else null
                     VyrkButton(str(if (inCw) R.string.resume else R.string.play) + (resumeEp?.let { "  ·  $it" } ?: ""), icon = R.drawable.ic_play, style = ButtonStyle.PRIMARY,
                         height = ACTION_H + 2.dp, horizontalPadding = 24.dp, glow = true, shape = Dimens.pillShape,
                         modifier = Modifier.focusRequester(playReq).traceFocus("info:play"), onClick = {
