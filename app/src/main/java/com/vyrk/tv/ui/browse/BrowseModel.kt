@@ -7,12 +7,10 @@ import androidx.compose.runtime.setValue
 import com.vyrk.core.addon.AddonClient
 import com.vyrk.core.addon.AddonResult
 import com.vyrk.core.addon.Descriptor
-import com.vyrk.core.addon.MetaItem
 import com.vyrk.core.addon.MetaPreview
 import com.vyrk.core.catalog.AnimeBrowse
 import com.vyrk.core.catalog.CatalogRef
 import com.vyrk.core.catalog.CatalogRules
-import com.vyrk.tv.data.ProfileSession
 import com.vyrk.tv.data.Tab
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job

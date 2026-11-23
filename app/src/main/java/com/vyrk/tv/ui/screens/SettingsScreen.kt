@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,16 +78,13 @@ import com.vyrk.tv.ui.Overlay
 import com.vyrk.tv.ui.Screen
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.VyrkButton
-import com.vyrk.tv.ui.components.VyrkChip
 import com.vyrk.tv.ui.components.ChoicePill
 import androidx.compose.foundation.layout.size
-import com.vyrk.tv.ui.components.glassPanel
 import com.vyrk.tv.ui.components.ColorSwatch
 import com.vyrk.tv.ui.components.CheckChip
 import com.vyrk.tv.ui.components.SegmentedControl
 import com.vyrk.tv.ui.components.OnOffControl
 import com.vyrk.tv.ui.components.ColumnDivider
-import com.vyrk.tv.ui.components.RowDivider
 import com.vyrk.tv.ui.components.SettingRow
 import com.vyrk.tv.ui.components.WrapRow
 import com.vyrk.tv.ui.str

@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.vyrk.core.addon.Descriptor
 import com.vyrk.core.addon.MetaPreview
-import com.vyrk.tv.data.Profile
 import com.vyrk.tv.data.Tab
 
 sealed interface Screen {
@@ -62,7 +61,6 @@ class AppState {
     data class Toast(val text: String, val id: Long = System.nanoTime())
 
     fun push(o: Overlay) { overlays.add(o) }
-    fun pop(): Overlay? = if (overlays.isEmpty()) null else overlays.removeAt(overlays.lastIndex)
     fun replaceTop(o: Overlay) { if (overlays.isNotEmpty()) overlays[overlays.lastIndex] = o else overlays.add(o) }
     fun showToast(text: String) { toast = Toast(text) }
 }

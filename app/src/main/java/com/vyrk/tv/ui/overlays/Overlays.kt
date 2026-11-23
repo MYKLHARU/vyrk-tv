@@ -1,11 +1,8 @@
 package com.vyrk.tv.ui.overlays
 
 import com.vyrk.tv.ui.components.glassPanel
-import android.os.Build
 import android.view.WindowManager
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,11 +39,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.tv.material3.Text
 import com.vyrk.core.addon.AddonUrls
-import com.vyrk.core.addon.MetaPreview
 import com.vyrk.core.addon.Redact
 import com.vyrk.core.catalog.CatalogRules
 import com.vyrk.tv.R
-import com.vyrk.tv.data.ProfileColors
 import com.vyrk.tv.data.Tab
 import com.vyrk.tv.player.Playback
 import com.vyrk.tv.ui.AppState
@@ -55,7 +50,6 @@ import com.vyrk.tv.ui.LocalApp
 import com.vyrk.tv.ui.LocalGraph
 import com.vyrk.tv.ui.LocalSession
 import com.vyrk.tv.ui.Overlay
-import com.vyrk.tv.ui.Screen
 import com.vyrk.tv.ui.browse.BrowseModel
 import com.vyrk.tv.ui.browse.CW_ROW
 import com.vyrk.tv.ui.browse.Poster
@@ -66,9 +60,7 @@ import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.QrCode
 import com.vyrk.tv.ui.components.Tag
 import com.vyrk.tv.ui.components.VyrkButton
-import com.vyrk.tv.ui.components.VyrkChip
 import com.vyrk.tv.ui.components.WrapRow
-import com.vyrk.tv.ui.screens.AlphaKeyboard
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.ReprovideAppDensity
 import com.vyrk.tv.ui.theme.Vyrk

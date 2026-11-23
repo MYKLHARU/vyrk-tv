@@ -1,14 +1,12 @@
 package com.vyrk.tv.player
 
 import com.vyrk.tv.ui.components.focusHalo
-import com.vyrk.tv.ui.theme.Dimens
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.OptIn
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +30,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -82,11 +79,9 @@ import com.vyrk.tv.VyrkApp
 import com.vyrk.tv.data.AppGraph
 import com.vyrk.tv.ui.FocusTrace
 import com.vyrk.tv.ui.KeyBus
-import com.vyrk.tv.ui.browse.TitleLogo
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.VyrkButton
 import com.vyrk.tv.ui.components.VyrkChip
-import com.vyrk.tv.ui.components.VyrkIconButton
 import com.vyrk.tv.ui.components.WrapRow
 import com.vyrk.tv.ui.theme.AccentChoice
 import com.vyrk.tv.ui.theme.FittedCanvas
@@ -788,11 +783,6 @@ private fun AudioSubsPanel(m: PlayerModel) {
 fun PlayerModel.sessionSettingsLanguages(): List<String> = VyrkApp.graphOrNull()?.session?.value?.settings?.value?.subtitleLanguages.orEmpty()
 
 @Composable
-private fun OptionRow(text: String, selected: Boolean, trace: String, onClick: () -> Unit) {
-    VyrkChip(text, selected, onClick, Modifier.fillMaxWidth().traceFocus(trace), maxLines = 2)
-}
-
-@Composable
 private fun SourcesPanel(m: PlayerModel) {
     val first = remember { FocusRequester() }
     val choices = m.sourceChoices
@@ -974,14 +964,6 @@ private fun EpisodesPanel(m: PlayerModel) {
     }
 }
 
-@Composable
-fun Spinner(size: androidx.compose.ui.unit.Dp, color: Color) {
-    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "spin")
-    val angle by transition.animateFloat(0f, 360f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.LinearEasing)), label = "angle")
-    androidx.compose.foundation.Canvas(Modifier.size(size)) {
-        drawArc(color, startAngle = angle, sweepAngle = 270f, useCenter = false, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
-    }
-}
 @Composable
 private fun SkipPill(label: Int) {
     val c = Vyrk.colors

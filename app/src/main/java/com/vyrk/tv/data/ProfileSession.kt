@@ -425,8 +425,6 @@ class ProfileSession(
         putItem(LibraryRules.markVideosWatched(base, meta, videos, watched))
     }
 
-    fun toggleNotifications(id: String) { item(id)?.let { putItem(it.copy(state = it.state.copy(noNotif = !it.state.noNotif))) } }
-
     // ---- New episodes ----
 
     suspend fun refreshNewEpisodes(force: Boolean) {
@@ -447,8 +445,6 @@ class ProfileSession(
         }
         updateState { it.copy(newEpisodes = result, newEpisodesCheckedMs = now) }
     }
-
-    fun newEpisodeIds(itemId: String): Set<String> = _state.value.newEpisodes[itemId].orEmpty()
 
     companion object {
         const val DEFAULT_CINEMETA = "https://v3-cinemeta.strem.io/manifest.json"

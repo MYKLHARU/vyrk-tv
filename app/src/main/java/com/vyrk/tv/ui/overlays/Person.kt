@@ -59,7 +59,6 @@ import com.vyrk.tv.ui.Section
 import com.vyrk.tv.ui.components.VyrkButton
 import com.vyrk.tv.ui.components.VyrkChip
 import com.vyrk.tv.ui.components.WrapRow
-import com.vyrk.tv.ui.components.focusGlow
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus

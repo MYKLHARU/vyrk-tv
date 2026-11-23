@@ -9,7 +9,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -337,6 +336,4 @@ data class Descriptor(
     val flags: DescriptorFlags = DescriptorFlags(),
 )
 
-internal fun JsonElement?.boolOrNull(): Boolean? = (this as? JsonPrimitive)?.booleanOrNull
-internal fun JsonElement?.strOrNull(): String? = (this as? JsonPrimitive)?.contentOrNull
 internal fun JsonElement.str(): String = jsonPrimitive.content

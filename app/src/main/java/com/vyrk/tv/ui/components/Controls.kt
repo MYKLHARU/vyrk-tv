@@ -42,10 +42,6 @@ import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import androidx.compose.ui.draw.shadow
 
-/** Focus is a soft accent glow plus a slight zoom. Never a white border. */
-@Composable
-fun focusGlow(): Glow = Glow(elevationColor = Vyrk.colors.accent.copy(alpha = 0.6f), elevation = Dimens.glowRadius)
-
 /** True inside menus, dialogs and Settings: buttons there take focus in brand gold, not white and the accent. */
 val LocalMenuColors = androidx.compose.runtime.staticCompositionLocalOf { false }
 
@@ -86,10 +82,6 @@ fun Modifier.focusHalo(color: Color? = null, spread: Dp = 12.dp): Modifier = com
     val a by androidx.compose.animation.core.animateFloatAsState(if (on) 1f else 0f, com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.FAST), label = "halo")
     this.onFocusChanged { on = it.hasFocus }.centeredGlow(color ?: Vyrk.colors.accent.copy(alpha = 0.35f), spread, a)
 }
-
-/** Focus halo for menu and settings items: brand gold instead of the content accent. */
-@Composable
-fun menuGlow(): Glow = Glow(elevationColor = Vyrk.colors.goldGlow, elevation = Dimens.glowRadius)
 
 /** [BRAND] is the gold call to action used in menus, dialogs and Settings; [PRIMARY] uses the content accent. */
 enum class ButtonStyle { PRIMARY, BRAND, SECONDARY, GHOST, OUTLINE }

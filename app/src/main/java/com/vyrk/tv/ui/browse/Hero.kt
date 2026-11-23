@@ -1,7 +1,6 @@
 package com.vyrk.tv.ui.browse
 
 import androidx.compose.ui.draw.drawWithContent
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.ensureActive
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.border
@@ -38,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.vyrk.tv.ui.theme.motionSpec
 import com.vyrk.tv.ui.theme.Motion
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -56,7 +54,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
-import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.AsyncImage
 import coil3.request.transformations
 import com.vyrk.core.addon.MetaItem
@@ -65,7 +62,6 @@ import com.vyrk.tv.R
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.Tag
 import com.vyrk.tv.ui.components.VyrkButton
-import com.vyrk.tv.ui.components.VyrkIconButton
 import com.vyrk.tv.ui.components.WrapRow
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
@@ -203,20 +199,6 @@ fun HeroLogo(titleId: String, name: String, logos: List<String>, maxWidth: Dp, m
             )
         }
     }
-}
-
-/** Logo artwork if the title has one, else the title as text. */
-@Composable
-fun TitleLogo(meta: MetaPreview, maxWidth: Dp, maxHeight: Dp) {
-    val logo = meta.logo
-    val text: @Composable () -> Unit = {
-        Text(meta.name, style = Vyrk.type.cinematicM, color = Vyrk.colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = maxWidth))
-    }
-    if (logo == null) text() else SubcomposeAsyncImage(
-        model = logo, contentDescription = meta.name, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
-        modifier = Modifier.widthIn(max = maxWidth).heightIn(max = maxHeight),
-        error = { text() }, loading = { Box(Modifier.height(maxHeight)) },
-    )
 }
 
 /** "Movie", "Series", "Live" or the add-on's own type. */

@@ -442,11 +442,6 @@ fun EmptyState(@DrawableRes icon: Int, message: String, modifier: Modifier = Mod
     }
 }
 
-/** Hairline between setting rows. */
-@Composable
-fun RowDivider(modifier: Modifier = Modifier) =
-    Box(modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.06f)))
-
 /** Vertical hairline between two setting columns. */
 @Composable
 fun ColumnDivider(modifier: Modifier = Modifier) =

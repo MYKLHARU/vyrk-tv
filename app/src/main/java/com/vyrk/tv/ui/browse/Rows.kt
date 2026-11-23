@@ -46,7 +46,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
@@ -59,14 +58,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Surface
@@ -78,10 +72,8 @@ import com.vyrk.tv.R
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.Icon
 import com.vyrk.tv.ui.components.VyrkButton
-import com.vyrk.tv.ui.components.focusGlow
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
-import com.vyrk.tv.ui.theme.Jakarta
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.traceFocus
 import kotlinx.coroutines.launch

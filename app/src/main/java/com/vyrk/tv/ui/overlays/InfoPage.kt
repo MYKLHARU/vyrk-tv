@@ -3,16 +3,12 @@ package com.vyrk.tv.ui.overlays
 import com.vyrk.tv.ui.components.focusHalo
 import android.os.Build
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +20,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
@@ -40,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
@@ -84,7 +77,6 @@ import com.vyrk.core.stream.StreamRanker
 import com.vyrk.core.tmdb.Credits
 import com.vyrk.tv.R
 import com.vyrk.tv.player.Playback
-import com.vyrk.tv.player.SourceLine
 import com.vyrk.tv.player.exclusionText
 import com.vyrk.tv.ui.LocalActivity
 import com.vyrk.tv.ui.LocalApp
@@ -100,7 +92,6 @@ import com.vyrk.tv.ui.components.VyrkButton
 import com.vyrk.tv.ui.components.VyrkChip
 import com.vyrk.tv.ui.components.VyrkIconButton
 import com.vyrk.tv.ui.components.WrapRow
-import com.vyrk.tv.ui.components.focusGlow
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
