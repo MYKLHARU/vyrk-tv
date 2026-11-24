@@ -95,8 +95,8 @@ data class DeviceSettings(
     val interfaceSize: String = "MEDIUM",
     /** Soft clicks when moving and selecting with the remote. */
     val navSounds: Boolean = false,
-    /** The sound with VYRK's opening animation. */
-    val introSound: Boolean = true,
+    /** The sound with VYRK's opening animation (TV only). Off unless switched on. */
+    val introSound: Boolean = false,
     val frameRateMatching: Boolean = false,
     /** Play Dolby Vision files with an HDR10 base as HDR10 (more stable on some boxes). */
     val dolbyVisionAsHdr10: Boolean = false,

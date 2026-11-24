@@ -47,6 +47,73 @@ if [[ -n "$APK" ]]; then
 fi
 adbs pm clear "$PKG" >/dev/null || true
 enable_traces
+
+# ---------------------------------------------------------------- the opening (first half only)
+# CI runs with Android's animations off, which skips the opening, so switch the animator on just
+# for this: it must start, play to its end, and skip on OK without that press reaching the
+# welcome screen underneath (its focused button is Use without an account).
+if [[ "${E2E_PART:-all}" != 2 ]]; then
+  intro_events() { local o; o=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true); printf '%s\n' "$o" | grep 'intro:' || true; }
+  wait_intro() {
+    local deadline=$((SECONDS + $2))
+    while (( SECONDS < deadline )); do [[ "$(intro_events)" == *"$1"* ]] && return 0; sleep 0.1; done
+    return 1
+  }
+  # What the app and Android said about it, for a failure.
+  intro_dump() {
+    local o; o=$(adb_run logcat -d -v time 2>/dev/null || true)
+    printf '%s\n' "$o" | grep -E 'VyrkEvent|VyrkIntro|ANR in|AndroidRuntime|EGL|BLASTBufferQueue|SurfaceView|Choreographer' | tail -n 25 | sed 's/^/[e2e]   /' || true
+  }
+  # In slow motion (the animator duration scale stretches it 4×), so the software-rendered
+  # emulator's screenshots land on the moments they name and the skip lands mid-way.
+  adbs settings put global animator_duration_scale 4
+  adb_run logcat -c
+  adbs am start -n "$PKG/.MainActivity" >/dev/null
+  if wait_intro 'intro: first frame' 20; then
+    t0=$SECONDS
+    at() { local wait=$(( $1 - (SECONDS - t0) )); (( wait > 0 )) && sleep "$wait"; return 0; }
+    # A screenshot takes the emulator about 2 s, so these land at about 1.1, 1.8 and 2.9 s in.
+    at 4; shot intro-molten-line
+    at 6; shot intro-gold
+    at 10; shot intro-lockup
+    if wait_intro 'intro: end' 14; then
+      end=$(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //')
+      if [[ "$end" == "end completed"* && "$end" != *skipped_at* ]]; then log "ok: the opening played to its end ($end)"; else fail "the opening didn't play through: $end"; fi
+    else fail "the opening didn't end"; intro_dump; fi
+  else
+    fail "the opening didn't start"; intro_dump
+  fi
+  adbs am force-stop "$PKG"
+  adb_run logcat -c
+  adbs am start -n "$PKG/.MainActivity" >/dev/null
+  if wait_intro 'intro: first frame' 20; then
+    sleep 3
+    adb_run shell input keyevent KEYCODE_DPAD_CENTER
+    if wait_intro 'intro: end' 5; then
+      end=$(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //')
+      if [[ "$end" == *skipped_at* && "$(intro_events)" == *'intro: skip (key DPAD_CENTER)'* ]]; then log "ok: OK skips the opening ($end)"; else fail "OK didn't skip the opening: $end"; fi
+    else fail "OK didn't skip the opening"; intro_dump; fi
+    sleep 1.5
+    ev=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
+    if [[ "$ev" == *'guest: profile'* ]]; then fail "the press that skipped the opening reached the welcome screen"
+    else log "ok: the press that skipped the opening didn't reach the screen underneath"; fi
+    expect '^welcome:guest$' "after a skip, focus is on the welcome screen"
+    # Coming back to VYRK (the process still running) doesn't play it again.
+    adb_run logcat -c
+    adb_run shell input keyevent KEYCODE_HOME
+    sleep 2
+    adbs am start -n "$PKG/.MainActivity" >/dev/null
+    sleep 4
+    if [[ "$(intro_events)" == *'intro: start'* ]]; then fail "the opening played again on coming back to VYRK"
+    else log "ok: coming back to VYRK doesn't play the opening again"; fi
+  else
+    fail "the opening didn't start for the skip check"
+  fi
+  adbs am force-stop "$PKG"
+  adbs settings put global animator_duration_scale 0
+  adbs pm clear "$PKG" >/dev/null || true
+fi
+
 adb_run logcat -c
 adbs am start -n "$PKG/.MainActivity" >/dev/null
 sleep 8

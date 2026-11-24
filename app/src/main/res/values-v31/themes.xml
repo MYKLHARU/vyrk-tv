@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ splash screen: plain near-black with no icon, the first frame of the opening,
+         which then forges the V on it (ui/intro). -->
+    <style name="Theme.Vyrk" parent="Base.Theme.Vyrk">
+        <item name="android:windowSplashScreenBackground">@color/vyrk_launch</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+    </style>
+</resources>

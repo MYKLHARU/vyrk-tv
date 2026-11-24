@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
         // Back arrives through the dispatcher on Android 16; log it for the focus trace.
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (com.vyrk.tv.ui.intro.LaunchIntro.handleBack()) return
                 KeyBus.onKey(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK))
                 isEnabled = false
                 onBackPressedDispatcher.onBackPressed()
@@ -58,8 +59,8 @@ class MainActivity : ComponentActivity() {
             val ready by graph.ready.collectAsState()
             AppRoot(graph = graph, ready = ready, activity = this)
         }
-        // The opening, laid over the app; an opening that can't play is simply skipped.
-        if (savedInstanceState == null) runCatching { com.vyrk.tv.ui.components.LaunchIntro.play(this, phone = com.vyrk.tv.ui.phone.FormFactor.isPhone(this)) }
+        // The opening, laid over the app as it starts (cold starts only); one that can't play is skipped.
+        if (savedInstanceState == null) runCatching { com.vyrk.tv.ui.intro.LaunchIntro.play(this, tv = com.vyrk.tv.ui.phone.FormFactor.isTv(this)) }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -81,6 +82,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // While the opening shows, keys skip it (OK, Enter, Back) or do nothing; none reach the screen underneath.
+        if (com.vyrk.tv.ui.intro.LaunchIntro.handleKey(event)) return true
         // The remote's Search key opens Search and starts listening.
         if (event.keyCode == KeyEvent.KEYCODE_SEARCH) {
             if (event.action == KeyEvent.ACTION_UP) incomingSearch.value = SearchRequest("", voice = true)
