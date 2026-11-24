@@ -32,8 +32,13 @@ import java.util.Locale
 /**
  * mpv (libmpv) behind Media3's [Player] interface: VYRK's backup player for files ExoPlayer can't
  * decode or read. The screen, the media session and the player model use it like ExoPlayer; mpv
- * draws the picture (and embedded subtitles) itself on the PlayerView's surface. mpv calls back on
- * its own thread; everything here runs on the main thread.
+ * draws the picture (and embedded subtitles) itself on the PlayerView's surface.
+ *
+ * The main thread never waits on mpv: libmpv's calls block until its core thread takes them, and
+ * that thread can itself be waiting on the surface, which the main thread is tearing down (an
+ * ANR on leaving the player). So commands go to one worker thread in order, state comes from
+ * observed properties, and detaching the surface waits at most [DETACH_TIMEOUT_MS] (as ExoPlayer
+ * does).
  */
 @OptIn(UnstableApi::class)
 class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePlayer(Looper.getMainLooper()) {
@@ -58,22 +63,44 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
     private var surface: Surface? = null
     private var holder: SurfaceHolder? = null
     private var pendingLoad = false
+    private val worker = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "vyrk-mpv") }
+    // Written by mpv's event thread, read on the main thread.
+    @Volatile private var timePos: Double? = null
+    @Volatile private var cacheAhead = 0.0
+    private var pausedForCache = false
+    private var seeking = false
+    private var videoW = 0L
+    private var videoH = 0L
+    private var videoPar = 1.0
+
+    /** Runs [block] on the worker thread, in order with every other mpv call. */
+    private fun send(block: (MPV) -> Unit) {
+        val m = mpv ?: return
+        runCatching { worker.execute { runCatching { block(m) }.onFailure { Diagnostics.log("player", "mpv: ${it.javaClass.simpleName}") } } }
+    }
 
     private val holderCallback = object : SurfaceHolder.Callback {
         override fun surfaceCreated(h: SurfaceHolder) = attach(h.surface)
         override fun surfaceChanged(h: SurfaceHolder, format: Int, width: Int, height: Int) {
-            mpv?.setPropertyString("android-surface-size", "${width}x$height")
+            send { it.setPropertyString("android-surface-size", "${width}x$height") }
         }
         override fun surfaceDestroyed(h: SurfaceHolder) = detach()
     }
 
     private val observer = object : MPV.EventObserver {
-        override fun eventProperty(property: String) { main.post { onProperty(property) } }
-        override fun eventProperty(property: String, value: Long) { main.post { onProperty(property) } }
+        override fun eventProperty(property: String) {}
+        override fun eventProperty(property: String, value: Long) { main.post { onNumber(property, value.toDouble()) } }
         override fun eventProperty(property: String, value: Boolean) { main.post { onFlag(property, value) } }
-        override fun eventProperty(property: String, value: String) { main.post { onProperty(property) } }
-        override fun eventProperty(property: String, value: Double) { main.post { if (property == "duration") { durationUs = (value * 1_000_000).toLong(); invalidateState() } } }
-        override fun eventProperty(property: String, value: MPVNode) { main.post { onProperty(property) } }
+        override fun eventProperty(property: String, value: String) {}
+        override fun eventProperty(property: String, value: Double) {
+            when (property) {
+                // Every frame: kept for the position supplier, no main-thread work.
+                "time-pos" -> timePos = value
+                "demuxer-cache-duration" -> cacheAhead = value
+                else -> main.post { onNumber(property, value) }
+            }
+        }
+        override fun eventProperty(property: String, value: MPVNode) { if (property == "track-list") main.post { tracks = buildTracks(value); invalidateState() } }
         override fun event(eventId: Int, data: MPVNode) { main.post { onEvent(eventId, data) } }
     }
 
@@ -103,15 +130,9 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
         return b.build()
     }
 
-    private fun positionMs(): Long =
-        mpv?.takeIf { loaded }?.getPropertyDouble("time-pos")?.let { (it * 1000).toLong() } ?: startMs
+    private fun positionMs(): Long = timePos?.takeIf { loaded }?.let { (it * 1000).toLong() } ?: startMs
 
-    private fun bufferedMs(): Long {
-        val m = mpv?.takeIf { loaded } ?: return startMs
-        val pos = positionMs()
-        val ahead = m.getPropertyDouble("demuxer-cache-duration") ?: 0.0
-        return pos + (ahead * 1000).toLong()
-    }
+    private fun bufferedMs(): Long = if (!loaded) startMs else positionMs() + (cacheAhead * 1000).toLong()
 
     /** Request headers for the next file (from the add-on's proxy headers). */
     fun setHeaders(h: Map<String, String>) { headers = h }
@@ -137,22 +158,21 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
 
     override fun handleSetPlayWhenReady(playWhenReady: Boolean): ListenableFuture<*> {
         this.playWhenReady = playWhenReady
-        mpv?.setPropertyBoolean("pause", !playWhenReady)
+        send { it.setPropertyBoolean("pause", !playWhenReady) }
         return Futures.immediateVoidFuture()
     }
 
     override fun handleSeek(mediaItemIndex: Int, positionMs: Long, seekCommand: Int): ListenableFuture<*> {
         val target = if (positionMs == C.TIME_UNSET) 0 else positionMs.coerceAtLeast(0)
-        val m = mpv
-        if (m != null && loaded) {
-            ended = false; buffering = true
-            m.command("seek", String.format(Locale.US, "%.3f", target / 1000.0), "absolute")
+        if (mpv != null && loaded) {
+            ended = false; buffering = true; timePos = target / 1000.0
+            send { it.command("seek", String.format(Locale.US, "%.3f", target / 1000.0), "absolute") }
         } else startMs = target
         return Futures.immediateVoidFuture()
     }
 
     override fun handleStop(): ListenableFuture<*> {
-        mpv?.command("stop")
+        send { it.command("stop") }
         playbackState = Player.STATE_IDLE
         resetFile()
         return Futures.immediateVoidFuture()
@@ -162,10 +182,10 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
         holder?.removeCallback(holderCallback)
         holder = null
         detach()
-        val m = mpv
+        // mpv's shutdown can take a moment (it joins its threads): on the worker, after everything queued.
+        send { it.removeObserver(observer); it.close() }
         mpv = null
-        // mpv's shutdown can take a moment (it joins its threads): off the main thread.
-        if (m != null) Thread({ runCatching { m.removeObserver(observer); m.close() } }, "vyrk-mpv-release").start()
+        worker.shutdown()
         return Futures.immediateVoidFuture()
     }
 
@@ -192,9 +212,8 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
 
     /** Selects an mpv track by the id its [Format] carries ("audio:2", "sub:3"); null turns the type off. */
     fun selectTrack(type: Int, formatId: String?) {
-        val m = mpv ?: return
         val prop = if (type == C.TRACK_TYPE_AUDIO) "aid" else if (type == C.TRACK_TYPE_TEXT) "sid" else return
-        m.setPropertyString(prop, formatId?.substringAfter(':') ?: "no")
+        send { it.setPropertyString(prop, formatId?.substringAfter(':') ?: "no") }
     }
 
     private fun useHolder(h: SurfaceHolder) {
@@ -207,21 +226,19 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
 
     private fun attach(s: Surface) {
         surface = s
-        val m = mpv ?: return
-        m.attachSurface(s)
-        m.setOptionString("force-window", "yes")
-        m.setPropertyString("vo", VO)
+        if (mpv == null) return
+        send { it.attachSurface(s); it.setOptionString("force-window", "yes"); it.setPropertyString("vo", VO) }
         if (pendingLoad) load()
     }
 
+    /** mpv lets go of the surface before it goes; waits at most [DETACH_TIMEOUT_MS], then carries on. */
     private fun detach() {
-        val m = mpv
-        if (m != null && surface != null) {
-            m.setPropertyString("vo", "null")
-            m.setOptionString("force-window", "no")
-            m.detachSurface()
-        }
+        val had = surface != null
         surface = null
+        if (!had || mpv == null) return
+        val done = java.util.concurrent.CountDownLatch(1)
+        send { m -> try { m.setPropertyString("vo", "null"); m.setOptionString("force-window", "no"); m.detachSurface() } finally { done.countDown() } }
+        if (!done.await(DETACH_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS)) Diagnostics.log("player", "mpv: surface detach timed out")
     }
 
     private fun ensureMpv(): MPV? {
@@ -250,54 +267,63 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
                 setOptionString("msg-level", "all=warn")
                 setOptionString("sid", "no")
                 addObserver(observer)
+                observeProperty("time-pos", MPV.mpvFormat.MPV_FORMAT_DOUBLE)
+                observeProperty("demuxer-cache-duration", MPV.mpvFormat.MPV_FORMAT_DOUBLE)
                 observeProperty("duration", MPV.mpvFormat.MPV_FORMAT_DOUBLE)
                 observeProperty("paused-for-cache", MPV.mpvFormat.MPV_FORMAT_FLAG)
                 observeProperty("seeking", MPV.mpvFormat.MPV_FORMAT_FLAG)
                 observeProperty("eof-reached", MPV.mpvFormat.MPV_FORMAT_FLAG)
-                observeProperty("track-list", MPV.mpvFormat.MPV_FORMAT_NONE)
-                observeProperty("video-params", MPV.mpvFormat.MPV_FORMAT_NONE)
+                observeProperty("track-list", MPV.mpvFormat.MPV_FORMAT_NODE)
+                observeProperty("video-params/w", MPV.mpvFormat.MPV_FORMAT_INT64)
+                observeProperty("video-params/h", MPV.mpvFormat.MPV_FORMAT_INT64)
+                observeProperty("video-params/par", MPV.mpvFormat.MPV_FORMAT_DOUBLE)
             }.also { mpv = it; surface?.let(::attach) }
         }.onFailure { Diagnostics.log("player", "mpv failed to start: ${it.javaClass.simpleName}") }.getOrNull()
     }
 
     private fun load() {
-        val m = mpv ?: return
+        if (mpv == null) return
         val url = item?.localConfiguration?.uri?.toString() ?: return
         pendingLoad = false
+        timePos = null; cacheAhead = 0.0
         // mpv's list option: "Name: value" entries separated by commas (commas inside values escaped).
-        m.setPropertyString("http-header-fields", headers.entries.joinToString(",") { (k, v) -> "$k: ${v.replace(",", "\\,")}" })
-        m.setPropertyString("start", if (startMs > 0) String.format(Locale.US, "+%.3f", startMs / 1000.0) else "none")
-        m.setPropertyBoolean("pause", !playWhenReady)
-        m.command("loadfile", url, "replace")
+        val fields = headers.entries.joinToString(",") { (k, v) -> "$k: ${v.replace(",", "\\,")}" }
+        val start = if (startMs > 0) String.format(Locale.US, "+%.3f", startMs / 1000.0) else "none"
+        val pause = !playWhenReady
+        send { m ->
+            m.setPropertyString("http-header-fields", fields)
+            m.setPropertyString("start", start)
+            m.setPropertyBoolean("pause", pause)
+            m.command("loadfile", url, "replace")
+        }
         Diagnostics.log("player", "mpv: loading")
     }
 
     private fun resetFile() {
         loaded = false; firstFrameShown = false; firstFramePending = false; buffering = false; ended = false
         error = null; durationUs = C.TIME_UNSET; tracks = Tracks.EMPTY; videoSize = VideoSize.UNKNOWN
+        pausedForCache = false; seeking = false; videoW = 0; videoH = 0; videoPar = 1.0
     }
 
     private fun onFlag(property: String, value: Boolean) {
         when (property) {
-            "paused-for-cache", "seeking" -> buffering = value || (mpv?.getPropertyBoolean("paused-for-cache") == true)
+            "paused-for-cache" -> { pausedForCache = value; buffering = value || seeking }
+            "seeking" -> { seeking = value; buffering = value || pausedForCache }
             "eof-reached" -> ended = value && loaded
             else -> return
         }
         invalidateState()
     }
 
-    private fun onProperty(property: String) {
-        val m = mpv ?: return
+    private fun onNumber(property: String, value: Double) {
         when (property) {
-            "track-list" -> tracks = buildTracks(m.getPropertyNode("track-list"))
-            "video-params" -> {
-                val w = m.getPropertyInt("video-params/w") ?: 0
-                val h = m.getPropertyInt("video-params/h") ?: 0
-                val par = m.getPropertyDouble("video-params/par")?.toFloat()?.takeIf { it > 0 } ?: 1f
-                videoSize = if (w > 0 && h > 0) VideoSize(w, h, par) else VideoSize.UNKNOWN
-            }
+            "duration" -> durationUs = (value * 1_000_000).toLong()
+            "video-params/w" -> videoW = value.toLong()
+            "video-params/h" -> videoH = value.toLong()
+            "video-params/par" -> videoPar = value.takeIf { it > 0 } ?: 1.0
             else -> return
         }
+        if (property.startsWith("video-params")) videoSize = if (videoW > 0 && videoH > 0) VideoSize(videoW.toInt(), videoH.toInt(), videoPar.toFloat()) else VideoSize.UNKNOWN
         invalidateState()
     }
 
@@ -305,7 +331,7 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
         when (id) {
             MPV.mpvEvent.MPV_EVENT_FILE_LOADED -> { loaded = true; buffering = true; Diagnostics.log("player", "mpv: file loaded") }
             MPV.mpvEvent.MPV_EVENT_PLAYBACK_RESTART -> {
-                buffering = mpv?.getPropertyBoolean("paused-for-cache") == true
+                buffering = pausedForCache
                 if (!firstFrameShown && loaded) { firstFrameShown = true; firstFramePending = true }
             }
             MPV.mpvEvent.MPV_EVENT_END_FILE -> {
@@ -325,6 +351,7 @@ class MpvPlayer(context: Context, private val userAgent: String) : SimpleBasePla
         /** libmpv needs Android 7; VYRK still runs on 6, without the backup player. */
         val supported: Boolean get() = Build.VERSION.SDK_INT >= 24
         private const val VO = "gpu"
+        private const val DETACH_TIMEOUT_MS = 500L
         private const val UID = "vyrk-mpv"
 
         private val COMMANDS = Player.Commands.Builder().addAll(
