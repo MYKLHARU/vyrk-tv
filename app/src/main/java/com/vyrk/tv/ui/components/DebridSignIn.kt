@@ -152,7 +152,8 @@ fun TorBoxKeyEntry(ui: DebridSignInUi) {
 /** "⚡ TB" on a torrent source the debrid service has ready, "RD" when it can't say; null for other sources. */
 @Composable
 fun debridTag(r: com.vyrk.core.stream.Ranked): String? {
-    val short = com.vyrk.tv.ui.LocalGraph.current.debrid.short ?: return null
+    // The player's screens don't provide LocalGraph: the app's graph works everywhere.
+    val short = com.vyrk.tv.VyrkApp.graph(androidx.compose.ui.platform.LocalContext.current).debrid.short ?: return null
     if (r.info.delivery != com.vyrk.core.stream.Delivery.TORRENT || r.candidate.stream.url != null) return null
     return if (r.info.cached == true) "⚡ $short" else short
 }

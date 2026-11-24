@@ -407,6 +407,7 @@ class PlayerModel(
         val settling = current
         scope.launch { delay(FREEZE_GRACE_MS); if (current === settling && firstFrame) onSourceSettled?.invoke() }
         Diagnostics.log("player", "first frame ${engine.bufferDiagnostics()}")
+        vyrkEvent("first_frame ${if (engine.onBackup) "mpv" else "exo"}")
         resetProgressClock()
         firstFrameJob?.cancel()
         progressTo(1f)
