@@ -5,7 +5,7 @@ All user-visible changes. Versions follow `vX.Y.Z` tags.
 ## v0.1.63
 
 - A new opening, forged: on dark hammered iron lit by a forge, a line of molten gold runs round the V, fills it and cools into brushed gold with a single pulse of light; the V settles, VYRK and "Forged for Streaming" appear beneath it, and it dissolves into the app. About 3.5 seconds, on every cold start (the short sting on later launches is gone); not when you come back to VYRK or turn the phone.
-- It's drawn on its own surface and thread, so it stays smooth while Home or the sign-in screen loads underneath, ready the moment it ends.
+- It's drawn with OpenGL on its own surface and thread, so it stays smooth while Home or the sign-in screen loads underneath, ready the moment it ends. A device that can't keep up gets a lighter version (no smoke) rather than a stutter.
 - OK, Enter or Back (or a tap) skips it straight away; that press does nothing on the screen underneath, and the remote's focus is where the screen put it.
 - Android 12 and later show a plain dark splash screen that leads into it, instead of the icon.
 - Still skipped with Reduce motion and when Android's animations are off, and now with a screen reader too. To watch it in slow motion, raise Developer options › Animator duration scale.

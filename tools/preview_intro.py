@@ -109,10 +109,9 @@ EMBERS = [
 # Smoke: centre x, y (fractions), width (fraction of the larger side), drift x, y (fractions per
 # second), rotation (degrees per second), opacity, colour, layer.
 SMOKE = [
-    (0.30, 0.70, 0.95, 0.006, -0.018, 1.5, 0.10, "#8A7C70", "back"),
-    (0.72, 0.62, 0.85, -0.008, -0.014, -1.2, 0.08, "#857668", "back"),
-    (0.50, 0.58, 0.70, 0.003, -0.020, 0.8, 0.09, "#B07A52", "back"),
-    (0.55, 0.96, 1.10, -0.010, -0.024, -0.6, 0.05, "#7A6C62", "front"),
+    (0.32, 0.68, 0.62, 0.006, -0.018, 1.5, 0.15, "#8A7C70", "back"),
+    (0.68, 0.60, 0.56, -0.008, -0.014, -1.2, 0.13, "#B07A52", "back"),
+    (0.52, 0.95, 0.72, -0.010, -0.024, -0.6, 0.08, "#7A6C62", "front"),
 ]
 
 
@@ -265,8 +264,8 @@ def draw_emblem(frame, t, w, h):
     gold_amount = progress(t, T["COOL_START"], T["COOL_END"])
     tracing = trace_blades(t)
     # Light the molten metal throws on the iron, and the completing pulse.
-    sprite(frame, "intro_glow.webp", cx, cy + 6 * s, 260 * s, 230 * s,
-           0.10 * min(1, tracing * 3) + 0.34 * molten_amount + 0.10 * gold_amount, hexc("#FF7A26"))
+    sprite(frame, "intro_glow.webp", cx, cy + 6 * s, 210 * s, 185 * s,
+           0.12 * min(1, tracing * 3) + 0.40 * molten_amount + 0.12 * gold_amount, hexc("#FF7A26"))
     pl = pulse(t)
     if pl > 0:
         sprite(frame, "intro_glow.webp", cx, cy, 250 * s, 250 * s, 0.30 * pl, hexc("#FFC878"))
@@ -299,32 +298,52 @@ def draw_emblem(frame, t, w, h):
             u = (bx + by) / 1.4142
             band = np.exp(-((u - band_c) / 7.0) ** 2) * 0.55 * math.sin(math.pi * g)
             frame.blend(x0, y0, np.array(hexc("#FFF0C8"), np.float32), m * band, "add")
-    # The molten line.
+    # The molten line: distance to the part of each outline run so far, hottest near its head (ForgedScene TRACE).
     outline_alpha = 1 - progress(t, T["COOL_START"], T["COOL_END"] + 0.1)
     if tracing > 0 and outline_alpha > 0:
-        lw = s
-        segs_old, segs_hot, heads = [], [], []
-        for pts, p in ((LEFT, trace_blades(t)), (RIGHT, trace_blades(t)), (NOTCH, trace_notch(t))):
-            if p <= 0:
+        m = 10
+        x0, y0 = int(ox - m * s), int(oy - m * s)
+        wpx, hpx = int((100 + 2 * m) * s) + 2, int((100 + 2 * m) * s) + 2
+        yy, xx = np.mgrid[0:hpx, 0:wpx].astype(np.float32)
+        px, py = (xx + x0 + 0.5 - ox) / s, (yy + y0 + 0.5 - oy) / s
+        col = np.zeros((hpx, wpx, 3), np.float32)
+
+        def stroke(dist, width):
+            return np.clip((width * 0.5 - dist) * s + 0.5, 0, 1)
+
+        def glow(r):
+            x = np.clip(1 - r, 0, 1)
+            return x ** 2.4 * (0.7 + 0.3 * np.exp(-12 * r * r))
+
+        for pts, pr in ((LEFT, trace_blades(t)), (RIGHT, trace_blades(t)), (NOTCH, trace_notch(t))):
+            if pr <= 0:
                 continue
-            poly = [(ox + x * s, oy + y * s) for x, y in trace_order(pts)]
+            poly = trace_order(pts)
             L = perimeter(poly)
-            d = p * L
-            hot = 0.16 * L
-            segs_old.append(walk(poly, 0, max(0.0, d - hot)))
-            segs_hot.append(walk(poly, max(0.0, d - hot), d))
-            if p < 1:
-                heads.append(walk(poly, d - 0.001, d)[-1])
-        x0, y0 = int(ox - 6 * s), int(oy - 6 * s)
-        wpx, hpx = int(112 * s), int(112 * s)
-        for segs, width, col, a in ((segs_old, 2.2 * lw, "#C8461A", 0.16), (segs_old, 0.7 * lw, "#E0662A", 0.55),
-                                    (segs_hot, 3.4 * lw, "#FF6A1C", 0.24), (segs_hot, 1.4 * lw, "#FFA040", 0.65),
-                                    (segs_hot, 0.5 * lw, "#FFF0D0", 0.95)):
-            m = lines_mask(segs, x0, y0, wpx, hpx, width)
-            frame.blend(x0, y0, np.array(hexc(col), np.float32), m * a * outline_alpha, "add")
-        for hx, hy in heads:
-            sprite(frame, "intro_glow.webp", hx, hy, 14 * s, 14 * s, 0.9, hexc("#FFB060"))
-            sprite(frame, "intro_glow.webp", hx, hy, 4 * s, 4 * s, 1.0, hexc("#FFF4DC"))
+            run = pr * L
+            best = np.full(px.shape, 1000.0, np.float32)
+            age = np.zeros(px.shape, np.float32)
+            s0 = 0.0
+            for a_, b_ in zip(poly, poly[1:] + poly[:1]):
+                ln = math.dist(a_, b_)
+                if s0 < run:
+                    abx, aby = b_[0] - a_[0], b_[1] - a_[1]
+                    tt = np.clip(((px - a_[0]) * abx + (py - a_[1]) * aby) / (abx * abx + aby * aby), 0, min(1.0, (run - s0) / ln))
+                    dist = np.hypot(px - (a_[0] + abx * tt), py - (a_[1] + aby * tt))
+                    closer = dist < best
+                    best = np.where(closer, dist, best)
+                    age = np.where(closer, run - (s0 + tt * ln), age)
+                s0 += ln
+            heat = np.clip(1 - age / (0.16 * L), 0, 1)[..., None]
+            cooled = np.array(hexc("#C8461A")) * (0.16 * stroke(best, 2.2))[..., None] + np.array(hexc("#E0662A")) * (0.55 * stroke(best, 0.7))[..., None]
+            hot = (np.array(hexc("#FF6A1C")) * (0.24 * stroke(best, 3.4))[..., None] + np.array(hexc("#FFA040")) * (0.65 * stroke(best, 1.4))[..., None]
+                   + np.array(hexc("#FFF0D0")) * (0.95 * stroke(best, 0.5))[..., None])
+            col += cooled * (1 - heat) + hot * heat
+            if pr < 1:
+                hx, hy = walk(poly, run - 0.001, run)[-1]
+                rr = np.hypot(px - hx, py - hy)
+                col += np.array(hexc("#FFB060")) * (0.9 * glow(rr / 7.0))[..., None] + np.array(hexc("#FFF4DC")) * glow(rr / 2.0)[..., None]
+        frame.blend(x0, y0, np.minimum(col * outline_alpha, 1), np.ones(px.shape, np.float32), "add")
 
 
 FONT_WORD = None
@@ -436,7 +455,7 @@ def smoke(frame, t, w, h, layer):
             continue
         x, y = pushed((cx + dx * t) * w, (cy + dy * t) * h, w, h, k)
         sw = size * big * (1 + 0.05 * t)
-        sprite(frame, "intro_smoke.webp", x, y, sw, sw * 0.75, 1.6 * op * (0.3 + 0.7 * reveal(t)), hexc(col), mode="over", rot=rot * t)
+        sprite(frame, "intro_smoke.webp", x, y, sw, sw * 0.5, op * (0.3 + 0.7 * reveal(t)), hexc(col), mode="over", rot=rot * t)
 
 
 def vignette(frame, w, h):
@@ -460,8 +479,6 @@ def render(t, w, h):
     a = np.asarray(img).astype(np.float32) / 255
     flick = 1 + 0.03 * math.sin(2 * math.pi * 1.7 * t) + 0.02 * math.sin(2 * math.pi * 4.3 * t + 1)
     f.blend(int(w / 2 - a.shape[1] / 2), int(h / 2 - a.shape[0] / 2), a, np.full(a.shape[:2], min(1.0, reveal(t) * flick), np.float32))
-    # Haze over the forge.
-    sprite(f, "intro_glow.webp", w / 2, h * 0.64, 1.3 * max(w, h), 0.9 * max(w, h), 0.035 * reveal(t) * flick, hexc("#FF7A2A"))
     vignette(f, w, h)
     smoke(f, t, w, h, "back")
     embers(f, t, w, h, "back")

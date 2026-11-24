@@ -12,8 +12,9 @@ core/brand/IntroTimeline.kt for the sequence and ui/intro/ForgedScene.kt for how
   res/raw/intro.wav                     the optional sound (off unless Settings › Opening sound)
 
 The V's geometry is read from site/img/mark.svg, the brand's own mark, so the textures line up
-with the paths the app draws (core/brand/Emblem.kt). The textures are fixed (seeded), so every
-run gives the same files. Synthesised here; no samples, photos or fonts.
+with the shapes the app draws (core/brand/Emblem.kt). All but the iron are power-of-two sizes,
+for OpenGL ES 2 mipmaps. The textures are fixed (seeded), so every run gives the same files.
+Synthesised here; no samples, photos or fonts.
 
 Run from the repository root:  python3 tools/gen_intro.py
 Then look at it:               python3 tools/preview_intro.py
@@ -286,12 +287,12 @@ def molten(size=512):
 
 
 # ------------------------------------------------------------------ smoke, glow, bokeh
-def smoke(w=512, h=384):
+def smoke(w=512, h=256):
     rng = np.random.default_rng(41)
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
     ex, ey = (xx - w / 2) / (w * 0.46), (yy - h / 2) / (h * 0.42)
     shape = np.exp(-2.6 * (ex * ex + ey * ey))
-    billow = 0.5 + 0.5 * fbm(h, w, 110, 5, rng)
+    billow = 0.5 + 0.5 * fbm(h, w, 90, 5, rng)
     a = np.clip((billow - 0.38) * 2.2, 0, 1) ** 1.3 * shape
     save("intro_smoke.webp", np.ones((h, w, 3), np.float32), a / a.max(), quality=80, rng=rng)
 
@@ -303,7 +304,7 @@ def glow(size=256):
     save("intro_glow.webp", np.ones((size, size, 3), np.float32), a / a.max(), lossless=True)
 
 
-def bokeh(size=96):
+def bokeh(size=128):
     yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
     r = np.sqrt((xx - size / 2 + 0.5) ** 2 + (yy - size / 2 + 0.5) ** 2) / (size / 2 - 3)
     disc = np.clip((1 - r) * 9, 0, 1)

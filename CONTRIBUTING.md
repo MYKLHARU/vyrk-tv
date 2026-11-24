@@ -27,7 +27,7 @@ Wording: short, plain and specific; sentence case for buttons ("Add Top 10 rows"
 
 ## The opening
 
-The opening is drawn by `ui/intro/ForgedScene.kt` from the textures and sound made by `tools/gen_intro.py`; its V comes from `core/brand/Emblem.kt` (the brand's own `site/img/mark.svg`).
+The opening is drawn with OpenGL ES 2 by `ui/intro/ForgedScene.kt` (on its own thread, `ForgedIntroView`) from the textures and sound made by `tools/gen_intro.py`; its V comes from `core/brand/Emblem.kt` (the brand's own `site/img/mark.svg`).
 
 - Timing: every moment is a constant in `core/brand/IntroTimeline.kt` (seconds from the first frame), with the sequence written out at the top. Change them there; `:core:test` checks they still run in order and fit.
 - Preview without a device: `python3 tools/preview_intro.py` writes frames at key moments to `build/intro-preview/`; `--video` renders the whole thing (needs ffmpeg), `--size 1080x2400` a phone held upright. It reads the timing from `IntroTimeline.kt` and mirrors `ForgedScene.kt`, so keep the two in step.

@@ -59,6 +59,11 @@ if [[ "${E2E_PART:-all}" != 2 ]]; then
     while (( SECONDS < deadline )); do [[ "$(intro_events)" == *"$1"* ]] && return 0; sleep 0.1; done
     return 1
   }
+  # What the app and Android said about it, for a failure.
+  intro_dump() {
+    local o; o=$(adb_run logcat -d -v time 2>/dev/null || true)
+    printf '%s\n' "$o" | grep -E 'VyrkEvent|VyrkIntro|ANR in|AndroidRuntime|EGL|BLASTBufferQueue|SurfaceView|Choreographer' | tail -n 25 | sed 's/^/[e2e]   /' || true
+  }
   adbs settings put global animator_duration_scale 1
   adb_run logcat -c
   adbs am start -n "$PKG/.MainActivity" >/dev/null
@@ -67,9 +72,9 @@ if [[ "${E2E_PART:-all}" != 2 ]]; then
     sleep 0.5; shot intro-gold
     sleep 0.8; shot intro-lockup
     if wait_intro 'intro: end' 8; then log "ok: the opening played ($(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //'))"
-    else fail "the opening didn't end ($(intro_events | tail -n 3 | tr '\n' ' '))"; fi
+    else fail "the opening didn't end"; intro_dump; fi
   else
-    fail "the opening didn't start ($(intro_events | tail -n 3 | tr '\n' ' '))"
+    fail "the opening didn't start"; intro_dump
   fi
   adbs am force-stop "$PKG"
   adb_run logcat -c
@@ -78,7 +83,7 @@ if [[ "${E2E_PART:-all}" != 2 ]]; then
     sleep 0.8
     adb_run shell input keyevent KEYCODE_DPAD_CENTER
     if wait_intro 'intro: end' 4 && [[ "$(intro_events)" == *'intro: skip (key DPAD_CENTER)'* ]]; then log "ok: OK skips the opening ($(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //'))"
-    else fail "OK didn't skip the opening ($(intro_events | tail -n 3 | tr '\n' ' '))"; fi
+    else fail "OK didn't skip the opening"; intro_dump; fi
     sleep 1.5
     ev=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
     if [[ "$ev" == *'guest: profile'* ]]; then fail "the press that skipped the opening reached the welcome screen"
