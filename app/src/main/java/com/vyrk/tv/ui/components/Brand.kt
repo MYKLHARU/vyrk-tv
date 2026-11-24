@@ -25,33 +25,27 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.vyrk.core.brand.Emblem
 import com.vyrk.tv.ui.theme.Vyrk
 
 /**
  * VYRK mark: an angular V built from two faceted blades meeting at a point, inspired by
- * Norse knotwork geometry. Original vector, drawn in code (same paths as res/drawable/ic_vyrk_mark.xml).
+ * Norse knotwork geometry. Its geometry is [Emblem] (the same as res/drawable/ic_launcher.xml).
  */
 @Composable
 fun VyrkMark(size: Dp, accent: Color = Vyrk.colors.accent, modifier: Modifier = Modifier, highlight: Color = Color.White) {
     Canvas(modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
-        fun p(x: Float, y: Float) = Offset(x / 100f * w, y / 100f * h)
-        val left = Path().apply {
-            moveTo(p(8f, 14f).x, p(8f, 14f).y); lineTo(p(30f, 14f).x, p(30f, 14f).y)
-            lineTo(p(54f, 70f).x, p(54f, 70f).y); lineTo(p(50f, 88f).x, p(50f, 88f).y); close()
+        fun p(pt: Emblem.Point) = Offset(pt.x / 100f * w, pt.y / 100f * h)
+        fun path(pts: List<Emblem.Point>) = Path().apply {
+            moveTo(p(pts[0]).x, p(pts[0]).y)
+            for (pt in pts.drop(1)) lineTo(p(pt).x, p(pt).y)
+            close()
         }
-        val right = Path().apply {
-            moveTo(p(92f, 14f).x, p(92f, 14f).y); lineTo(p(70f, 14f).x, p(70f, 14f).y)
-            lineTo(p(56f, 47f).x, p(56f, 47f).y); lineTo(p(63f, 63f).x, p(63f, 63f).y); close()
-        }
-        val rune = Path().apply { // inner facet, like a rune notch
-            moveTo(p(40f, 14f).x, p(40f, 14f).y); lineTo(p(60f, 14f).x, p(60f, 14f).y)
-            lineTo(p(50f, 36f).x, p(50f, 36f).y); close()
-        }
-        drawPath(left, Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.75f)), p(8f, 14f), p(50f, 88f)))
-        drawPath(right, Brush.linearGradient(listOf(highlight, accent), p(92f, 14f), p(60f, 60f)))
-        drawPath(rune, accent.copy(alpha = 0.55f))
+        drawPath(path(Emblem.LEFT), Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.75f)), p(Emblem.LEFT[0]), p(Emblem.LEFT[3])))
+        drawPath(path(Emblem.RIGHT), Brush.linearGradient(listOf(highlight, accent), p(Emblem.RIGHT[0]), Offset(0.60f * w, 0.60f * h)))
+        drawPath(path(Emblem.NOTCH), accent.copy(alpha = 0.55f)) // inner facet, like a rune notch
     }
 }
 

@@ -53,7 +53,7 @@ fun AppRoot(graph: AppGraph, ready: Boolean, activity: MainActivity) {
     val scope = rememberCoroutineScope()
     // The opening plays before these settings load; it reads this copy of them next time.
     LaunchedEffect(settings?.reduceMotion, device.introSound) {
-        if (settings != null) com.vyrk.tv.ui.components.IntroPrefs.mirror(activity, settings.reduceMotion, device.introSound)
+        if (settings != null) com.vyrk.tv.ui.intro.IntroPrefs.mirror(activity, settings.reduceMotion, device.introSound)
     }
 
     // Startup routing.

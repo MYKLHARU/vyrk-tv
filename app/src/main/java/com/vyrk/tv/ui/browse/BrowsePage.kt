@@ -182,9 +182,9 @@ fun BrowsePage(
         }
     }
     val introContext = androidx.compose.ui.platform.LocalContext.current
-    // Home starts on the title the opening's V showed (the one it featured last time).
+    // Home starts on the title it featured last time, so its picture can show at once.
     LaunchedEffect(heroCandidates.map { it.id }) {
-        model.lockHero(if (isHome) com.vyrk.tv.ui.components.IntroPrefs.preferFeatured(introContext, heroCandidates) { it.id } else heroCandidates)
+        model.lockHero(if (isHome) com.vyrk.tv.ui.intro.IntroPrefs.preferFeatured(introContext, heroCandidates) { it.id } else heroCandidates)
     }
     val heroItems = model.heroItems.ifEmpty { heroCandidates }
     val heroIndex = model.heroIndex.coerceIn(0, (heroItems.size - 1).coerceAtLeast(0))
@@ -208,7 +208,7 @@ fun BrowsePage(
     val heroBackdrop = heroArt.backdrops.firstOrNull()
     LaunchedEffect(isHome, active, heroEnabled, heroMeta?.id, heroBackdrop) {
         if (isHome && active && heroEnabled && heroMeta != null && heroBackdrop != null)
-            com.vyrk.tv.ui.components.IntroPrefs.setFeatured(introContext, heroMeta.id, com.vyrk.core.art.Artwork.titleKey(heroMeta.type, heroMeta.id), heroBackdrop)
+            com.vyrk.tv.ui.intro.IntroPrefs.setFeatured(introContext, heroMeta.id, com.vyrk.core.art.Artwork.titleKey(heroMeta.type, heroMeta.id), heroBackdrop)
     }
     LaunchedEffect(active, shownBackdrop) { if (active && shownBackdrop != null) app.backdrop = shownBackdrop }
     // The hero keeps its slot while its titles load. Inserting it later above rows that are
@@ -344,9 +344,9 @@ fun BrowsePage(
         // page's: a plain height() was, which left the bottom bar-height of the screen uncovered with
         // a hard edge above the last row.
         val wallpaperMeta = if (headerShown) settledPoster else heroMeta
-        // While Home's titles load, keep the picture the opening ended on behind it; it's the same
+        // While Home's titles load, show last time's featured picture behind it; it's the same
         // title Home then starts on, so the wallpaper simply stays.
-        val introPicture = remember { com.vyrk.tv.ui.components.IntroPrefs.featured(introContext) }
+        val introPicture = remember { com.vyrk.tv.ui.intro.IntroPrefs.featured(introContext) }
         val introWall = introPicture?.takeIf { isHome && heroPending && wallpaperMeta == null }
         val wallKey = introWall?.key ?: wallpaperMeta?.let { com.vyrk.core.art.Artwork.titleKey(it.type, it.id) }
         val wallUrls = introWall?.let { listOf(it.backdrop) } ?: wallpaper

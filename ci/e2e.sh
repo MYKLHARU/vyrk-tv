@@ -47,6 +47,51 @@ if [[ -n "$APK" ]]; then
 fi
 adbs pm clear "$PKG" >/dev/null || true
 enable_traces
+
+# ---------------------------------------------------------------- the opening (first half only)
+# CI runs with Android's animations off, which skips the opening, so switch the animator on just
+# for this: it must start, play to its end, and skip on OK without that press reaching the
+# welcome screen underneath (its focused button is Use without an account).
+if [[ "${E2E_PART:-all}" != 2 ]]; then
+  intro_events() { local o; o=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true); printf '%s\n' "$o" | grep 'intro:' || true; }
+  wait_intro() {
+    local deadline=$((SECONDS + $2))
+    while (( SECONDS < deadline )); do [[ "$(intro_events)" == *"$1"* ]] && return 0; sleep 0.1; done
+    return 1
+  }
+  adbs settings put global animator_duration_scale 1
+  adb_run logcat -c
+  adbs am start -n "$PKG/.MainActivity" >/dev/null
+  if wait_intro 'intro: first frame' 20; then
+    sleep 1.0; shot intro-forging
+    sleep 0.5; shot intro-gold
+    sleep 0.8; shot intro-lockup
+    if wait_intro 'intro: end' 8; then log "ok: the opening played ($(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //'))"
+    else fail "the opening didn't end ($(intro_events | tail -n 3 | tr '\n' ' '))"; fi
+  else
+    fail "the opening didn't start ($(intro_events | tail -n 3 | tr '\n' ' '))"
+  fi
+  adbs am force-stop "$PKG"
+  adb_run logcat -c
+  adbs am start -n "$PKG/.MainActivity" >/dev/null
+  if wait_intro 'intro: first frame' 20; then
+    sleep 0.8
+    adb_run shell input keyevent KEYCODE_DPAD_CENTER
+    if wait_intro 'intro: end' 4 && [[ "$(intro_events)" == *'intro: skip (key DPAD_CENTER)'* ]]; then log "ok: OK skips the opening ($(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //'))"
+    else fail "OK didn't skip the opening ($(intro_events | tail -n 3 | tr '\n' ' '))"; fi
+    sleep 1.5
+    ev=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
+    if [[ "$ev" == *'guest: profile'* ]]; then fail "the press that skipped the opening reached the welcome screen"
+    else log "ok: the press that skipped the opening didn't reach the screen underneath"; fi
+    expect '^welcome:guest$' "after a skip, focus is on the welcome screen"
+  else
+    fail "the opening didn't start for the skip check"
+  fi
+  adbs am force-stop "$PKG"
+  adbs settings put global animator_duration_scale 0
+  adbs pm clear "$PKG" >/dev/null || true
+fi
+
 adb_run logcat -c
 adbs am start -n "$PKG/.MainActivity" >/dev/null
 sleep 8

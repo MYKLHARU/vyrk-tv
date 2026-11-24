@@ -41,6 +41,7 @@ not run yet.
 | Requirement | Where | Status | Evidence |
 |---|---|---|---|
 | VYRK name, angular-V mark, wordmark, TV banner as original vectors | `res/drawable`, `ui/components/Brand.kt` | Done | showcase |
+| Opening on a cold start (about 3.5 s): molten gold runs round the V on dark iron, fills it and cools to brushed gold, one pulse; the V settles, VYRK and "Forged for Streaming" appear, then it dissolves into the app. Drawn on its own surface and thread (hardware canvas), so the app starts and loads underneath without slowing it. OK, Enter, Back or a tap skips it and never reaches the screen underneath; focus stays with the app. Not on resume or rotation. Off with Reduce motion, Android's animations off or a screen reader; slow motion with Developer options › Animator duration scale. Plain near-black splash (Android 12+) leading into it. Sound off unless Settings › Opening sound (TV). Timing in one place | `ui/intro`, `core/brand/IntroTimeline.kt`, `core/brand/Emblem.kt`, `tools/gen_intro.py`, `tools/preview_intro.py` | Built | core (timing, geometry against the brand mark); E2E (plays, OK skips without pressing Use without an account, focus after) |
 | Obsidian #0B141D / frost #A9E1F3 palette, Plus Jakarta Sans bundled | `ui/theme/Theme.kt`, `res/font` | Done | showcase |
 | Package `com.vyrk.tv`, GPL-3.0, minSdk 23, per-ABI + universal APKs | `app/build.gradle.kts`, `LICENSE` | Done | local release build |
 | Two modules: pure-Kotlin `core`, Android `app` | `settings.gradle.kts` | Done | build |
