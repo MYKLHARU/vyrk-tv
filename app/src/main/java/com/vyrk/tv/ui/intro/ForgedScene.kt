@@ -602,7 +602,7 @@ internal class ForgedScene(private val context: Context) {
             check(ok[0] != 0) { "intro shader link: ${GL.glGetProgramInfoLog(id)}" }
             aPos = GL.glGetAttribLocation(id, "aPos")
             aUv = GL.glGetAttribLocation(id, "aUv")
-            for (name in uniforms + arrayOf("uRes", "uZoom", "uZoomTo")) locations[name] = GL.glGetUniformLocation(id, name)
+            for (name in uniforms.toList() + listOf("uRes", "uZoom", "uZoomTo")) locations[name] = GL.glGetUniformLocation(id, name)
         }
 
         fun use() = GL.glUseProgram(id)
