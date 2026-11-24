@@ -72,20 +72,14 @@ if [[ "${E2E_PART:-all}" != 2 ]]; then
   if wait_intro 'intro: first frame' 20; then
     t0=$SECONDS
     at() { local wait=$(( $1 - (SECONDS - t0) )); (( wait > 0 )) && sleep "$wait"; return 0; }
-    at 4; shot intro-molten-line     # about 1.0 s into the opening
-    at 5; shot intro-pour            # 1.3 s
-    at 7; shot intro-pulse           # 1.8 s
-    at 9; shot intro-wordmark        # 2.3 s
-    at 12; shot intro-lockup         # 3.0 s
+    # A screenshot takes the emulator about 2 s, so these land at about 1.1, 1.8 and 2.9 s in.
+    at 4; shot intro-molten-line
+    at 6; shot intro-gold
+    at 10; shot intro-lockup
     if wait_intro 'intro: end' 14; then
       end=$(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //')
       if [[ "$end" == "end completed"* && "$end" != *skipped_at* ]]; then log "ok: the opening played to its end ($end)"; else fail "the opening didn't play through: $end"; fi
     else fail "the opening didn't end"; intro_dump; fi
-    # TEMP (review): a contact sheet of the shots above, in the log.
-    if command -v ffmpeg >/dev/null; then
-      sheet=$(ls "$OUT"/*-intro-*.png | head -n 5)
-      ffmpeg -loglevel error -y $(for f in $sheet; do printf -- '-i %s ' "$f"; done) -filter_complex "$(n=0; for f in $sheet; do printf '[%d:v]scale=640:-1[v%d];' $n $n; n=$((n+1)); done; for i in $(seq 0 $((n-1))); do printf '[v%d]' $i; done; printf 'vstack=inputs=%d' $n)" -q:v 4 "$OUT/intro-sheet.jpg" && { echo "INTRO-SHEET-BEGIN"; base64 -w 0 "$OUT/intro-sheet.jpg"; echo; echo "INTRO-SHEET-END"; } || true
-    fi
   else
     fail "the opening didn't start"; intro_dump
   fi
@@ -104,6 +98,14 @@ if [[ "${E2E_PART:-all}" != 2 ]]; then
     if [[ "$ev" == *'guest: profile'* ]]; then fail "the press that skipped the opening reached the welcome screen"
     else log "ok: the press that skipped the opening didn't reach the screen underneath"; fi
     expect '^welcome:guest$' "after a skip, focus is on the welcome screen"
+    # Coming back to VYRK (the process still running) doesn't play it again.
+    adb_run logcat -c
+    adb_run shell input keyevent KEYCODE_HOME
+    sleep 2
+    adbs am start -n "$PKG/.MainActivity" >/dev/null
+    sleep 4
+    if [[ "$(intro_events)" == *'intro: start'* ]]; then fail "the opening played again on coming back to VYRK"
+    else log "ok: coming back to VYRK doesn't play the opening again"; fi
   else
     fail "the opening didn't start for the skip check"
   fi
