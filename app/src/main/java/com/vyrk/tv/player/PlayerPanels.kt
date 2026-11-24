@@ -259,7 +259,7 @@ fun exclusionText(r: Ranked): String = when (r.exclusion) {
 fun SourceLine(r: Ranked, current: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val i = r.info
     val parts = listOf(i.resolutionLabel, i.releaseType.label, i.codec.label, i.hdr.joinToString("/") { it.label }, i.audio.joinToString(" ") { it.label }, i.channels.orEmpty(),
-        i.sizeBytes?.let { "%.1f GB".format(it / 1e9) }.orEmpty()).filter { it.isNotBlank() }
+        i.sizeBytes?.let { "%.1f GB".format(it / 1e9) }.orEmpty(), com.vyrk.tv.ui.components.debridTag(r).orEmpty()).filter { it.isNotBlank() }
     val langs = i.languages.joinToString(", ") { Languages.label(it) }
     val text = buildString {
         append(r.candidate.addonName); append('\n'); append(parts.joinToString(" · ").ifEmpty { "—" })

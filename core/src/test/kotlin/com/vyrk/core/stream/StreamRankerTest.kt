@@ -237,4 +237,20 @@ class StreamRankerTest {
         assertEquals(listOf(0, 0, 2), cands.map { it.addonOrder })
         assertEquals("Name c", cands.last().addonName)
     }
+
+    @Test
+    fun torrentsPlayThroughAConnectedDebridServiceAndItsCacheCounts() {
+        val torrents = listOf(
+            c("Torrent A", title = "Film.2019.1080p.WEB-DL.mkv", url = null, infoHash = "AAA", index = 0),
+            c("Torrent B", title = "Film.2019.1080p.WEB-DL.mkv", url = null, infoHash = "bbb", index = 1),
+        )
+        assertTrue(StreamRanker.rank(torrents, tv1080, RankPrefs()).none { it.playable })
+        val rd = StreamRanker.rank(torrents, tv1080.copy(debrid = "RD"), RankPrefs())
+        assertTrue(rd.all { it.playable })
+        assertTrue(rd.all { r -> r.reasons.any { it.code == "debrid_unchecked" } })
+        val tb = StreamRanker.rank(torrents, tv1080.copy(debrid = "TB", debridCached = setOf("bbb")), RankPrefs())
+        assertEquals("Torrent B", tb.first().candidate.stream.name)
+        assertEquals(Exclusion.UNCACHED, tb.single { it.candidate.stream.name == "Torrent A" }.exclusion)
+        assertEquals(true, tb.first().info.cached)
+    }
 }

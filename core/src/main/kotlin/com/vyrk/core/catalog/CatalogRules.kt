@@ -114,10 +114,13 @@ object CatalogRules {
     fun hasLiveCatalogs(addons: List<Descriptor>): Boolean =
         addons.any { d -> d.manifest.catalogs.any { it.type == "tv" || it.type == "channel" } }
 
-    /** Add-ons that need Stremio's local streaming server (p2p or local-only transports). */
-    fun needsStreamingServer(d: Descriptor): Boolean {
+    /**
+     * Add-ons that need Stremio's local streaming server (p2p or local-only transports). With a
+     * debrid service connected ([debrid]), p2p add-ons' torrents play through it instead.
+     */
+    fun needsStreamingServer(d: Descriptor, debrid: Boolean = false): Boolean {
         val u = d.transportUrl.lowercase()
-        return d.manifest.behaviorHints.p2p && !d.manifest.hasResource("catalog") && !d.manifest.hasResource("meta") ||
+        return !debrid && d.manifest.behaviorHints.p2p && !d.manifest.hasResource("catalog") && !d.manifest.hasResource("meta") ||
             u.startsWith("http://127.0.0.1:11470") || u.startsWith("http://localhost:11470")
     }
 }

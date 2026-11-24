@@ -2,6 +2,15 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.65
+
+- **Real-Debrid and TorBox.** Settings › Streams › Debrid service connects one of them (Real-Debrid with a code entered on real-debrid.com/device, or a QR code; TorBox with its API key, which the TV keypad types or the phone pastes). Torrent sources from your add-ons then play through it as ordinary web links: torrent add-ons such as Torrentio without their own debrid setup now work, and their torrents are no longer listed as needing a streaming server.
+  - TorBox says what it has ready, so torrents it doesn't have are set aside before anything plays and ready ones get a "⚡ TB" tag. Real-Debrid no longer says, so VYRK asks for each torrent as it plays it; one that isn't ready is removed from your account again (nothing downloads unasked) and the next source plays. Those don't count against the three tries.
+  - VYRK picks the file the add-on meant: its file name, else its file index when that's the right episode, else the episode by name (S01E02, 1x02), else the largest video that isn't a sample. In a season pack without the episode it plays nothing rather than the wrong one.
+  - The sign-in stays encrypted on the device; tokens, links and torrent hashes are never logged.
+- **A backup player.** When ExoPlayer can't decode or read a file (or the picture never comes), VYRK now tries the same source in mpv before moving on, at the same second; you'll see "Trying the backup player…". Settings › Picture & sound › Backup player: When needed (default), Always, or Off. Android 7 and later.
+- **Dolby Vision profile 7** (Blu-ray remuxes) now plays everywhere instead of failing on most TVs: on a TV whose Dolby Vision decoder takes profile 8, each frame's Dolby Vision data is converted to profile 8.1 as it plays (so it's still Dolby Vision); elsewhere VYRK plays the HDR10 picture inside. The conversion follows dovi_tool's and is checked bit for bit against its test files.
+
 ## v0.1.64
 
 - The opening now ends by diving into VYRK: the gold V opens into a window onto Home (or the sign-in screen), keeping a thin gold rim, VYRK and the tagline fall away, and the camera flies through the V until the app fills the screen. About 3.7 seconds in all; OK, Enter, Back or a tap still skips it.

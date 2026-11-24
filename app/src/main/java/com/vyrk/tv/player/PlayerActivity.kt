@@ -1,5 +1,7 @@
 package com.vyrk.tv.player
 
+import com.vyrk.tv.data.BackupPlayer
+
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.WindowManager
@@ -53,7 +55,8 @@ class PlayerActivity : ComponentActivity() {
         val dev = graph.deviceSettings.value
         val engine = PlayerEngine(this, graph.http, dev.passthrough, dev.softwareAudio,
             onBandwidth = { bps -> graph.updateDevice { it.copy(measuredBps = bps) } }, live = com.vyrk.core.addon.isLiveType(req.meta.type),
-            dolbyVisionAsHdr10 = dev.dolbyVisionAsHdr10)
+            dolbyVisionAsHdr10 = dev.dolbyVisionAsHdr10, displayDolbyVision = graph.playbackCaps().displayDolbyVision,
+            backup = dev.backupPlayer != BackupPlayer.OFF, userAgent = "VYRK/${com.vyrk.tv.BuildConfig.VERSION_NAME} (Android TV)")
         engine.dialogue.clearDialogue = dev.clearDialogue && !dev.passthrough
         engine.dialogue.tvSpeaker = dev.tvSpeakerMode && !dev.passthrough
         val m = PlayerModel(graph, session, lifecycleScope, engine, req) { id, args -> getString(id, *args) }
@@ -68,7 +71,8 @@ class PlayerActivity : ComponentActivity() {
         // Another app as the default player (Settings › Picture & sound).
         m.handOff = { r, pos -> dev.externalPlayer.isNotEmpty() && playExternally(r, dev.externalPlayer, pos) }
         mediaSession = MediaSession.Builder(this, engine.player).build()
-        engine.player.addListener(object : Player.Listener {
+        engine.onPlayerChanged = { p -> mediaSession?.player = p }
+        engine.addListener(object : Player.Listener {
             override fun onRenderedFirstFrame() {
                 m.onFirstFrame()
                 if (dev.frameRateMatching) matchFrameRate(engine)
@@ -132,7 +136,7 @@ class PlayerActivity : ComponentActivity() {
 
     /** Optional frame-rate matching: pick a display mode at the content's rate; restored on exit. */
     private fun matchFrameRate(engine: PlayerEngine) {
-        val fps = engine.player.videoFormat?.frameRate?.takeIf { it > 0 } ?: return
+        val fps = engine.videoFrameRate() ?: return
         val display = window.decorView.display ?: return
         val cur = display.mode
         val best = display.supportedModes.filter { it.physicalWidth == cur.physicalWidth && it.physicalHeight == cur.physicalHeight }

@@ -134,7 +134,7 @@ private fun PhoneInstallConfirm(o: Overlay.InstallConfirm, close: () -> Unit) {
     val c = Vyrk.colors
     val d = o.descriptor
     val installedMsg = d?.let { str(R.string.installed_addon, it.manifest.name) }.orEmpty()
-    val needsServer = d?.let { CatalogRules.needsStreamingServer(it) } == true
+    val needsServer = d?.let { CatalogRules.needsStreamingServer(it, com.vyrk.tv.ui.LocalGraph.current.debrid.connected) } == true
     PhoneSheet(true, close, str(R.string.install_addon_title)) {
         if (o.external) Text(str(R.string.install_from_link), style = Vyrk.type.bodyM, color = c.warning)
         Spacer(Modifier.height(8.dp))

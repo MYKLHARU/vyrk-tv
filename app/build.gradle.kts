@@ -122,6 +122,14 @@ android {
 
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/versions/9/OSGI-INF/MANIFEST.MF")
+        // libmpv and its FFmpeg are large: compressed in the APK keeps the download small. No 32-bit x86 TVs.
+        jniLibs.useLegacyPackaging = true
+        jniLibs.excludes += setOf("lib/x86/**")
+    }
+
+    androidResources {
+        // The mpv library still ships a 6 MB subtitle font it no longer uses (subtitles use the system fonts).
+        ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~:!subfont.ttf"
     }
 
     lint {
@@ -167,6 +175,8 @@ dependencies {
     implementation(libs.media3.okhttp)
     implementation(libs.media3.ui)
     implementation(libs.media3.ffmpeg)
+    // libmpv: the backup player (MpvPlayer). Its manifest asks for Android 7; VYRK checks before using it.
+    implementation(libs.mpv.android)
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
     implementation(libs.coil.okhttp)

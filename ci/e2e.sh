@@ -364,6 +364,33 @@ key KEYCODE_DPAD_LEFT 1.2; key KEYCODE_DPAD_LEFT 1.2; key KEYCODE_DPAD_LEFT 1.2
 expect '^settings:addons$' "Left from an add-on returns to the Add-ons group"
 key KEYCODE_BACK 1.5 "back to tabs"
 
+# ---------------------------------------------------------------- the backup player (mpv)
+# Settings › Picture & sound › Backup player › Always, then play: the broken 4K fails in mpv and the
+# 720p file plays in mpv. Proves libmpv loads, draws on the PlayerView's surface and reports a frame.
+until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
+key KEYCODE_DPAD_CENTER 2 "open settings"
+until_focus KEYCODE_DPAD_DOWN '^settings:picture$' 6
+key KEYCODE_DPAD_RIGHT 1.2 "into Picture & sound"
+if until_focus KEYCODE_DPAD_DOWN '^set:backup_player:' 16 && until_focus KEYCODE_DPAD_RIGHT '^set:backup_player:1$' 3; then
+  key KEYCODE_DPAD_CENTER 1.2 "Backup player: Always"
+  shot settings-backup-player
+  adbs am start -a android.intent.action.VIEW -d "'vyrk://open?type=movie&id=tt1254207'" "$PKG" >/dev/null
+  sleep 8
+  wait_focus '^info:play$' 15
+  key KEYCODE_DPAD_CENTER 2 "play in mpv"
+  MPV_EV=""
+  for _ in $(seq 1 30); do
+    MPV_EV=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
+    printf '%s\n' "$MPV_EV" | grep -q 'first_frame mpv' && break
+    sleep 2
+  done
+  shot player-mpv
+  if printf '%s\n' "$MPV_EV" | grep -q 'first_frame mpv'; then log "ok: the backup player (mpv) played the 720p file"
+  else fail "mpv never showed a frame ($(printf '%s\n' "$MPV_EV" | grep -E 'backup_player|first_frame|play_start' | tr '\n' ' '))"
+    adb_run logcat -d 2>/dev/null | grep -iE 'mpv|vyrk' | tail -n 60 || true; fi
+  back_from_player
+fi
+
 fi # end of part 1
 
 if [[ $PART != 1 ]]; then

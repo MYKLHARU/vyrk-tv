@@ -9,7 +9,6 @@ import com.vyrk.core.library.LibraryItem
 import com.vyrk.core.library.LibraryItemState
 import com.vyrk.core.library.LibraryRules
 import com.vyrk.core.stream.Ranked
-import com.vyrk.core.stream.StreamRanker
 import com.vyrk.core.tmdb.Credits
 import com.vyrk.tv.R
 import com.vyrk.tv.data.AppGraph
@@ -43,7 +42,7 @@ fun sourcesMessage(state: SourcesState): String? {
 suspend fun loadTitleSources(graph: AppGraph, session: ProfileSession, meta: MetaPreview, runtimeMinutes: Int?): SourcesState.Ready {
     val videoId = meta.behaviorHints.defaultVideoId ?: meta.id
     val results = graph.addonClient.allStreams(session.effectiveAddons(), meta.type, videoId)
-    val ranked = StreamRanker.rank(StreamRanker.candidates(results), graph.playbackCaps(), session.rankPrefs(meta.id, runtimeMinutes))
+    val ranked = graph.rankStreams(results, session.rankPrefs(meta.id, runtimeMinutes))
     return SourcesState.Ready(ranked, failedAddons = results.count { it.second is AddonResult.Failed }, addonCount = results.size)
 }
 

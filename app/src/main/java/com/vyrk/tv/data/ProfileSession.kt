@@ -58,6 +58,8 @@ class ProfileSession(
     private val addonClient: AddonClient,
     private val accountApi: StremioAccountApi,
     private val sharedAddons: () -> List<Descriptor>,
+    /** A debrid service is connected, so p2p (torrent) add-ons are usable. */
+    private val debridConnected: () -> Boolean = { false },
 ) {
     // Background sync and saves must never take the app down: an uncaught exception in a
     // coroutine without a handler ends the process on Android.
@@ -104,7 +106,8 @@ class ProfileSession(
 
     /** Add-ons this profile uses, plus other profiles' shared stream add-ons when enabled. */
     fun effectiveAddons(): List<Descriptor> {
-        val own = _addons.value.filterNot { CatalogRules.needsStreamingServer(it) }
+        val debrid = debridConnected()
+        val own = _addons.value.filterNot { CatalogRules.needsStreamingServer(it, debrid) }
         if (!_settings.value.useSharedAddons) return own
         val ids = own.map { it.manifest.id }.toSet()
         return own + sharedAddons().filter { it.manifest.id !in ids && it.manifest.hasResource("stream") }

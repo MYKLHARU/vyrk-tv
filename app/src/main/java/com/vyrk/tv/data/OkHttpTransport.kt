@@ -33,6 +33,17 @@ class OkHttpTransport(private val client: OkHttpClient) : HttpTransport {
         return execute(req, timeoutMs)
     }
 
+    override suspend fun postForm(url: String, form: Map<String, String>, headers: Map<String, String>, timeoutMs: Long): HttpResult {
+        val body = okhttp3.FormBody.Builder().apply { form.forEach { (k, v) -> add(k, v) } }.build()
+        val req = Request.Builder().url(url).apply { headers.forEach { (k, v) -> header(k, v) } }.post(body).build()
+        return execute(req, timeoutMs)
+    }
+
+    override suspend fun delete(url: String, headers: Map<String, String>, timeoutMs: Long): HttpResult {
+        val req = Request.Builder().url(url).apply { headers.forEach { (k, v) -> header(k, v) } }.delete().build()
+        return execute(req, timeoutMs)
+    }
+
     override suspend fun getBytes(url: String, headers: Map<String, String>, timeoutMs: Long): ByteArray? = suspendCancellableCoroutine { cont ->
         val req = Request.Builder().url(url).apply { headers.forEach { (k, v) -> header(k, v) } }.build()
         val call = client.newCall(req)

@@ -51,6 +51,9 @@ class AppGraph(val context: Context) {
     /** Trakt sync; off unless the build has TRAKT_CLIENT_ID (TRAKT_CLIENT_SECRET only for older Trakt apps). */
     val trakt = TraktAccount(com.vyrk.core.trakt.TraktClient(transport, BuildConfig.TRAKT_CLIENT_ID, BuildConfig.TRAKT_CLIENT_SECRET),
         vault, File(File(context.filesDir, "vyrk"), "trakt.enc"), scope)
+    /** Real-Debrid or TorBox: torrent sources play through it. Signed in on this device only. */
+    val debrid = DebridAccount(com.vyrk.core.debrid.RealDebridClient(transport), com.vyrk.core.debrid.TorBoxClient(transport),
+        vault, File(File(context.filesDir, "vyrk"), "debrid.enc"), scope)
     /** Hand-off from the UI to PlayerActivity (same process). */
     @Volatile var pendingPlayback: com.vyrk.tv.player.PlaybackRequest? = null
 
@@ -87,10 +90,27 @@ class AppGraph(val context: Context) {
         val d = deviceSettings.value
         val base = device.caps(d.measuredBps)
         return base.copy(
+            debrid = debrid.short,
             frozeKeys = freezeGuard.frozenKeys(),
             frozeKinds = freezeGuard.frozenKinds(),
             displayDolbyVision = if (d.dolbyVisionAsHdr10) false else base.displayDolbyVision,
         )
+    }
+    /**
+     * Ranks add-on results for this TV. With TorBox connected, torrent sources are first checked
+     * against what TorBox has ready (one request), so uncached ones are set aside.
+     */
+    suspend fun rankStreams(
+        results: List<Pair<com.vyrk.core.addon.Descriptor, com.vyrk.core.addon.AddonResult<com.vyrk.core.addon.StreamsResponse>>>,
+        prefs: com.vyrk.core.stream.RankPrefs,
+    ): List<com.vyrk.core.stream.Ranked> {
+        val candidates = com.vyrk.core.stream.StreamRanker.candidates(results)
+        var caps = playbackCaps()
+        if (caps.debrid != null) {
+            val hashes = candidates.filter { it.stream.url == null }.mapNotNull { it.stream.infoHash }
+            if (hashes.isNotEmpty()) caps = caps.copy(debridCached = debrid.cached(hashes))
+        }
+        return com.vyrk.core.stream.StreamRanker.rank(candidates, caps, prefs)
     }
     /** Kitsu → MyAnimeList ids, for AniSkip and the airing calendar. */
     val animeIds = com.vyrk.core.anime.AnimeIds(transport)
@@ -186,7 +206,7 @@ class AppGraph(val context: Context) {
     /** Opens a profile (after any PIN check) and makes it the active session. */
     suspend fun openProfile(p: Profile): ProfileSession {
         _session.value?.let { if (it.profile.id == p.id) return it; it.close() }
-        val s = ProfileSession(p, profileDir(p.id), vault, addonClient, accountApi, ::sharedAddonsFor)
+        val s = ProfileSession(p, profileDir(p.id), vault, addonClient, accountApi, ::sharedAddonsFor) { debrid.connected }
         s.load()
         _session.value = s
         bindWatchNext(s)

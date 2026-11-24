@@ -89,6 +89,10 @@ fun ProfileSettings.upgraded(): ProfileSettings {
     return if (s.revision < 1) s.copy(revision = 1) else s
 }
 
+/** When VYRK's player uses mpv instead of ExoPlayer. */
+@Serializable
+enum class BackupPlayer { WHEN_NEEDED, ALWAYS, OFF }
+
 /** TV-wide settings. */
 @Serializable
 data class DeviceSettings(
@@ -100,6 +104,8 @@ data class DeviceSettings(
     val frameRateMatching: Boolean = false,
     /** Play Dolby Vision files with an HDR10 base as HDR10 (more stable on some boxes). */
     val dolbyVisionAsHdr10: Boolean = false,
+    /** mpv as the backup player: for files ExoPlayer can't play, for everything, or never. */
+    val backupPlayer: BackupPlayer = BackupPlayer.WHEN_NEEDED,
     /** Play in another app by default: its package, or "" for VYRK's own player. */
     val externalPlayer: String = "",
     val passthrough: Boolean = false,

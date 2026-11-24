@@ -29,4 +29,12 @@ const val skip_ending = 25
 const val skipped_opening = 26
 const val skipped_ending = 27
 const val no_picture_trying_next = 28
+const val debrid_checking = 29
+const val debrid_signed_out = 30
+const val debrid_not_premium = 31
+const val debrid_not_cached = 32
+const val debrid_removed = 33
+const val debrid_no_file = 34
+const val debrid_failed = 35
+const val trying_backup_player = 36
 } }

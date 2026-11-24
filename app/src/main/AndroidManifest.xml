@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- libmpv (the backup player) asks for Android 7; on Android 6 VYRK runs without it (MpvPlayer.supported). -->
+    <uses-sdk tools:overrideLibrary="is.xyz.mpv" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />

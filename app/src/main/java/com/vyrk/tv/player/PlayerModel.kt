@@ -142,6 +142,13 @@ class PlayerModel(
 
     private val settings: ProfileSettings get() = session.settings.value
     private var policy = RecoveryPolicy(1, false)
+    private val backupMode get() = graph.deviceSettings.value.backupPlayer
+    private fun newPolicy(count: Int, picked: Boolean, start: Int = 0) =
+        RecoveryPolicy(count, picked, startIndex = start, backupEngine = engine.backupAvailable && backupMode == com.vyrk.tv.data.BackupPlayer.WHEN_NEEDED)
+    /** Direct links the debrid service gave for torrent sources, by [Candidate.key]; reused until one fails. */
+    private val debridLinks = mutableMapOf<String, com.vyrk.core.debrid.DebridResult.Ok>()
+    /** The stream the engine is playing (a torrent's debrid link in place of the torrent). */
+    private var playingStream: com.vyrk.core.addon.Stream? = null
     private var index = 0
     private var item: LibraryItem? = null
     /** The video whose file the engine has, so progress is saved against it (not the one loading next). */
@@ -235,7 +242,7 @@ class PlayerModel(
             val results = graph.addonClient.allStreams(addons, streamType, vid)
             if (generation != loadGeneration) return
             if (results.isEmpty()) { fail(Phase.NO_SOURCES, s(com.vyrk.tv.R.string.no_stream_addons)); return }
-            StreamRanker.rank(StreamRanker.candidates(results), caps(), prefs(req.meta.id))
+            graph.rankStreams(results, prefs(req.meta.id))
         }
         if (generation != loadGeneration) return
         progressTo(0.42f)
@@ -254,7 +261,7 @@ class PlayerModel(
             }
             fail(Phase.NO_SOURCES, msg); return
         }
-        policy = RecoveryPolicy(playable.size, userPicked)
+        policy = newPolicy(playable.size, userPicked)
         index = 0
         val startAt = LibraryRules.resumeMs(item, vid)
         if (handOff?.invoke(playable.first(), startAt) == true) return
@@ -269,7 +276,7 @@ class PlayerModel(
 
     private fun quality(r: Ranked) = listOf(r.info.resolutionLabel, r.info.releaseType.label).filter { it.isNotEmpty() }.joinToString(" ")
 
-    private fun playCandidate(startMs: Long, audioOverride: String? = null) {
+    private fun playCandidate(startMs: Long, audioOverride: String? = null, backup: Boolean = false) {
         val r = candidates.getOrNull(index) ?: return
         val generation = ++streamGeneration
         completionSaved = false
@@ -291,17 +298,69 @@ class PlayerModel(
         connecting = s(com.vyrk.tv.R.string.connecting_to, r.candidate.addonName, quality(r).ifEmpty { "—" })
         progressTo(0.5f)
         firstFrame = false
+        firstFrameJob?.cancel()
         playingVideoId = video?.id ?: request.videoId ?: request.meta.id
         Diagnostics.log("player", "candidate ${index + 1}/${candidates.size} from ${r.candidate.addonId}")
         vyrkEvent("play_start $playingVideoId $startMs")
         onSourceStarting?.invoke(r)
-        engine.prepare(r.candidate.stream, startMs, preserveAudio = audioOverride != null)
+        val stream = r.candidate.stream
+        if (stream.url == null && r.info.delivery == Delivery.TORRENT) {
+            debridLinks[r.candidate.key]?.let { ok -> return startEngine(r, debridStream(stream, ok), startMs, audioOverride, backup, generation) }
+            val service = graph.debrid.service ?: return handleDebrid(com.vyrk.core.debrid.DebridResult.SignedOut)
+            connecting = s(com.vyrk.tv.R.string.debrid_checking, service.label)
+            val vid = playingVideoId
+            scope.launch {
+                val result = graph.debrid.resolve(stream, vid)
+                if (generation != streamGeneration) return@launch
+                if (result is com.vyrk.core.debrid.DebridResult.Ok) {
+                    debridLinks[r.candidate.key] = result
+                    vyrkEvent("debrid_ok")
+                    startEngine(r, debridStream(stream, result), startMs, audioOverride, backup, generation)
+                } else handleDebrid(result)
+            }
+            return
+        }
+        startEngine(r, stream, startMs, audioOverride, backup, generation)
+    }
+
+    /** The torrent stream as a web link: the debrid service's URL, with its file name and size for the parser and chapters. */
+    private fun debridStream(s: com.vyrk.core.addon.Stream, ok: com.vyrk.core.debrid.DebridResult.Ok) =
+        s.copy(url = ok.url, behaviorHints = s.behaviorHints.copy(filename = s.behaviorHints.filename ?: ok.filename, videoSize = s.behaviorHints.videoSize ?: ok.bytes))
+
+    private fun startEngine(r: Ranked, stream: com.vyrk.core.addon.Stream, startMs: Long, audioOverride: String?, backup: Boolean, generation: Int) {
+        playingStream = stream
+        val useBackup = backup || backupMode == com.vyrk.tv.data.BackupPlayer.ALWAYS
+        if (useBackup && engine.backupAvailable) vyrkEvent("backup_player")
+        engine.prepare(stream, startMs, preserveAudio = audioOverride != null, backup = useBackup)
         resetProgressClock()
         scope.launch { loadSubtitles(playingVideoId!!, r, generation) }
         firstFrameJob?.cancel()
         firstFrameJob = scope.launch {
             delay(maxOf(policy.firstFrameTimeoutMs, com.vyrk.core.playback.PlaybackBuffering.startupTimeoutMs(isLive, r.info)))
             if (!firstFrame) noPicture(r)
+        }
+    }
+
+    /**
+     * The debrid service couldn't give a link. Not ready, gone or no such file: on to the next
+     * source (these don't count against the three tries). Signed out or no premium: say so.
+     */
+    private fun handleDebrid(result: com.vyrk.core.debrid.DebridResult) {
+        val label = graph.debrid.service?.label ?: "Debrid"
+        onSourceSettled?.invoke()
+        vyrkEvent("debrid_unavailable ${result.javaClass.simpleName}")
+        val msg = when (result) {
+            com.vyrk.core.debrid.DebridResult.SignedOut -> return fail(Phase.ERROR, s(com.vyrk.tv.R.string.debrid_signed_out, label))
+            com.vyrk.core.debrid.DebridResult.NotPremium -> return fail(Phase.ERROR, s(com.vyrk.tv.R.string.debrid_not_premium, label))
+            com.vyrk.core.debrid.DebridResult.NotCached -> s(com.vyrk.tv.R.string.debrid_not_cached, label)
+            com.vyrk.core.debrid.DebridResult.Removed -> s(com.vyrk.tv.R.string.debrid_removed, label)
+            com.vyrk.core.debrid.DebridResult.NoFile -> s(com.vyrk.tv.R.string.debrid_no_file)
+            else -> s(com.vyrk.tv.R.string.debrid_failed, label)
+        }
+        when (val action = policy.onUnavailable()) {
+            RecoveryAction.AskUser -> { phase = Phase.ASK; message = msg }
+            RecoveryAction.GiveUp -> fail(Phase.ERROR, msg)
+            else -> { showNotice(msg); handle(action) }
         }
     }
 
@@ -316,11 +375,12 @@ class PlayerModel(
         Diagnostics.log("player", "no picture after start (loaded=$loaded)")
         vyrkEvent("no_picture $loaded")
         onSourceSettled?.invoke()
-        if (loaded) {
+        val action = policy.onNoPicture(loaded)
+        if (loaded && action != RecoveryAction.TryBackupEngine) {
             decoderFailedOn(r)
             if (index + 1 <= candidates.lastIndex) showNotice(s(com.vyrk.tv.R.string.no_picture_trying_next))
         }
-        handle(policy.onFirstFrameTimeout())
+        handle(action)
     }
 
     /** Where you stopped in another app, saved like VYRK's own progress. */
@@ -347,6 +407,7 @@ class PlayerModel(
         val settling = current
         scope.launch { delay(FREEZE_GRACE_MS); if (current === settling && firstFrame) onSourceSettled?.invoke() }
         Diagnostics.log("player", "first frame ${engine.bufferDiagnostics()}")
+        vyrkEvent("first_frame ${if (engine.onBackup) "mpv" else "exo"}")
         resetProgressClock()
         firstFrameJob?.cancel()
         progressTo(1f)
@@ -363,7 +424,7 @@ class PlayerModel(
         }
         applyTrackPrefs()
         showControls()
-        r.candidate.stream.url?.let { url -> if (url != chaptersFor) { chaptersFor = url; scope.launch { loadChapters(r) } } }
+        playingStream?.url?.let { url -> if (url != chaptersFor) { chaptersFor = url; scope.launch { loadChapters(playingStream ?: r.candidate.stream) } } }
     }
 
     private fun resetTimeline() {
@@ -412,10 +473,10 @@ class PlayerModel(
     }
 
     /** Matroska chapters from the playing file, read with HTTP range requests. */
-    private suspend fun loadChapters(r: Ranked) {
+    private suspend fun loadChapters(stream: com.vyrk.core.addon.Stream) {
         if (!settings.chapterMarkers) return
-        val url = r.candidate.stream.url ?: return
-        val headers = r.candidate.stream.behaviorHints.proxyHeaders?.request.orEmpty()
+        val url = stream.url ?: return
+        val headers = stream.behaviorHints.proxyHeaders?.request.orEmpty()
         val chapters = runCatching {
             MkvChapters.read { start, len -> graph.transport.getBytes(url, headers + ("Range" to "bytes=$start-${start + len - 1}"), 10_000) }
         }.getOrDefault(emptyList())
@@ -470,8 +531,9 @@ class PlayerModel(
         firstFrameJob?.cancel()
         // Once the film is playing, a broken audio track shouldn't stop it: change track, keep the second.
         if (cls == com.vyrk.core.playback.ErrorClass.AUDIO_TRACK && firstFrame && switchAudioMidFilm()) return
-        if (cls == com.vyrk.core.playback.ErrorClass.DECODER) current?.let { decoderFailedOn(it) }
-        handle(policy.onFailure(cls, canRefresh = true))
+        val action = policy.onFailure(cls, canRefresh = true)
+        if (cls == com.vyrk.core.playback.ErrorClass.DECODER && action != RecoveryAction.TryBackupEngine) current?.let { decoderFailedOn(it) }
+        handle(action)
     }
 
     /**
@@ -531,7 +593,17 @@ class PlayerModel(
                 next?.let { selectedAudio = it.id; engine.select(C.TRACK_TYPE_AUDIO, it.id) }
                 playCandidate(pos, next?.id)
             }
-            RecoveryAction.RefreshLink -> scope.launch { refreshLink(pos) }
+            RecoveryAction.RefreshLink -> {
+                val r = current
+                // A debrid link that stopped working: ask the service for a fresh one.
+                if (r != null && r.info.delivery == Delivery.TORRENT && debridLinks.remove(r.candidate.key) != null) playCandidate(pos, recoveryAudio, engine.onBackup)
+                else scope.launch { refreshLink(pos) }
+            }
+            RecoveryAction.TryBackupEngine -> {
+                Diagnostics.log("player", "trying the backup player")
+                showNotice(s(com.vyrk.tv.R.string.trying_backup_player))
+                playCandidate(pos, recoveryAudio, backup = true)
+            }
             RecoveryAction.NextCandidate -> {
                 val next = candidates.getOrNull(policy.candidateIndex)
                 if (next != null && suspectSource(next)) handle(policy.onFirstFrameTimeout())
@@ -574,7 +646,7 @@ class PlayerModel(
 
     fun retryPicked() {
         val pos = if (incompleteReason != null) 0L else startPositionFallback()
-        policy = RecoveryPolicy(candidates.size, userPicked, startIndex = index)
+        policy = newPolicy(candidates.size, userPicked, index)
         playCandidate(pos)
     }
 
@@ -588,7 +660,7 @@ class PlayerModel(
         val rest = candidates.filter { it.candidate.key != r.candidate.key }
         candidates.clear(); candidates.add(r); candidates.addAll(rest)
         index = 0
-        policy = RecoveryPolicy(candidates.size, true)
+        policy = newPolicy(candidates.size, true)
         panel = Panel.NONE
         playCandidate(pos)
     }
@@ -606,7 +678,7 @@ class PlayerModel(
         if (idx < 0) return
         val pos = engine.player.currentPosition
         index = idx
-        policy = RecoveryPolicy(candidates.size, userPicked, startIndex = index)
+        policy = newPolicy(candidates.size, userPicked, index)
         playCandidate(pos)
     }
 

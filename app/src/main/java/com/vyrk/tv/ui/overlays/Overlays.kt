@@ -202,7 +202,7 @@ private fun InstallConfirm(o: Overlay.InstallConfirm) {
     val d = o.descriptor
     LaunchedEffect(d != null, o.error) { kotlinx.coroutines.delay(60); first.tryRequestFocus() }
     val installedMsg = d?.let { str(R.string.installed_addon, it.manifest.name) }.orEmpty()
-    val needsServer = d?.let { CatalogRules.needsStreamingServer(it) } == true
+    val needsServer = d?.let { CatalogRules.needsStreamingServer(it, com.vyrk.tv.ui.LocalGraph.current.debrid.connected) } == true
     CenterCard(560.dp) {
         Text(str(R.string.install_addon_title), style = Vyrk.type.headlineL, color = Vyrk.colors.text)
         Spacer(Modifier.height(6.dp))

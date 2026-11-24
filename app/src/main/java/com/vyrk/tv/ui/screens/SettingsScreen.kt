@@ -448,6 +448,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                 }
             }
             Group.STREAMS -> {
+                DebridSetting()
                 Choice(str(R.string.source_preset), listOf(Preset.BALANCED to str(R.string.preset_balanced), Preset.BEST_PICTURE to str(R.string.preset_best), Preset.FAST_START to str(R.string.preset_fast), Preset.ADDON_ORDER to str(R.string.preset_addon_order)), s.preset, "set:preset", str(R.string.preset_hint)) { v -> upd { it.copy(preset = v) } }
                 Choice(str(R.string.max_resolution), listOf(null to str(R.string.any), 2160 to "4K", 1080 to "1080p", 720 to "720p"), s.maxResolution, "set:max_res") { v -> upd { it.copy(maxResolution = v) } }
                 Choice(str(R.string.max_file_size), listOf(null to str(R.string.any), 50 to "50 GB", 20 to "20 GB", 10 to "10 GB", 4 to "4 GB"), s.maxSizeGb, "set:max_size") { v -> upd { it.copy(maxSizeGb = v) } }
@@ -467,6 +468,9 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                 Toggle(str(R.string.nav_sounds), d.navSounds, "set:nav_sounds", str(R.string.nav_sounds_desc), R.drawable.ic_audio) { v -> graph.updateDevice { it.copy(navSounds = v) } }
                 Toggle(str(R.string.frame_rate_matching), d.frameRateMatching, "set:frame_rate") { v -> graph.updateDevice { it.copy(frameRateMatching = v) } }
                 Toggle(str(R.string.dv_as_hdr10), d.dolbyVisionAsHdr10, "set:dv_hdr10", str(R.string.dv_as_hdr10_desc)) { v -> graph.updateDevice { it.copy(dolbyVisionAsHdr10 = v) } }
+                if (com.vyrk.tv.player.MpvPlayer.supported) Choice(str(R.string.backup_player),
+                    listOf(com.vyrk.tv.data.BackupPlayer.WHEN_NEEDED to str(R.string.backup_when_needed), com.vyrk.tv.data.BackupPlayer.ALWAYS to str(R.string.backup_always), com.vyrk.tv.data.BackupPlayer.OFF to str(R.string.off)),
+                    d.backupPlayer, "set:backup_player", str(R.string.backup_player_hint), R.drawable.ic_play) { v -> graph.updateDevice { it.copy(backupPlayer = v) } }
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val players = remember { com.vyrk.tv.player.ExternalPlayers.installed(ctx) }
                 val playerChoices = listOf("" to "VYRK") + players.take(4).map { it.pkg to it.label } + listOf(com.vyrk.tv.player.PlayerActivity.ASK to str(R.string.ask_each_time))
@@ -534,6 +538,31 @@ private fun GroupContent(session: ProfileSession, group: Group) {
 private fun accentName(a: AccentChoice) = when (a) {
     AccentChoice.GOLD -> str(R.string.accent_gold); AccentChoice.FROST -> str(R.string.accent_frost); AccentChoice.BLUE -> str(R.string.accent_blue); AccentChoice.TEAL -> str(R.string.accent_teal)
     AccentChoice.VIOLET -> str(R.string.accent_violet); AccentChoice.AMBER -> str(R.string.accent_amber); AccentChoice.PINK -> str(R.string.accent_pink)
+}
+
+/** Settings › Streams, top: the debrid service, its sign-in (Real-Debrid's code, or the TorBox key keypad). */
+@Composable
+private fun DebridSetting() {
+    val graph = LocalGraph.current
+    val state by graph.debrid.state.collectAsState()
+    val ui = com.vyrk.tv.ui.components.rememberDebridSignIn(graph.debrid)
+    when (val s = state) {
+        is com.vyrk.tv.data.DebridAccount.State.Connected ->
+            Setting(str(R.string.debrid), com.vyrk.tv.ui.components.debridStatus(s)) {
+                VyrkButton(str(R.string.debrid_disconnect), onClick = { graph.debrid.disconnect() }, modifier = Modifier.traceFocus("set:debrid_disconnect"))
+            }
+        com.vyrk.tv.data.DebridAccount.State.SignedOut -> {
+            Setting(str(R.string.debrid), str(R.string.debrid_desc)) {
+                if (ui.busy) VyrkButton(str(R.string.cancel), onClick = { ui.cancel() }, modifier = Modifier.traceFocus("set:debrid_cancel"))
+                else {
+                    VyrkButton(str(R.string.debrid_connect_rd), style = ButtonStyle.BRAND, onClick = { ui.startRealDebrid() }, modifier = Modifier.traceFocus("set:debrid_rd"))
+                    VyrkButton(str(R.string.debrid_connect_tb), onClick = { ui.startTorBox() }, modifier = Modifier.traceFocus("set:debrid_tb"))
+                }
+            }
+            if (ui.typing != null) com.vyrk.tv.ui.components.TorBoxKeyEntry(ui)
+            else com.vyrk.tv.ui.components.DebridCodePanel(ui.step, qr = true)
+        }
+    }
 }
 
 @Composable

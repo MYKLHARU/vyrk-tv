@@ -694,6 +694,7 @@ private fun InfoSourceCard(r: Ranked, recommended: Boolean, modifier: Modifier =
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(r.candidate.addonName, style = Vyrk.type.titleS, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     if (recommended) Tag(str(R.string.recommended), color = c.onAccent, background = c.accent)
+                    com.vyrk.tv.ui.components.debridTag(r)?.let { Tag(it, color = c.gold, background = c.gold.copy(alpha = 0.16f)) }
                 }
                 Row(Modifier.padding(top = 3.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (sum.badges.isNotEmpty()) com.vyrk.tv.ui.components.QualityBadgeRow(sum.badges)
