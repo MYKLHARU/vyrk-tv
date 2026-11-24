@@ -15,3 +15,6 @@
 -dontwarn org.conscrypt.**
 -dontwarn org.bouncycastle.**
 -dontwarn org.openjsse.**
+
+# libmpv (the backup player) finds its Kotlin classes, fields and callbacks by name from native code.
+-keep class is.xyz.mpv.** { *; }

@@ -492,6 +492,7 @@ fun SourceCard(r: Ranked, recommended: Boolean, expanded: Boolean, tag: String, 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(r.candidate.addonName, style = Vyrk.type.titleS, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                     if (recommended) Tag(str(R.string.recommended), color = c.onAccent, background = c.accent)
+                    com.vyrk.tv.ui.components.debridTag(r)?.let { Tag(it, color = c.gold, background = c.gold.copy(alpha = 0.16f)) }
                     if (current) Icon(R.drawable.ic_check, null, Modifier.size(16.dp), tint = c.gold)
                 }
                 if (sum.badges.isNotEmpty()) com.vyrk.tv.ui.components.QualityBadgeRow(sum.badges, Modifier.padding(top = 4.dp))

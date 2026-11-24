@@ -8,6 +8,14 @@ interface HttpTransport {
     /** A JSON POST with request headers (Trakt's API key and sign-in). Transports without headers ignore them. */
     suspend fun post(url: String, body: String, headers: Map<String, String>, timeoutMs: Long = 15_000): HttpResult = postJson(url, body, timeoutMs)
 
+    /** A form POST (application/x-www-form-urlencoded) with request headers: the debrid services' API. */
+    suspend fun postForm(url: String, form: Map<String, String>, headers: Map<String, String> = emptyMap(), timeoutMs: Long = 15_000): HttpResult =
+        throw UnsupportedOperationException("postForm")
+
+    /** A DELETE with request headers. */
+    suspend fun delete(url: String, headers: Map<String, String> = emptyMap(), timeoutMs: Long = 15_000): HttpResult =
+        throw UnsupportedOperationException("delete")
+
     /** Raw bytes, for range reads of media files. Returns null on any failure. */
     suspend fun getBytes(url: String, headers: Map<String, String> = emptyMap(), timeoutMs: Long = 15_000): ByteArray? = null
 }

@@ -180,7 +180,7 @@ fun AddonCard(session: ProfileSession, d: com.vyrk.core.addon.Descriptor, index:
     val c = Vyrk.colors
     val refreshedMsg = str(R.string.addon_refreshed)
     val m = d.manifest
-    val skipped = CatalogRules.needsStreamingServer(d)
+    val skipped = CatalogRules.needsStreamingServer(d, com.vyrk.tv.ui.LocalGraph.current.debrid.connected)
     // A management card on dark steel; its edge lights cyan while one of its actions has focus.
     var within by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(16.dp)

@@ -8,6 +8,15 @@ Jellyfin Media3 FFmpeg decoder (org.jellyfin.media3:media3-ffmpeg-decoder)
   Includes FFmpeg built with GPL components. GNU General Public License v3.0.
   https://github.com/jellyfin/jellyfin-androidx-media
 
+mpv-android-lib (io.github.abdallahmehiz:mpv-android-lib), the backup player
+  The Kotlin and JNI wrapper: Copyright mpv-android authors and Abdallah Mehiz, MIT License.
+  https://github.com/abdallahmehiz/mpv-android
+  Includes libmpv (https://mpv.io), FFmpeg (https://ffmpeg.org), libass and their
+  dependencies, under the GNU General Public License and the GNU Lesser General Public License.
+
+Dolby Vision profile 7 to 8.1 conversion: ported from dovi_tool's dolby_vision crate
+  Copyright (c) quietvoid. MIT License. https://github.com/quietvoid/dovi_tool
+
 Jetpack Compose, Compose for TV (androidx.tv:tv-material), AndroidX libraries
   Copyright The Android Open Source Project. Apache License 2.0.
 

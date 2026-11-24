@@ -125,6 +125,7 @@ fun PhoneSettings(session: ProfileSession) {
         Text(str(R.string.settings), style = Vyrk.type.displayS, color = c.text)
         AccountCard(session)
         TraktCard()
+        DebridCard()
         PhoneCard {
             PhoneGroup.entries.forEach { g ->
                 PhoneListRow(str(g.title), { open = g.name }, icon = g.icon, hint = g.subtitle?.let { str(it) }, tag = "settings:${g.name.lowercase()}")
@@ -186,6 +187,59 @@ private fun TraktCard() {
             } else {
                 Spacer(Modifier.height(10.dp))
                 PhoneButton(str(R.string.trakt_connect), { signIn.start() }, style = PhoneButtonStyle.PRIMARY, tag = "about:trakt_connect")
+            }
+        }
+    }
+}
+
+/** Real-Debrid (device code, with a button that opens the page) or TorBox (paste the API key). */
+@Composable
+private fun DebridCard() {
+    val graph = com.vyrk.tv.ui.LocalGraph.current
+    val state by graph.debrid.state.collectAsState()
+    val ui = com.vyrk.tv.ui.components.rememberDebridSignIn(graph.debrid)
+    val uri = androidx.compose.ui.platform.LocalUriHandler.current
+    val c = Vyrk.colors
+    PhoneCard(title = str(R.string.debrid)) {
+        val s = state
+        if (s is com.vyrk.tv.data.DebridAccount.State.Connected) {
+            Text(com.vyrk.tv.ui.components.debridStatus(s), style = Vyrk.type.bodyM, color = c.text)
+            Spacer(Modifier.height(10.dp))
+            PhoneButton(str(R.string.debrid_disconnect), { graph.debrid.disconnect() }, style = PhoneButtonStyle.OUTLINE, tag = "set:debrid_disconnect")
+            return@PhoneCard
+        }
+        Text(str(R.string.debrid_desc), style = Vyrk.type.bodyM, color = c.textSecondary)
+        Spacer(Modifier.height(10.dp))
+        val step = ui.step
+        val typing = ui.typing
+        when {
+            step is com.vyrk.tv.data.DebridAccount.SignIn.Code -> {
+                com.vyrk.tv.ui.components.DebridCodePanel(step, qr = false)
+                Spacer(Modifier.height(10.dp))
+                PhoneButton(str(R.string.trakt_open_site), { runCatching { uri.openUri(step.code.qrUrl) } }, style = PhoneButtonStyle.PRIMARY, tag = "set:debrid_open")
+                Spacer(Modifier.height(8.dp))
+                PhoneButton(str(R.string.cancel), { ui.cancel() }, style = PhoneButtonStyle.OUTLINE, tag = "set:debrid_cancel")
+            }
+            typing != null -> {
+                Text(str(R.string.debrid_key), style = Vyrk.type.labelL, color = c.textMuted)
+                Spacer(Modifier.height(6.dp))
+                Box(Modifier.fillMaxWidth().background(c.raised, RoundedCornerShape(12.dp)).border(1.dp, c.gold.copy(alpha = 0.4f), RoundedCornerShape(12.dp)).padding(14.dp)) {
+                    BasicTextField(typing, { ui.typing = it.trim() }, textStyle = Vyrk.type.titleM.copy(color = c.text), cursorBrush = SolidColor(c.gold), singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, autoCorrectEnabled = false),
+                        modifier = Modifier.fillMaxWidth().testTag("set:debrid_key"))
+                }
+                Text(str(R.string.debrid_key_hint), style = Vyrk.type.bodyS, color = c.textSecondary, modifier = Modifier.padding(top = 6.dp))
+                com.vyrk.tv.ui.components.DebridCodePanel(step, qr = false, modifier = Modifier.padding(top = 6.dp))
+                Spacer(Modifier.height(10.dp))
+                PhoneButton(str(R.string.debrid_connect), { ui.connectTorBox(typing) }, style = PhoneButtonStyle.PRIMARY, enabled = typing.isNotBlank(), tag = "set:debrid_key_connect")
+                Spacer(Modifier.height(8.dp))
+                PhoneButton(str(R.string.cancel), { ui.cancel() }, style = PhoneButtonStyle.OUTLINE, tag = "set:debrid_cancel")
+            }
+            else -> {
+                com.vyrk.tv.ui.components.DebridCodePanel(step, qr = false)
+                PhoneButton(str(R.string.debrid_connect_rd), { ui.startRealDebrid() }, style = PhoneButtonStyle.PRIMARY, tag = "set:debrid_rd")
+                Spacer(Modifier.height(8.dp))
+                PhoneButton(str(R.string.debrid_connect_tb), { ui.startTorBox() }, style = PhoneButtonStyle.OUTLINE, tag = "set:debrid_tb")
             }
         }
     }
@@ -405,7 +459,7 @@ private fun AddonCard(session: ProfileSession, d: Descriptor, index: Int, lastIn
             m.resources.forEach { Tag(it.name) }
             m.types.forEach { Tag(it, background = c.gold.copy(alpha = 0.16f), color = c.gold) }
         }
-        if (CatalogRules.needsStreamingServer(d)) Text(str(R.string.needs_streaming_server), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
+        if (CatalogRules.needsStreamingServer(d, com.vyrk.tv.ui.LocalGraph.current.debrid.connected)) Text(str(R.string.needs_streaming_server), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
         if (com.vyrk.core.addon.AddonUrls.isUnencryptedPublic(d.transportUrl)) Text(str(R.string.addon_not_encrypted), style = Vyrk.type.bodyS, color = c.warning, modifier = Modifier.padding(top = 6.dp))
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {

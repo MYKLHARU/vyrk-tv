@@ -96,6 +96,8 @@ fun PlayerScreen(m: PlayerModel, onExit: () -> Unit) {
                 }
             },
             update = { view ->
+                // ExoPlayer, or mpv after a fallback.
+                m.engine.player.let { p -> if (view.player !== p) view.player = p }
                 view.resizeMode = when (m.pictureSize) {
                     PictureSize.FIT -> AspectRatioFrameLayout.RESIZE_MODE_FIT
                     PictureSize.ZOOM -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM

@@ -39,6 +39,8 @@ sealed interface RecoveryAction {
     data object NextCandidate : RecoveryAction
     data object TryOtherAudioTrack : RecoveryAction
     data object EnableFfmpegAudio : RecoveryAction
+    /** The same source again in the backup player (mpv), for files the main player can't decode or read. */
+    data object TryBackupEngine : RecoveryAction
     data object SeekToLiveEdge : RecoveryAction
     /** User picked this source: ask before switching. */
     data object AskUser : RecoveryAction
@@ -57,12 +59,17 @@ class RecoveryPolicy(
     val retriesPerCandidate: Int = 2,
     val firstFrameTimeoutMs: Long = 12_000,
     val startIndex: Int = 0,
+    /** A backup player is available: a decoder or container failure tries it once per source. */
+    val backupEngine: Boolean = false,
 ) {
     var candidateIndex = startIndex; private set
     private var retries = 0
     private var refreshed = false
     private var audioFallbacks = 0
-    private val limit get() = minOf(candidateCount, startIndex + maxCandidates)
+    private var engineTried = false
+    /** Sources skipped as unavailable: they don't use up one of the [maxCandidates] tries (at most [MAX_SKIPPED] of them). */
+    private var skipped = 0
+    private val limit get() = minOf(candidateCount, startIndex + maxCandidates + skipped)
 
     fun onFailure(cls: ErrorClass, canRefresh: Boolean): RecoveryAction {
         if (cls == ErrorClass.BEHIND_LIVE_WINDOW) return RecoveryAction.SeekToLiveEdge
@@ -73,6 +80,10 @@ class RecoveryPolicy(
                 2 -> RecoveryAction.TryOtherAudioTrack
                 else -> advance()
             }
+        }
+        if ((cls == ErrorClass.DECODER || cls == ErrorClass.CONTAINER) && backupEngine && !engineTried) {
+            engineTried = true
+            return RecoveryAction.TryBackupEngine
         }
         if ((cls == ErrorClass.HTTP_EXPIRED || cls == ErrorClass.HTTP_NOT_FOUND) && !refreshed && canRefresh) {
             refreshed = true
@@ -91,11 +102,22 @@ class RecoveryPolicy(
 
     fun onFirstFrameTimeout(): RecoveryAction = onFailure(ErrorClass.TIMEOUT, canRefresh = false)
 
+    /** No picture in time; [loaded] means the file was read and the decoder is what stalled. */
+    fun onNoPicture(loaded: Boolean): RecoveryAction = if (loaded) onFailure(ErrorClass.DECODER, canRefresh = false) else onFirstFrameTimeout()
+
+    /** The source can't be had at all (a torrent the debrid service doesn't have ready): the next one. */
+    fun onUnavailable(): RecoveryAction {
+        if (skipped < MAX_SKIPPED) skipped++
+        return advance()
+    }
+
+    private companion object { const val MAX_SKIPPED = 6 }
+
     private fun advance(): RecoveryAction {
         if (userPicked) return RecoveryAction.AskUser
         if (candidateIndex + 1 >= limit) return RecoveryAction.GiveUp
         candidateIndex++
-        retries = 0; refreshed = false; audioFallbacks = 0
+        retries = 0; refreshed = false; audioFallbacks = 0; engineTried = false
         return RecoveryAction.NextCandidate
     }
 }

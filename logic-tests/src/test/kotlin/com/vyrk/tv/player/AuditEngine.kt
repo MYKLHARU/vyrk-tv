@@ -25,7 +25,9 @@ class PlayerEngine {
     var texts = emptyList<TextTrack>()
     val selections = mutableListOf<Pair<Int, String?>>()
     var preservedAudio = false
-    fun prepare(stream: Stream, startMs: Long, preserveAudio: Boolean = false) { preservedAudio = preserveAudio; preparations += stream to startMs; player.currentPosition = startMs; player.isPlaying = true }
+    val backupAvailable = false
+    val onBackup = false
+    fun prepare(stream: Stream, startMs: Long, preserveAudio: Boolean = false, backup: Boolean = false) { preservedAudio = preserveAudio; preparations += stream to startMs; player.currentPosition = startMs; player.isPlaying = true }
     fun audioTracks() = audio
     fun embeddedTextTracks() = texts
     fun select(type: Int, id: String?) { selections += type to id }

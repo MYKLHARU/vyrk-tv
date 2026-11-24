@@ -97,6 +97,8 @@ fun PhonePlayerScreen(m: PlayerModel, onExit: () -> Unit) {
                         CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW, android.graphics.Color.BLACK, null))
                 }
             },
+            // ExoPlayer, or mpv after a fallback.
+            update = { view -> m.engine.player.let { p -> if (view.player !== p) view.player = p } },
             modifier = Modifier.fillMaxSize(),
         )
         val cue = m.currentCue()

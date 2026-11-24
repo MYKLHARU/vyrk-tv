@@ -29,6 +29,10 @@ data class DeviceCaps(
     val displayDolbyVision: Boolean? = null,
     val display4k: Boolean? = null,
     val hasStreamingServer: Boolean = false,
+    /** A debrid service is connected (its short name, "RD"): torrent sources play through it. */
+    val debrid: String? = null,
+    /** Torrent hashes (lower case) the debrid service has ready; null when it can't say (Real-Debrid). */
+    val debridCached: Set<String>? = null,
     /** Smoothed measured connection speed in bits per second. */
     val measuredBps: Double? = null,
 )
@@ -118,7 +122,7 @@ object StreamRanker {
 
     fun exclusion(info: StreamInfo, caps: DeviceCaps, prefs: RankPrefs): Exclusion? {
         when (info.delivery) {
-            Delivery.TORRENT -> if (!caps.hasStreamingServer) return Exclusion.TORRENT_NO_SERVER
+            Delivery.TORRENT -> if (!caps.hasStreamingServer && caps.debrid == null) return Exclusion.TORRENT_NO_SERVER
             Delivery.EXTERNAL -> return Exclusion.EXTERNAL
             Delivery.YOUTUBE -> return Exclusion.YOUTUBE
             Delivery.UNKNOWN -> return Exclusion.UNKNOWN_SOURCE
@@ -156,12 +160,18 @@ object StreamRanker {
     fun freezeKind(info: StreamInfo): String = formatGroup(info) + if (Hdr.DOLBY_VISION in info.hdr) "/dv" else ""
 
     fun score(c: Candidate, caps: DeviceCaps, prefs: RankPrefs): Ranked {
-        val info = StreamParser.parse(c.stream)
+        val info = StreamParser.parse(c.stream).let { i ->
+            // A torrent played through the debrid service: what the service says is ready counts as cached.
+            val hash = c.stream.infoHash?.lowercase()
+            if (i.delivery == Delivery.TORRENT && caps.debrid != null && hash != null && caps.debridCached != null) i.copy(cached = hash in caps.debridCached) else i
+        }
         val reasons = mutableListOf<Reason>()
         fun add(code: String, pts: Int) { if (pts != 0) reasons += Reason(code, pts) }
         // The file this TV froze on is never picked again by itself; files of the same kind go last.
         val excl = if (c.key in caps.frozeKeys) Exclusion.FROZE_THIS_TV else exclusion(info, caps, prefs)
         if (freezeKind(info) in caps.frozeKinds) add("froze_kind", -300)
+        // Real-Debrid can't say what's ready, so such a torrent may need a second try: known-ready sources first.
+        if (info.delivery == Delivery.TORRENT && caps.debrid != null && info.cached == null && prefs.preset != Preset.ADDON_ORDER) add("debrid_unchecked", -15)
         val res = info.resolution ?: 0
         val hdrCapable = caps.displayHdr10 == true || caps.displayDolbyVision == true
         val gb = info.sizeBytes?.let { it / 1e9 }
