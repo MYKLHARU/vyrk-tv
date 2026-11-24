@@ -30,7 +30,7 @@ Wording: short, plain and specific; sentence case for buttons ("Add Top 10 rows"
 The opening is drawn with OpenGL ES 2 by `ui/intro/ForgedScene.kt` (on its own thread, `ForgedIntroView`) from the textures and sound made by `tools/gen_intro.py`; its V comes from `core/brand/Emblem.kt` (the brand's own `site/img/mark.svg`).
 
 - Timing: every moment is a constant in `core/brand/IntroTimeline.kt` (seconds from the first frame), with the sequence written out at the top. Change them there; `:core:test` checks they still run in order and fit.
-- Preview without a device: `python3 tools/preview_intro.py` writes frames at key moments to `build/intro-preview/`; `--video` renders the whole thing (needs ffmpeg), `--size 1080x2400` a phone held upright. It reads the timing from `IntroTimeline.kt` and mirrors `ForgedScene.kt`, so keep the two in step.
+- Preview without a device: `python3 tools/preview_intro.py` writes frames at key moments to `build/intro-preview/` (with the site's Home screenshot standing in for the app the V opens onto); `--video` renders the whole thing (needs ffmpeg), `--size 1080x2400` a phone held upright. It reads the timing from `IntroTimeline.kt` and mirrors `ForgedScene.kt`, so keep the two in step.
 - On a device: it plays on a cold start, so `adb shell am force-stop com.vyrk.tv` and open VYRK again. Developer options › Animator duration scale plays it slower (5× is good for timing).
 - Textures or sound: edit and run `python3 tools/gen_intro.py` (Pillow and NumPy).
 

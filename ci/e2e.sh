@@ -72,10 +72,11 @@ if [[ "${E2E_PART:-all}" != 2 ]]; then
   if wait_intro 'intro: first frame' 20; then
     t0=$SECONDS
     at() { local wait=$(( $1 - (SECONDS - t0) )); (( wait > 0 )) && sleep "$wait"; return 0; }
-    # A screenshot takes the emulator about 2 s, so these land at about 1.1, 1.8 and 2.9 s in.
+    # A screenshot takes the emulator about 2 s, so these land at about 1.1, 1.8, 2.9 and 3.4 s in.
     at 4; shot intro-molten-line
     at 6; shot intro-gold
     at 10; shot intro-lockup
+    at 13; shot intro-dive
     if wait_intro 'intro: end' 14; then
       end=$(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //')
       if [[ "$end" == "end completed"* && "$end" != *skipped_at* ]]; then log "ok: the opening played to its end ($end)"; else fail "the opening didn't play through: $end"; fi

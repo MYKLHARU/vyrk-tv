@@ -11,19 +11,21 @@ class IntroTimelineTest {
     private fun times() = generateSequence(0f) { it + step }.takeWhile { it <= T.END + 0.2f }
 
     @Test
-    fun phasesRunInTheirOrderAndFitInThreeAndAHalfSeconds() {
-        assertEquals(3.5f, T.END)
-        val order = listOf(0f, T.REVEAL_END, T.TRACE_START, T.TRACE_END, T.PULSE_AT, T.SETTLE_END, T.DISSOLVE_START, T.END)
+    fun phasesRunInTheirOrderAndFitInUnderFourSeconds() {
+        assertTrue(T.END in 3.4f..3.8f)
+        val order = listOf(0f, T.REVEAL_END, T.TRACE_START, T.TRACE_END, T.PULSE_AT, T.SETTLE_END, T.TAGLINE_START, T.WINDOW_START, T.ZOOM_START, T.DISSOLVE_START, T.END)
         assertEquals(order, order.sorted())
         assertTrue(T.POUR_START < T.TRACE_END && T.POUR_START > T.TRACE_START)
         assertTrue(T.COOL_START > T.POUR_START && T.COOL_END <= T.PULSE_AT)
         assertTrue(T.WORDMARK_START > T.SETTLE_START && T.TAGLINE_START >= T.WORDMARK_START + 3 * T.WORDMARK_LETTER_STAGGER)
-        assertTrue(T.TAGLINE_START + T.TAGLINE_FADE < T.DISSOLVE_START, "the tagline is fully in before the dissolve")
+        assertTrue(T.TAGLINE_START + T.TAGLINE_FADE < T.WINDOW_START, "the tagline is fully in before the V opens")
+        assertTrue(T.WINDOW_START + T.WINDOW_OPEN < T.DISSOLVE_START, "the window is open before the last fade")
     }
 
     @Test
     fun everyPhaseMovesOneWayFromZeroToOne() {
-        val curves = listOf<(Float) -> Float>(T::reveal, T::traceBlades, T::traceNotch, T::settle, T::push, T::tagline, T::wordmarkTracking) +
+        val curves = listOf<(Float) -> Float>(T::reveal, T::traceBlades, T::traceNotch, T::settle, T::push, T::tagline, T::wordmarkTracking,
+            T::window, T::zoomCentre, { t -> 1f - T.wordsLeft(t) }, { t -> (T.zoom(t) - 1f) / (T.ZOOM_DEPTH - 1f) }) +
             (0..3).map { i -> { t: Float -> T.letter(t, i) } }
         for (f in curves) {
             assertEquals(0f, f(0f), 1e-4f)
@@ -67,5 +69,17 @@ class IntroTimelineTest {
         // Skipped during the dissolve: never brighter than it already was.
         val late = T.DISSOLVE_START + 0.2f
         assertTrue(T.visibility(late + 0.01f, skippedAt = late) <= T.visibility(late))
+    }
+
+    @Test
+    fun theCameraDivesThroughTheOpenV() {
+        assertEquals(1f, T.zoom(T.ZOOM_START), 1e-4f)
+        assertEquals(T.ZOOM_DEPTH, T.zoom(T.END), 1e-3f)
+        // Slow to start: half-way through, still well under a tenth of the way in.
+        assertTrue(T.zoom((T.ZOOM_START + T.END) / 2) < T.ZOOM_DEPTH / 10)
+        assertEquals(1f, T.window(T.ZOOM_START + 0.15f), 1e-4f)
+        assertEquals(0f, T.wordsLeft(T.ZOOM_START + 0.2f), 1e-4f)
+        // The last fade only starts once the camera is deep in.
+        assertTrue(T.zoom(T.DISSOLVE_START) > 10f)
     }
 }

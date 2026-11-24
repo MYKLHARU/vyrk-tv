@@ -17,8 +17,10 @@ import kotlin.math.pow
  *  1.80       One pulse of light as the shape completes.
  *  1.84–2.62  The V settles up into its place in the lockup; a slow camera push begins.
  *  2.02–2.70  VYRK appears beneath it, letter by letter, with a metallic highlight.
- *  2.70–3.06  "Forged for Streaming" appears beneath that.
- *  3.14–3.50  A short hold, then everything dissolves into the app.
+ *  2.70–3.04  "Forged for Streaming" appears beneath that; a short hold.
+ *  3.16–3.32  The V opens into a window onto the app, from its heart out, leaving a gold rim;
+ *             VYRK and the tagline fall away.
+ *  3.20–3.70  The camera dives through the V (into its left blade) until the app fills the screen.
  */
 object IntroTimeline {
     const val REVEAL_END = 0.60f
@@ -41,9 +43,16 @@ object IntroTimeline {
     const val WORDMARK_HIGHLIGHT_START = 2.28f
     const val WORDMARK_HIGHLIGHT_END = 3.02f
     const val TAGLINE_START = 2.70f
-    const val TAGLINE_FADE = 0.36f
-    const val DISSOLVE_START = 3.14f
-    const val END = 3.50f
+    const val TAGLINE_FADE = 0.34f
+    const val WINDOW_START = 3.16f
+    const val WINDOW_OPEN = 0.16f
+    const val WORDS_OUT = 0.18f
+    const val ZOOM_START = 3.20f
+    /** How far the camera goes in: the V ends this many times its size, its blade wider than the screen. */
+    const val ZOOM_DEPTH = 40f
+    /** A last fade under the dive, so nothing of the opening is left whatever the screen's shape. */
+    const val DISSOLVE_START = 3.60f
+    const val END = 3.70f
 
     /** How long a skip takes to fade out (OK, Enter, Back or a tap). */
     const val SKIP_FADE = 0.22f
@@ -101,6 +110,18 @@ object IntroTimeline {
     }
 
     fun tagline(t: Float): Float = easeOutCubic(progress(t, TAGLINE_START, TAGLINE_START + TAGLINE_FADE))
+
+    /** How far the V has opened into a window onto the app, from its heart out: 0 → 1. */
+    fun window(t: Float): Float = easeOutCubic(progress(t, WINDOW_START, WINDOW_START + WINDOW_OPEN))
+
+    /** VYRK and the tagline, 1 → 0 as the camera goes in. */
+    fun wordsLeft(t: Float): Float = 1f - easeOutCubic(progress(t, WINDOW_START, WINDOW_START + WORDS_OUT))
+
+    /** The dive's zoom: 1 → [ZOOM_DEPTH], slow to start and accelerating, like flying in. */
+    fun zoom(t: Float): Float = ZOOM_DEPTH.pow(progress(t, ZOOM_START, END).pow(1.8f))
+
+    /** How far the dive has brought the point it heads for to the middle of the screen: 0 → 1. */
+    fun zoomCentre(t: Float): Float = smoothstep(progress(t, ZOOM_START, END))
 
     /**
      * How visible the whole opening is: 1 until the dissolve, then down to 0 at [END]. After a skip
