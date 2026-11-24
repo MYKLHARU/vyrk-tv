@@ -33,8 +33,10 @@ import kotlin.math.sin
  *
  * Passes, back to front: iron (lit, revealed and vignetted in one pass); smoke and embers behind;
  * the light the V throws and its pulse; the V (molten fill, gold, the pour's edge and the glint in
- * one pass, then the molten line in another); VYRK and the tagline; embers and smoke in front; and
- * during the dissolve, one pass that fades everything into the app.
+ * one pass, then the molten line in another); at the end, the V's window onto the app (a pass that
+ * clears the pieces to transparent, so the app shows through); VYRK and the tagline; embers and
+ * smoke in front; and for a skip or the last moment, one pass that fades everything into the app.
+ * The camera's dive through the V is a zoom applied to every pass in the vertex shader.
  */
 internal class ForgedScene(private val context: Context) {
     private val tagline = context.getString(R.string.tagline)
@@ -81,6 +83,7 @@ internal class ForgedScene(private val context: Context) {
     private lateinit var trace: Program
     private lateinit var text: Program
     private lateinit var fade: Program
+    private lateinit var window: Program
     private val quad: FloatBuffer = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
 
     /** With the opening's context current: compiles the shaders and uploads the textures. */
@@ -91,6 +94,7 @@ internal class ForgedScene(private val context: Context) {
         trace = program(TRACE, "uSegA", "uSegS", "uTrace", "uHeads", "uOutline", "uPpu")
         text = program(TEXT, "uTex", "uMetal", "uBand", "uTop", "uBottom", "uHi")
         fade = program(FADE, "uAlpha")
+        window = program(WINDOW, "uEdges", "uWin")
         texIron = upload(pending.getValue("iron"), mip = false)
         texGold = upload(pending.getValue("gold"), mip = true)
         texMolten = upload(pending.getValue("molten"), mip = true)
@@ -224,10 +228,18 @@ internal class ForgedScene(private val context: Context) {
         val push = T.push(t)
         val reveal = T.reveal(t)
         val flicker = 1f + 0.03f * sin(2f * PI.toFloat() * 1.7f * t) + 0.02f * sin(2f * PI.toFloat() * 4.3f * t + 1f)
+        placeEmblem(t, push)
+        // The dive: everything zooms about a point in the V's left blade, which drifts to the middle.
+        zoom = T.zoom(t)
+        pivotX = ox + DIVE_X * s
+        pivotY = oy + DIVE_Y * s
+        val c = T.zoomCentre(t)
+        toX = pivotX + (w / 2f - pivotX) * c
+        toY = pivotY + (h / 2f - pivotY) * c
         drawIron(push, min(1f, reveal * flicker))
         if (!lite) drawSmoke(t, push, reveal, front = false)
         drawEmbers(t, push, reveal, front = false)
-        drawEmblem(t, push)
+        drawEmblem(t)
         drawWords(t, push)
         drawEmbers(t, push, reveal, front = true)
         if (!lite) drawSmoke(t, push, reveal, front = true)
@@ -236,6 +248,7 @@ internal class ForgedScene(private val context: Context) {
             GL.glBlendFunc(GL.GL_ZERO, GL.GL_SRC_ALPHA)
             fade.use()
             GL.glUniform1f(fade.u("uAlpha"), visibility)
+            zoom = 1f; pivotX = 0f; pivotY = 0f; toX = 0f; toY = 0f
             rect(0f, 0f, w, h, 0f, 0f, 1f, 1f, fade)
         }
     }
@@ -254,7 +267,9 @@ internal class ForgedScene(private val context: Context) {
         GL.glUniform3f(bg.u("uBase"), r(BASE), g(BASE), b(BASE))
         // The edges fall away to black, to the screen's own shape.
         GL.glUniform4f(bg.u("uVig"), 0.5f * w, 0.53f * h, 0.5f * w, min(0.5f * h, 0.7f * w))
-        rect(0f, 0f, w, h, -x0 / (iw * sc), -y0 / (ih * sc), (w - x0) / (iw * sc), (h - y0) / (ih * sc), bg)
+        // Larger than the screen, so it still covers it however the dive moves it.
+        val m = 1.2f * max(w, h)
+        rect(-m, -m, w + m, h + m, (-m - x0) / (iw * sc), (-m - y0) / (ih * sc), (w + m - x0) / (iw * sc), (h + m - y0) / (ih * sc), bg)
         GL.glEnable(GL.GL_BLEND)
     }
 
@@ -339,7 +354,12 @@ internal class ForgedScene(private val context: Context) {
     private val traceU = FloatArray(9)
     private val headsU = FloatArray(9)
 
-    private fun drawEmblem(t: Float, push: Float) {
+    // The V's box on screen before the dive: its top-left corner and pixels per box unit.
+    private var ox = 0f
+    private var oy = 0f
+    private var s = 1f
+
+    private fun placeEmblem(t: Float, push: Float) {
         // Where it forms (centred, a little larger) and where it settles in the lockup.
         val finalS = e / 100f
         val finalX = w / 2f - e / 2f
@@ -348,15 +368,18 @@ internal class ForgedScene(private val context: Context) {
         val formY = h / 2f - 51f * formS
         val k = T.settle(t)
         val k2 = 1f + T.PUSH_LOCKUP * push
-        val s = (formS + (finalS - formS) * k) * k2
-        val ox = pushed(formX + (finalX - formX) * k, w / 2f, k2)
-        val oy = pushed(formY + (boxY - formY) * k, h / 2f, k2)
+        s = (formS + (finalS - formS) * k) * k2
+        ox = pushed(formX + (finalX - formX) * k, w / 2f, k2)
+        oy = pushed(formY + (boxY - formY) * k, h / 2f, k2)
+    }
 
+    private fun drawEmblem(t: Float) {
         val pourP = T.progress(t, T.POUR_START, T.POUR_END)
         val coolP = T.progress(t, T.COOL_START, T.COOL_END)
         val tracing = T.traceBlades(t)
         // The light the hot metal throws on the iron, and the pulse as the shape completes.
-        sprite(texGlow, ox + 50f * s, oy + 57f * s, 210f * s, 185f * s, 0.12f * min(1f, tracing * 3f) + 0.40f * pourP * (1f - coolP) + 0.12f * coolP, 0xFF7A26, true)
+        val open = T.window(t)
+        sprite(texGlow, ox + 50f * s, oy + 57f * s, 210f * s, 185f * s, (0.12f * min(1f, tracing * 3f) + 0.40f * pourP * (1f - coolP) + 0.12f * coolP) * (1f - 0.6f * open), 0xFF7A26, true)
         val pulse = T.pulse(t)
         if (pulse > 0f) sprite(texGlow, ox + 50f * s, oy + 51f * s, 250f * s, 250f * s, 0.30f * pulse, 0xFFC878, true)
 
@@ -372,7 +395,7 @@ internal class ForgedScene(private val context: Context) {
             bindTex(texGold, fill.u("uGold"), 0)
             bindTex(texMolten, fill.u("uMolten"), 1)
             GL.glUniform3fv(fill.u("uEdges"), 11, edges, 0)
-            GL.glUniform1f(fill.u("uPpu"), s)
+            GL.glUniform1f(fill.u("uPpu"), s * zoom)
             val cool = T.coolFront(t)
             GL.glUniform4f(fill.u("uFronts"), cool, T.pourFront(t), if (coolP > 0f) 1f else 0f, if (cool < 100f) 1f else 0f)
             val g = T.progress(t, T.PULSE_AT - 0.04f, T.PULSE_AT + 0.36f)
@@ -400,8 +423,18 @@ internal class ForgedScene(private val context: Context) {
             GL.glUniform3fv(trace.u("uTrace"), 3, traceU, 0)
             GL.glUniform3fv(trace.u("uHeads"), 3, headsU, 0)
             GL.glUniform1f(trace.u("uOutline"), outline)
-            GL.glUniform1f(trace.u("uPpu"), s)
+            GL.glUniform1f(trace.u("uPpu"), s * zoom)
             rect(x0, y0, x1, y1, -m, -m, 100f + m, 100f + m, trace)
+        }
+        // The window: the pieces clear to transparent from their hearts out, so the app shows
+        // through; a gold rim stays until the dive is under way.
+        if (open > 0f) {
+            val rim = 1.1f * (1f - ((zoom - 1.5f) / 4f).coerceIn(0f, 1f))
+            GL.glBlendFunc(GL.GL_ZERO, GL.GL_ONE_MINUS_SRC_ALPHA)
+            window.use()
+            GL.glUniform3fv(window.u("uEdges"), 11, edges, 0)
+            GL.glUniform3f(window.u("uWin"), s * zoom, rim, rim + (1f - open) * 10f)
+            rect(x0, y0, x1, y1, -m, -m, 100f + m, 100f + m, window)
         }
     }
 
@@ -424,6 +457,8 @@ internal class ForgedScene(private val context: Context) {
     private fun drawWords(t: Float, push: Float) {
         val k = 1f + T.PUSH_LOCKUP * push
         val cx = w / 2f
+        val left = T.wordsLeft(t)
+        if (left <= 0f) return
         GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
         if (t >= T.WORDMARK_START) {
             val size = wordSize * k
@@ -433,7 +468,7 @@ internal class ForgedScene(private val context: Context) {
             var total = track * (WORD.length - 1)
             for (i in WORD.indices) total += advances[i] * scale
             val base = pushed(wordBase, h / 2f, k)
-            val left = cx - total / 2f
+            val start = cx - total / 2f
             val cap = 0.70f * size
             val hi = T.wordmarkHighlight(t)
             text.use()
@@ -443,13 +478,13 @@ internal class ForgedScene(private val context: Context) {
             GL.glUniform3f(text.u("uTop"), 0xFB / 255f, 0xF8 / 255f, 0xF1 / 255f)
             GL.glUniform3f(text.u("uBottom"), 0xB9 / 255f, 0xB0 / 255f, 0xA2 / 255f)
             GL.glUniform3f(text.u("uHi"), 1f, 0xF2 / 255f, 0xD6 / 255f)
-            GL.glUniform4f(text.u("uBand"), left - 0.6f * wordSize + hi * (total + 1.2f * wordSize), base, 0.35f, 0.28f * wordSize)
-            var x = left
+            GL.glUniform4f(text.u("uBand"), start - 0.6f * wordSize + hi * (total + 1.2f * wordSize), base, 0.35f, 0.28f * wordSize)
+            var x = start
             for (i in WORD.indices) {
                 val a = T.letter(t, i)
                 if (a > 0f) {
                     val b = base + (1f - a) * 0.10f * wordSize * k
-                    GL.glUniform4f(text.u("uMetal"), b - cap, b, a, if (hi > -0.2f && hi < 1.2f) 1f else 0f)
+                    GL.glUniform4f(text.u("uMetal"), b - cap, b, a * left, if (hi > -0.2f && hi < 1.2f) 1f else 0f)
                     val g = glyphs[i]
                     rect(x + g[4] * scale, b + g[5] * scale, x + g[6] * scale, b + g[7] * scale, g[0], g[1], g[2], g[3], text)
                 }
@@ -464,7 +499,7 @@ internal class ForgedScene(private val context: Context) {
             bindTex(texTag, text.u("uTex"), 0)
             GL.glUniform3f(text.u("uTop"), r(GOLD), g(GOLD), b(GOLD))
             GL.glUniform3f(text.u("uBottom"), r(GOLD), g(GOLD), b(GOLD))
-            GL.glUniform4f(text.u("uMetal"), base - 1f, base, 0.92f * a, 0f)
+            GL.glUniform4f(text.u("uMetal"), base - 1f, base, 0.92f * a * left, 0f)
             GL.glUniform4f(text.u("uBand"), 0f, 0f, 0f, 1f)
             val tw = tagW * scale
             val top = base - tagAscent * scale
@@ -526,9 +561,18 @@ internal class ForgedScene(private val context: Context) {
 
     private val rectBuf = FloatArray(16)
 
+    // The dive's zoom, applied to every quad by the vertex shader (identity until the end).
+    private var zoom = 1f
+    private var pivotX = 0f
+    private var pivotY = 0f
+    private var toX = 0f
+    private var toY = 0f
+
     private fun quad(v: FloatArray, p: Program) {
         quad.clear(); quad.put(v); quad.position(0)
         GL.glUniform2f(p.u("uRes"), w, h)
+        GL.glUniform4f(p.u("uZoom"), pivotX, pivotY, zoom, 0f)
+        GL.glUniform2f(p.u("uZoomTo"), toX, toY)
         GL.glVertexAttribPointer(p.aPos, 2, GL.GL_FLOAT, false, 16, quad)
         GL.glEnableVertexAttribArray(p.aPos)
         if (p.aUv >= 0) {
@@ -558,8 +602,7 @@ internal class ForgedScene(private val context: Context) {
             check(ok[0] != 0) { "intro shader link: ${GL.glGetProgramInfoLog(id)}" }
             aPos = GL.glGetAttribLocation(id, "aPos")
             aUv = GL.glGetAttribLocation(id, "aUv")
-            for (name in uniforms) locations[name] = GL.glGetUniformLocation(id, name)
-            locations["uRes"] = GL.glGetUniformLocation(id, "uRes")
+            for (name in uniforms.toList() + listOf("uRes", "uZoom", "uZoomTo")) locations[name] = GL.glGetUniformLocation(id, name)
         }
 
         fun use() = GL.glUseProgram(id)
@@ -591,6 +634,9 @@ internal class ForgedScene(private val context: Context) {
         const val BASE = 0xFF050404.toInt()
         private const val GOLD = 0xD4A65A
         private const val FORM_SCALE = 1.10f
+        /** Where the dive heads: deep in the left blade, the widest part of the V (box units). */
+        private const val DIVE_X = 28.5f
+        private const val DIVE_Y = 32f
         private const val WORD = "VYRK"
         private const val IRON_W = 1920f
         private const val IRON_H = 1080f
@@ -628,17 +674,24 @@ internal class ForgedScene(private val context: Context) {
         )
 
         // ---------------------------------------------------------------- shaders
-        // Positions in pixels from the top left; aUv is a texture coordinate or, for the V, box units.
+        // Positions in pixels from the top left; aUv is a texture coordinate or, for the V, box
+        // units. The dive zooms by uZoom.z about uZoom.xy and draws that point at uZoomTo. vPx is
+        // where a fragment is on screen, vLocal where it was before the dive.
         private const val VERTEX = """
 attribute vec2 aPos;
 attribute vec2 aUv;
 uniform vec2 uRes;
+uniform vec4 uZoom;
+uniform vec2 uZoomTo;
 varying vec2 vUv;
 varying vec2 vPx;
+varying vec2 vLocal;
 void main() {
+  vec2 pos = uZoomTo + (aPos - uZoom.xy) * uZoom.z;
   vUv = aUv;
-  vPx = aPos;
-  gl_Position = vec4(aPos.x / uRes.x * 2.0 - 1.0, 1.0 - aPos.y / uRes.y * 2.0, 0.0, 1.0);
+  vPx = pos;
+  vLocal = aPos;
+  gl_Position = vec4(pos.x / uRes.x * 2.0 - 1.0, 1.0 - pos.y / uRes.y * 2.0, 0.0, 1.0);
 }"""
 
         // The iron over the base colour, then the vignette: clear to 0.45 of the radius, 0.62 at
@@ -754,7 +807,7 @@ void main() {
         private const val TEXT = """
 precision mediump float;
 varying vec2 vUv;
-varying vec2 vPx;
+varying vec2 vLocal;
 uniform sampler2D uTex;
 uniform vec4 uMetal;   // cap top y, baseline y, opacity, highlight on
 uniform vec4 uBand;    // band centre x, its y, slant, width
@@ -763,10 +816,27 @@ uniform vec3 uBottom;
 uniform vec3 uHi;
 void main() {
   float a = texture2D(uTex, vUv).a * uMetal.z;
-  vec3 c = mix(uTop, uBottom, clamp((vPx.y - uMetal.x) / max(uMetal.y - uMetal.x, 1.0), 0.0, 1.0));
-  float q = ((vPx.x - uBand.x) + (vPx.y - uBand.y) * uBand.z) / uBand.w;
+  vec3 c = mix(uTop, uBottom, clamp((vLocal.y - uMetal.x) / max(uMetal.y - uMetal.x, 1.0), 0.0, 1.0));
+  float q = ((vLocal.x - uBand.x) + (vLocal.y - uBand.y) * uBand.z) / uBand.w;
   c += uHi * (0.55 * exp(-q * q) * uMetal.w);
   gl_FragColor = vec4(min(c, vec3(1.0)), 1.0) * a;
+}"""
+
+        // The V's window: clears what's drawn inside the pieces deeper than uWin.z (and never within
+        // the rim, uWin.y) to transparent, with glBlendFunc(ZERO, ONE_MINUS_SRC_ALPHA).
+        private const val WINDOW = HIGHP + """
+varying vec2 vUv;
+uniform vec3 uEdges[11];
+uniform vec3 uWin;   // pixels per box unit, rim width, depth the opening has reached out to
+float edge(vec3 n, vec2 p) { return dot(n.xy, p) - n.z; }
+void main() {
+  vec2 p = vUv;
+  float left = min(min(edge(uEdges[0], p), edge(uEdges[1], p)), min(edge(uEdges[2], p), edge(uEdges[3], p)));
+  float right = min(min(edge(uEdges[4], p), edge(uEdges[5], p)), min(edge(uEdges[6], p), edge(uEdges[7], p)));
+  float notch = min(min(edge(uEdges[8], p), edge(uEdges[9], p)), edge(uEdges[10], p));
+  float hole = clamp((max(max(left, right), notch) - max(uWin.y, uWin.z)) * uWin.x + 0.5, 0.0, 1.0);
+  if (hole <= 0.0) discard;
+  gl_FragColor = vec4(0.0, 0.0, 0.0, hole);
 }"""
 
         // Multiplies what's drawn (colour and alpha) by uAlpha, with glBlendFunc(ZERO, SRC_ALPHA).

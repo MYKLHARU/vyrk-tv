@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.64
+
+- The opening now ends by diving into VYRK: the gold V opens into a window onto Home (or the sign-in screen), keeping a thin gold rim, VYRK and the tagline fall away, and the camera flies through the V until the app fills the screen. About 3.7 seconds in all; OK, Enter, Back or a tap still skips it.
+
 ## v0.1.63
 
 - A new opening, forged: on dark hammered iron lit by a forge, a line of molten gold runs round the V, fills it and cools into brushed gold with a single pulse of light; the V settles, VYRK and "Forged for Streaming" appear beneath it, and it dissolves into the app. About 3.5 seconds, on every cold start (the short sting on later launches is gone); not when you come back to VYRK or turn the phone.

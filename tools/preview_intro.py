@@ -6,7 +6,7 @@ the timing straight from core/src/main/kotlin/com/vyrk/core/brand/IntroTimeline.
 to the timing shows here as it will in the app. Fonts are stand-ins (the app uses the system
 serif for VYRK); materials and motion match.
 
-  python3 tools/preview_intro.py                     frames at 0.3, 0.9, 1.4, 1.8, 2.3, 2.9 and 3.3 s
+  python3 tools/preview_intro.py                     frames at 0.3, 0.9, 1.4, 1.8, 2.3, 2.9, 3.3 and 3.5 s
   python3 tools/preview_intro.py --times 1.2 1.6     chosen moments
   python3 tools/preview_intro.py --video             the whole thing at 30 fps (needs ffmpeg)
   python3 tools/preview_intro.py --size 1080x2400    a phone held upright
@@ -69,6 +69,10 @@ def wordmark_highlight(t):
 
 def tagline(t): return ease_out_cubic(progress(t, T["TAGLINE_START"], T["TAGLINE_START"] + T["TAGLINE_FADE"]))
 def visibility(t): return 1 - ease_in_out_sine(progress(t, T["DISSOLVE_START"], T["END"]))
+def window(t): return ease_out_cubic(progress(t, T["WINDOW_START"], T["WINDOW_START"] + T["WINDOW_OPEN"]))
+def words_left(t): return 1 - ease_out_cubic(progress(t, T["WINDOW_START"], T["WINDOW_START"] + T["WORDS_OUT"]))
+def zoom(t): return T["ZOOM_DEPTH"] ** (progress(t, T["ZOOM_START"], T["END"]) ** 1.8)
+def zoom_centre(t): return smoothstep(progress(t, T["ZOOM_START"], T["END"]))
 
 
 # ------------------------------------------------------------------ the scene (mirror of ForgedScene.kt)
@@ -78,6 +82,8 @@ NOTCH = [(40, 14), (60, 14), (50, 36)]
 PIECES = [LEFT, RIGHT, NOTCH]
 BASE = (5, 4, 4)
 FORM_SCALE = 1.10
+DIVE = (28.5, 32.0)     # where the dive heads, in the V's box (ForgedScene.DIVE_X, DIVE_Y)
+APP = os.path.join(ROOT, "site", "img", "shots", "home.jpg")   # stands in for the app underneath
 
 
 def trace_order(p): return [p[0]] + list(reversed(p[1:]))
@@ -120,6 +126,7 @@ class Frame:
         self.w, self.h = w, h
         self.px = np.zeros((h, w, 3), np.float32)
         self.px[:] = np.array(BASE, np.float32) / 255
+        self.hole = np.zeros((h, w), np.float32)    # where the V's window shows the app
 
     def blend(self, x0, y0, rgb, a, mode="over"):
         """Composite an rgb (h,w,3) with coverage a (h,w) at x0, y0 (clipped)."""
@@ -265,7 +272,7 @@ def draw_emblem(frame, t, w, h):
     tracing = trace_blades(t)
     # Light the molten metal throws on the iron, and the completing pulse.
     sprite(frame, "intro_glow.webp", cx, cy + 6 * s, 210 * s, 185 * s,
-           0.12 * min(1, tracing * 3) + 0.40 * molten_amount + 0.12 * gold_amount, hexc("#FF7A26"))
+           (0.12 * min(1, tracing * 3) + 0.40 * molten_amount + 0.12 * gold_amount) * (1 - 0.6 * window(t)), hexc("#FF7A26"))
     pl = pulse(t)
     if pl > 0:
         sprite(frame, "intro_glow.webp", cx, cy, 250 * s, 250 * s, 0.30 * pl, hexc("#FFC878"))
@@ -344,6 +351,28 @@ def draw_emblem(frame, t, w, h):
                 rr = np.hypot(px - hx, py - hy)
                 col += np.array(hexc("#FFB060")) * (0.9 * glow(rr / 7.0))[..., None] + np.array(hexc("#FFF4DC")) * glow(rr / 2.0)[..., None]
         frame.blend(x0, y0, np.minimum(col * outline_alpha, 1), np.ones(px.shape, np.float32), "add")
+    # The window: the pieces clear from their hearts out, a gold rim staying until the dive is under way.
+    op = window(t)
+    if op > 0:
+        rim = 1.1 * (1 - min(max((zoom(t) - 1.5) / 4, 0), 1))
+        depth = max(rim, rim + (1 - op) * 10)
+        for pts in PIECES:
+            scr = [(ox + x * s, oy + y * s) for x, y in pts]
+            x0, y0, cover = polygon_mask(frame, scr)
+            hh, ww = cover.shape
+            yy, xx = np.mgrid[0:hh, 0:ww].astype(np.float32)
+            bx, by = (xx + x0 + 0.5 - ox) / s, (yy + y0 + 0.5 - oy) / s
+            cx_, cy_ = sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts)
+            d = np.full(bx.shape, 1e9, np.float32)
+            for a_, b_ in zip(pts, pts[1:] + pts[:1]):
+                nx, ny = -(b_[1] - a_[1]), b_[0] - a_[0]
+                l = math.hypot(nx, ny); nx, ny = nx / l, ny / l
+                if nx * (cx_ - a_[0]) + ny * (cy_ - a_[1]) < 0: nx, ny = -nx, -ny
+                d = np.minimum(d, nx * bx + ny * by - (nx * a_[0] + ny * a_[1]))
+            hole = np.clip((d - depth) * s + 0.5, 0, 1)
+            ys, xs = slice(max(0, y0), min(frame.h, y0 + hh)), slice(max(0, x0), min(frame.w, x0 + ww))
+            sub = hole[ys.start - y0:ys.stop - y0, xs.start - x0:xs.stop - x0]
+            frame.hole[ys, xs] = np.maximum(frame.hole[ys, xs], sub)
 
 
 FONT_WORD = None
@@ -376,6 +405,9 @@ def text_layer(chars, font, xs, base, h, w):
 def draw_text(frame, t, w, h):
     e, _, word_px, word_base, tag_px, tag_base = layout(w, h)
     k = 1 + T["PUSH_LOCKUP"] * push(t)
+    left = words_left(t)
+    if left <= 0:
+        return
     fw, ft = fonts(word_px * k, tag_px * k)
     # VYRK, letter by letter, the spacing settling from 0.62 em to the wordmark's 0.385 em.
     if t >= T["WORDMARK_START"]:
@@ -401,12 +433,12 @@ def draw_text(frame, t, w, h):
             f = np.clip((yy - (base - cap)) / cap, 0, 1)
             top, bot = np.array(hexc("#FBF8F1")), np.array(hexc("#B9B0A2"))
             col = (top[None, None, :] * (1 - f[..., None]) + bot[None, None, :] * f[..., None])
-            frame.blend(0, 0, np.broadcast_to(col, (h, w, 3)), m * a, "over")
+            frame.blend(0, 0, np.broadcast_to(col, (h, w, 3)), m * a * left, "over")
             if -0.2 < hi < 1.2:
                 xx = np.arange(w, dtype=np.float32)[None, :]
                 bandx = (cx - total / 2 - 0.6 * word_px) + hi * (total + 1.2 * word_px)
                 band = np.exp(-(((xx - bandx) + (yy - base) * 0.35) / (0.28 * word_px)) ** 2)
-                frame.blend(0, 0, np.array(hexc("#FFF2D6"), np.float32), m * a * band * 0.55, "add")
+                frame.blend(0, 0, np.array(hexc("#FFF2D6"), np.float32), m * a * left * band * 0.55, "add")
     # Forged for Streaming.
     a = tagline(t)
     if a > 0:
@@ -422,7 +454,7 @@ def draw_text(frame, t, w, h):
             xs.append(x)
             x += av + track
         m = text_layer(list(text), ft, xs, base, h, w)
-        frame.blend(0, 0, np.array(hexc("#D4A65A"), np.float32), m * a * 0.92, "over")
+        frame.blend(0, 0, np.array(hexc("#D4A65A"), np.float32), m * a * left * 0.92, "over")
 
 
 def embers(frame, t, w, h, layer):
@@ -486,9 +518,42 @@ def render(t, w, h):
     draw_text(f, t, w, h)
     embers(f, t, w, h, "front")
     smoke(f, t, w, h, "front")
+    # The dive: zoom about the point in the left blade, drifting it to the middle (as the vertex shader does).
+    z = zoom(t)
+    scene, hole = f.px, f.hole
+    if z > 1.0001:
+        s0, ox, oy = emblem_transform(t, w, h)
+        kk = 1 + T["PUSH_LOCKUP"] * push(t)
+        ox, oy = pushed(ox, oy, w, h, kk)
+        px_, py_ = ox + DIVE[0] * s0 * kk, oy + DIVE[1] * s0 * kk
+        c = zoom_centre(t)
+        tx, ty = px_ + (w / 2 - px_) * c, py_ + (h / 2 - py_) * c
+        data = (1 / z, 0, px_ - tx / z, 0, 1 / z, py_ - ty / z)
+        img = Image.fromarray(np.clip(scene * 255, 0, 255).astype(np.uint8)).transform((w, h), Image.AFFINE, data, Image.BICUBIC)
+        scene = np.asarray(img).astype(np.float32) / 255
+        hole = np.asarray(Image.fromarray((hole * 255).astype(np.uint8)).transform((w, h), Image.AFFINE, data, Image.BILINEAR)).astype(np.float32) / 255
+    app = app_under(w, h)
+    out = scene * (1 - hole[..., None]) + app * hole[..., None]
     v = visibility(t)
-    out = f.px * v + np.array([0.02, 0.04, 0.055], np.float32) * (1 - v)   # the app's dark blue beneath
+    out = out * v + app * (1 - v)
     return Image.fromarray(np.clip(out * 255, 0, 255).astype(np.uint8))
+
+
+_APP = {}
+
+
+def app_under(w, h):
+    """The app beneath the opening: VYRK's Home screenshot from the site, or its dark blue."""
+    if (w, h) not in _APP:
+        if os.path.exists(APP):
+            im = Image.open(APP).convert("RGB")
+            sc = max(w / im.width, h / im.height)
+            im = im.resize((int(im.width * sc) + 1, int(im.height * sc) + 1), Image.BICUBIC)
+            l, t_ = (im.width - w) // 2, (im.height - h) // 2
+            _APP[(w, h)] = np.asarray(im.crop((l, t_, l + w, t_ + h))).astype(np.float32) / 255
+        else:
+            _APP[(w, h)] = np.broadcast_to(np.array([0.02, 0.04, 0.055], np.float32), (h, w, 3))
+    return _APP[(w, h)]
 
 
 if __name__ == "__main__":
@@ -511,7 +576,7 @@ if __name__ == "__main__":
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", mp4], check=True)
         print(mp4)
     else:
-        for t in args.times or [0.3, 0.9, 1.4, 1.8, 2.3, 2.9, 3.3]:
+        for t in args.times or [0.3, 0.9, 1.4, 1.8, 2.3, 2.9, 3.3, 3.5]:
             path = os.path.join(OUT, f"t{t:.2f}-{w}x{h}.png")
             render(t, w, h).save(path)
             print(path)
