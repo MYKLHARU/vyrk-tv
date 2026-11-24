@@ -64,15 +64,28 @@ if [[ "${E2E_PART:-all}" != 2 ]]; then
     local o; o=$(adb_run logcat -d -v time 2>/dev/null || true)
     printf '%s\n' "$o" | grep -E 'VyrkEvent|VyrkIntro|ANR in|AndroidRuntime|EGL|BLASTBufferQueue|SurfaceView|Choreographer' | tail -n 25 | sed 's/^/[e2e]   /' || true
   }
-  adbs settings put global animator_duration_scale 1
+  # In slow motion (the animator duration scale stretches it 4×), so the software-rendered
+  # emulator's screenshots land on the moments they name and the skip lands mid-way.
+  adbs settings put global animator_duration_scale 4
   adb_run logcat -c
   adbs am start -n "$PKG/.MainActivity" >/dev/null
   if wait_intro 'intro: first frame' 20; then
-    sleep 1.0; shot intro-forging
-    sleep 0.5; shot intro-gold
-    sleep 0.8; shot intro-lockup
-    if wait_intro 'intro: end' 8; then log "ok: the opening played ($(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //'))"
+    t0=$SECONDS
+    at() { local wait=$(( $1 - (SECONDS - t0) )); (( wait > 0 )) && sleep "$wait"; return 0; }
+    at 4; shot intro-molten-line     # about 1.0 s into the opening
+    at 5; shot intro-pour            # 1.3 s
+    at 7; shot intro-pulse           # 1.8 s
+    at 9; shot intro-wordmark        # 2.3 s
+    at 12; shot intro-lockup         # 3.0 s
+    if wait_intro 'intro: end' 14; then
+      end=$(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //')
+      if [[ "$end" == "end completed"* && "$end" != *skipped_at* ]]; then log "ok: the opening played to its end ($end)"; else fail "the opening didn't play through: $end"; fi
     else fail "the opening didn't end"; intro_dump; fi
+    # TEMP (review): a contact sheet of the shots above, in the log.
+    if command -v ffmpeg >/dev/null; then
+      sheet=$(ls "$OUT"/*-intro-*.png | head -n 5)
+      ffmpeg -loglevel error -y $(for f in $sheet; do printf -- '-i %s ' "$f"; done) -filter_complex "$(n=0; for f in $sheet; do printf '[%d:v]scale=640:-1[v%d];' $n $n; n=$((n+1)); done; for i in $(seq 0 $((n-1))); do printf '[v%d]' $i; done; printf 'vstack=inputs=%d' $n)" -q:v 4 "$OUT/intro-sheet.jpg" && { echo "INTRO-SHEET-BEGIN"; base64 -w 0 "$OUT/intro-sheet.jpg"; echo; echo "INTRO-SHEET-END"; } || true
+    fi
   else
     fail "the opening didn't start"; intro_dump
   fi
@@ -80,9 +93,11 @@ if [[ "${E2E_PART:-all}" != 2 ]]; then
   adb_run logcat -c
   adbs am start -n "$PKG/.MainActivity" >/dev/null
   if wait_intro 'intro: first frame' 20; then
-    sleep 0.8
+    sleep 3
     adb_run shell input keyevent KEYCODE_DPAD_CENTER
-    if wait_intro 'intro: end' 4 && [[ "$(intro_events)" == *'intro: skip (key DPAD_CENTER)'* ]]; then log "ok: OK skips the opening ($(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //'))"
+    if wait_intro 'intro: end' 5; then
+      end=$(intro_events | grep 'intro: end' | tail -n 1 | sed 's/.*intro: //')
+      if [[ "$end" == *skipped_at* && "$(intro_events)" == *'intro: skip (key DPAD_CENTER)'* ]]; then log "ok: OK skips the opening ($end)"; else fail "OK didn't skip the opening: $end"; fi
     else fail "OK didn't skip the opening"; intro_dump; fi
     sleep 1.5
     ev=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
