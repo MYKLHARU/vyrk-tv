@@ -154,10 +154,14 @@ fun BrowsePage(
     val recRows = rememberRecommendationRows(session, enabled = isHome && !model.animeOnly) { picks ->
         if (com.vyrk.tv.ui.phone.FormFactor.isTv(graph.context)) session.scope.launch { graph.homeChannel.publish(picks) }
     }
+    // The Anime tab opens with AniList: its genres, then its rows, before your add-ons' catalogues.
+    val aniList = rememberAniList(session, model, enabled = model.tab == Tab.ANIME)
+    val animeEmpty = model.animeOnly && model.built && model.rows.isEmpty() && !aniList.showBar
     val rows = buildList {
         if (isHome && cwItems.isNotEmpty()) add(cwRow)
         addAll(top10Rows)
         addAll(seasonalRows)
+        addAll(aniList.rows)
         addAll(model.rows.take(2))
         addAll(recRows)
         addAll(model.rows.drop(2))
@@ -272,6 +276,17 @@ fun BrowsePage(
             if (!watchReq.tryRequestFocus() || !heroEnabled) restoreTarget = rows.firstOrNull()?.let { Origin(tabKey, it.key, 0, "") }
         }
     }
+    // Anime Kitsu added from the AniList card: the card goes as the genres arrive, so focus moves to
+    // All genres instead of being lost with the button.
+    val genresReq = remember { FocusRequester() }
+    LaunchedEffect(aniList.showOffer, active) {
+        if (!active) { flags.offerFocused.set(false); return@LaunchedEffect }
+        if (!aniList.showOffer && aniList.showBar && flags.offerFocused.getAndSet(false)) {
+            androidx.compose.runtime.snapshotFlow { windowInfoForCard.isWindowFocused }.first { it }
+            delay(150)
+            if (!genresReq.tryRequestFocus()) app.focusTabsTick++
+        }
+    }
     // Only requests made while this page is open: a page built later (another tab) must not act
     // on an old request now that its hero can be ready on the first frame.
     val heroTickAtStart = remember { app.focusHeroTick }
@@ -289,7 +304,8 @@ fun BrowsePage(
             if (heroEnabled) { listState.scrollToItem(0); delay(30); watchReq.tryRequestFocus() }
             return@LaunchedEffect
         }
-        val headerItems = (if (heroEnabled) 1 else 0) + (if (showTop10Card) 1 else 0)
+        val headerItems = (if (heroEnabled) 1 else 0) + (if (showTop10Card) 1 else 0) + (if (animeEmpty) 1 else 0) +
+            (if (aniList.showBar || aniList.showOffer) 1 else 0)
         // Already on screen (back from the info page, or from the tab strip): don't jump the page.
         if (listState.layoutInfo.visibleItemsInfo.none { it.key == t.rowKey }) listState.scrollToItem(idx + headerItems)
     }
@@ -387,12 +403,12 @@ fun BrowsePage(
                         onNext = { model.heroIndex = (heroIndex + 1) % heroItems.size },
                         onFocusChanged = { f ->
                             heroFocused = f; flags.heroFocused.set(f)
-                            if (f) flags.top10CardFocused.set(false)
+                            if (f) { flags.top10CardFocused.set(false); flags.topItemFocused.set(false); flags.offerFocused.set(false) }
                             if (f) { focusedPoster = null; scope.launch { listState.animateScrollToItem(0) } } else if (app.preview?.id == heroMeta?.id) Unit
                         },
                     )
                 }
-                if (model.animeOnly && model.built && model.rows.isEmpty()) item(key = "anime-empty") {
+                if (animeEmpty) item(key = "anime-empty") {
                     androidx.tv.material3.Text(com.vyrk.tv.ui.str(com.vyrk.tv.R.string.anime_no_catalogs),
                         modifier = Modifier.padding(Dimens.screenMargin), color = com.vyrk.tv.ui.theme.Vyrk.colors.textSecondary)
                 }
@@ -416,6 +432,18 @@ fun BrowsePage(
                         },
                     )
                 }
+                // AniList's genres, or (with no add-on that opens Kitsu titles) the card offering Anime Kitsu.
+                // Like the hero, focus here keeps the page at the top.
+                val onTopFocus = { f: Boolean ->
+                    flags.topItemFocused.set(f)
+                    if (f) { flags.heroFocused.set(false); focusedPoster = null; scope.launch { listState.animateScrollToItem(0) } }
+                }
+                if (aniList.showOffer) item(key = "anilist-offer") {
+                    AniListOffer(onAdd = { AniListRows.offerKitsu(app, session, scope) }, onFocus = { f -> onTopFocus(f); if (f) flags.offerFocused.set(true) })
+                }
+                if (aniList.showBar) item(key = "anilist-genres") {
+                    AniListGenreBar(aniList.state, allReq = genresReq, onFocus = { f -> onTopFocus(f); if (f) flags.offerFocused.set(false) })
+                }
                 items(rows, key = { it.key }) { row ->
                     val origin = { i: Int, m: MetaPreview -> Origin(tabKey, row.key, i, m.id) }
                     BrowseRow(
@@ -437,7 +465,7 @@ fun BrowsePage(
                             onFocused = { m, i ->
                                 if (app.preview != null && app.preview?.id != m.id) app.preview = null
                                 focusedPoster = m; focusedRowKey = row.key
-                                flags.heroFocused.set(false); flags.top10CardFocused.set(false)
+                                flags.heroFocused.set(false); flags.top10CardFocused.set(false); flags.topItemFocused.set(false); flags.offerFocused.set(false)
                                 session.rememberFocus(tabKey, FocusMemory(row.key, i, m.id))
                                 if (!row.animeOnly && row.kind != RowKind.CONTINUE && i >= row.items.size - 6) model.loadMore(row)
                                 // The wallpaper for the titles either side, ahead of time, so moving along the row

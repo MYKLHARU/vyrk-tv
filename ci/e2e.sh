@@ -600,6 +600,67 @@ if ! python ci/anime_mode_probe.py --adb "$ADB" --package "$PKG" --out "$OUT/ani
   fail "anime mode normal-app journey failed"
 fi
 
+# ---------------------------------------------------------------- AniList on the Anime tab
+# No add-on here opens Kitsu titles, so the Anime tab offers Anime Kitsu. Adding it (the live
+# third-party add-on) brings AniList's genres and rows; a genre narrows them and a title opens.
+# AniList and Anime Kitsu are outside services: their being unreachable is reported, but an
+# answer saying VYRK's request was wrong fails the build.
+anilist_event() {  # the latest AniList result for a filter: "anilist ok filter=all trending=28/30 …"
+  local o; o=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
+  printf '%s\n' "$o" | grep -oE "anilist (ok|failed) filter=$1( .*)?$" | tail -n 1 || true
+}
+anilist_check() {  # $1 filter, $2 what: 0 when the rows loaded
+  local deadline=$((SECONDS + 45)) e=""
+  while (( SECONDS < deadline )); do e=$(anilist_event "$1"); [[ -n "$e" ]] && break; sleep 1; done
+  case "$e" in
+    "anilist ok "*)
+      # Each row reads shown/answered: AniList's titles, and how many of them an add-on opens.
+      if [[ "$e" =~ =[1-9][0-9]*/ ]]; then log "ok: $2 ($e)"; return 0; fi
+      fail "$2: AniList answered but no title could be opened ($e)" ;;
+    *"code=400"*|*"code=200"*) fail "$2: AniList refused VYRK's request ($e)" ;;
+    "") fail "$2: VYRK never asked AniList" ;;
+    *) log "warn: $2: AniList unreachable or rate-limited, an outside service ($e)" ;;
+  esac
+  return 1
+}
+for _ in $(seq 1 6); do [[ "$(focus_now)" =~ ^(tab|nav): ]] && break; key KEYCODE_DPAD_UP 1 "up to the tabs"; done
+if until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8 && until_focus KEYCODE_DPAD_RIGHT '^tab:anime$' 6; then
+  sleep 3; shot anilist-offer
+  key KEYCODE_DPAD_DOWN 1.5 "into Anime"
+  if focus_matches '^anilist:add_kitsu$' 10; then
+    log "ok: the Anime tab offers Anime Kitsu for AniList's rows"
+    key KEYCODE_DPAD_CENTER 2 "add Anime Kitsu"
+    if focus_matches '^install:confirm$' 30; then
+      # Not key(): the focused button goes with the card once the add-on is in, a moment before
+      # focus is moved on, and key() would count that moment as focus lost.
+      adb_run shell input keyevent KEYCODE_DPAD_CENTER; echo "KEYCODE_DPAD_CENTER | install Anime Kitsu" >> "$TRACE"
+      if focus_matches '^anilist:genre:all$' 20; then log "ok: with Anime Kitsu added, focus moved from the card to AniList's genres"
+      else fail "after adding Anime Kitsu, focus is '$(focus_now)' instead of AniList's genres"; fi
+      if anilist_check all "AniList's rows for all genres"; then
+        sleep 3; shot anilist-rows
+        if until_focus KEYCODE_DPAD_DOWN '^poster:anilist:trending#' 3; then
+          key KEYCODE_DPAD_CENTER 2 "open an AniList title"
+          if focus_matches '^info:' 40; then log "ok: an AniList title opens through Anime Kitsu ($(focus_now))"; sleep 3; shot anilist-title
+          else fail "an AniList title didn't open: focus is '$(focus_now)'"; fi
+          key KEYCODE_BACK 2 "back to the rows"
+          wait_focus '^poster:anilist:trending#' 15 || true
+        fi
+        if until_focus KEYCODE_DPAD_UP '^anilist:genre:' 3 && until_focus KEYCODE_DPAD_LEFT '^anilist:genre:all$' 25 &&
+           until_focus KEYCODE_DPAD_RIGHT '^anilist:genre:action$' 2; then
+          key KEYCODE_DPAD_CENTER 2 "AniList genre: Action"
+          anilist_check Action "AniList's rows for Action" && { sleep 3; shot anilist-action; }
+          [[ "$(focus_now)" == 'anilist:genre:action' ]] && log "ok: focus stays on the genre" || fail "choosing a genre moved focus to '$(focus_now)'"
+        fi
+      fi
+    else
+      log "warn: Anime Kitsu's manifest didn't load (an outside service); focus is '$(focus_now)'"
+      key KEYCODE_BACK 1.5 "close the install prompt"
+    fi
+  else
+    fail "the Anime tab didn't offer Anime Kitsu: focus is '$(focus_now)'"
+  fi
+fi
+
 fi # end of part 2
 
 # ---------------------------------------------------------------- results

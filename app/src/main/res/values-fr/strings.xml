@@ -18,6 +18,14 @@
     <string name="addons_pending_sync">Enregistré sur ce téléviseur. Synchronisation du compte en attente.</string>
     <string name="airs_on">Diffusion le %1$s</string>
     <string name="always_show_sources">Toujours afficher les sources</string>
+    <string name="anilist_add_kitsu">Ajouter Anime Kitsu</string>
+    <string name="anilist_genres">Genres AniList</string>
+    <string name="anilist_offer_body">Les animés tendance, de saison et les mieux notés d\'AniList, par genre. Les titres s\'ouvrent avec un module d\'animés qui lit les identifiants Kitsu : ajoutez le module tiers gratuit Anime Kitsu.</string>
+    <string name="anilist_offer_title">Parcourez les animés d\'AniList</string>
+    <string name="anilist_popular">Les plus populaires</string>
+    <string name="anilist_season">Populaires cette saison</string>
+    <string name="anilist_top">Les mieux notés</string>
+    <string name="anilist_trending">Tendances sur AniList</string>
     <string name="anime_all_genres">Tous les genres</string>
     <string name="anime_load_more">Charger plus</string>
     <string name="anime_no_catalogs">Aucun catalogue animé ici. Ajoutez-en ou activez-en un dans les paramètres.</string>

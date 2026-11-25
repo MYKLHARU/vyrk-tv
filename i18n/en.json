@@ -468,5 +468,13 @@
     "instant_start_desc": "While a title's page is open, VYRK gets the top source ready: its debrid link and its first seconds (up to 40 MB), so Play starts at once.",
     "playback_report": "Send a playback report",
     "playback_report_scan": "Scan with your phone to see the report",
-    "playback_report_what": "It holds this TV's model, what it can play, the settings that change playback and VYRK's recent log: no links, accounts or add-on addresses. Nothing leaves your phone until you send it."
+    "playback_report_what": "It holds this TV's model, what it can play, the settings that change playback and VYRK's recent log: no links, accounts or add-on addresses. Nothing leaves your phone until you send it.",
+    "anilist_genres": "AniList genres",
+    "anilist_trending": "Trending on AniList",
+    "anilist_season": "Popular this season",
+    "anilist_popular": "All-time popular",
+    "anilist_top": "Top rated",
+    "anilist_offer_title": "Browse anime from AniList",
+    "anilist_offer_body": "Trending, seasonal and top-rated anime from AniList, by genre. Titles open through an anime add-on that reads Kitsu IDs: add the free third-party Anime Kitsu add-on.",
+    "anilist_add_kitsu": "Add Anime Kitsu"
 }

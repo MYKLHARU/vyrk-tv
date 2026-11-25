@@ -18,6 +18,14 @@
     <string name="addons_pending_sync">Saved on this TV. Account sync pending.</string>
     <string name="airs_on">Airs %1$s</string>
     <string name="always_show_sources">Always show sources</string>
+    <string name="anilist_add_kitsu">Add Anime Kitsu</string>
+    <string name="anilist_genres">AniList genres</string>
+    <string name="anilist_offer_body">Trending, seasonal and top-rated anime from AniList, by genre. Titles open through an anime add-on that reads Kitsu IDs: add the free third-party Anime Kitsu add-on.</string>
+    <string name="anilist_offer_title">Browse anime from AniList</string>
+    <string name="anilist_popular">All-time popular</string>
+    <string name="anilist_season">Popular this season</string>
+    <string name="anilist_top">Top rated</string>
+    <string name="anilist_trending">Trending on AniList</string>
     <string name="anime_all_genres">All genres</string>
     <string name="anime_load_more">Load more</string>
     <string name="anime_no_catalogs">No anime catalogues here. Add or enable an anime catalogue in Settings.</string>

@@ -18,6 +18,14 @@
     <string name="addons_pending_sync">Auf diesem Fernseher gespeichert. Kontosynchronisierung ausstehend.</string>
     <string name="airs_on">Läuft am %1$s</string>
     <string name="always_show_sources">Quellen immer anzeigen</string>
+    <string name="anilist_add_kitsu">Anime Kitsu hinzufügen</string>
+    <string name="anilist_genres">AniList-Genres</string>
+    <string name="anilist_offer_body">Angesagte, aktuelle und bestbewertete Anime von AniList, nach Genre. Titel öffnen sich über ein Anime-Add-on, das Kitsu-IDs liest: Füge das kostenlose Drittanbieter-Add-on Anime Kitsu hinzu.</string>
+    <string name="anilist_offer_title">Anime von AniList entdecken</string>
+    <string name="anilist_popular">Die beliebtesten aller Zeiten</string>
+    <string name="anilist_season">Beliebt in dieser Saison</string>
+    <string name="anilist_top">Am besten bewertet</string>
+    <string name="anilist_trending">Im Trend auf AniList</string>
     <string name="anime_all_genres">Alle Genres</string>
     <string name="anime_load_more">Mehr laden</string>
     <string name="anime_no_catalogs">Hier gibt es keine Anime-Kataloge. Füge einen in den Einstellungen hinzu oder aktiviere ihn.</string>

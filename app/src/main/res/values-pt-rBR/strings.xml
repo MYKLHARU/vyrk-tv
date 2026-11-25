@@ -18,6 +18,14 @@
     <string name="addons_pending_sync">Salvo nesta TV. Sincronização da conta pendente.</string>
     <string name="airs_on">Vai ao ar em %1$s</string>
     <string name="always_show_sources">Sempre mostrar fontes</string>
+    <string name="anilist_add_kitsu">Adicionar Anime Kitsu</string>
+    <string name="anilist_genres">Gêneros do AniList</string>
+    <string name="anilist_offer_body">Animes em alta, da temporada e mais bem avaliados do AniList, por gênero. Os títulos abrem por um complemento de anime que lê IDs do Kitsu: adicione o complemento gratuito de terceiros Anime Kitsu.</string>
+    <string name="anilist_offer_title">Explore animes do AniList</string>
+    <string name="anilist_popular">Mais populares de todos os tempos</string>
+    <string name="anilist_season">Populares nesta temporada</string>
+    <string name="anilist_top">Mais bem avaliados</string>
+    <string name="anilist_trending">Em alta no AniList</string>
     <string name="anime_all_genres">Todos os gêneros</string>
     <string name="anime_load_more">Carregar mais</string>
     <string name="anime_no_catalogs">Não há catálogos de anime aqui. Adicione ou ative um nas Configurações.</string>
