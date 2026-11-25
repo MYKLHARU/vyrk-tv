@@ -417,12 +417,19 @@ fi
 
 # ---------------------------------------------------------------- the playback report
 # Settings › About › Send a playback report shows a QR code (the report packed into a link).
-# The mpv check leaves focus in Settings › Picture & sound; from anywhere else, open Settings.
-[[ "$(focus_now)" =~ ^set: ]] && key KEYCODE_DPAD_LEFT 1.2 "back to the groups"
-if [[ ! "$(focus_now)" =~ ^settings: ]]; then
-  until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
-  key KEYCODE_DPAD_CENTER 2 "open settings"
-fi
+# Find the settings groups from wherever the mpv check left focus (a setting, the title page, the tabs).
+for _ in 1 2 3 4 5; do
+  F=$(focus_now); log "report check: focus is '$F'"
+  case "$F" in
+    settings:*) break ;;
+    set:*) key KEYCODE_DPAD_LEFT 1.2 "back to the groups" ;;
+    nav:settings) key KEYCODE_DPAD_CENTER 2 "open settings" ;;
+    nav:*) for k in KEYCODE_DPAD_RIGHT KEYCODE_DPAD_LEFT; do
+             for _ in 1 2 3 4 5 6 7 8; do [[ "$(focus_now)" == nav:settings ]] && break 2; key "$k" 1.1 "towards Settings"; done
+           done ;;
+    *) key KEYCODE_BACK 1.5 "back towards the tabs" ;;
+  esac
+done
 until_focus KEYCODE_DPAD_DOWN '^settings:about$' 10
 key KEYCODE_DPAD_RIGHT 1.2 "into About"
 if until_focus KEYCODE_DPAD_DOWN '^about:(notices|diagnostics|report)$' 14 && until_focus KEYCODE_DPAD_RIGHT '^about:report$' 3; then
