@@ -78,6 +78,7 @@ import com.vyrk.tv.ui.Overlay
 import com.vyrk.tv.ui.Screen
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.VyrkButton
+import com.vyrk.tv.ui.components.QrCode
 import com.vyrk.tv.ui.components.ChoicePill
 import androidx.compose.foundation.layout.size
 import com.vyrk.tv.ui.components.ColorSwatch
@@ -457,6 +458,7 @@ private fun GroupContent(session: ProfileSession, group: Group) {
                 Toggle(str(R.string.always_show_sources), s.alwaysShowSources, "set:always_sources") { v -> upd { it.copy(alwaysShowSources = v) } }
                 Toggle(str(R.string.sources_on_info), s.sourcesOnInfoPage, "set:sources_info") { v -> upd { it.copy(sourcesOnInfoPage = v) } }
                 Toggle(str(R.string.load_sources_on_open), s.loadSourcesOnOpen, "set:load_sources") { v -> upd { it.copy(loadSourcesOnOpen = v) } }
+                Toggle(str(R.string.instant_start), d.instantStart, "set:instant_start", str(R.string.instant_start_desc)) { v -> graph.updateDevice { it.copy(instantStart = v) } }
                 Toggle(str(R.string.autoplay_next), s.autoplayNext, "set:autoplay") { v -> upd { it.copy(autoplayNext = v) } }
                 Toggle(str(R.string.ask_still_watching), s.askStillWatching, "set:still_watching") { v -> upd { it.copy(askStillWatching = v) } }
                 Choice(str(R.string.setting_skip_intro), listOf(com.vyrk.tv.data.SkipIntroMode.BUTTON to str(R.string.skip_show_button), com.vyrk.tv.data.SkipIntroMode.AUTOMATIC to str(R.string.skip_automatic), com.vyrk.tv.data.SkipIntroMode.OFF to str(R.string.off)), s.skipIntro, "set:skip_intro", str(R.string.skip_intro_hint)) { v -> upd { it.copy(skipIntro = v) } }
@@ -599,6 +601,7 @@ private fun AboutGroup(session: ProfileSession) {
     val c = Vyrk.colors
     val upToDate = str(R.string.up_to_date)
     val failedFmt = R.string.update_failed
+    var report by remember { mutableStateOf<String?>(null) }
     val ctx = LocalActivity.current
     // The VYRK crest: the gold V, the name in spaced serif capitals, the tagline and this build.
     Row(
@@ -672,5 +675,25 @@ private fun AboutGroup(session: ProfileSession) {
             (graph.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("VYRK diagnostics", text))
             app.showToast(copied)
         }, modifier = Modifier.traceFocus("about:diagnostics"))
+        VyrkButton(str(R.string.playback_report), onClick = { report = if (report == null) com.vyrk.tv.data.PlaybackReport.link(graph) else null },
+            modifier = Modifier.traceFocus("about:report"))
+    }
+    // The report as a QR code: the phone opens the report page with it, ready to read and send.
+    report?.let { link ->
+        Spacer(Modifier.height(12.dp))
+        Row(
+            Modifier.fillMaxWidth().background(c.shade.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                .border(1.dp, c.gold.copy(alpha = 0.35f), RoundedCornerShape(14.dp)).padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.background(Color.White, RoundedCornerShape(8.dp)).padding(8.dp)) {
+                QrCode(link, 300.dp, lowCorrection = true)
+            }
+            Spacer(Modifier.width(20.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(str(R.string.playback_report_scan), style = Vyrk.type.titleS, color = c.text)
+                Text(str(R.string.playback_report_what), style = Vyrk.type.bodyM, color = c.textSecondary)
+            }
+        }
     }
 }

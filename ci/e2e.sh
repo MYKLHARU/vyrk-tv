@@ -364,6 +364,30 @@ key KEYCODE_DPAD_LEFT 1.2; key KEYCODE_DPAD_LEFT 1.2; key KEYCODE_DPAD_LEFT 1.2
 expect '^settings:addons$' "Left from an add-on returns to the Add-ons group"
 key KEYCODE_BACK 1.5 "back to tabs"
 
+# ---------------------------------------------------------------- instant start
+# The title page gets the source ready (the broken 4K answers 404, so the 720p file is cached),
+# and the player then reads its start from the cache: first_frame says how many bytes came from it.
+ev_count() { adb_run logcat -d -s VyrkEvent:I 2>/dev/null | grep -c "$1" || true; }
+READY_BEFORE=$(ev_count 'instant_start ready')
+FRAMES_BEFORE=$(ev_count 'first_frame exo')
+adbs am start -a android.intent.action.VIEW -d "'vyrk://open?type=movie&id=tt1254207'" "$PKG" >/dev/null
+sleep 6
+wait_focus '^info:play$' 15
+for _ in $(seq 1 20); do [ "$(ev_count 'instant_start ready')" -gt "$READY_BEFORE" ] && break; sleep 2; done
+if [ "$(ev_count 'instant_start ready')" -gt "$READY_BEFORE" ]; then
+  log "ok: instant start got the source ready on the title page"
+  key KEYCODE_DPAD_CENTER 2 "play (instant start)"
+  for _ in $(seq 1 30); do [ "$(ev_count 'first_frame exo')" -gt "$FRAMES_BEFORE" ] && break; sleep 2; done
+  CACHED=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null | grep 'first_frame exo' | tail -n 1 | sed -n 's/.*cached=\([0-9]*\).*/\1/p')
+  if [ "${CACHED:-0}" -gt 0 ]; then log "ok: the player started from instant start's cache ($CACHED bytes)"
+  else fail "the player read nothing from instant start's cache (cached=${CACHED:-none})"; fi
+  back_from_player
+else
+  fail "instant start never got a source ready"
+  adb_run logcat -d 2>/dev/null | grep -iE 'instant|VyrkEvent' | tail -n 30 || true
+  key KEYCODE_BACK 1.5 "leave the title page"
+fi
+
 # ---------------------------------------------------------------- the backup player (mpv)
 # Settings › Picture & sound › Backup player › Always, then play: the broken 4K fails in mpv and the
 # 720p file plays in mpv. Proves libmpv loads, draws on the PlayerView's surface and reports a frame.
@@ -390,6 +414,29 @@ if until_focus KEYCODE_DPAD_DOWN '^set:backup_player:' 16 && until_focus KEYCODE
     adb_run logcat -d 2>/dev/null | grep -iE 'mpv|vyrk' | tail -n 60 || true; fi
   back_from_player
 fi
+
+# ---------------------------------------------------------------- the playback report
+# Settings › About › Send a playback report shows a QR code (the report packed into a link).
+# Find the settings groups from wherever the mpv check left focus (a setting, the title page, the tabs).
+for _ in 1 2 3 4 5; do
+  F=$(focus_now); log "report check: focus is '$F'"
+  case "$F" in
+    settings:*) break ;;
+    set:*) key KEYCODE_DPAD_LEFT 1.2 "back to the groups" ;;
+    nav:settings) key KEYCODE_DPAD_CENTER 2 "open settings" ;;
+    nav:*) for k in KEYCODE_DPAD_RIGHT KEYCODE_DPAD_LEFT; do
+             for _ in 1 2 3 4 5 6 7 8; do [[ "$(focus_now)" == nav:settings ]] && break 2; key "$k" 1.1 "towards Settings"; done
+           done ;;
+    *) key KEYCODE_BACK 1.5 "back towards the tabs" ;;
+  esac
+done
+until_focus KEYCODE_DPAD_DOWN '^settings:about$' 10
+key KEYCODE_DPAD_RIGHT 1.2 "into About"
+if until_focus KEYCODE_DPAD_DOWN '^about:(notices|diagnostics|report)$' 14 && until_focus KEYCODE_DPAD_RIGHT '^about:report$' 3; then
+  key KEYCODE_DPAD_CENTER 2 "playback report"
+  shot settings-playback-report
+  log "ok: the playback report QR code opened"
+else fail "no Send a playback report button"; fi
 
 fi # end of part 1
 

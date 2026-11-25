@@ -106,6 +106,8 @@ data class DeviceSettings(
     val dolbyVisionAsHdr10: Boolean = false,
     /** mpv as the backup player: for files ExoPlayer can't play, for everything, or never. */
     val backupPlayer: BackupPlayer = BackupPlayer.WHEN_NEEDED,
+    /** Get the top source ready while a title page is open (debrid link, first seconds cached). */
+    val instantStart: Boolean = true,
     /** Play in another app by default: its package, or "" for VYRK's own player. */
     val externalPlayer: String = "",
     val passthrough: Boolean = false,

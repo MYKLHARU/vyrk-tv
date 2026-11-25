@@ -463,5 +463,10 @@
     "backup_player": "Backup player",
     "backup_player_hint": "mpv takes over when the main player can't play a file. Always: mpv for everything.",
     "backup_when_needed": "When needed",
-    "backup_always": "Always"
+    "backup_always": "Always",
+    "instant_start": "Instant start",
+    "instant_start_desc": "While a title's page is open, VYRK gets the top source ready: its debrid link and its first seconds (up to 40 MB), so Play starts at once.",
+    "playback_report": "Send a playback report",
+    "playback_report_scan": "Scan with your phone to see the report",
+    "playback_report_what": "It holds this TV's model, what it can play, the settings that change playback and VYRK's recent log: no links, accounts or add-on addresses. Nothing leaves your phone until you send it."
 }

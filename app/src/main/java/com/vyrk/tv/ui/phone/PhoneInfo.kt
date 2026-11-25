@@ -118,6 +118,7 @@ fun PhoneInfoPage(o: Overlay.Info, onClose: () -> Unit) {
         scope.launch { sources = loadTitleSources(graph, session, meta, RuntimeText.minutes(full?.runtime)) }
     }
     LaunchedEffect(meta.id, showSources) { if (showSources && (settings.loadSourcesOnOpen || o.showSources) && sources is SourcesState.Idle) loadSources() }
+    com.vyrk.tv.ui.overlays.InstantStartEffect(graph, session, meta, sources, pageLoadsSources = showSources && (settings.loadSourcesOnOpen || o.showSources))
 
     val c = Vyrk.colors
     val art = rememberTitleArt(meta, full, metadataLoading = details.loading)

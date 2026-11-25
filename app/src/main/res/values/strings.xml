@@ -172,6 +172,8 @@
     <string name="install_from_link">This link came from another app. Check it before you install.</string>
     <string name="install_from_url">Install from URL</string>
     <string name="installed_addon">Installed %1$s</string>
+    <string name="instant_start">Instant start</string>
+    <string name="instant_start_desc">While a title\'s page is open, VYRK gets the top source ready: its debrid link and its first seconds (up to 40 MB), so Play starts at once.</string>
     <string name="interface_size">Interface size</string>
     <string name="intro_sound">Opening sound</string>
     <string name="intro_sound_desc">Play VYRK\'s sound with the opening animation</string>
@@ -250,6 +252,9 @@
     <string name="play_with">Play with</string>
     <string name="play_with_app">Play with %1$s</string>
     <string name="play_with_other_app">Another app…</string>
+    <string name="playback_report">Send a playback report</string>
+    <string name="playback_report_scan">Scan with your phone to see the report</string>
+    <string name="playback_report_what">It holds this TV\'s model, what it can play, the settings that change playback and VYRK\'s recent log: no links, accounts or add-on addresses. Nothing leaves your phone until you send it.</string>
     <string name="poster_size">Poster size</string>
     <string name="poster_size_desc">Size of the posters in rows</string>
     <string name="preferred_format">Preferred format</string>

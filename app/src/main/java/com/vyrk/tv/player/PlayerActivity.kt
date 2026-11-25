@@ -56,7 +56,8 @@ class PlayerActivity : ComponentActivity() {
         val engine = PlayerEngine(this, graph.http, dev.passthrough, dev.softwareAudio,
             onBandwidth = { bps -> graph.updateDevice { it.copy(measuredBps = bps) } }, live = com.vyrk.core.addon.isLiveType(req.meta.type),
             dolbyVisionAsHdr10 = dev.dolbyVisionAsHdr10, displayDolbyVision = graph.playbackCaps().displayDolbyVision,
-            backup = dev.backupPlayer != BackupPlayer.OFF, userAgent = "VYRK/${com.vyrk.tv.BuildConfig.VERSION_NAME} (Android TV)")
+            backup = dev.backupPlayer != BackupPlayer.OFF, userAgent = "VYRK/${com.vyrk.tv.BuildConfig.VERSION_NAME} (Android TV)",
+            startCache = if (dev.instantStart) graph.instantStart.cache else null)
         engine.dialogue.clearDialogue = dev.clearDialogue && !dev.passthrough
         engine.dialogue.tvSpeaker = dev.tvSpeakerMode && !dev.passthrough
         val m = PlayerModel(graph, session, lifecycleScope, engine, req) { id, args -> getString(id, *args) }

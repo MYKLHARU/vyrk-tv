@@ -463,5 +463,10 @@
     "backup_player": "Ersatzplayer",
     "backup_player_hint": "mpv übernimmt, wenn der Hauptplayer eine Datei nicht abspielen kann. Immer: mpv für alles.",
     "backup_when_needed": "Bei Bedarf",
-    "backup_always": "Immer"
+    "backup_always": "Immer",
+    "instant_start": "Sofortstart",
+    "instant_start_desc": "Solange die Seite eines Titels offen ist, bereitet VYRK die beste Quelle vor: ihren Debrid-Link und die ersten Sekunden (bis zu 40 MB), damit Abspielen sofort startet.",
+    "playback_report": "Wiedergabebericht senden",
+    "playback_report_scan": "Scanne mit dem Handy, um den Bericht zu sehen",
+    "playback_report_what": "Er enthält das Modell dieses Fernsehers, was er abspielen kann, die Einstellungen zur Wiedergabe und VYRKs aktuelles Protokoll: keine Links, Konten oder Add-on-Adressen. Nichts verlässt dein Handy, bis du es sendest."
 }

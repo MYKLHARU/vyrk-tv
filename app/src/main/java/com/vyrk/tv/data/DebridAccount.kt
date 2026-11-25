@@ -52,6 +52,9 @@ class DebridAccount(
     val state: StateFlow<State> = _state.asStateFlow()
     @Volatile private var login: DebridLogin? = null
     private val lock = Mutex()
+    private class Link(val ok: DebridResult.Ok, val atMs: Long)
+    private val links = java.util.concurrent.ConcurrentHashMap<String, Link>()
+    private companion object { const val LINK_TTL_MS = 60 * 60_000L }
 
     val connected: Boolean get() = login != null
     /** "RD" or "TB" while connected. */
@@ -66,6 +69,7 @@ class DebridAccount(
     }
 
     private suspend fun save(l: DebridLogin?) {
+        if (l?.service != login?.service) links.clear()
         login = l
         if (l == null) { file.delete(); _state.value = State.SignedOut }
         else {
@@ -140,8 +144,25 @@ class DebridAccount(
         return tb.cached(l.token, hashes)
     }
 
-    /** A direct link for a torrent [stream], for the video [videoId]. */
+    private fun linkKey(stream: Stream, videoId: String?) =
+        "${login?.service}|${stream.infoHash?.lowercase()}|$videoId|${stream.fileIdx}|${stream.behaviorHints.filename}"
+
+    /** Forgets a link that stopped working, so the next [resolve] asks the service again. */
+    fun forget(stream: Stream, videoId: String?) { links.remove(linkKey(stream, videoId)) }
+
+    /**
+     * A direct link for a torrent [stream], for the video [videoId]. Links are kept for an hour,
+     * so the one instant start fetched on the title page is the one the player uses.
+     */
     suspend fun resolve(stream: Stream, videoId: String?): DebridResult {
+        val key = linkKey(stream, videoId)
+        links[key]?.takeIf { System.currentTimeMillis() - it.atMs < LINK_TTL_MS }?.let { return it.ok }
+        val result = fetch(stream, videoId)
+        if (result is DebridResult.Ok) links[key] = Link(result, System.currentTimeMillis())
+        return result
+    }
+
+    private suspend fun fetch(stream: Stream, videoId: String?): DebridResult {
         val l = login ?: return DebridResult.SignedOut
         val hash = stream.infoHash ?: return DebridResult.NoFile
         val token = token() ?: return DebridResult.SignedOut

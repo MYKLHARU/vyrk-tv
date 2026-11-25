@@ -172,6 +172,8 @@
     <string name="install_from_link">Este enlace viene de otra app. Revísalo antes de instalar.</string>
     <string name="install_from_url">Instalar desde URL</string>
     <string name="installed_addon">%1$s instalado</string>
+    <string name="instant_start">Inicio instantáneo</string>
+    <string name="instant_start_desc">Mientras la página de un título está abierta, VYRK prepara la mejor fuente: su enlace debrid y sus primeros segundos (hasta 40 MB), para que Reproducir empiece al instante.</string>
     <string name="interface_size">Tamaño de la interfaz</string>
     <string name="intro_sound">Sonido de apertura</string>
     <string name="intro_sound_desc">Reproduce el sonido de VYRK con la animación de inicio</string>
@@ -250,6 +252,9 @@
     <string name="play_with">Reproducir con</string>
     <string name="play_with_app">Reproducir con %1$s</string>
     <string name="play_with_other_app">Otra app…</string>
+    <string name="playback_report">Enviar un informe de reproducción</string>
+    <string name="playback_report_scan">Escanéalo con el móvil para ver el informe</string>
+    <string name="playback_report_what">Incluye el modelo de esta TV, lo que puede reproducir, los ajustes que afectan a la reproducción y el registro reciente de VYRK: sin enlaces, cuentas ni direcciones de complementos. Nada sale de tu móvil hasta que lo envíes.</string>
     <string name="poster_size">Tamaño de los pósteres</string>
     <string name="poster_size_desc">Tamaño de los pósteres en las filas</string>
     <string name="preferred_format">Formato preferido</string>

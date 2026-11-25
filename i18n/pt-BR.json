@@ -463,5 +463,10 @@
     "backup_player": "Player reserva",
     "backup_player_hint": "O mpv assume quando o player principal não consegue tocar um arquivo. Sempre: mpv para tudo.",
     "backup_when_needed": "Quando precisar",
-    "backup_always": "Sempre"
+    "backup_always": "Sempre",
+    "instant_start": "Início instantâneo",
+    "instant_start_desc": "Enquanto a página de um título está aberta, o VYRK prepara a melhor fonte: o link debrid e os primeiros segundos (até 40 MB), para que Reproduzir comece na hora.",
+    "playback_report": "Enviar um relatório de reprodução",
+    "playback_report_scan": "Escaneie com o celular para ver o relatório",
+    "playback_report_what": "Traz o modelo desta TV, o que ela consegue reproduzir, os ajustes que mudam a reprodução e o registro recente do VYRK: sem links, contas nem endereços de complementos. Nada sai do seu celular até você enviar."
 }

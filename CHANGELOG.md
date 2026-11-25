@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.66
+
+- **Instant start.** While a title's page is open, VYRK now gets what Play will play ready: after a second and a half on the page it ranks the sources for that video (the film, or the series' resume or first episode), fetches a torrent's debrid link, and downloads the first seconds of the top source (up to 40 MB; just the file's header when resuming) into a small cache on the device. The player reads that start from the cache while it connects for the rest, and doesn't ask the add-ons again. If the top source answers with an error, the next one is readied instead. Leaving the page or pressing Play stops it; plain files only (not HLS/DASH). On by default: Settings › Streams › Instant start.
+  - Debrid links are now kept for an hour, so the link fetched on the title page is the one that plays; a link that stops working is fetched again.
+  - The diagnostics now say how long the picture took and how much came from the cache.
+- **Send a playback report.** Settings › About › Send a playback report shows a QR code. Scanned with a phone, it opens a page on the VYRK site with the TV's model, its decoders and Dolby Vision profiles, what the display takes, the settings that change playback and VYRK's recent log, with buttons to copy it, save it or open a GitHub issue with it filled in. The report travels inside the link after the "#", which browsers never send to a server; it holds no links, accounts or add-on addresses. The phone app shares the same report through the share sheet.
+
 ## v0.1.65
 
 - **Real-Debrid and TorBox.** Settings › Streams › Debrid service connects one of them (Real-Debrid with a code entered on real-debrid.com/device, or a QR code; TorBox with its API key, which the TV keypad types or the phone pastes). Torrent sources from your add-ons then play through it as ordinary web links: torrent add-ons such as Torrentio without their own debrid setup now work, and their torrents are no longer listed as needing a streaming server.

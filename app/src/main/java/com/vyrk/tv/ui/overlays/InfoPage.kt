@@ -151,6 +151,7 @@ fun InfoPage(o: Overlay.Info) {
     // Focus moves once the tab's content has been laid out.
     fun focusSoon(req: FocusRequester) = scope.launch { repeat(2) { androidx.compose.runtime.withFrameNanos { } }; req.tryRequestFocus() }
     fun toDetails() { panelOpen = true; tab = PanelTab.DETAILS; focusSoon(detailsReq) }
+    InstantStartEffect(graph, session, meta, sources, pageLoadsSources = !isSeries && settings.loadSourcesOnOpen && showSourcesPanel)
     LaunchedEffect(meta.id) {
         if (!isSeries && settings.loadSourcesOnOpen && showSourcesPanel) loadSources()
         if (o.showSources) {

@@ -172,6 +172,8 @@
     <string name="install_from_link">यह लिंक किसी दूसरे ऐप से आया है। इंस्टॉल करने से पहले जाँच लें।</string>
     <string name="install_from_url">URL से इंस्टॉल करें</string>
     <string name="installed_addon">%1$s इंस्टॉल हुआ</string>
+    <string name="instant_start">तुरंत शुरुआत</string>
+    <string name="instant_start_desc">जब किसी टाइटल का पेज खुला होता है, VYRK सबसे अच्छा स्रोत तैयार रखता है: उसका डेब्रिड लिंक और पहले कुछ सेकंड (40 MB तक), ताकि चलाएँ दबाते ही शुरू हो।</string>
     <string name="interface_size">इंटरफ़ेस का आकार</string>
     <string name="intro_sound">शुरुआती ध्वनि</string>
     <string name="intro_sound_desc">शुरुआती एनिमेशन के साथ VYRK की ध्वनि चलाएँ</string>
@@ -250,6 +252,9 @@
     <string name="play_with">इससे चलाएँ</string>
     <string name="play_with_app">%1$s से चलाएँ</string>
     <string name="play_with_other_app">दूसरा ऐप…</string>
+    <string name="playback_report">प्लेबैक रिपोर्ट भेजें</string>
+    <string name="playback_report_scan">रिपोर्ट देखने के लिए फ़ोन से स्कैन करें</string>
+    <string name="playback_report_what">इसमें इस टीवी का मॉडल, यह क्या चला सकता है, प्लेबैक बदलने वाली सेटिंग्स और VYRK का हाल का लॉग है: कोई लिंक, खाता या ऐड-ऑन पता नहीं। जब तक आप न भेजें, कुछ भी आपके फ़ोन से बाहर नहीं जाता।</string>
     <string name="poster_size">पोस्टर का आकार</string>
     <string name="poster_size_desc">पंक्तियों में पोस्टर का आकार</string>
     <string name="preferred_format">पसंदीदा फ़ॉर्मैट</string>
