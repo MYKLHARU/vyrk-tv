@@ -31,19 +31,23 @@ object ComfortZoneSpec : BringIntoViewSpec {
 class PageFocusFlags {
     val heroFocused = AtomicBoolean(false)
     val top10CardFocused = AtomicBoolean(false)
+    /** The Anime tab's AniList genres or Anime Kitsu card: like the Top 10 card, they keep the page at the top. */
+    val topItemFocused = AtomicBoolean(false)
+    /** The Anime Kitsu card's button had focus last: when the card goes (Anime Kitsu added), focus moves to the genres. */
+    val offerFocused = AtomicBoolean(false)
     /** Distance from the list's top to where the focused poster's top should sit. */
     val posterTarget = AtomicReference(0f)
 }
 
 /**
- * Page scrolling: the hero and the Top 10 card keep the page at the top (the caller scrolls to
- * item 0); otherwise the focused row sits just below the title header.
+ * Page scrolling: the hero, the Top 10 card and the AniList genres keep the page at the top (the
+ * caller scrolls to item 0); otherwise the focused row sits just below the title header.
  */
 @OptIn(ExperimentalFoundationApi::class)
 class PageSpec(private val flags: PageFocusFlags) : BringIntoViewSpec {
     override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
         if (flags.heroFocused.get()) return 0f
-        if (flags.top10CardFocused.get()) {
+        if (flags.top10CardFocused.get() || flags.topItemFocused.get()) {
             // Stay at the top while the focused button fits on screen.
             return if (offset + size <= containerSize) 0f else offset + size - containerSize
         }

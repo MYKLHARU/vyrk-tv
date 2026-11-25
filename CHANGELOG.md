@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.67
+
+- **AniList on the Anime tab.** The Anime tab now opens with AniList, with no account needed: a bar of AniList's genres (Action to Thriller, without the adult ones, plus the Isekai, Shounen, Seinen and Shoujo tags), then four rows: Trending on AniList, Popular this season, All-time popular and Top rated. Choose a genre and all four rows show only that genre; All genres goes back. Your add-ons' anime catalogues follow below as before. On TVs and phones.
+  - Titles open through your add-ons like the rest of the tab, by their Kitsu ID (the one Anime Kitsu, AIO Metadata and Torrentio read). VYRK carries AniList's titles with their Kitsu IDs; a title newer than that list is looked up through an add-on that reads AniList or MyAnimeList IDs (Anime Kitsu does). The rows show only titles one of your add-ons can open.
+  - With no add-on that opens Kitsu titles, the tab offers to add Anime Kitsu (free, third-party) instead, with the usual confirmation.
+  - The rows are kept for half an hour per genre. If AniList doesn't answer, the first row says so, with Retry.
+
 ## v0.1.66
 
 - **Instant start.** While a title's page is open, VYRK now gets what Play will play ready: after a second and a half on the page it ranks the sources for that video (the film, or the series' resume or first episode), fetches a torrent's debrid link, and downloads the first seconds of the top source (up to 40 MB; just the file's header when resuming) into a small cache on the device. The player reads that start from the cache while it connects for the rest, and doesn't ask the add-ons again. If the top source answers with an error, the next one is readied instead. Leaving the page or pressing Play stops it; plain files only (not HLS/DASH). On by default: Settings › Streams › Instant start.

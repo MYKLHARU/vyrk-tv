@@ -468,5 +468,13 @@
     "instant_start_desc": "Mentre la pagina di un titolo è aperta, VYRK prepara la fonte migliore: il suo link debrid e i primi secondi (fino a 40 MB), così Riproduci parte subito.",
     "playback_report": "Invia un rapporto di riproduzione",
     "playback_report_scan": "Scansiona con il telefono per vedere il rapporto",
-    "playback_report_what": "Contiene il modello di questa TV, cosa può riprodurre, le impostazioni che cambiano la riproduzione e il registro recente di VYRK: niente link, account o indirizzi dei componenti aggiuntivi. Nulla lascia il telefono finché non lo invii."
+    "playback_report_what": "Contiene il modello di questa TV, cosa può riprodurre, le impostazioni che cambiano la riproduzione e il registro recente di VYRK: niente link, account o indirizzi dei componenti aggiuntivi. Nulla lascia il telefono finché non lo invii.",
+    "anilist_genres": "Generi di AniList",
+    "anilist_trending": "Di tendenza su AniList",
+    "anilist_season": "Popolari questa stagione",
+    "anilist_popular": "I più popolari di sempre",
+    "anilist_top": "I più votati",
+    "anilist_offer_title": "Sfoglia gli anime di AniList",
+    "anilist_offer_body": "Gli anime di tendenza, di stagione e più votati di AniList, per genere. I titoli si aprono con un componente anime che legge gli ID di Kitsu: aggiungi il componente gratuito di terze parti Anime Kitsu.",
+    "anilist_add_kitsu": "Aggiungi Anime Kitsu"
 }

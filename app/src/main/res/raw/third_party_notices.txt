@@ -49,6 +49,16 @@ IntroDB (https://introdb.app)
 TMDB (https://www.themoviedb.org)
   This product uses the TMDB API but is not endorsed or certified by TMDB.
 
+AniList (https://anilist.co)
+  The Anime tab's AniList rows and genres come from AniList's public API.
+  VYRK is not affiliated with or endorsed by AniList.
+
+AniList to Kitsu ID list (assets/anilist-kitsu.txt)
+  Derived from Fribb/anime-lists (https://github.com/Fribb/anime-lists), which builds on
+  anime-offline-database (https://github.com/manami-project/anime-offline-database).
+  Made available under the Open Data Commons Open Database License 1.0
+  (https://opendatacommons.org/licenses/odbl/1-0/).
+
 Chapter markers and smart scrubbing follow ideas from Alder
   (https://github.com/aradhyas8/Alder), GPL-3.0. VYRK's implementation is its own.
 

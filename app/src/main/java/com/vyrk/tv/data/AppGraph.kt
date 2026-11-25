@@ -116,6 +116,14 @@ class AppGraph(val context: Context) {
     }
     /** Kitsu → MyAnimeList ids, for AniSkip and the airing calendar. */
     val animeIds = com.vyrk.core.anime.AnimeIds(transport)
+    /** The Anime tab's AniList rows: AniList's public API (no account). */
+    val aniList = com.vyrk.core.anime.AniListClient(transport)
+    /** AniList → Kitsu IDs bundled with the app (tools/gen_anime_ids.py); read on first use, off the main thread. */
+    val aniListIds: com.vyrk.core.anime.AniListKitsu by lazy {
+        runCatching { context.assets.open("anilist-kitsu.txt").bufferedReader().use { it.readText() } }
+            .map { com.vyrk.core.anime.AniListKitsu.parse(it) }
+            .getOrElse { com.vyrk.tv.ui.Perf.log("anilist ids unreadable: ${it.message}"); com.vyrk.core.anime.AniListKitsu.EMPTY }
+    }
     private var watchNextJob: kotlinx.coroutines.Job? = null
 
     /** Watch Next follows the active session's Continue Watching. */

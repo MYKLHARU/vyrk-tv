@@ -191,6 +191,8 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
     val seasonalRows = com.vyrk.tv.ui.browse.rememberSeasonalRows(session, enabled = isHome && !model.animeOnly)
 
     val recRows = com.vyrk.tv.ui.browse.rememberRecommendationRows(session, enabled = isHome)
+    // The Anime tab opens with AniList: its genres, then its rows, before your add-ons' catalogues.
+    val aniList = com.vyrk.tv.ui.browse.rememberAniList(session, model, enabled = model.tab == Tab.ANIME)
     val bottom = bottomContentPadding()
     LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = bottom) {
         if (heroOn) item(key = "hero") {
@@ -224,10 +226,14 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
                 }
             }
         }
-        if (model.built && model.rows.isEmpty()) item(key = "empty") {
+        if (aniList.showOffer) item(key = "anilist-offer") {
+            AniListOfferCard(onAdd = { com.vyrk.tv.ui.browse.AniListRows.offerKitsu(app, session, scope) })
+        }
+        if (aniList.showBar) item(key = "anilist-genres") { AniListGenreChips(aniList.state) }
+        if (model.built && model.rows.isEmpty() && aniList.rows.isEmpty() && !aniList.showOffer) item(key = "empty") {
             Text(str(R.string.row_empty), style = Vyrk.type.bodyL, color = Vyrk.colors.textMuted, modifier = Modifier.padding(PhoneMargin))
         }
-        items(top10Rows + seasonalRows + model.rows.take(2) + recRows + model.rows.drop(2), key = { it.key }) { row ->
+        items(top10Rows + seasonalRows + aniList.rows + model.rows.take(2) + recRows + model.rows.drop(2), key = { it.key }) { row ->
             LaunchedEffect(row) { model.ensureLoaded(row) }
             CatalogueRow(row, model, library, sstate.newEpisodes)
         }
@@ -401,6 +407,38 @@ private fun ContinueCard(meta: MetaPreview, item: LibraryItem?, tag: String, onC
                 if (progress > 0f) Box(Modifier.fillMaxWidth(progress.coerceIn(0.03f, 1f)).fillMaxHeight().background(c.accent))
             }
         }
+    }
+}
+
+/** AniList's genres (and a few tags) above its rows on the Anime tab. */
+@Composable
+private fun AniListGenreChips(state: com.vyrk.tv.ui.browse.AniListState) {
+    Column(Modifier.padding(top = 16.dp)) {
+        PhoneSectionHeader(str(R.string.anilist_genres))
+        Spacer(Modifier.height(4.dp))
+        LazyRow(contentPadding = PaddingValues(horizontal = PhoneMargin), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            item(key = "all") { PhoneChip(str(R.string.anime_all_genres), state.filter == null, { state.filter = null }, tag = "anilist:genre:all") }
+            items(com.vyrk.core.anime.AniList.filters, key = { it.name }) { f ->
+                PhoneChip(f.name, state.filter == f, { state.filter = f }, tag = "anilist:genre:${com.vyrk.tv.ui.browse.AniListState.slug(f)}")
+            }
+        }
+    }
+}
+
+/** On the Anime tab with no add-on that opens Kitsu titles: what AniList's rows need, and a button to add Anime Kitsu. */
+@Composable
+private fun AniListOfferCard(onAdd: () -> Unit) {
+    val c = Vyrk.colors
+    PhoneCard(Modifier.padding(start = PhoneMargin, end = PhoneMargin, top = 16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(R.drawable.ic_trending, null, Modifier.size(22.dp), tint = c.gold)
+            Spacer(Modifier.width(10.dp))
+            Text(str(R.string.anilist_offer_title), style = Vyrk.type.titleL, color = c.text)
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(str(R.string.anilist_offer_body), style = Vyrk.type.bodyS, color = c.textSecondary)
+        Spacer(Modifier.height(12.dp))
+        PhoneButton(str(R.string.anilist_add_kitsu), onAdd, style = PhoneButtonStyle.PRIMARY, icon = R.drawable.ic_plus, height = 42.dp, tag = "anilist:add_kitsu")
     }
 }
 
