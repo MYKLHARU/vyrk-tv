@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
+import coil3.request.transformations
 import com.vyrk.core.addon.MetaPreview
 
 /**
