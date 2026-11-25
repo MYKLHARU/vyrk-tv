@@ -375,7 +375,9 @@ fun BrowsePage(
         // The carved rune pillar down the left edge, over the artwork and under everything else.
         if (active) com.vyrk.tv.ui.components.RunePillar(Modifier.offset(x = 17.dp).padding(top = 8.dp, bottom = 20.dp))
 
-        CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec) {
+        // The expanded card shows the focused title's artwork as the header has it.
+        val focusArt = settledPoster?.let { FocusArt(it.type, it.id, headerArt) }
+        CompositionLocalProvider(LocalBringIntoViewSpec provides pageSpec, LocalFocusArt provides focusArt) {
             LazyColumn(
                 state = listState,
                 // Under the title header, rows that scroll up are cut off at its bottom edge (it has
