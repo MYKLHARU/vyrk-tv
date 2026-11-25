@@ -417,8 +417,12 @@ fi
 
 # ---------------------------------------------------------------- the playback report
 # Settings › About › Send a playback report shows a QR code (the report packed into a link).
-until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
-key KEYCODE_DPAD_CENTER 2 "open settings"
+# The mpv check leaves focus in Settings › Picture & sound; from anywhere else, open Settings.
+[[ "$(focus_now)" =~ ^set: ]] && key KEYCODE_DPAD_LEFT 1.2 "back to the groups"
+if [[ ! "$(focus_now)" =~ ^settings: ]]; then
+  until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
+  key KEYCODE_DPAD_CENTER 2 "open settings"
+fi
 until_focus KEYCODE_DPAD_DOWN '^settings:about$' 10
 key KEYCODE_DPAD_RIGHT 1.2 "into About"
 if until_focus KEYCODE_DPAD_DOWN '^about:(notices|diagnostics|report)$' 14 && until_focus KEYCODE_DPAD_RIGHT '^about:report$' 3; then
