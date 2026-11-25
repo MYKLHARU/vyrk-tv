@@ -191,7 +191,7 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
     val seasonalRows = com.vyrk.tv.ui.browse.rememberSeasonalRows(session, enabled = isHome && !model.animeOnly)
 
     val recRows = com.vyrk.tv.ui.browse.rememberRecommendationRows(session, enabled = isHome)
-    // The Anime tab opens with AniList: its genres, then its rows, before your add-ons' catalogues.
+    // The Anime tab opens with AniList's rows (its lists, then a row per genre), before your add-ons' catalogues.
     val aniList = com.vyrk.tv.ui.browse.rememberAniList(session, model, enabled = model.tab == Tab.ANIME)
     val bottom = bottomContentPadding()
     LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = bottom) {
@@ -229,7 +229,6 @@ private fun CataloguePage(session: ProfileSession, model: BrowseModel, listState
         if (aniList.showOffer) item(key = "anilist-offer") {
             AniListOfferCard(onAdd = { com.vyrk.tv.ui.browse.AniListRows.offerKitsu(app, session, scope) })
         }
-        if (aniList.showBar) item(key = "anilist-genres") { AniListGenreChips(aniList.state) }
         if (model.built && model.rows.isEmpty() && aniList.rows.isEmpty() && !aniList.showOffer) item(key = "empty") {
             Text(str(R.string.row_empty), style = Vyrk.type.bodyL, color = Vyrk.colors.textMuted, modifier = Modifier.padding(PhoneMargin))
         }
@@ -405,21 +404,6 @@ private fun ContinueCard(meta: MetaPreview, item: LibraryItem?, tag: String, onC
             val progress = if (item?.isInContinueWatching == true) item.progress else 0f
             Box(Modifier.padding(top = 5.dp).fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.2f))) {
                 if (progress > 0f) Box(Modifier.fillMaxWidth(progress.coerceIn(0.03f, 1f)).fillMaxHeight().background(c.accent))
-            }
-        }
-    }
-}
-
-/** AniList's genres (and a few tags) above its rows on the Anime tab. */
-@Composable
-private fun AniListGenreChips(state: com.vyrk.tv.ui.browse.AniListState) {
-    Column(Modifier.padding(top = 16.dp)) {
-        PhoneSectionHeader(str(R.string.anilist_genres))
-        Spacer(Modifier.height(4.dp))
-        LazyRow(contentPadding = PaddingValues(horizontal = PhoneMargin), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            item(key = "all") { PhoneChip(str(R.string.anime_all_genres), state.filter == null, { state.filter = null }, tag = "anilist:genre:all") }
-            items(com.vyrk.core.anime.AniList.filters, key = { it.name }) { f ->
-                PhoneChip(f.name, state.filter == f, { state.filter = f }, tag = "anilist:genre:${com.vyrk.tv.ui.browse.AniListState.slug(f)}")
             }
         }
     }

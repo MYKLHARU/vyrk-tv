@@ -1,20 +1,14 @@
 package com.vyrk.tv.ui.browse
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
@@ -23,10 +17,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
@@ -44,9 +37,7 @@ import com.vyrk.tv.ui.LocalGraph
 import com.vyrk.tv.ui.Overlay
 import com.vyrk.tv.ui.components.ButtonStyle
 import com.vyrk.tv.ui.components.Icon
-import com.vyrk.tv.ui.components.SectionHeading
 import com.vyrk.tv.ui.components.VyrkButton
-import com.vyrk.tv.ui.components.VyrkChip
 import com.vyrk.tv.ui.components.glassPanel
 import com.vyrk.tv.ui.str
 import com.vyrk.tv.ui.theme.Dimens
@@ -64,39 +55,48 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * The Anime tab's AniList section: a genre bar and four rows (Trending, Popular this season,
- * All-time popular, Top rated) from AniList's public API, with no account. Titles open through
- * your add-ons by Kitsu ID like the rest of the tab; with no add-on that opens Kitsu titles, the
- * section is a card offering Anime Kitsu instead.
+ * The Anime tab's AniList rows, from AniList's public API with no account: four lists (Trending,
+ * Popular this season, All-time popular, Top rated), then a row for each genre (and a few popular
+ * tags) with what's popular in it now. Titles open through your add-ons by Kitsu ID like the rest
+ * of the tab; with no add-on that opens Kitsu titles, the tab shows a card offering Anime Kitsu.
  */
 @Stable
 class AniListState {
-    /** The genre (or tag) the rows are narrowed to; null for all. Kept while the app runs. */
-    var filter by mutableStateOf<AniList.Filter?>(null)
-    /** Bumped by Retry. */
+    /** Every AniList row, in page order: the four lists, then the genres. */
+    val shelves: List<Pair<AniList.Shelf, RowState>> =
+        (AniList.main + AniList.filters.map { AniList.Shelf.Genre(it) }).map { it to RowState(rowKey(it), RowKind.CATALOG, null, "") }
+    private val byKey = shelves.associate { it.second.key to it.first }
+    /** Bumped by Retry on the four lists. */
     var attempt by mutableIntStateOf(0)
-    /** The add-ons the loaded rows were filtered for: other add-ons, other rows. */
+    /** Genre rows that came on screen (or were retried), waiting for their request. */
+    internal var wanted by mutableStateOf(emptySet<String>())
+    /** The add-ons the loaded rows were filtered for: other add-ons, other titles. */
     internal var loadedFor: Int? = null
-    private val rows = HashMap<String, RowState>()
 
-    fun row(section: AniList.Section, filter: AniList.Filter?): RowState =
-        rowKey(section, filter).let { key -> rows.getOrPut(key) { RowState(key, RowKind.CATALOG, null, "") } }
-
-    fun retry() { attempt++ }
+    /**
+     * A row came on screen: the four lists load with the page, a genre row with the next request
+     * (with the genre rows after it). After a failure, this is Retry.
+     */
+    fun want(row: RowState) {
+        when (byKey[row.key] ?: return) {
+            is AniList.Shelf.Main -> if (row.error != null) attempt++
+            is AniList.Shelf.Genre -> if (!row.loading && (!row.loadedOnce || row.error != null)) wanted = wanted + row.key
+        }
+    }
 
     companion object {
         private const val PREFIX = "anilist:"
-        fun rowKey(section: AniList.Section, filter: AniList.Filter?) =
-            PREFIX + section.key + (filter?.let { ":" + slug(it) } ?: "")
+        fun rowKey(s: AniList.Shelf) = PREFIX + when (s) {
+            is AniList.Shelf.Main -> s.section.key
+            is AniList.Shelf.Genre -> "genre:" + s.filter.slug
+        }
         fun isAniListRow(row: RowState) = row.ref == null && row.key.startsWith(PREFIX)
-        /** A focus label for a filter: `anilist:genre:slice-of-life`. */
-        fun slug(f: AniList.Filter) = f.name.lowercase().replace(' ', '-')
     }
 }
 
-/** What a page draws for AniList: the genre bar and rows, or the card offering Anime Kitsu. */
-class AniListUi(val state: AniListState, val rows: List<RowState>, val showBar: Boolean, val showOffer: Boolean) {
-    companion object { val NONE = AniListUi(AniListState(), emptyList(), showBar = false, showOffer = false) }
+/** What a page draws for AniList: its rows, or the card offering Anime Kitsu. */
+class AniListUi(val rows: List<RowState>, val showOffer: Boolean) {
+    companion object { val NONE = AniListUi(emptyList(), showOffer = false) }
 }
 
 object AniListRows {
@@ -104,18 +104,20 @@ object AniListRows {
     const val KITSU_ADDON_URL = "https://anime-kitsu.strem.fun/manifest.json"
     /** Titles newer than the bundled ID list looked up per load; the rest wait for the next one. */
     private const val LOOKUPS = 12
+    /** Genre rows asked for in one request: the one on screen and the next ones. */
+    const val GENRE_BATCH = 4
 
     /** Whether an add-on opens Kitsu titles: AniList's rows need one. */
     fun canOpen(addons: List<Descriptor>) = addons.any { it.manifest.supports("meta", "series", "kitsu:1") }
 
-    /** The rows' posters, by section, or the failure (`code` 0 when AniList could not be reached). */
-    suspend fun load(graph: AppGraph, addons: List<Descriptor>, filter: AniList.Filter?): Result<Map<AniList.Section, List<MetaPreview>>> =
+    /** The posters of [shelves], or the failure (`code` 0 when AniList could not be reached). */
+    suspend fun load(graph: AppGraph, addons: List<Descriptor>, shelves: List<AniList.Shelf>): Result<Map<AniList.Shelf, List<MetaPreview>>> =
         withContext(Dispatchers.IO) {
-            val name = filter?.name ?: "all"
-            when (val r = graph.aniList.rows(filter)) {
+            val what = if (shelves.all { it is AniList.Shelf.Main }) "main" else "genres"
+            when (val r = graph.aniList.rows(shelves)) {
                 is AniListClient.Result.Failed -> {
-                    Diagnostics.trace("anilist failed filter=$name code=${r.code} ${r.reason}")
-                    Diagnostics.log("anilist", "rows failed (${r.code}): ${r.reason}")
+                    Diagnostics.trace("anilist failed $what code=${r.code} ${r.reason}")
+                    Diagnostics.log("anilist", "$what failed (${r.code}): ${r.reason}")
                     Result.failure(IllegalStateException(r.reason))
                 }
                 is AniListClient.Result.Ok -> {
@@ -123,7 +125,10 @@ object AniListRows {
                     lookUp(graph, addons, AniList.unmapped(r.rows, ids, LOOKUPS), ids)
                     val opens = { type: String, id: String -> addons.any { it.manifest.supports("meta", type, id) } }
                     val out = r.rows.mapValues { (_, media) -> AniList.previews(media, ids, opens) }
-                    Diagnostics.trace("anilist ok filter=$name " + AniList.Section.entries.joinToString(" ") { "${it.key}=${out[it].orEmpty().size}/${r.rows[it].orEmpty().size}" })
+                    Diagnostics.trace("anilist ok $what " + shelves.joinToString(" ") { s ->
+                        val name = when (s) { is AniList.Shelf.Main -> s.section.key; is AniList.Shelf.Genre -> s.filter.slug }
+                        "$name=${out[s].orEmpty().size}/${r.rows[s].orEmpty().size}"
+                    })
                     Result.success(out)
                 }
             }
@@ -168,8 +173,9 @@ object AniListRows {
 }
 
 /**
- * AniList's rows for a page ([enabled] on the Anime tab). Rows show while they load, then only
- * with titles; a failed request leaves one row with Retry.
+ * AniList's rows for a page ([enabled] on the Anime tab). The four lists load with the page and the
+ * first genre rows right after; the other genre rows as they come on screen, [AniListRows.GENRE_BATCH]
+ * to a request. Rows show while they load, then only with titles; a failed request leaves Retry.
  */
 @Composable
 fun rememberAniList(session: ProfileSession, model: BrowseModel, enabled: Boolean): AniListUi {
@@ -179,62 +185,73 @@ fun rememberAniList(session: ProfileSession, model: BrowseModel, enabled: Boolea
     val list = remember(addons) { session.effectiveAddons() }
     val canOpen = remember(list) { AniListRows.canOpen(list) }
     val state = model.aniList
-    val filter = state.filter
-    val sections = AniList.Section.entries.map { it to state.row(it, filter) }
     val titles = mapOf(
         AniList.Section.TRENDING to str(R.string.anilist_trending),
         AniList.Section.SEASON to str(R.string.anilist_season),
         AniList.Section.POPULAR to str(R.string.anilist_popular),
         AniList.Section.TOP to str(R.string.anilist_top),
     )
-    sections.forEach { (s, row) -> row.title = filter?.let { "${titles.getValue(s)} · ${it.name}" } ?: titles.getValue(s) }
+    state.shelves.forEach { (s, row) ->
+        row.title = when (s) { is AniList.Shelf.Main -> titles.getValue(s.section); is AniList.Shelf.Genre -> s.filter.name }
+    }
+    val main = state.shelves.filter { it.first is AniList.Shelf.Main }
+    val genres = state.shelves.filter { it.first is AniList.Shelf.Genre }
     val addonsKey = remember(list) { list.joinToString { it.transportUrl }.hashCode() }
-    LaunchedEffect(enabled, canOpen, filter, state.attempt, addonsKey) {
+    // The four lists, with the page; then the first genre rows, so they're ready when you get there.
+    LaunchedEffect(enabled, canOpen, state.attempt, addonsKey) {
         if (!enabled || !canOpen) return@LaunchedEffect
-        val rows = sections.map { it.second }
-        if (state.loadedFor == addonsKey && rows.all { it.loadedOnce && it.error == null }) return@LaunchedEffect
-        rows.forEach { it.loading = true; it.error = null }
-        try {
-            val result = AniListRows.load(graph, list, filter)
-            result.onSuccess { bySection -> sections.forEach { (s, row) -> row.items = bySection[s].orEmpty() } }
-                .onFailure { e -> rows.forEach { it.items = emptyList() }; rows.first().error = e.message ?: "AniList" }
+        if (state.loadedFor != addonsKey) {
+            // Other add-ons open other titles: genre rows already shown are filled again (AniList's answer is kept).
+            state.wanted = state.wanted + genres.filter { it.second.loadedOnce }.map { it.second.key }
+        } else if (main.all { it.second.loadedOnce && it.second.error == null }) return@LaunchedEffect
+        if (fill(graph, list, main, state)) {
             state.loadedFor = addonsKey
-            rows.forEach { it.loadedOnce = true }
-        } finally {
-            rows.forEach { it.loading = false }
+            state.wanted = state.wanted + genres.take(AniListRows.GENRE_BATCH).filter { !it.second.loadedOnce }.map { it.second.key }
+        }
+    }
+    // Genre rows as they come on screen, with the ones after them.
+    LaunchedEffect(enabled, canOpen, addonsKey) {
+        if (!enabled || !canOpen) return@LaunchedEffect
+        snapshotFlow { state.wanted }.collect { wanted ->
+            if (wanted.isEmpty()) return@collect
+            val first = genres.indexOfFirst { it.second.key in wanted }
+            val batch = (genres.filter { it.second.key in wanted } +
+                genres.drop(first.coerceAtLeast(0)).filter { !it.second.loadedOnce && !it.second.loading }).distinct().take(AniListRows.GENRE_BATCH)
+            state.wanted = wanted - batch.map { it.second.key }.toSet()
+            fill(graph, list, batch, state)
         }
     }
     if (!enabled) return AniListUi.NONE
-    // Hide row (title menu) hides that row for every genre.
+    // Hide row (title menu) hides a row for good; v0.1.67's genre-narrowed keys hide their list.
     val hidden = settings.hiddenRows
-    val rows = if (!canOpen) emptyList() else sections.mapIndexedNotNull { i, (s, row) ->
-        val base = AniListState.rowKey(s, null)
-        row.takeIf { (!it.loadedOnce || it.items.isNotEmpty() || i == 0 && it.error != null) && hidden.none { h -> h == base || h.startsWith("$base:") } }
+    val rows = if (!canOpen) emptyList() else state.shelves.mapIndexedNotNull { i, (s, row) ->
+        val shown = !row.loadedOnce || row.items.isNotEmpty() || row.error != null && (s is AniList.Shelf.Genre || i == 0)
+        row.takeIf { shown && hidden.none { h -> h == row.key || h.startsWith(row.key + ":") } }
     }
-    return AniListUi(state, rows, showBar = canOpen, showOffer = !canOpen)
+    return AniListUi(rows, showOffer = !canOpen)
 }
 
-/** AniList's genres (and a few tags) above its rows. Focus here keeps the page at the top. */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun AniListGenreBar(state: AniListState, allReq: FocusRequester, onFocus: (Boolean) -> Unit) {
-    var active by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth().onFocusChanged { active = it.hasFocus; onFocus(it.hasFocus) }) {
-        SectionHeading(str(R.string.anilist_genres), active = active, rule = true,
-            modifier = Modifier.padding(start = Dimens.screenMargin, end = Dimens.screenMargin, bottom = 10.dp))
-        CompositionLocalProvider(LocalBringIntoViewSpec provides ComfortZoneSpec) {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = Dimens.screenMargin, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                item(key = "all") {
-                    VyrkChip(str(R.string.anime_all_genres), state.filter == null, { state.filter = null }, Modifier.focusRequester(allReq).traceFocus("anilist:genre:all"))
-                }
-                items(AniList.filters, key = { it.name }) { f ->
-                    VyrkChip(f.name, state.filter == f, { state.filter = f }, Modifier.traceFocus("anilist:genre:${AniListState.slug(f)}"))
-                }
+/**
+ * Fills [rows] from one request. A failure shows on the first of the four lists (they fail
+ * together) or on each genre row; rows cut off midway are asked for again. True when it loaded.
+ */
+private suspend fun fill(graph: AppGraph, addons: List<Descriptor>, rows: List<Pair<AniList.Shelf, RowState>>, state: AniListState): Boolean {
+    if (rows.isEmpty()) return true
+    rows.forEach { (_, r) -> r.loading = true; r.error = null }
+    var done = false
+    try {
+        val result = AniListRows.load(graph, addons, rows.map { it.first })
+        result.onSuccess { bySelf -> rows.forEach { (s, r) -> r.items = bySelf[s].orEmpty() } }
+            .onFailure { e ->
+                val reason = e.message ?: "AniList"
+                rows.forEachIndexed { i, (s, r) -> r.items = emptyList(); r.error = if (s is AniList.Shelf.Genre || i == 0) reason else null }
             }
-        }
+        rows.forEach { (_, r) -> r.loadedOnce = true }
+        done = true
+        return result.isSuccess
+    } finally {
+        rows.forEach { (_, r) -> r.loading = false }
+        if (!done) state.wanted = state.wanted + rows.filter { it.first is AniList.Shelf.Genre }.map { it.second.key }
     }
 }
 

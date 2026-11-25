@@ -2,6 +2,12 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.68
+
+- **AniList's genres are rows now, not a filter.** Under AniList's four lists on the Anime tab there's a row for each genre, Action to Thriller, then Isekai, Shounen, Seinen and Shoujo, each showing what's popular in that genre right now. The genre bar is gone.
+  - The first genre rows arrive right after the four lists; the rest load as you scroll to them, four to a request, so opening the tab asks AniList for no more than before.
+  - Hold OK on a poster › Hide row hides a genre you don't want (Settings can bring hidden rows back).
+
 ## v0.1.67
 
 - **AniList on the Anime tab.** The Anime tab now opens with AniList, with no account needed: a bar of AniList's genres (Action to Thriller, without the adult ones, plus the Isekai, Shounen, Seinen and Shoujo tags), then four rows: Trending on AniList, Popular this season, All-time popular and Top rated. Choose a genre and all four rows show only that genre; All genres goes back. Your add-ons' anime catalogues follow below as before. On TVs and phones.

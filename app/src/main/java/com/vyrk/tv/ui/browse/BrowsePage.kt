@@ -154,9 +154,9 @@ fun BrowsePage(
     val recRows = rememberRecommendationRows(session, enabled = isHome && !model.animeOnly) { picks ->
         if (com.vyrk.tv.ui.phone.FormFactor.isTv(graph.context)) session.scope.launch { graph.homeChannel.publish(picks) }
     }
-    // The Anime tab opens with AniList: its genres, then its rows, before your add-ons' catalogues.
+    // The Anime tab opens with AniList's rows (its lists, then a row per genre), before your add-ons' catalogues.
     val aniList = rememberAniList(session, model, enabled = model.tab == Tab.ANIME)
-    val animeEmpty = model.animeOnly && model.built && model.rows.isEmpty() && !aniList.showBar
+    val animeEmpty = model.animeOnly && model.built && model.rows.isEmpty() && aniList.rows.isEmpty()
     val rows = buildList {
         if (isHome && cwItems.isNotEmpty()) add(cwRow)
         addAll(top10Rows)
@@ -276,15 +276,15 @@ fun BrowsePage(
             if (!watchReq.tryRequestFocus() || !heroEnabled) restoreTarget = rows.firstOrNull()?.let { Origin(tabKey, it.key, 0, "") }
         }
     }
-    // Anime Kitsu added from the AniList card: the card goes as the genres arrive, so focus moves to
-    // All genres instead of being lost with the button.
-    val genresReq = remember { FocusRequester() }
+    // Anime Kitsu added from the AniList card: the card goes with its button, so focus waits on the
+    // tab strip and moves to AniList's first row once its titles are in.
     LaunchedEffect(aniList.showOffer, active) {
         if (!active) { flags.offerFocused.set(false); return@LaunchedEffect }
-        if (!aniList.showOffer && aniList.showBar && flags.offerFocused.getAndSet(false)) {
+        if (!aniList.showOffer && flags.offerFocused.getAndSet(false)) {
             androidx.compose.runtime.snapshotFlow { windowInfoForCard.isWindowFocused }.first { it }
-            delay(150)
-            if (!genresReq.tryRequestFocus()) app.focusTabsTick++
+            flags.topItemFocused.set(false)
+            app.focusTabsTick++
+            aniList.rows.firstOrNull()?.let { restoreTarget = Origin(tabKey, it.key, 0, "") }
         }
     }
     // Only requests made while this page is open: a page built later (another tab) must not act
@@ -305,7 +305,7 @@ fun BrowsePage(
             return@LaunchedEffect
         }
         val headerItems = (if (heroEnabled) 1 else 0) + (if (showTop10Card) 1 else 0) + (if (animeEmpty) 1 else 0) +
-            (if (aniList.showBar || aniList.showOffer) 1 else 0)
+            (if (aniList.showOffer) 1 else 0)
         // Already on screen (back from the info page, or from the tab strip): don't jump the page.
         if (listState.layoutInfo.visibleItemsInfo.none { it.key == t.rowKey }) listState.scrollToItem(idx + headerItems)
     }
@@ -432,17 +432,14 @@ fun BrowsePage(
                         },
                     )
                 }
-                // AniList's genres, or (with no add-on that opens Kitsu titles) the card offering Anime Kitsu.
-                // Like the hero, focus here keeps the page at the top.
+                // With no add-on that opens Kitsu titles, the card offering Anime Kitsu in place of AniList's
+                // rows. Like the hero, focus here keeps the page at the top.
                 val onTopFocus = { f: Boolean ->
                     flags.topItemFocused.set(f)
                     if (f) { flags.heroFocused.set(false); focusedPoster = null; scope.launch { listState.animateScrollToItem(0) } }
                 }
                 if (aniList.showOffer) item(key = "anilist-offer") {
                     AniListOffer(onAdd = { AniListRows.offerKitsu(app, session, scope) }, onFocus = { f -> onTopFocus(f); if (f) flags.offerFocused.set(true) })
-                }
-                if (aniList.showBar) item(key = "anilist-genres") {
-                    AniListGenreBar(aniList.state, allReq = genresReq, onFocus = { f -> onTopFocus(f); if (f) flags.offerFocused.set(false) })
                 }
                 items(rows, key = { it.key }) { row ->
                     val origin = { i: Int, m: MetaPreview -> Origin(tabKey, row.key, i, m.id) }

@@ -10,29 +10,40 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import java.time.LocalDate
 
 /**
  * AniList (https://anilist.co) on the Anime tab, without an account: its public GraphQL API
- * (`POST https://graphql.anilist.co`, no key) answers four rows in one request, narrowed by one of
- * its genres (or a few popular tags). Nothing plays from AniList: titles open through your add-ons
- * by Kitsu ID ([AniListKitsu]), like the rest of the Anime tab.
+ * (`POST https://graphql.anilist.co`, no key) answers the tab's rows, several in one request: four
+ * lists, then a row per genre (and a few popular tags). Nothing plays from AniList: titles open
+ * through your add-ons by Kitsu ID ([AniListKitsu]), like the rest of the Anime tab.
  */
 object AniList {
     const val ENDPOINT = "https://graphql.anilist.co"
     const val PER_ROW = 30
+    const val PER_GENRE = 20
 
     enum class Section(val key: String) { TRENDING("trending"), SEASON("season"), POPULAR("popular"), TOP("top") }
 
     /** A genre, or one of the tags offered with them (AniList keeps Isekai and the demographics as tags). */
-    data class Filter(val name: String, val tag: Boolean = false)
+    data class Filter(val name: String, val tag: Boolean = false) {
+        /** For row keys, focus labels and GraphQL aliases: "slice_of_life", "sci_fi". */
+        val slug: String get() = name.lowercase().replace(Regex("[^a-z0-9]+"), "_")
+    }
+
+    /** A row: one of the four lists, or a genre with what's popular in it now. Its key is its GraphQL alias. */
+    sealed interface Shelf {
+        val key: String
+        data class Main(val section: Section) : Shelf { override val key: String get() = section.key }
+        data class Genre(val filter: Filter) : Shelf { override val key: String get() = "genre_" + filter.slug }
+    }
+
+    val main: List<Shelf.Main> = Section.entries.map { Shelf.Main(it) }
 
     /** AniList's genres without its adult ones (Hentai, Ecchi), then the tags people browse by most. */
     val filters: List<Filter> = listOf(
@@ -58,35 +69,56 @@ object AniList {
         (when (today.monthValue) { in 1..3 -> "WINTER"; in 4..6 -> "SPRING"; in 7..9 -> "SUMMER"; else -> "FALL" }) to today.year
 
     private const val FIELDS = "id idMal format seasonYear genres title { romaji english } coverImage { extraLarge large } description(asHtml: false)"
-    private fun page(alias: String, args: String) =
-        "$alias: Page(perPage: \$n) { media(type: ANIME, isAdult: false, $args, genre_in: \$genre, tag_in: \$tag) { $FIELDS } }"
 
-    val QUERY: String = "query (\$n: Int, \$season: MediaSeason, \$year: Int, \$genre: [String], \$tag: [String]) { " +
-        listOf(
-            page(Section.TRENDING.key, "sort: TRENDING_DESC"),
-            page(Section.SEASON.key, "season: \$season, seasonYear: \$year, sort: POPULARITY_DESC"),
-            page(Section.POPULAR.key, "sort: POPULARITY_DESC"),
-            page(Section.TOP.key, "sort: SCORE_DESC"),
-        ).joinToString(" ") + " }"
+    private fun quoted(s: String) = "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
-    /** The request: unused filter variables are left out, so AniList applies no filter for them. */
-    fun requestBody(filter: Filter?, today: LocalDate, perPage: Int = PER_ROW): String = buildJsonObject {
-        put("query", QUERY)
-        putJsonObject("variables") {
+    private fun page(shelf: Shelf): String {
+        val (perPage, args) = when (shelf) {
+            is Shelf.Main -> "\$n" to when (shelf.section) {
+                Section.TRENDING -> "sort: TRENDING_DESC"
+                Section.SEASON -> "season: \$season, seasonYear: \$year, sort: POPULARITY_DESC"
+                Section.POPULAR -> "sort: POPULARITY_DESC"
+                Section.TOP -> "sort: SCORE_DESC"
+            }
+            // What's popular in the genre now: trending first, then all-time popularity for the rest.
+            is Shelf.Genre -> "\$g" to "${if (shelf.filter.tag) "tag_in" else "genre_in"}: [${quoted(shelf.filter.name)}], sort: [TRENDING_DESC, POPULARITY_DESC]"
+        }
+        return "${shelf.key}: Page(perPage: $perPage) { media(type: ANIME, isAdult: false, $args) { $FIELDS } }"
+    }
+
+    /** Only the variables these rows use are declared (GraphQL refuses unused ones) and sent. */
+    private fun variables(shelves: List<Shelf>, today: LocalDate): Map<String, Pair<String, Any>> = buildMap {
+        if (shelves.any { it is Shelf.Main }) put("n", "Int" to PER_ROW)
+        if (shelves.any { it is Shelf.Genre }) put("g", "Int" to PER_GENRE)
+        if (Shelf.Main(Section.SEASON) in shelves) {
             val (season, year) = season(today)
-            put("n", perPage)
-            put("season", season)
-            put("year", year)
-            if (filter != null) putJsonArray(if (filter.tag) "tag" else "genre") { add(filter.name) }
+            put("season", "MediaSeason" to season)
+            put("year", "Int" to year)
+        }
+    }
+
+    /** One request for [shelves], each answered under its own alias. */
+    fun query(shelves: List<Shelf>, today: LocalDate): String {
+        val vars = variables(shelves, today)
+        val decl = if (vars.isEmpty()) "" else vars.entries.joinToString(", ", "(", ") ") { (k, v) -> "\$$k: ${v.first}" }
+        return "query $decl{ " + shelves.joinToString(" ") { page(it) } + " }"
+    }
+
+    fun requestBody(shelves: List<Shelf>, today: LocalDate): String = buildJsonObject {
+        put("query", query(shelves, today))
+        putJsonObject("variables") {
+            variables(shelves, today).forEach { (k, v) ->
+                when (val value = v.second) { is Int -> put(k, value); else -> put(k, value.toString()) }
+            }
         }
     }.toString()
 
     /** The rows of an answer, or null when it carries errors instead of data. */
-    fun parse(body: String): Map<Section, List<Media>>? {
+    fun parse(body: String, shelves: List<Shelf>): Map<Shelf, List<Media>>? {
         val root = runCatching { ProtocolJson.parseToJsonElement(body) as? JsonObject }.getOrNull() ?: return null
         val data = root["data"] as? JsonObject ?: return null
-        if ((root["errors"] as? JsonArray)?.isNotEmpty() == true && Section.entries.none { data[it.key] is JsonObject }) return null
-        return Section.entries.associateWith { s ->
+        if ((root["errors"] as? JsonArray)?.isNotEmpty() == true && shelves.none { data[it.key] is JsonObject }) return null
+        return shelves.associateWith { s ->
             ((data[s.key] as? JsonObject)?.get("media") as? JsonArray).orEmpty().mapNotNull { media(it) }.distinctBy { it.id }
         }
     }
@@ -144,37 +176,42 @@ object AniList {
      */
     fun lookupIds(m: Media): List<String> = listOfNotNull("anilist:${m.id}", m.malId?.let { "mal:$it" })
 
-    /** Titles of [rows] still without a Kitsu ID, first rows first, at most [limit]. */
-    fun unmapped(rows: Map<Section, List<Media>>, ids: AniListKitsu, limit: Int): List<Media> =
-        Section.entries.flatMap { rows[it].orEmpty() }.distinctBy { it.id }
+    /** Titles of [rows] still without a Kitsu ID, in row order, at most [limit]. */
+    fun unmapped(rows: Map<Shelf, List<Media>>, ids: AniListKitsu, limit: Int): List<Media> =
+        rows.values.flatten().distinctBy { it.id }
             .filter { ids.kitsu(it.id) == null && !ids.isKnownMiss(it.id) }.take(limit)
 }
 
-/** The rows' request, cached for half an hour per filter, one request at a time (AniList limits the rate). */
+/**
+ * Rows from AniList, each kept for half an hour; only the rows not kept are asked for, in one
+ * request, one request at a time (AniList limits the rate).
+ */
 class AniListClient(private val http: HttpTransport, private val now: () -> Long = System::currentTimeMillis) {
     sealed interface Result {
-        data class Ok(val rows: Map<AniList.Section, List<AniList.Media>>) : Result
+        data class Ok(val rows: Map<AniList.Shelf, List<AniList.Media>>) : Result
         /** [code] is the HTTP status, or 0 when AniList could not be reached. */
         data class Failed(val code: Int, val reason: String) : Result
     }
 
     private val mutex = Mutex()
-    private val cache = HashMap<String, Pair<Long, Map<AniList.Section, List<AniList.Media>>>>()
+    private val cache = HashMap<AniList.Shelf, Pair<Long, List<AniList.Media>>>()
 
-    suspend fun rows(filter: AniList.Filter?, today: LocalDate = LocalDate.now()): Result = mutex.withLock {
-        val key = filter?.let { (if (it.tag) "tag:" else "genre:") + it.name } ?: ""
-        cache[key]?.takeIf { now() - it.first < FRESH_MS }?.let { return Result.Ok(it.second) }
+    suspend fun rows(shelves: List<AniList.Shelf>, today: LocalDate = LocalDate.now()): Result = mutex.withLock {
+        val fresh = shelves.mapNotNull { s -> cache[s]?.takeIf { now() - it.first < FRESH_MS }?.let { s to it.second } }.toMap()
+        val ask = shelves.filter { it !in fresh }
+        if (ask.isEmpty()) return Result.Ok(fresh)
         val r = try {
-            http.post(AniList.ENDPOINT, AniList.requestBody(filter, today), mapOf("Accept" to "application/json"), 12_000)
+            http.post(AniList.ENDPOINT, AniList.requestBody(ask, today), mapOf("Accept" to "application/json"), 12_000)
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
             return Result.Failed(0, e.message ?: e.javaClass.simpleName)
         }
-        val rows = if (r.isSuccess) AniList.parse(r.body) else null
+        val rows = if (r.isSuccess) AniList.parse(r.body, ask) else null
         if (rows == null) return Result.Failed(r.code, AniList.errorMessage(r.body) ?: "HTTP ${r.code}")
-        cache[key] = now() to rows
-        Result.Ok(rows)
+        val t = now()
+        rows.forEach { (s, media) -> cache[s] = t to media }
+        Result.Ok(shelves.associateWith { fresh[it] ?: rows[it].orEmpty() })
     }
 
     companion object {
