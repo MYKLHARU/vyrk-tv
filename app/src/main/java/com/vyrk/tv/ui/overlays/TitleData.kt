@@ -46,6 +46,18 @@ suspend fun loadTitleSources(graph: AppGraph, session: ProfileSession, meta: Met
     return SourcesState.Ready(ranked, failedAddons = results.count { it.second is AddonResult.Failed }, addonCount = results.size)
 }
 
+/**
+ * Instant start for a title page: once the page's own sources are in (when it loads them), or
+ * straight away otherwise, gets what Play will play ready. Leaving the page stops it.
+ */
+@Composable
+fun InstantStartEffect(graph: AppGraph, session: ProfileSession, meta: MetaPreview, sources: SourcesState, pageLoadsSources: Boolean) {
+    val ready = sources as? SourcesState.Ready
+    val waiting = pageLoadsSources && ready == null
+    androidx.compose.runtime.LaunchedEffect(meta.id, waiting, ready) { if (!waiting) graph.instantStart.prepare(session, meta, ready?.ranked) }
+    androidx.compose.runtime.DisposableEffect(meta.id) { onDispose { graph.instantStart.cancel() } }
+}
+
 /** Cast and crew with photos from TMDB, when the build has a TMDB key and the title has an IMDb ID. */
 @Composable
 fun rememberTmdbCredits(graph: AppGraph, meta: MetaPreview): Credits? {

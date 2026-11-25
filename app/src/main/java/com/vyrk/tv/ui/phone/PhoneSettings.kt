@@ -278,6 +278,7 @@ private fun ColumnScope.GroupPage(session: ProfileSession, group: PhoneGroup, on
             PhoneChoice(str(R.string.preferred_hdr), listOf(HdrPref.ANY to any, HdrPref.DOLBY_VISION to "Dolby Vision", HdrPref.HDR10 to "HDR10", HdrPref.SDR to "SDR"), s.hdr, { v -> upd { it.copy(hdr = v) } })
             PhoneToggle(str(R.string.sources_on_info), s.sourcesOnInfoPage, { v -> upd { it.copy(sourcesOnInfoPage = v) } })
             PhoneToggle(str(R.string.load_sources_on_open), s.loadSourcesOnOpen, { v -> upd { it.copy(loadSourcesOnOpen = v) } })
+            PhoneToggle(str(R.string.instant_start), d.instantStart, { v -> graph.updateDevice { it.copy(instantStart = v) } }, hint = str(R.string.instant_start_desc), tag = "set:instant_start")
             PhoneToggle(str(R.string.always_show_sources), s.alwaysShowSources, { v -> upd { it.copy(alwaysShowSources = v) } })
             PhoneToggle(str(R.string.autoplay_next), s.autoplayNext, { v -> upd { it.copy(autoplayNext = v) } }, tag = "set:autoplay")
             PhoneToggle(str(R.string.ask_still_watching), s.askStillWatching, { v -> upd { it.copy(askStillWatching = v) } })
@@ -534,6 +535,15 @@ private fun AboutPage(session: ProfileSession) {
             }
             (graph.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("VYRK diagnostics", text))
             app.showToast(copied)
+        }, icon = R.drawable.ic_swap)
+        // The report's text and its page link, through the share sheet (mail, chat, a GitHub issue).
+        val shareTitle = str(R.string.playback_report)
+        PhoneListRow(shareTitle, {
+            val text = com.vyrk.tv.data.PlaybackReport.text(graph)
+            val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                .putExtra(android.content.Intent.EXTRA_SUBJECT, "VYRK ${BuildConfig.VERSION_NAME} playback report")
+                .putExtra(android.content.Intent.EXTRA_TEXT, text + "\n" + com.vyrk.core.diag.ReportCodec.link(text))
+            runCatching { ctx.startActivity(android.content.Intent.createChooser(send, shareTitle)) }
         }, icon = R.drawable.ic_swap)
     }
 }

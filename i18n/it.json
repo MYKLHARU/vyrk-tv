@@ -463,5 +463,10 @@
     "backup_player": "Lettore di riserva",
     "backup_player_hint": "mpv subentra quando il lettore principale non riesce a riprodurre un file. Sempre: mpv per tutto.",
     "backup_when_needed": "Quando serve",
-    "backup_always": "Sempre"
+    "backup_always": "Sempre",
+    "instant_start": "Avvio istantaneo",
+    "instant_start_desc": "Mentre la pagina di un titolo è aperta, VYRK prepara la fonte migliore: il suo link debrid e i primi secondi (fino a 40 MB), così Riproduci parte subito.",
+    "playback_report": "Invia un rapporto di riproduzione",
+    "playback_report_scan": "Scansiona con il telefono per vedere il rapporto",
+    "playback_report_what": "Contiene il modello di questa TV, cosa può riprodurre, le impostazioni che cambiano la riproduzione e il registro recente di VYRK: niente link, account o indirizzi dei componenti aggiuntivi. Nulla lascia il telefono finché non lo invii."
 }

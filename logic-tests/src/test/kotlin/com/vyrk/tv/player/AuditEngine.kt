@@ -26,6 +26,7 @@ class PlayerEngine {
     val selections = mutableListOf<Pair<Int, String?>>()
     var preservedAudio = false
     val backupAvailable = false
+    val cachedBytes = 0L
     val onBackup = false
     fun prepare(stream: Stream, startMs: Long, preserveAudio: Boolean = false, backup: Boolean = false) { preservedAudio = preserveAudio; preparations += stream to startMs; player.currentPosition = startMs; player.isPlaying = true }
     fun audioTracks() = audio

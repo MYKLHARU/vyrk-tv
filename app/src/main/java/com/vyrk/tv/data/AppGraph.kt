@@ -54,6 +54,8 @@ class AppGraph(val context: Context) {
     /** Real-Debrid or TorBox: torrent sources play through it. Signed in on this device only. */
     val debrid = DebridAccount(com.vyrk.core.debrid.RealDebridClient(transport), com.vyrk.core.debrid.TorBoxClient(transport),
         vault, File(File(context.filesDir, "vyrk"), "debrid.enc"), scope)
+    /** Gets what Play will play ready while a title page is open. */
+    val instantStart = com.vyrk.tv.player.InstantStart(this)
     /** Hand-off from the UI to PlayerActivity (same process). */
     @Volatile var pendingPlayback: com.vyrk.tv.player.PlaybackRequest? = null
 

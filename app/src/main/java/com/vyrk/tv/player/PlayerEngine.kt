@@ -60,6 +60,8 @@ class PlayerEngine(
     /** The backup player may be used. */
     backup: Boolean = true,
     private val userAgent: String = "VYRK",
+    /** Instant start's cache of source beginnings, read (never written) by the player. */
+    startCache: androidx.media3.datasource.cache.Cache? = null,
 ) {
     private val appContext = context.applicationContext
 
@@ -73,6 +75,20 @@ class PlayerEngine(
     val trackSelector = DefaultTrackSelector(context)
     private val mediaHttp = PlaybackNetwork.client(http)
     private val dataSource = OkHttpDataSource.Factory(mediaHttp)
+    private val cachedRead = java.util.concurrent.atomic.AtomicLong()
+    /** Bytes of the current file the player read from instant start's cache. */
+    val cachedBytes: Long get() = cachedRead.get()
+    private val mediaSource: androidx.media3.datasource.DataSource.Factory = startCache?.let { cache ->
+        androidx.media3.datasource.cache.CacheDataSource.Factory()
+            .setCache(cache)
+            .setUpstreamDataSourceFactory(dataSource)
+            .setCacheWriteDataSinkFactory(null)
+            .setFlags(androidx.media3.datasource.cache.CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+            .setEventListener(object : androidx.media3.datasource.cache.CacheDataSource.EventListener {
+                override fun onCachedBytesRead(cacheSizeBytes: Long, cachedBytesRead: Long) { cachedRead.addAndGet(cachedBytesRead) }
+                override fun onCacheIgnored(reason: Int) {}
+            })
+    } ?: dataSource
     val bufferConfig = PlaybackBuffering.forHeap(Runtime.getRuntime().maxMemory(), live)
     private val allocator = DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE)
 
@@ -116,7 +132,7 @@ class PlayerEngine(
         .setTrackSelector(trackSelector)
         .setBandwidthMeter(meter)
         .setLoadControl(PlaybackLoadControls.create(bufferConfig, allocator))
-        .setMediaSourceFactory(DefaultMediaSourceFactory(dataSource, Dv7ExtractorsFactory(DefaultExtractorsFactory(), dv7Mode)))
+        .setMediaSourceFactory(DefaultMediaSourceFactory(mediaSource, Dv7ExtractorsFactory(DefaultExtractorsFactory(), dv7Mode)))
         .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), true)
         .setHandleAudioBecomingNoisy(true)
         .setWakeMode(C.WAKE_MODE_NETWORK)
@@ -158,6 +174,7 @@ class PlayerEngine(
                 url.contains(".mpd", true) -> setMimeType(MimeTypes.APPLICATION_MPD)
             }
         }.build()
+        cachedRead.set(0)
         val target: Player = if (backup && backupAvailable) mpv ?: MpvPlayer(appContext, userAgent).also { mpv = it } else exo
         use(target)
         if (target is MpvPlayer) target.setHeaders(headers)

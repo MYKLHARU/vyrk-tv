@@ -172,6 +172,8 @@
     <string name="install_from_link">Ce lien vient d\'une autre app. Vérifiez-le avant d\'installer.</string>
     <string name="install_from_url">Installer depuis une URL</string>
     <string name="installed_addon">%1$s installé</string>
+    <string name="instant_start">Démarrage instantané</string>
+    <string name="instant_start_desc">Pendant que la page d\'un titre est ouverte, VYRK prépare la meilleure source : son lien debrid et ses premières secondes (jusqu\'à 40 Mo), pour que Lecture démarre aussitôt.</string>
     <string name="interface_size">Taille de l\'interface</string>
     <string name="intro_sound">Son d\'ouverture</string>
     <string name="intro_sound_desc">Joue le son de VYRK avec l\'animation d\'ouverture</string>
@@ -250,6 +252,9 @@
     <string name="play_with">Lire avec</string>
     <string name="play_with_app">Lire avec %1$s</string>
     <string name="play_with_other_app">Une autre app…</string>
+    <string name="playback_report">Envoyer un rapport de lecture</string>
+    <string name="playback_report_scan">Scannez avec votre téléphone pour voir le rapport</string>
+    <string name="playback_report_what">Il contient le modèle de cette TV, ce qu\'elle peut lire, les réglages qui changent la lecture et le journal récent de VYRK : ni liens, ni comptes, ni adresses d\'extensions. Rien ne quitte votre téléphone tant que vous ne l\'envoyez pas.</string>
     <string name="poster_size">Taille des affiches</string>
     <string name="poster_size_desc">Taille des affiches dans les rangées</string>
     <string name="preferred_format">Format préféré</string>

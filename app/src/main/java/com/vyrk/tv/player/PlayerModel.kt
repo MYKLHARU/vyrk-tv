@@ -142,6 +142,8 @@ class PlayerModel(
 
     private val settings: ProfileSettings get() = session.settings.value
     private var policy = RecoveryPolicy(1, false)
+    /** When the player opened, for "picture after … ms" in the diagnostics. */
+    private val openedAt = android.os.SystemClock.elapsedRealtime()
     private val backupMode get() = graph.deviceSettings.value.backupPlayer
     private fun newPolicy(count: Int, picked: Boolean, start: Int = 0) =
         RecoveryPolicy(count, picked, startIndex = start, backupEngine = engine.backupAvailable && backupMode == com.vyrk.tv.data.BackupPlayer.WHEN_NEEDED)
@@ -407,7 +409,8 @@ class PlayerModel(
         val settling = current
         scope.launch { delay(FREEZE_GRACE_MS); if (current === settling && firstFrame) onSourceSettled?.invoke() }
         Diagnostics.log("player", "first frame ${engine.bufferDiagnostics()}")
-        vyrkEvent("first_frame ${if (engine.onBackup) "mpv" else "exo"}")
+        vyrkEvent("first_frame ${if (engine.onBackup) "mpv" else "exo"} cached=${engine.cachedBytes}")
+        Diagnostics.log("player", "picture after ${android.os.SystemClock.elapsedRealtime() - openedAt} ms (${engine.cachedBytes / 1024} KB from instant start)")
         resetProgressClock()
         firstFrameJob?.cancel()
         progressTo(1f)
@@ -596,7 +599,10 @@ class PlayerModel(
             RecoveryAction.RefreshLink -> {
                 val r = current
                 // A debrid link that stopped working: ask the service for a fresh one.
-                if (r != null && r.info.delivery == Delivery.TORRENT && debridLinks.remove(r.candidate.key) != null) playCandidate(pos, recoveryAudio, engine.onBackup)
+                if (r != null && r.info.delivery == Delivery.TORRENT && debridLinks.remove(r.candidate.key) != null) {
+                    graph.debrid.forget(r.candidate.stream, playingVideoId)
+                    playCandidate(pos, recoveryAudio, engine.onBackup)
+                }
                 else scope.launch { refreshLink(pos) }
             }
             RecoveryAction.TryBackupEngine -> {

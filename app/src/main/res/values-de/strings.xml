@@ -172,6 +172,8 @@
     <string name="install_from_link">Dieser Link kommt aus einer anderen App. Prüfe ihn vor der Installation.</string>
     <string name="install_from_url">Per URL installieren</string>
     <string name="installed_addon">%1$s installiert</string>
+    <string name="instant_start">Sofortstart</string>
+    <string name="instant_start_desc">Solange die Seite eines Titels offen ist, bereitet VYRK die beste Quelle vor: ihren Debrid-Link und die ersten Sekunden (bis zu 40 MB), damit Abspielen sofort startet.</string>
     <string name="interface_size">Oberflächengröße</string>
     <string name="intro_sound">Eröffnungston</string>
     <string name="intro_sound_desc">Spielt den VYRK-Sound zur Startanimation</string>
@@ -250,6 +252,9 @@
     <string name="play_with">Abspielen mit</string>
     <string name="play_with_app">Mit %1$s abspielen</string>
     <string name="play_with_other_app">Andere App…</string>
+    <string name="playback_report">Wiedergabebericht senden</string>
+    <string name="playback_report_scan">Scanne mit dem Handy, um den Bericht zu sehen</string>
+    <string name="playback_report_what">Er enthält das Modell dieses Fernsehers, was er abspielen kann, die Einstellungen zur Wiedergabe und VYRKs aktuelles Protokoll: keine Links, Konten oder Add-on-Adressen. Nichts verlässt dein Handy, bis du es sendest.</string>
     <string name="poster_size">Postergröße</string>
     <string name="poster_size_desc">Größe der Poster in den Reihen</string>
     <string name="preferred_format">Bevorzugtes Format</string>

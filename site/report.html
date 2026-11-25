@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VYRK · Playback report</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#050A0E">
+  <link rel="icon" href="img/mark.svg" type="image/svg+xml">
+  <style>
+    :root { --bg: #050A0E; --panel: #0B151C; --raised: #10212A; --text: #F4F5F6; --text-2: #9FB1B9; --muted: #6E838E; --accent: #D4A65A; --on-accent: #1A1206; --edge: rgba(255,255,255,.10); }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 28px 18px 48px; }
+    header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    header img { width: 34px; height: 34px; }
+    h1 { font: 600 22px/1.2 "Noto Serif", Georgia, serif; letter-spacing: .04em; margin: 0; }
+    p { color: var(--text-2); margin: 8px 0 18px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; }
+    button, a.button { appearance: none; border: 1px solid var(--edge); background: var(--raised); color: var(--text); border-radius: 999px; padding: 10px 18px; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+    pre { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px; white-space: pre-wrap; word-break: break-word; font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--text); }
+    .note { color: var(--muted); font-size: 13px; }
+    .error { color: #E8A07A; }
+  </style>
+</head>
+<body>
+<main>
+  <header><img src="img/mark.svg" alt=""><h1>Playback report</h1></header>
+  <p id="intro">What your TV sent: its model, what it can decode and VYRK's recent log. Read it, then send it however you like.</p>
+  <div class="actions" id="actions" hidden>
+    <a class="button primary" id="issue" target="_blank" rel="noopener">Open a GitHub issue</a>
+    <button id="copy" type="button">Copy</button>
+    <button id="save" type="button">Save as text</button>
+  </div>
+  <pre id="report">Unpacking…</pre>
+  <p class="note">The report travels in the part of this link after “#”, which your browser never sends to any server: this page only unpacks it on your phone.</p>
+</main>
+<script>
+(async () => {
+  const out = document.getElementById('report');
+  const packed = new URLSearchParams(location.hash.slice(1)).get('r');
+  if (!packed) { out.textContent = 'This link holds no report. In VYRK, open Settings › About › Send a playback report and scan the code.'; out.classList.add('error'); return; }
+  try {
+    const b64 = packed.replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(b64 + '='.repeat((4 - b64.length % 4) % 4));
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    const text = await new Response(stream).text();
+    out.textContent = text;
+    const first = text.split('\n')[0] || 'VYRK playback report';
+    const device = (text.split('\n').find(l => l.startsWith('Device: ')) || '').slice(8).split(' · ')[0];
+    const title = 'Playback report: ' + (device || first);
+    const body = 'What happened (what you played, what you saw):\n\n\n<details><summary>Report</summary>\n\n```\n' + text + '\n```\n</details>\n';
+    const issue = document.getElementById('issue');
+    // GitHub's new-issue link takes the text in the address; a long report is pasted instead.
+    if (body.length < 6000) issue.href = 'https://github.com/MYKLHARU/vyrk-tv/issues/new?title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(body);
+    else { issue.href = 'https://github.com/MYKLHARU/vyrk-tv/issues/new?title=' + encodeURIComponent(title); issue.textContent = 'Open a GitHub issue (then paste)'; }
+    document.getElementById('copy').onclick = async () => { try { await navigator.clipboard.writeText(text); document.getElementById('copy').textContent = 'Copied'; } catch (_) {} };
+    document.getElementById('save').onclick = () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+      a.download = 'vyrk-report.txt'; a.click();
+    };
+    document.getElementById('actions').hidden = false;
+  } catch (e) {
+    out.textContent = 'This report couldn’t be unpacked (the link may be cut short, or the browser is too old).';
+    out.classList.add('error');
+  }
+})();
+</script>
+</body>
+</html>

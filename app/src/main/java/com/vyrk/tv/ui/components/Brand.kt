@@ -72,13 +72,14 @@ fun Wordmark(height: Dp = 26.dp, modifier: Modifier = Modifier) {
 
 /** QR code rendered with ZXing; dark modules on white for reliable phone scanning. */
 @Composable
-fun QrCode(content: String, size: Dp, modifier: Modifier = Modifier) {
-    val bmp = remember(content) { qrBitmap(content, 512) }
+fun QrCode(content: String, size: Dp, modifier: Modifier = Modifier, lowCorrection: Boolean = false) {
+    // Long content (a playback report) uses the lowest error correction: fewer, larger squares.
+    val bmp = remember(content) { qrBitmap(content, if (lowCorrection) 720 else 512, if (lowCorrection) ErrorCorrectionLevel.L else ErrorCorrectionLevel.M) }
     Image(bmp, contentDescription = null, modifier = modifier.size(size), filterQuality = FilterQuality.None)
 }
 
-fun qrBitmap(content: String, px: Int): ImageBitmap {
-    val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M, EncodeHintType.MARGIN to 2)
+fun qrBitmap(content: String, px: Int, ecc: ErrorCorrectionLevel = ErrorCorrectionLevel.M): ImageBitmap {
+    val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ecc, EncodeHintType.MARGIN to 2)
     val m = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, px, px, hints)
     val pixels = IntArray(m.width * m.height) { i -> if (m.get(i % m.width, i / m.width)) 0xFF0B141D.toInt() else 0xFFFFFFFF.toInt() }
     return Bitmap.createBitmap(pixels, m.width, m.height, Bitmap.Config.ARGB_8888).asImageBitmap()

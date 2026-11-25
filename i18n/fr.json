@@ -463,5 +463,10 @@
     "backup_player": "Lecteur de secours",
     "backup_player_hint": "mpv prend le relais quand le lecteur principal ne peut pas lire un fichier. Toujours : mpv pour tout.",
     "backup_when_needed": "Si nécessaire",
-    "backup_always": "Toujours"
+    "backup_always": "Toujours",
+    "instant_start": "Démarrage instantané",
+    "instant_start_desc": "Pendant que la page d'un titre est ouverte, VYRK prépare la meilleure source : son lien debrid et ses premières secondes (jusqu'à 40 Mo), pour que Lecture démarre aussitôt.",
+    "playback_report": "Envoyer un rapport de lecture",
+    "playback_report_scan": "Scannez avec votre téléphone pour voir le rapport",
+    "playback_report_what": "Il contient le modèle de cette TV, ce qu'elle peut lire, les réglages qui changent la lecture et le journal récent de VYRK : ni liens, ni comptes, ni adresses d'extensions. Rien ne quitte votre téléphone tant que vous ne l'envoyez pas."
 }

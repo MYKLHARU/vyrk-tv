@@ -23,6 +23,7 @@ class AppGraph(val transport: HttpTransport) {
 class AuditDebrid {
     val service: com.vyrk.core.debrid.DebridService? = null
     suspend fun resolve(stream: com.vyrk.core.addon.Stream, videoId: String?): com.vyrk.core.debrid.DebridResult = com.vyrk.core.debrid.DebridResult.SignedOut
+    fun forget(stream: com.vyrk.core.addon.Stream, videoId: String?) {}
 }
 class AuditDevice {
     fun caps(speed: Double?) = DeviceCaps(measuredBps = speed)
