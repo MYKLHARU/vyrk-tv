@@ -388,20 +388,6 @@ else
   key KEYCODE_BACK 1.5 "leave the title page"
 fi
 
-# ---------------------------------------------------------------- the playback report
-# Settings › About › Send a playback report shows a QR code (the report packed into a link).
-until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
-key KEYCODE_DPAD_CENTER 2 "open settings"
-until_focus KEYCODE_DPAD_DOWN '^settings:about$' 10
-key KEYCODE_DPAD_RIGHT 1.2 "into About"
-if until_focus KEYCODE_DPAD_DOWN '^about:(notices|diagnostics|report)$' 14 && until_focus KEYCODE_DPAD_RIGHT '^about:report$' 3; then
-  key KEYCODE_DPAD_CENTER 2 "playback report"
-  shot settings-playback-report
-  log "ok: the playback report QR code opened"
-else fail "no Send a playback report button"; fi
-key KEYCODE_BACK 1.5 "back to the groups"
-key KEYCODE_BACK 1.5 "back to tabs"
-
 # ---------------------------------------------------------------- the backup player (mpv)
 # Settings › Picture & sound › Backup player › Always, then play: the broken 4K fails in mpv and the
 # 720p file plays in mpv. Proves libmpv loads, draws on the PlayerView's surface and reports a frame.
@@ -428,6 +414,18 @@ if until_focus KEYCODE_DPAD_DOWN '^set:backup_player:' 16 && until_focus KEYCODE
     adb_run logcat -d 2>/dev/null | grep -iE 'mpv|vyrk' | tail -n 60 || true; fi
   back_from_player
 fi
+
+# ---------------------------------------------------------------- the playback report
+# Settings › About › Send a playback report shows a QR code (the report packed into a link).
+until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 6
+key KEYCODE_DPAD_CENTER 2 "open settings"
+until_focus KEYCODE_DPAD_DOWN '^settings:about$' 10
+key KEYCODE_DPAD_RIGHT 1.2 "into About"
+if until_focus KEYCODE_DPAD_DOWN '^about:(notices|diagnostics|report)$' 14 && until_focus KEYCODE_DPAD_RIGHT '^about:report$' 3; then
+  key KEYCODE_DPAD_CENTER 2 "playback report"
+  shot settings-playback-report
+  log "ok: the playback report QR code opened"
+else fail "no Send a playback report button"; fi
 
 fi # end of part 1
 

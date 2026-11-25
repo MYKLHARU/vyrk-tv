@@ -84,10 +84,15 @@ class PlayerEngine(
             .setUpstreamDataSourceFactory(dataSource)
             .setCacheWriteDataSinkFactory(null)
             .setFlags(androidx.media3.datasource.cache.CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
-            .setEventListener(object : androidx.media3.datasource.cache.CacheDataSource.EventListener {
-                override fun onCachedBytesRead(cacheSizeBytes: Long, cachedBytesRead: Long) { cachedRead.addAndGet(cachedBytesRead) }
-                override fun onCacheIgnored(reason: Int) {}
-            })
+            // Counted as the bytes are read (the cache's own event only comes when a read closes, long after the first frame).
+            .setCacheReadDataSourceFactory(androidx.media3.datasource.FileDataSource.Factory().setListener(object : androidx.media3.datasource.TransferListener {
+                override fun onTransferInitializing(source: androidx.media3.datasource.DataSource, dataSpec: androidx.media3.datasource.DataSpec, isNetwork: Boolean) {}
+                override fun onTransferStart(source: androidx.media3.datasource.DataSource, dataSpec: androidx.media3.datasource.DataSpec, isNetwork: Boolean) {}
+                override fun onBytesTransferred(source: androidx.media3.datasource.DataSource, dataSpec: androidx.media3.datasource.DataSpec, isNetwork: Boolean, bytesTransferred: Int) {
+                    cachedRead.addAndGet(bytesTransferred.toLong())
+                }
+                override fun onTransferEnd(source: androidx.media3.datasource.DataSource, dataSpec: androidx.media3.datasource.DataSpec, isNetwork: Boolean) {}
+            }))
     } ?: dataSource
     val bufferConfig = PlaybackBuffering.forHeap(Runtime.getRuntime().maxMemory(), live)
     private val allocator = DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE)
