@@ -662,8 +662,8 @@ if until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8 && until_focus KEYCODE_DPAD_RIGH
                   key KEYCODE_DPAD_LEFT 1.2 "back to the groups"
                   for _ in $(seq 1 4); do [[ "$(focus_now)" =~ ^(tab|nav): ]] && break; key KEYCODE_DPAD_UP 1 "up to the tabs"; done
                   if until_focus KEYCODE_DPAD_LEFT '^tab:anime$' 8; then
-                    key KEYCODE_DPAD_DOWN 2 "back into Anime"
-                    if focus_matches '^poster:anilist:' 6; then
+                    # Anime Kitsu's catalogues give the tab a featured title now: step down past it.
+                    if until_focus KEYCODE_DPAD_DOWN '^poster:anilist:' 4; then
                       sleep 3; shot anilist-expanded
                       key KEYCODE_DPAD_RIGHT 2 "the next card widens"
                       sleep 3; shot anilist-expanded-next
