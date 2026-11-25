@@ -1,6 +1,7 @@
 package com.vyrk.tv.ui.browse
 
 import com.vyrk.tv.ui.components.focusHalo
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -419,22 +420,52 @@ fun BrowseRow(
     }
 }
 
-/** The expanded card's face: backdrop, logo and one line of detail over a soft shade. */
+/**
+ * The focused title's artwork as the page header has it: backdrops from its details, TMDB and
+ * fanart.tv, and its best logo. The expanded card shows the same, so the two never disagree and
+ * the card reuses pictures already loaded.
+ */
+data class FocusArt(val type: String, val id: String, val art: TitleArt)
+
+val LocalFocusArt = androidx.compose.runtime.compositionLocalOf<FocusArt?> { null }
+
+/**
+ * The expanded card's face: the title's backdrop, its logo and one line of detail over a soft
+ * shade. Only landscape pictures fill the card: the catalogue's backdrop or Cinemeta's by IMDb ID
+ * (from VYRK's anime list for anime), else the header's (the title's details, TMDB, fanart.tv).
+ * With none, the whole poster sits at the right over a dimmed, blurred copy of itself, rather than
+ * a crop that cuts through faces.
+ */
 @Composable
 private fun ExpandedArt(meta: MetaPreview, width: Dp, height: Dp, detail: String?, modifier: Modifier) {
     val c = Vyrk.colors
+    val shared = LocalFocusArt.current?.takeIf { it.id == meta.id && it.type == meta.type }?.art
+    val artIds = com.vyrk.tv.ui.LocalGraph.current.animeArtIds
+    val own = remember(meta.type, meta.id, meta.background, meta.imdbId, artIds) {
+        val lookup = com.vyrk.core.art.Artwork.lookupId(meta) ?: artIds.lookupId(meta.id, meta.type)
+        listOfNotNull(com.vyrk.core.art.Artwork.forBackdrop(meta.background, "w780"), lookup?.let(com.vyrk.core.art.Artwork::metahubBackground))
+    }
+    // The card's own pictures first, ready as it widens; the header's (from the title's details)
+    // when it has none, so a picture already shown isn't swapped for another.
+    val backdrops = (own + shared?.backdrops.orEmpty()).distinct()
+    var failed by remember(meta.type, meta.id) { mutableStateOf(emptySet<String>()) }
+    val url = backdrops.firstOrNull { it !in failed }
     Box(modifier.background(c.raised)) {
-        val candidates = remember(meta.id, meta.background, meta.poster) {
-            listOfNotNull(com.vyrk.core.art.Artwork.forBackdrop(meta.background, "w780"), com.vyrk.core.art.Artwork.metahubBackground(meta.id), meta.poster).distinct()
+        if (url != null) {
+            AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { failed = failed + url })
+        } else if (meta.poster != null) {
+            AsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize().blur(28.dp).graphicsLayer { alpha = 0.45f })
+            AsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Fit, alignment = Alignment.CenterEnd,
+                modifier = Modifier.fillMaxSize())
         }
-        var attempt by remember(candidates) { mutableIntStateOf(0) }
-        val url = candidates.getOrNull(attempt)
-        if (url != null) AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.6f to Color.Transparent)))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to c.shade.copy(alpha = 0.9f))))
         Box(Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 12.dp).width(width * 0.52f).height(height * 0.42f), contentAlignment = Alignment.BottomStart) {
-            val logos = cardLogos(meta)
-            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.52f, height * 0.42f, Vyrk.type.titleL, Modifier.fillMaxHeight())
+            // The header's logos first (TMDB and fanart.tv's, already loaded for the header above).
+            val logos = shared?.logos?.takeIf { it.isNotEmpty() } ?: cardLogos(meta)
+            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.52f, height * 0.42f, Vyrk.type.titleL,
+                Modifier.fillMaxHeight(), loading = shared?.logosLoading == true)
         }
         val line = detail ?: listOfNotNull(meta.releaseInfo?.take(4)?.takeIf { it.isNotBlank() }, meta.imdbRating?.takeIf { it.isNotBlank() }?.let { "★ $it" }).joinToString("  ·  ")
         if (line.isNotEmpty()) Text(line, style = Vyrk.type.labelL, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis,

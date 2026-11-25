@@ -650,6 +650,29 @@ if until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8 && until_focus KEYCODE_DPAD_RIGH
             until_focus KEYCODE_DPAD_DOWN '^poster:anilist:genre:fantasy#' 6 || true
             # Fantasy is the fifth genre: on screen now, so its batch is asked for.
             anilist_check genres "AniList's next genre rows, as they came on screen" 'fantasy=' && shot anilist-genre-more
+            # Expanding cards (Settings › Profile & appearance): the focused AniList poster widens into a
+            # landscape picture with its logo, never the portrait poster cropped (screenshots for review).
+            for _ in $(seq 1 10); do [[ "$(focus_now)" =~ ^(tab|nav): ]] && break; key KEYCODE_DPAD_UP 1 "up to the tabs"; done
+            if until_focus KEYCODE_DPAD_RIGHT '^nav:settings$' 8; then
+              key KEYCODE_DPAD_CENTER 2 "open settings"
+              if focus_matches '^settings:profile$' 6; then
+                key KEYCODE_DPAD_RIGHT 1.2 "into Profile & appearance"
+                if until_focus KEYCODE_DPAD_DOWN '^set:expand_cards$' 20; then
+                  key KEYCODE_DPAD_CENTER 1.2 "Expanding cards: on"
+                  key KEYCODE_DPAD_LEFT 1.2 "back to the groups"
+                  for _ in $(seq 1 4); do [[ "$(focus_now)" =~ ^(tab|nav): ]] && break; key KEYCODE_DPAD_UP 1 "up to the tabs"; done
+                  if until_focus KEYCODE_DPAD_LEFT '^tab:anime$' 8; then
+                    key KEYCODE_DPAD_DOWN 2 "back into Anime"
+                    if focus_matches '^poster:anilist:' 6; then
+                      sleep 3; shot anilist-expanded
+                      key KEYCODE_DPAD_RIGHT 2 "the next card widens"
+                      sleep 3; shot anilist-expanded-next
+                      log "ok: expanding cards on AniList's rows ($(focus_now))"
+                    else log "warn: expanding cards: focus is '$(focus_now)', not an AniList poster"; fi
+                  fi
+                fi
+              fi
+            fi
           fi
         fi
       fi

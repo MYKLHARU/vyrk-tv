@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.70
+
+- **Expanding cards look right for anime and more.** A widened card fell back to the portrait poster, cropped to a wide shape, whenever the catalogue gave no backdrop, which was every AniList title. It now:
+  - shows a wide picture: the title's backdrop, else Cinemeta's by IMDb ID (anime uses VYRK's own anime list), else the one the header above is showing;
+  - uses the header's logo, so card and header match and the logo appears at once;
+  - when a title has no wide picture at all, shows the whole poster at the right over a soft, blurred copy of itself instead of a crop through faces.
+
 ## v0.1.69
 
 - **Anime posters show their title.** AniList's, Kitsu's and MyAnimeList's covers are artwork without the title on them, unlike the posters on the other tabs, so a row of them was hard to tell apart. Those posters now carry the title's logo at the foot, over a soft shade, or its name when there's no logo. On TVs and phones, in every row, Search, Discover and the Library. Posters that already print their title (Cinemeta's, TMDB's) are left as they are.
