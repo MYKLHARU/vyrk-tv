@@ -2,6 +2,10 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.69
+
+- **Anime posters show their title.** AniList's, Kitsu's and MyAnimeList's covers are artwork without the title on them, unlike the posters on the other tabs, so a row of them was hard to tell apart. Those posters now carry the title's logo at the foot, over a soft shade, or its name when there's no logo. On TVs and phones, in every row, Search, Discover and the Library. Posters that already print their title (Cinemeta's, TMDB's) are left as they are.
+
 ## v0.1.68
 
 - **AniList's genres are rows now, not a filter.** Under AniList's four lists on the Anime tab there's a row for each genre, Action to Thriller, then Isekai, Shounen, Seinen and Shoujo, each showing what's popular in that genre right now. The genre bar is gone.

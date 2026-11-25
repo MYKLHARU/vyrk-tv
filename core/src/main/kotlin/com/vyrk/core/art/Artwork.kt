@@ -51,6 +51,17 @@ object Artwork {
     /** The IMDb id inside a Stremio id ("tt0944947", "tt0944947:1:2"), or null. */
     fun imdbId(id: String): String? = id.substringBefore(':').takeIf { imdb.matches(it) }
 
+    private val keyArtHosts = listOf("anilist.co", "anili.st", "kitsu.app", "kitsu.io", "myanimelist.net")
+
+    /**
+     * Anime covers from AniList, Kitsu or MyAnimeList: key art, which rarely carries the title the
+     * way Cinemeta's and TMDB's posters do, so the poster draws it (logo or name) at its foot.
+     */
+    fun isKeyArt(url: String?): Boolean {
+        val host = url?.substringAfter("://", "")?.substringBefore('/')?.substringBefore(':')?.lowercase() ?: return false
+        return host.isNotEmpty() && keyArtHosts.any { host == it || host.endsWith(".$it") }
+    }
+
     /** Cinemeta's poster for an IMDb id (the same image service Stremio uses), else null. */
     fun metahubPoster(id: String): String? = imdbId(id)?.let { "$METAHUB/poster/medium/$it/img" }
 

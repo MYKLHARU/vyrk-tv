@@ -176,6 +176,10 @@ fun Poster(
         if (url != null) {
             AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
         } else fallback()
+        // Anime key art doesn't print the title the way other posters do: draw it at the foot.
+        if (url != null && com.vyrk.core.art.Artwork.isKeyArt(url)) {
+            KeyArtTitle(meta, width, Vyrk.type.titleS, bottomInset = if (state.progress > 0f) 10.dp else 0.dp)
+        }
         if (expand) {
             val show by androidx.compose.animation.core.animateFloatAsState(if (wide) 1f else 0f,
                 com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.STANDARD), label = "poster-expand")
