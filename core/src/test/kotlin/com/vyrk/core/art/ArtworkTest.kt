@@ -2,7 +2,9 @@ package com.vyrk.core.art
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ArtworkTest {
     @Test
@@ -13,6 +15,24 @@ class ArtworkTest {
         assertNull(Artwork.metahubPoster("kitsu:12"))
         assertNull(Artwork.metahubPoster("tmdb:1399"))
         assertNull(Artwork.metahubPoster("ttabc"))
+    }
+
+    @Test
+    fun animeCoversAreKeyArtWithoutTheirTitle() {
+        listOf(
+            "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-73IhOXpJZiMF.jpg",
+            "https://img.anili.st/media/16498",
+            "https://media.kitsu.app/anime/poster_images/7442/medium.jpg",
+            "https://media.kitsu.io/anime/poster_images/1/large.jpg?1431697256",
+            "https://cdn.myanimelist.net/images/anime/10/47347.jpg",
+        ).forEach { assertTrue(Artwork.isKeyArt(it), it) }
+        listOf(
+            "https://images.metahub.space/poster/medium/tt2560140/img",
+            "https://image.tmdb.org/t/p/w500/x.jpg",
+            "https://notanilist.co/x.jpg",
+            "https://example.org/kitsu.app/x.jpg",
+            "kitsu.app", "", null,
+        ).forEach { assertFalse(Artwork.isKeyArt(it), it.toString()) }
     }
 
     @Test

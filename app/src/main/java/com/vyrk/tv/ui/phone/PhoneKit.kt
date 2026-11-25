@@ -226,6 +226,10 @@ fun PhonePoster(
         candidates.getOrNull(attempt)?.let { url ->
             AsyncImage(url, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                 onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
+            // Anime key art doesn't print the title the way other posters do: draw it at the foot.
+            if (com.vyrk.core.art.Artwork.isKeyArt(url)) {
+                com.vyrk.tv.ui.browse.KeyArtTitle(meta, width, Vyrk.type.labelL, bottomInset = if (state.progress > 0f) 8.dp else 0.dp)
+            }
         }
         if (state.isNew) Box(Modifier.align(Alignment.TopStart).padding(5.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
             Text(newLabel, style = Vyrk.type.labelS, color = c.onAccent)
