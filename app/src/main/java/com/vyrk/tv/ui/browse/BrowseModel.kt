@@ -74,7 +74,7 @@ class BrowseModel(
     fun rowListState(key: String) = rowListStates.getOrPut(key) { androidx.compose.foundation.lazy.LazyListState() }
     var focusedPoster by mutableStateOf<MetaPreview?>(null)
     var focusedRowKey by mutableStateOf<String?>(null)
-    /** The Anime tab's AniList genre and rows (AniListRows.kt), kept with the tab like its scroll position. */
+    /** The Anime tab's AniList rows (AniListRows.kt), kept with the tab like its scroll position. */
     val aniList = AniListState()
     /** Image URLs already requested ahead of time. */
     internal val prefetchedImages = HashSet<String>()
@@ -143,12 +143,13 @@ class BrowseModel(
     fun prefetch(count: Int) { rows.take(count).forEach { ensureLoaded(it) } }
 
     fun ensureLoaded(row: RowState) {
+        if (AniListState.isAniListRow(row)) { aniList.want(row); return }
         if (row.loadedOnce || row.loading) return
         load(row, reset = true)
     }
 
     fun retry(row: RowState) {
-        if (AniListState.isAniListRow(row)) aniList.retry() else load(row, reset = true)
+        if (AniListState.isAniListRow(row)) aniList.want(row) else load(row, reset = true)
     }
 
     fun loadMore(row: RowState) {

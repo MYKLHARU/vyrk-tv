@@ -7,6 +7,8 @@ import com.vyrk.core.addon.Descriptor
 import com.vyrk.core.profile.PinHasher
 import com.vyrk.core.profile.PinLockout
 import com.vyrk.tv.BuildConfig
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -118,6 +120,20 @@ class AppGraph(val context: Context) {
     val animeIds = com.vyrk.core.anime.AnimeIds(transport)
     /** The Anime tab's AniList rows: AniList's public API (no account). */
     val aniList = com.vyrk.core.anime.AniListClient(transport)
+    /**
+     * Kitsu / MyAnimeList → IMDb (else TMDB) IDs bundled with the app (tools/gen_anime_ids.py), so
+     * anime gets logos and backdrops when its add-on gives no IMDb ID. Read off the main thread as
+     * the app starts; empty until then (snapshot state, so artwork already drawn catches up).
+     */
+    var animeArtIds by androidx.compose.runtime.mutableStateOf(com.vyrk.core.anime.AnimeArtIds.EMPTY)
+        private set
+    init {
+        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { context.assets.open("anime-art-ids.txt").bufferedReader().use { it.readText() } }
+                .onSuccess { animeArtIds = com.vyrk.core.anime.AnimeArtIds.parse(it) }
+                .onFailure { com.vyrk.tv.ui.Perf.log("anime artwork ids unreadable: ${it.message}") }
+        }
+    }
     /** AniList → Kitsu IDs bundled with the app (tools/gen_anime_ids.py); read on first use, off the main thread. */
     val aniListIds: com.vyrk.core.anime.AniListKitsu by lazy {
         runCatching { context.assets.open("anilist-kitsu.txt").bufferedReader().use { it.readText() } }

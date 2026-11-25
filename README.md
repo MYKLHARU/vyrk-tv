@@ -35,7 +35,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Made for the remote** — every screen works with the D-pad, OK and Back. Focus is a soft frost glow with a slight zoom, never lost, and comes back to the exact poster after the info page, playback or a restart. The layout is fitted to a 960×540 canvas, so 1080p and 4K TVs look the same.
 
-**Browse** — a featured hero, Continue Watching, Top 10 rows per streaming service and your catalogue rows. The Anime tab opens with AniList's trending, seasonal, all-time popular and top-rated rows, narrowed by its genres (no AniList account needed). A title header with an optional muted trailer follows focus. Rows load lazily and page as you scroll.
+**Browse** — a featured hero, Continue Watching, Top 10 rows per streaming service and your catalogue rows. The Anime tab opens with AniList's trending, seasonal, all-time popular and top-rated rows, then a row for each of its genres (no AniList account needed). A title header with an optional muted trailer follows focus. Rows load lazily and page as you scroll.
 
 **Details and sources** — a full-screen title page over the title's own artwork, with cast photos; below it, every source ranked and explained. Play always starts the best one; choosing is optional. Series get a season guide. With a TMDB key, cast and crew get photos and their own pages.
 

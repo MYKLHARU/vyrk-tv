@@ -19,7 +19,6 @@
     <string name="airs_on">Läuft am %1$s</string>
     <string name="always_show_sources">Quellen immer anzeigen</string>
     <string name="anilist_add_kitsu">Anime Kitsu hinzufügen</string>
-    <string name="anilist_genres">AniList-Genres</string>
     <string name="anilist_offer_body">Angesagte, aktuelle und bestbewertete Anime von AniList, nach Genre. Titel öffnen sich über ein Anime-Add-on, das Kitsu-IDs liest: Füge das kostenlose Drittanbieter-Add-on Anime Kitsu hinzu.</string>
     <string name="anilist_offer_title">Anime von AniList entdecken</string>
     <string name="anilist_popular">Die beliebtesten aller Zeiten</string>

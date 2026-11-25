@@ -2,6 +2,13 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.68
+
+- **AniList's genres are rows now, not a filter.** Under AniList's four lists on the Anime tab there's a row for each genre, Action to Thriller, then Isekai, Shounen, Seinen and Shoujo, each showing what's popular in that genre right now. The genre bar is gone.
+  - The first genre rows arrive right after the four lists; the rest load as you scroll to them, four to a request, so opening the tab asks AniList for no more than before.
+  - Hold OK on a poster › Hide row hides a genre you don't want (Settings can bring hidden rows back).
+- **Logos for more anime.** VYRK finds a title's logo through its IMDb ID, which anime add-ons give for only some titles (Anime Kitsu for about 4 in 10), so many anime showed their name in plain text. VYRK now carries IMDb and TMDB IDs for about 8,400 anime by Kitsu and MyAnimeList ID, and uses them for logos and backdrops (from TMDB, fanart.tv and Cinemeta's images) wherever an add-on gives none: the header, the title page, the hero and Continue Watching. Titles keep their own IDs for everything else. Anime that no database links to IMDb or TMDB still show their name.
+
 ## v0.1.67
 
 - **AniList on the Anime tab.** The Anime tab now opens with AniList, with no account needed: a bar of AniList's genres (Action to Thriller, without the adult ones, plus the Isekai, Shounen, Seinen and Shoujo tags), then four rows: Trending on AniList, Popular this season, All-time popular and Top rated. Choose a genre and all four rows show only that genre; All genres goes back. Your add-ons' anime catalogues follow below as before. On TVs and phones.

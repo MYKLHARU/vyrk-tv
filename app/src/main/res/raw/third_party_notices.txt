@@ -53,7 +53,7 @@ AniList (https://anilist.co)
   The Anime tab's AniList rows and genres come from AniList's public API.
   VYRK is not affiliated with or endorsed by AniList.
 
-AniList to Kitsu ID list (assets/anilist-kitsu.txt)
+Anime ID lists (assets/anilist-kitsu.txt, assets/anime-art-ids.txt)
   Derived from Fribb/anime-lists (https://github.com/Fribb/anime-lists), which builds on
   anime-offline-database (https://github.com/manami-project/anime-offline-database).
   Made available under the Open Data Commons Open Database License 1.0

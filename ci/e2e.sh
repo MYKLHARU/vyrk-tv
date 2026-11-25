@@ -602,16 +602,16 @@ fi
 
 # ---------------------------------------------------------------- AniList on the Anime tab
 # No add-on here opens Kitsu titles, so the Anime tab offers Anime Kitsu. Adding it (the live
-# third-party add-on) brings AniList's genres and rows; a genre narrows them and a title opens.
-# AniList and Anime Kitsu are outside services: their being unreachable is reported, but an
-# answer saying VYRK's request was wrong fails the build.
-anilist_event() {  # the latest AniList result for a filter: "anilist ok filter=all trending=28/30 …"
+# third-party add-on) brings AniList's rows: its four lists, then a row per genre. A title opens,
+# and the genre rows load as they come on screen. AniList and Anime Kitsu are outside services:
+# their being unreachable is reported, but an answer saying VYRK's request was wrong fails the build.
+anilist_event() {  # the latest AniList result: "anilist ok main trending=28/30 …" or "anilist ok genres action=20/20 …"
   local o; o=$(adb_run logcat -d -s VyrkEvent:I 2>/dev/null || true)
-  printf '%s\n' "$o" | grep -oE "anilist (ok|failed) filter=$1( .*)?$" | tail -n 1 || true
+  printf '%s\n' "$o" | grep -oE "anilist (ok|failed) $1( .*)?$" | grep -E "${2:-.}" | tail -n 1 || true
 }
-anilist_check() {  # $1 filter, $2 what: 0 when the rows loaded
+anilist_check() {  # $1 main|genres, $2 what, $3 a pattern the result must hold: 0 when the rows loaded
   local deadline=$((SECONDS + 45)) e=""
-  while (( SECONDS < deadline )); do e=$(anilist_event "$1"); [[ -n "$e" ]] && break; sleep 1; done
+  while (( SECONDS < deadline )); do e=$(anilist_event "$1" "${3:-.}"); [[ -n "$e" ]] && break; sleep 1; done
   case "$e" in
     "anilist ok "*)
       # Each row reads shown/answered: AniList's titles, and how many of them an add-on opens.
@@ -634,22 +634,23 @@ if until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8 && until_focus KEYCODE_DPAD_RIGH
       # Not key(): the focused button goes with the card once the add-on is in, a moment before
       # focus is moved on, and key() would count that moment as focus lost.
       adb_run shell input keyevent KEYCODE_DPAD_CENTER; echo "KEYCODE_DPAD_CENTER | install Anime Kitsu" >> "$TRACE"
-      if focus_matches '^anilist:genre:all$' 20; then log "ok: with Anime Kitsu added, focus moved from the card to AniList's genres"
-      else fail "after adding Anime Kitsu, focus is '$(focus_now)' instead of AniList's genres"; fi
-      if anilist_check all "AniList's rows for all genres"; then
-        sleep 3; shot anilist-rows
-        if until_focus KEYCODE_DPAD_DOWN '^poster:anilist:trending#' 3; then
-          key KEYCODE_DPAD_CENTER 2 "open an AniList title"
-          if focus_matches '^info:' 40; then log "ok: an AniList title opens through Anime Kitsu ($(focus_now))"; sleep 3; shot anilist-title
-          else fail "an AniList title didn't open: focus is '$(focus_now)'"; fi
-          key KEYCODE_BACK 2 "back to the rows"
-          wait_focus '^poster:anilist:trending#' 15 || true
-        fi
-        if until_focus KEYCODE_DPAD_UP '^anilist:genre:' 3 && until_focus KEYCODE_DPAD_LEFT '^anilist:genre:all$' 25 &&
-           until_focus KEYCODE_DPAD_RIGHT '^anilist:genre:action$' 2; then
-          key KEYCODE_DPAD_CENTER 2 "AniList genre: Action"
-          anilist_check Action "AniList's rows for Action" && { sleep 3; shot anilist-action; }
-          [[ "$(focus_now)" == 'anilist:genre:action' ]] && log "ok: focus stays on the genre" || fail "choosing a genre moved focus to '$(focus_now)'"
+      if anilist_check main "AniList's four lists"; then
+        if focus_matches '^poster:anilist:trending#0$' 20; then log "ok: with Anime Kitsu added, focus moved from the card to AniList's first row"
+        else fail "after adding Anime Kitsu, focus is '$(focus_now)' instead of AniList's first row"; fi
+        sleep 2; shot anilist-rows
+        key KEYCODE_DPAD_CENTER 2 "open an AniList title"
+        if focus_matches '^info:' 40; then log "ok: an AniList title opens through Anime Kitsu ($(focus_now))"; sleep 3; shot anilist-title
+        else fail "an AniList title didn't open: focus is '$(focus_now)'"; fi
+        key KEYCODE_BACK 2 "back to the rows"
+        wait_focus '^poster:anilist:trending#' 15 || true
+        # The first genre rows are asked for right after the lists, so they're ready on the way down.
+        if anilist_check genres "AniList's first genre rows" 'action='; then
+          if until_focus KEYCODE_DPAD_DOWN '^poster:anilist:genre:action#' 6; then
+            log "ok: the Action row follows AniList's lists"; sleep 2; shot anilist-genre-rows
+            until_focus KEYCODE_DPAD_DOWN '^poster:anilist:genre:fantasy#' 6 || true
+            # Fantasy is the fifth genre: on screen now, so its batch is asked for.
+            anilist_check genres "AniList's next genre rows, as they came on screen" 'fantasy=' && shot anilist-genre-more
+          fi
         fi
       fi
     else
@@ -660,7 +661,6 @@ if until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8 && until_focus KEYCODE_DPAD_RIGH
     fail "the Anime tab didn't offer Anime Kitsu: focus is '$(focus_now)'"
   fi
 fi
-
 fi # end of part 2
 
 # ---------------------------------------------------------------- results

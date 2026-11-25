@@ -19,7 +19,6 @@
     <string name="airs_on">Diffusion le %1$s</string>
     <string name="always_show_sources">Toujours afficher les sources</string>
     <string name="anilist_add_kitsu">Ajouter Anime Kitsu</string>
-    <string name="anilist_genres">Genres AniList</string>
     <string name="anilist_offer_body">Les animés tendance, de saison et les mieux notés d\'AniList, par genre. Les titres s\'ouvrent avec un module d\'animés qui lit les identifiants Kitsu : ajoutez le module tiers gratuit Anime Kitsu.</string>
     <string name="anilist_offer_title">Parcourez les animés d\'AniList</string>
     <string name="anilist_popular">Les plus populaires</string>

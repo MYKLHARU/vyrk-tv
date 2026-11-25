@@ -55,23 +55,33 @@ class AniListTest {
         assertEquals("FALL" to 2026, AniList.season(LocalDate.of(2026, 12, 31)))
     }
 
-    @Test fun oneRequestAsksForFourSafeRows() {
-        val q = AniList.QUERY
+    private val day = LocalDate.of(2026, 11, 25)
+    private fun genre(name: String) = AniList.Shelf.Genre(AniList.filters.first { it.name == name })
+    private fun main(s: AniList.Section) = AniList.Shelf.Main(s)
+
+    @Test fun oneRequestAsksForTheFourListsSafely() {
+        val q = AniList.query(AniList.main, day)
+        assertTrue(q.startsWith("query (\$n: Int, \$season: MediaSeason, \$year: Int) { "), q)
         AniList.Section.entries.forEach { assertTrue("${it.key}: Page(perPage: \$n)" in q, it.key) }
         assertEquals(4, Regex("isAdult: false").findAll(q).count(), "adult titles are never asked for")
         assertTrue("season: \$season, seasonYear: \$year, sort: POPULARITY_DESC" in q)
         assertTrue("sort: TRENDING_DESC" in q && "sort: SCORE_DESC" in q)
         assertEquals(q.count { it == '{' }, q.count { it == '}' }, "balanced braces")
+        assertTrue("\"variables\":{\"n\":30,\"season\":\"FALL\",\"year\":2026}" in AniList.requestBody(AniList.main, day))
     }
 
-    @Test fun variablesCarryOnlyTheChosenFilter() {
-        val day = LocalDate.of(2026, 11, 25)
-        val all = AniList.requestBody(null, day)
-        assertTrue("\"variables\":{\"n\":30,\"season\":\"FALL\",\"year\":2026}" in all, all)
-        assertTrue("\"genre\"" !in all && "\"tag\"" !in all, "no filter variables at all, not nulls")
-        assertTrue("\"genre\":[\"Sci-Fi\"]" in AniList.requestBody(AniList.Filter("Sci-Fi"), day))
-        val tag = AniList.requestBody(AniList.Filter("Isekai", tag = true), day)
-        assertTrue("\"tag\":[\"Isekai\"]" in tag && "\"genre\"" !in tag)
+    @Test fun genreRowsShowWhatIsPopularInThemNow() {
+        val shelves = listOf(genre("Action"), genre("Slice of Life"), genre("Isekai"))
+        val q = AniList.query(shelves, day)
+        // Only the variables used are declared: GraphQL refuses a query that declares one it doesn't use.
+        assertTrue(q.startsWith("query (\$g: Int) { "), q)
+        assertTrue("genre_action: Page(perPage: \$g) { media(type: ANIME, isAdult: false, genre_in: [\"Action\"], sort: [TRENDING_DESC, POPULARITY_DESC])" in q, q)
+        assertTrue("genre_slice_of_life: Page(perPage: \$g) { media(type: ANIME, isAdult: false, genre_in: [\"Slice of Life\"]" in q)
+        assertTrue("genre_isekai: Page(perPage: \$g) { media(type: ANIME, isAdult: false, tag_in: [\"Isekai\"]" in q, "Isekai is a tag")
+        assertEquals(q.count { it == '{' }, q.count { it == '}' })
+        assertTrue("\"variables\":{\"g\":20}" in AniList.requestBody(shelves, day))
+        val mixed = AniList.query(listOf(main(AniList.Section.TOP), genre("Sci-Fi")), day)
+        assertTrue(mixed.startsWith("query (\$n: Int, \$g: Int) { ") && "genre_sci_fi:" in mixed, mixed)
     }
 
     @Test fun filtersAreAniListGenresWithoutAdultOnesThenTags() {
@@ -80,10 +90,14 @@ class AniListTest {
         assertEquals(17, AniList.filters.count { !it.tag })
         assertEquals(listOf("Isekai", "Shounen", "Seinen", "Shoujo"), AniList.filters.filter { it.tag }.map { it.name })
         assertEquals(names.distinct(), names)
+        val keys = AniList.filters.map { AniList.Shelf.Genre(it).key }
+        assertEquals(keys.distinct(), keys)
+        assertTrue(keys.all { Regex("[_A-Za-z][_0-9A-Za-z]*").matches(it) }, "aliases are GraphQL names: $keys")
+        assertEquals("sci_fi", AniList.Filter("Sci-Fi").slug); assertEquals("mahou_shoujo", AniList.Filter("Mahou Shoujo").slug)
     }
 
     @Test fun parsesRowsTitlesAndPlainDescriptions() {
-        val rows = AniList.parse(answer)!!
+        val rows = AniList.parse(answer, AniList.main)!!.mapKeys { (k, _) -> (k as AniList.Shelf.Main).section }
         val trending = rows.getValue(AniList.Section.TRENDING)
         assertEquals(listOf(185660, 999999999), trending.map { it.id })
         val dan = trending[0]
@@ -102,16 +116,16 @@ class AniListTest {
 
     @Test fun errorsAreNotRows() {
         val bad = """{"errors":[{"message":"Validation error of type FieldUndefined","status":400}],"data":null}"""
-        assertNull(AniList.parse(bad))
+        assertNull(AniList.parse(bad, AniList.main))
         assertEquals("Validation error of type FieldUndefined", AniList.errorMessage(bad))
-        assertNull(AniList.parse("<html>Bad gateway</html>"))
+        assertNull(AniList.parse("<html>Bad gateway</html>", AniList.main))
         assertNull(AniList.errorMessage("<html>Bad gateway</html>"))
     }
 
     @Test fun previewsOpenByKitsuIdAndOnlyWhatAnAddonOpens() {
         val ids = AniListKitsu.parse("# header\n21 12\n185660 49425\n199 176\n")
-        val rows = AniList.parse(answer)!!
-        val all = AniList.Section.entries.flatMap { rows.getValue(it) }
+        val rows = AniList.parse(answer, AniList.main)!!
+        val all = AniList.main.flatMap { rows.getValue(it) }
         val shown = AniList.previews(all, ids) { _, _ -> true }
         assertEquals(listOf("kitsu:49425", "kitsu:12", "kitsu:176"), shown.map { it.id }, "the unmapped title is left out")
         val dan = shown[0]
@@ -124,7 +138,7 @@ class AniListTest {
 
     @Test fun newTitlesAreLookedUpByAniListThenMalId() {
         val ids = AniListKitsu.parse("21 12\n")
-        val rows = AniList.parse(answer)!!
+        val rows = AniList.parse(answer, AniList.main)!!
         val missing = AniList.unmapped(rows, ids, limit = 10)
         assertEquals(listOf(185660, 999999999, 199), missing.map { it.id })
         assertEquals(listOf("anilist:185660", "mal:60543"), AniList.lookupIds(missing[0]))
@@ -158,27 +172,34 @@ class AniListTest {
         assertTrue(file.readText().contains("Open Database License"), "the ODbL notice stays with the data")
     }
 
-    @Test fun clientCachesPerFilterAndReportsFailures() = runTest {
+    @Test fun clientKeepsEachRowAndAsksOnlyForTheRest() = runTest {
         var t = 0L
-        val http = Fake { HttpResult(200, answer) }
+        val genres = """{"data":{"genre_action":{"media":[{"id":21,"title":{"romaji":"ONE PIECE"}}]},"genre_romance":{"media":[]}}}"""
+        val http = Fake { body -> HttpResult(200, if ("genre_" in body) genres else answer) }
         val client = AniListClient(http) { t }
-        val day = LocalDate.of(2026, 11, 25)
-        assertIs<AniListClient.Result.Ok>(client.rows(null, day))
-        assertIs<AniListClient.Result.Ok>(client.rows(null, day))
-        assertEquals(1, http.bodies.size, "cached")
+        val first = client.rows(AniList.main, day)
+        assertIs<AniListClient.Result.Ok>(first)
+        assertEquals(1, first.rows.getValue(main(AniList.Section.TOP)).size)
+        assertIs<AniListClient.Result.Ok>(client.rows(AniList.main, day))
+        assertEquals(1, http.bodies.size, "kept")
         assertEquals("application/json", http.headers[0]["Accept"])
-        client.rows(AniList.Filter("Romance"), day)
-        assertEquals(2, http.bodies.size, "each filter has its own rows")
+        val both = client.rows(listOf(main(AniList.Section.TRENDING), genre("Action"), genre("Romance")), day)
+        assertIs<AniListClient.Result.Ok>(both)
+        assertEquals(2, http.bodies.size)
+        assertTrue("trending:" !in http.bodies[1] && "genre_action:" in http.bodies[1], "only the rows not kept are asked for")
+        assertEquals(2, both.rows.getValue(main(AniList.Section.TRENDING)).size, "the kept row comes back too")
+        assertEquals(listOf(21), both.rows.getValue(genre("Action")).map { it.id })
+        assertEquals(emptyList(), both.rows.getValue(genre("Romance")))
         t += AniListClient.FRESH_MS + 1
         http.reply = { HttpResult(429, """{"errors":[{"message":"Too Many Requests.","status":429}],"data":null}""") }
-        val limited = client.rows(null, day)
+        val limited = client.rows(AniList.main, day)
         assertIs<AniListClient.Result.Failed>(limited)
         assertEquals(429, limited.code); assertEquals("Too Many Requests.", limited.reason)
         http.reply = { throw java.io.IOException("Unable to resolve host") }
-        val offline = client.rows(null, day)
+        val offline = client.rows(AniList.main, day)
         assertIs<AniListClient.Result.Failed>(offline)
         assertEquals(0, offline.code)
         http.reply = { HttpResult(200, """{"errors":[{"message":"Syntax Error"}]}""") }
-        assertIs<AniListClient.Result.Failed>(client.rows(null, day), "200 without data is a failure")
+        assertIs<AniListClient.Result.Failed>(client.rows(AniList.main, day), "200 without data is a failure")
     }
 }
