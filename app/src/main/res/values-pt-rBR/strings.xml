@@ -146,6 +146,8 @@
     <string name="expanding_cards">Cartões expansíveis</string>
     <string name="expanding_cards_desc">O pôster em foco se expande com a arte do título</string>
     <string name="external_player_missing">Não foi possível abrir esse player.</string>
+    <string name="facts_out_of_10">de 10</string>
+    <string name="facts_rated">classificação</string>
     <string name="featured_hero">Destaque principal</string>
     <string name="featured_hero_desc">Títulos em destaque grandes no topo do Início</string>
     <string name="filter_all">Tudo</string>

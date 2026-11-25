@@ -67,6 +67,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
+import com.vyrk.tv.ui.browse.CardCorner
+import com.vyrk.tv.ui.browse.PortraitFoot
 import com.vyrk.core.addon.MetaPreview
 import com.vyrk.tv.R
 import com.vyrk.tv.ui.browse.PosterState
@@ -208,10 +210,14 @@ fun PhonePoster(
     val c = Vyrk.colors
     val shape = RoundedCornerShape(10.dp)
     val newLabel = str(R.string.badge_new)
+    val facts = com.vyrk.tv.ui.browse.rememberCardFacts(meta)
+    val spoken = com.vyrk.tv.ui.browse.spokenFacts(facts)
+    val desc = if (spoken.isEmpty()) meta.name else "${meta.name}, $spoken"
+    val scale = com.vyrk.tv.ui.browse.CardScale.Phone
     Box(
         modifier.width(width).height(width * 1.5f)
             .press(onClick, onLongClick, tag = tag)
-            .semantics { contentDescription = meta.name }
+            .semantics { contentDescription = desc }
             .clip(shape)
             .background(Brush.verticalGradient(listOf(c.raised, c.panel)))
             .border(1.dp, Color.White.copy(alpha = 0.06f), shape),
@@ -224,19 +230,17 @@ fun PhonePoster(
         val candidates = remember(meta.poster, meta.id) { listOfNotNull(meta.poster, com.vyrk.core.art.Artwork.metahubPoster(meta.id)).distinct() }
         var attempt by remember(candidates) { mutableIntStateOf(0) }
         candidates.getOrNull(attempt)?.let { url ->
-            AsyncImage(url, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
-                onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
-            // Anime key art doesn't print the title the way other posters do: draw it at the foot.
-            if (com.vyrk.core.art.Artwork.isKeyArt(url)) {
-                com.vyrk.tv.ui.browse.KeyArtTitle(meta, width, Vyrk.type.labelL, bottomInset = if (state.progress > 0f) 8.dp else 0.dp)
-            }
+            com.vyrk.tv.ui.browse.CardArtwork(url, cardAspect = 2f / 3f, onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
+            // The foot: anime key art doesn't print the title the way other posters do, so it gets the
+            // logo (or name) too; every poster gets the facts row.
+            val keyArt = com.vyrk.core.art.Artwork.isKeyArt(url)
+            PortraitFoot(meta, facts, showTitle = keyArt, logos = if (keyArt) com.vyrk.tv.ui.browse.cardLogos(meta) else emptyList(),
+                width = width, scale = scale, bottomInset = if (state.progress > 0f) 8.dp else 0.dp)
         }
         if (state.isNew) Box(Modifier.align(Alignment.TopStart).padding(5.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
             Text(newLabel, style = Vyrk.type.labelS, color = c.onAccent)
         }
-        if (state.watched) Box(Modifier.align(Alignment.TopEnd).padding(5.dp).size(18.dp).background(c.success, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(R.drawable.ic_check, null, Modifier.size(11.dp), tint = c.background)
-        }
+        CardCorner(state.watched, facts.certificate, scale, tickSize = 18.dp)
         if (state.progress > 0f) Box(
             Modifier.align(Alignment.BottomCenter).padding(start = 6.dp, end = 6.dp, bottom = 6.dp).fillMaxWidth().height(3.dp)
                 .clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.3f)),

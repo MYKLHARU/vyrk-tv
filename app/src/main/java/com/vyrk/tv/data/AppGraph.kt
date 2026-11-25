@@ -118,6 +118,8 @@ class AppGraph(val context: Context) {
     }
     /** Kitsu → MyAnimeList ids, for AniSkip and the airing calendar. */
     val animeIds = com.vyrk.core.anime.AnimeIds(transport)
+    /** Media cards' age certificates (TMDB, by the device's region) and IMDb scores (Cinemeta) when the catalogue has none. */
+    val cardFacts = CardFactsSource(this)
     /** The Anime tab's AniList rows: AniList's public API (no account). */
     val aniList = com.vyrk.core.anime.AniListClient(transport)
     /**

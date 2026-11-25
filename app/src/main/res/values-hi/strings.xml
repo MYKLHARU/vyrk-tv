@@ -146,6 +146,8 @@
     <string name="expanding_cards">फैलने वाले कार्ड</string>
     <string name="expanding_cards_desc">फ़ोकस किया गया पोस्टर टाइटल की तस्वीर में फैल जाता है</string>
     <string name="external_player_missing">वह प्लेयर नहीं खुल सका।</string>
+    <string name="facts_out_of_10">10 में से</string>
+    <string name="facts_rated">रेटिंग</string>
     <string name="featured_hero">फ़ीचर्ड हीरो</string>
     <string name="featured_hero_desc">होम के ऊपर बड़े फ़ीचर्ड टाइटल</string>
     <string name="filter_all">सभी</string>

@@ -319,8 +319,9 @@ private fun TitleFacts(meta: MetaPreview, full: MetaItem?) {
             if (i > 0 || cert != null) Text("·", style = Vyrk.type.titleM, color = c.textMuted)
             Text(p, style = Vyrk.type.titleM, color = c.textSecondary, maxLines = 1)
         }
-        val rating = full?.imdbRating ?: meta.imdbRating
-        if (!rating.isNullOrBlank()) Tag("IMDb $rating", color = c.background, background = c.gold)
+        // IMDb's score only: an add-on's imdbRating counts for IMDb-keyed titles, else Cinemeta's (rememberCardFacts).
+        val imdb = com.vyrk.tv.ui.browse.rememberCardFacts(meta, full).imdb
+        if (imdb != null) Tag("IMDb ${com.vyrk.core.catalog.CardFacts.formatImdb(imdb)}", color = c.background, background = c.gold)
     }
 }
 
@@ -428,7 +429,9 @@ private fun TitleDetails(synopsis: String, full: MetaItem?, item: LibraryItem?, 
             }
         }
     }
-    full?.imdbRating?.let { Spacer(Modifier.height(10.dp)); Text(str(R.string.rating_attribution), style = Vyrk.type.labelS, color = c.textMuted) }
+    // Credited only when an IMDb score is shown (see TitleFacts).
+    val imdbShown = full?.let { com.vyrk.tv.ui.browse.rememberCardFacts(com.vyrk.core.addon.MetaPreview(it.id, it.type, it.name), it).imdb } != null
+    if (imdbShown) { Spacer(Modifier.height(10.dp)); Text(str(R.string.rating_attribution), style = Vyrk.type.labelS, color = c.textMuted) }
 }
 
 /** The time, top right, as on the player. */

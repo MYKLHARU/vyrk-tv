@@ -88,6 +88,9 @@ data class TmdbTitle(
 /** Artwork chosen for a title, as full image URLs; each is null when TMDB has none. */
 data class TmdbArtwork(val logo: String?, val backdrop: String?, val poster: String?)
 
+/** A title's facts for media cards: its age certificate in one region, and its IMDb ID. */
+data class TmdbFacts(val certification: String?, val imdbId: String?)
+
 /**
  * TMDB v3 API (https://developer.themoviedb.org/reference). Requests carry either a v3 API key
  * (`api_key` query) or a v4 read access token (`Authorization: Bearer`). The key comes from the
@@ -134,10 +137,40 @@ class TmdbClient(
         }
     }
 
-    /** TMDB id and media type ("movie" or "tv") for an IMDb id. */
+    private val findCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, String>>()
+
+    /** TMDB id and media type ("movie" or "tv") for an IMDb id. Found IDs are kept for the session. */
     suspend fun findByImdb(imdbId: String, preferTv: Boolean): Pair<Long, String>? {
+        val cacheKey = "$imdbId:$preferTv"
+        findCache[cacheKey]?.let { return it }
         val o = get("/find/$imdbId", "external_source=imdb_id") ?: return null
-        return parseFind(o, preferTv)
+        return parseFind(o, preferTv)?.also { findCache[cacheKey] = it }
+    }
+
+    private val factsCache = java.util.concurrent.ConcurrentHashMap<String, TmdbFacts>()
+
+    /**
+     * The age certificate in [region] (ISO 3166-1, "GB") and the IMDb ID of a title, by Stremio
+     * meta id ("tt…" via /find, or "tmdb:…"), in one request (`append_to_response`). Films take
+     * the region's theatrical certificate first, then other releases'; shows the region's rating.
+     * Answers are kept for the session, "none" included; failed requests are tried again later.
+     */
+    suspend fun facts(metaId: String, type: String, region: String): TmdbFacts? {
+        if (!enabled) return null
+        val country = region.trim().uppercase()
+        val cacheKey = "$type:$metaId:$country"
+        factsCache[cacheKey]?.let { return it }
+        val base = metaId.substringBefore(':')
+        val target: Pair<Long, String> = when {
+            base.startsWith("tt") -> findByImdb(base, preferTv = type == "series") ?: return null
+            metaId.startsWith("tmdb:") -> (metaId.removePrefix("tmdb:").substringBefore(':').toLongOrNull() ?: return null) to (if (type == "series") "tv" else "movie")
+            else -> return null
+        }
+        val append = if (target.second == "tv") "content_ratings,external_ids" else "release_dates,external_ids"
+        val o = get("/${target.second}/${target.first}", "append_to_response=$append") ?: return null
+        val facts = parseFacts(o, target.second, country)
+        factsCache[cacheKey] = facts
+        return facts
     }
 
     suspend fun credits(tmdbId: Long, mediaType: String): Credits? {
@@ -274,6 +307,23 @@ class TmdbClient(
             backdrop = image(pickBackdrop(parseImages(o, "backdrops"))?.path, backdropSize),
             poster = image(pickPoster(parseImages(o, "posters"))?.path, "w500"),
         )
+
+        /** Release types by preference for a film's certificate: theatrical, limited, digital, physical, TV, premiere. */
+        private val releaseOrder = listOf(3, 2, 4, 5, 6, 1)
+
+        /** The region's certificate and the IMDb ID from a details answer with release_dates or content_ratings appended. */
+        fun parseFacts(o: JsonObject, mediaType: String, region: String): TmdbFacts {
+            val cert = if (mediaType == "tv") {
+                (o["content_ratings"] as? JsonObject)?.arr("results")?.firstOrNull { it.s("iso_3166_1").equals(region, true) }?.s("rating")
+            } else {
+                (o["release_dates"] as? JsonObject)?.arr("results")?.firstOrNull { it.s("iso_3166_1").equals(region, true) }
+                    ?.arr("release_dates")?.filter { !it.s("certification").isNullOrBlank() }
+                    ?.minByOrNull { r -> releaseOrder.indexOf(r.l("type")?.toInt()).let { if (it < 0) releaseOrder.size else it } }
+                    ?.s("certification")
+            }
+            val imdb = ((o["external_ids"] as? JsonObject)?.s("imdb_id") ?: o.s("imdb_id"))?.takeIf { it.startsWith("tt") }
+            return TmdbFacts(cert?.trim()?.takeIf { it.isNotEmpty() }, imdb)
+        }
 
         fun parseFind(o: JsonObject, preferTv: Boolean): Pair<Long, String>? {
             val movie = o.arr("movie_results").firstOrNull()?.l("id")?.let { it to "movie" }

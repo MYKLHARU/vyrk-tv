@@ -475,5 +475,7 @@
     "anilist_top": "Mais bem avaliados",
     "anilist_offer_title": "Explore animes do AniList",
     "anilist_offer_body": "Animes em alta, da temporada e mais bem avaliados do AniList, por gênero. Os títulos abrem por um complemento de anime que lê IDs do Kitsu: adicione o complemento gratuito de terceiros Anime Kitsu.",
-    "anilist_add_kitsu": "Adicionar Anime Kitsu"
+    "anilist_add_kitsu": "Adicionar Anime Kitsu",
+    "facts_out_of_10": "de 10",
+    "facts_rated": "classificação"
 }

@@ -2,6 +2,14 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.71
+
+- **Media cards show their facts.** Every poster, for films, series and anime, on TVs and phones, now has a compact row at its foot, over a soft shade: the year, IMDb's score out of 10 and, where a source supplies it, Rotten Tomatoes' critics' Tomatometer. Each source is labelled. The age certificate sits in the top-right corner. The card's border, glow, size and shape are unchanged.
+  - **Real values only.** IMDb's score comes from the catalogue for IMDb-keyed titles, else from Cinemeta by the title's IMDb ID. Anime add-ons put their own site's score where IMDb's goes (Anime Kitsu sends Kitsu's), so the hero and title pages no longer label that as IMDb either. A zero is shown as a zero; anything missing is simply left out.
+  - **Certificates for your region.** They come from TMDB for the device's region (Android Settings › Languages & region; VYRK has no region setting of its own), and are hidden when TMDB has none for it. Nothing is inferred.
+  - **Rotten Tomatoes.** The card has a place for it, but none of the services VYRK uses publishes the Tomatometer, so it stays hidden until a ratings source is connected.
+  - **Artwork keeps faces in frame.** Crops keep a little more of the top than the bottom. A picture of the other shape (a landscape image on a poster, a poster on a wide card) is shown whole over a blurred copy instead of being cut through. Titles drawn on cards (anime key art, the expanded card) use one fixed logo slot, and the name when there's no logo.
+
 ## v0.1.70
 
 - **Expanding cards look right for anime and more.** A widened card fell back to the portrait poster, cropped to a wide shape, whenever the catalogue gave no backdrop, which was every AniList title. It now:

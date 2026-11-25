@@ -146,6 +146,8 @@
     <string name="expanding_cards">Cartes extensibles</string>
     <string name="expanding_cards_desc">L\'affiche sélectionnée s\'élargit avec l\'image du titre</string>
     <string name="external_player_missing">Impossible d\'ouvrir ce lecteur.</string>
+    <string name="facts_out_of_10">sur 10</string>
+    <string name="facts_rated">classification</string>
     <string name="featured_hero">Mise en avant</string>
     <string name="featured_hero_desc">Grands titres mis en avant en haut de l\'Accueil</string>
     <string name="filter_all">Tout</string>

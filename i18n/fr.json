@@ -475,5 +475,7 @@
     "anilist_top": "Les mieux notés",
     "anilist_offer_title": "Parcourez les animés d'AniList",
     "anilist_offer_body": "Les animés tendance, de saison et les mieux notés d'AniList, par genre. Les titres s'ouvrent avec un module d'animés qui lit les identifiants Kitsu : ajoutez le module tiers gratuit Anime Kitsu.",
-    "anilist_add_kitsu": "Ajouter Anime Kitsu"
+    "anilist_add_kitsu": "Ajouter Anime Kitsu",
+    "facts_out_of_10": "sur 10",
+    "facts_rated": "classification"
 }

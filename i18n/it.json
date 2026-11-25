@@ -475,5 +475,7 @@
     "anilist_top": "I più votati",
     "anilist_offer_title": "Sfoglia gli anime di AniList",
     "anilist_offer_body": "Gli anime di tendenza, di stagione e più votati di AniList, per genere. I titoli si aprono con un componente anime che legge gli ID di Kitsu: aggiungi il componente gratuito di terze parti Anime Kitsu.",
-    "anilist_add_kitsu": "Aggiungi Anime Kitsu"
+    "anilist_add_kitsu": "Aggiungi Anime Kitsu",
+    "facts_out_of_10": "su 10",
+    "facts_rated": "classificazione"
 }

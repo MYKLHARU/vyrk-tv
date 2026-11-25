@@ -146,6 +146,8 @@
     <string name="expanding_cards">Aufklappende Karten</string>
     <string name="expanding_cards_desc">Das fokussierte Poster wird zum Titelbild</string>
     <string name="external_player_missing">Dieser Player ließ sich nicht öffnen.</string>
+    <string name="facts_out_of_10">von 10</string>
+    <string name="facts_rated">Altersfreigabe</string>
     <string name="featured_hero">Hervorgehobener Titel</string>
     <string name="featured_hero_desc">Große hervorgehobene Titel oben auf Start</string>
     <string name="filter_all">Alle</string>

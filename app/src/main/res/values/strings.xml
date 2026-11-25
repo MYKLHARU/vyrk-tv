@@ -146,6 +146,8 @@
     <string name="expanding_cards">Expanding cards</string>
     <string name="expanding_cards_desc">The focused poster widens into the title\'s artwork</string>
     <string name="external_player_missing">Couldn\'t open that player.</string>
+    <string name="facts_out_of_10">out of 10</string>
+    <string name="facts_rated">rated</string>
     <string name="featured_hero">Featured hero</string>
     <string name="featured_hero_desc">Large featured titles at the top of Home</string>
     <string name="filter_all">All</string>
