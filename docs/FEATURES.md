@@ -101,6 +101,7 @@ not run yet.
 | Comfort-zone BringIntoViewSpec (12%/10%) and page spec with atomic flags | `browse/Scrolling.kt` | Done | E2E |
 | Poster progress, watched tick, "New" badge with text | `Rows.kt` | Partial | E2E (progress); New badge not exercised with real data |
 | Restore exact poster after info page, playback and restart; neighbour or hero fallback | `BrowsePage` | Done | E2E |
+| Anime artwork IDs: Kitsu / MyAnimeList → IMDb (else TMDB, same kind only) for about 8,400 titles, bundled (Fribb/anime-lists, ODbL), used for logos and backdrops (TMDB, fanart.tv, metahub) when the title's own metadata has no IMDb ID; read off the main thread at start; never replaces the title's ID | `core/anime/AnimeArtIds`, `Artwork.logos/backdrops(lookup)`, `rememberTitleArt`, `cardLogos` | Built | core (lookup rules, bundled list, metahub URLs) |
 | Anime only from reliable signals | `core/catalog` | Done | core |
 | Top 10 rows per service, ranked numbers, first 10, before other rows | `CatalogRules`, `Rows.kt` | Done | showcase, core |
 | Top 10 numbers from the supplied artwork (numbers 1–10, 85 : 148): outlined digits as tall as the posters, white on the left and fading to clear towards the poster, fainter down the ranks (50 % for 1 to 30 % from 5; 31 % for 10, whose 0 overlaps the 1) | `Rows.RankNumber` | Built | — |

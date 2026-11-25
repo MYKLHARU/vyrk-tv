@@ -391,7 +391,7 @@ private fun ContinueCard(meta: MetaPreview, item: LibraryItem?, tag: String, onC
         urls.getOrNull(attempt)?.let { u -> AsyncImage(u, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (urls.getOrNull(attempt) == u) attempt += 1 }) }
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.3f to Color.Transparent, 1f to c.shade.copy(alpha = 0.92f))))
         Box(Modifier.align(Alignment.TopStart).padding(10.dp).width(w * 0.55f).height(h * 0.38f), contentAlignment = Alignment.BottomStart) {
-            val logos = remember(meta.type, meta.id, meta.logo) { com.vyrk.core.art.Artwork.logos(meta, null, null) }
+            val logos = com.vyrk.tv.ui.browse.cardLogos(meta)
             HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, w * 0.55f, h * 0.38f, Vyrk.type.titleM, Modifier.fillMaxHeight())
         }
         Box(Modifier.align(Alignment.Center).size(40.dp).background(c.shade.copy(alpha = 0.55f), CircleShape).border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape), contentAlignment = Alignment.Center) {

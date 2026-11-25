@@ -555,7 +555,8 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
     val size = backdropSize(androidx.compose.ui.platform.LocalContext.current.resources.displayMetrics.widthPixels)
     val safeFull = meta?.let { com.vyrk.core.art.Artwork.matchingMeta(it, full) }
     val titleKey = meta?.let { com.vyrk.core.art.Artwork.titleKey(it.type, it.id) }
-    val lookupId = meta?.let { com.vyrk.core.art.Artwork.lookupId(it, safeFull) }
+    // Anime titles whose add-on gives no IMDb ID get one (or a TMDB ID) from VYRK's bundled list.
+    val lookupId = meta?.let { com.vyrk.core.art.Artwork.lookupId(it, safeFull) ?: graph.animeArtIds.lookupId(it.id, it.type) }
     // A supplied URL can be broken too: prepare a cached fallback for the focused title.
     val needTmdb = lookupId != null && graph.tmdb.enabled
     // Tagged with the id it was fetched for, like produceMeta: the previous title's TMDB logo must
@@ -598,8 +599,8 @@ fun rememberTitleArt(meta: MetaPreview?, full: com.vyrk.core.addon.MetaItem?, de
     val preview = meta ?: return TitleArt.NONE
     return remember(titleKey, preview.logo, preview.background, safeFull?.logo, safeFull?.background, lookupId, tmdb, fanartLogos, inheritedLogos, logosLoading, size) {
         TitleArt(
-            logos = (com.vyrk.core.art.Artwork.logos(preview, safeFull, tmdb?.logo) + fanartLogos + inheritedLogos).distinct(),
-            backdrops = com.vyrk.core.art.Artwork.backdrops(preview, safeFull, tmdb?.backdrop, size),
+            logos = (com.vyrk.core.art.Artwork.logos(preview, safeFull, tmdb?.logo, lookupId) + fanartLogos + inheritedLogos).distinct(),
+            backdrops = com.vyrk.core.art.Artwork.backdrops(preview, safeFull, tmdb?.backdrop, size, lookupId),
             logosLoading = logosLoading,
         )
     }

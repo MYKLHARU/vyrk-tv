@@ -429,7 +429,7 @@ private fun ExpandedArt(meta: MetaPreview, width: Dp, height: Dp, detail: String
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.6f to Color.Transparent)))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to c.shade.copy(alpha = 0.9f))))
         Box(Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 12.dp).width(width * 0.52f).height(height * 0.42f), contentAlignment = Alignment.BottomStart) {
-            val logos = remember(meta.type, meta.id, meta.logo, meta.imdbId) { com.vyrk.core.art.Artwork.logos(meta, null, null) }
+            val logos = cardLogos(meta)
             HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.52f, height * 0.42f, Vyrk.type.titleL, Modifier.fillMaxHeight())
         }
         val line = detail ?: listOfNotNull(meta.releaseInfo?.take(4)?.takeIf { it.isNotBlank() }, meta.imdbRating?.takeIf { it.isNotBlank() }?.let { "★ $it" }).joinToString("  ·  ")
@@ -502,7 +502,7 @@ fun ContinueCard(
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.72f), 0.58f to Color.Transparent)))
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.38f to Color.Transparent, 1f to c.shade.copy(alpha = if (focused) 0.82f else 0.92f))))
             Box(Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 11.dp).width(width * 0.5f).height(height * 0.40f), contentAlignment = Alignment.BottomStart) {
-                val logos = remember(meta.type, meta.id, meta.logo, meta.imdbId) { com.vyrk.core.art.Artwork.logos(meta, null, null) }
+                val logos = cardLogos(meta)
                 HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.5f, height * 0.40f, Vyrk.type.titleM, Modifier.fillMaxHeight())
             }
             // No watched tick here: "watched" means finished at least once before, which a card in
@@ -520,5 +520,15 @@ fun ContinueCard(
                 }
             }
         }
+    }
+}
+
+/** A card's logos from the title alone; anime titles without an IMDb ID get one from VYRK's bundled list. */
+@Composable
+internal fun cardLogos(meta: com.vyrk.core.addon.MetaPreview): List<String> {
+    val artIds = com.vyrk.tv.ui.LocalGraph.current.animeArtIds
+    return remember(meta.type, meta.id, meta.logo, meta.imdbId, artIds) {
+        com.vyrk.core.art.Artwork.logos(meta, null, null,
+            com.vyrk.core.art.Artwork.lookupId(meta) ?: artIds.lookupId(meta.id, meta.type))
     }
 }

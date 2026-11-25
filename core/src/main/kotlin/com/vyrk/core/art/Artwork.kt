@@ -29,12 +29,18 @@ object Artwork {
         imdbId(meta.id) ?: meta.imdbId?.let(::imdbId) ?: matchingMeta(meta, full)?.imdbId?.let(::imdbId)
             ?: meta.id.takeIf { tmdbId.matches(it) }
 
-    /** Keep the catalogue image the viewer selected; full metadata adds fallbacks, not a swap. */
-    fun backdrops(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem?, tmdb: String?, size: String): List<String> =
-        listOfNotNull(forBackdrop(meta.background, size), forBackdrop(matchingMeta(meta, full)?.background, size), tmdb, lookupId(meta, full)?.let(::metahubBackground)).distinct()
+    /**
+     * Keep the catalogue image the viewer selected; full metadata adds fallbacks, not a swap.
+     * [lookup] is the ID for image services: the title's own (see [lookupId]), or one found for an
+     * anime title in VYRK's bundled list.
+     */
+    fun backdrops(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem?, tmdb: String?, size: String,
+                  lookup: String? = lookupId(meta, full)): List<String> =
+        listOfNotNull(forBackdrop(meta.background, size), forBackdrop(matchingMeta(meta, full)?.background, size), tmdb, lookup?.let(::metahubBackground)).distinct()
 
-    fun logos(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem?, tmdb: String?): List<String> =
-        listOfNotNull(forLogo(meta.logo), forLogo(matchingMeta(meta, full)?.logo), tmdb, lookupId(meta, full)?.let(::metahubLogo)).distinct()
+    fun logos(meta: com.vyrk.core.addon.MetaPreview, full: com.vyrk.core.addon.MetaItem?, tmdb: String?,
+              lookup: String? = lookupId(meta, full)): List<String> =
+        listOfNotNull(forLogo(meta.logo), forLogo(matchingMeta(meta, full)?.logo), tmdb, lookup?.let(::metahubLogo)).distinct()
 
     private const val METAHUB = "https://images.metahub.space"
     private val imdb = Regex("""tt\d{5,10}""")
