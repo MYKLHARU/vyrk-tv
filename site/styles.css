@@ -118,6 +118,8 @@ h3 { margin: 0 0 8px; font-size: 19px; line-height: 1.3; letter-spacing: -0.01em
 
 /* ---- Download ---- */
 .download-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+/* Grid items may shrink below their content (the adb box scrolls instead of widening the page). */
+.download-grid > *, .steps > * { min-width: 0; }
 .apks { list-style: none; margin: 12px 0 14px; padding: 0; display: grid; gap: 10px; }
 .apk { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "name size size" "for for for"; gap: 2px 12px; padding: 14px 16px; border-radius: 14px; background: rgba(3, 7, 10, 0.5); border: 1px solid var(--edge); text-decoration: none; color: var(--text); transition: background 0.15s ease, transform 0.15s ease; }
 .apk:hover, .apk:focus-visible { background: var(--text); color: var(--bg); transform: scale(1.015); }
