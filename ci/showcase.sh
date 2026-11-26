@@ -61,7 +61,8 @@ key KEYCODE_DPAD_CENTER 6 "info page"
 sleep 2
 cap info-page
 key KEYCODE_DPAD_DOWN 2 "to the tabs"
-until_focus KEYCODE_DPAD_RIGHT '^info:tab:details$' 3 || until_focus KEYCODE_DPAD_LEFT '^info:tab:details$' 3 || true
+# A film opens on Details; otherwise step to it.
+focus_matches '^info:tab:details$' 3 || until_focus KEYCODE_DPAD_RIGHT '^info:tab:details$' 3 || until_focus KEYCODE_DPAD_LEFT '^info:tab:details$' 4 || true
 sleep 2
 cap info-details
 if until_focus KEYCODE_DPAD_RIGHT '^info:tab:cast$' 4; then sleep 3; cap info-cast; fi
@@ -93,7 +94,8 @@ if until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8 && until_focus KEYCODE_DPAD_RIGH
     if focus_matches '^install:confirm$' 30; then adb_run shell input keyevent KEYCODE_DPAD_CENTER; fi
   fi
   wait_focus '^poster:anilist:' 30 || true
-  sleep 5
+  # The header's artwork and logo come from TMDB and fanart.tv by VYRK's anime IDs: give them time.
+  sleep 14
   cap anime
 fi
 
