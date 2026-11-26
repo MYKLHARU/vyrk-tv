@@ -69,6 +69,24 @@ fun rememberTmdbCredits(graph: AppGraph, meta: MetaPreview): Credits? {
     return credits
 }
 
+/**
+ * The title page's TMDB details ([com.vyrk.core.tmdb.TmdbDetails]: credits, creators, production,
+ * videos, recommendations) in one request, by the title's IMDb or TMDB ID (anime by VYRK's bundled
+ * IDs). Null without a TMDB key, without an ID TMDB knows, or while it loads. Parsed off the main thread.
+ */
+@Composable
+fun rememberTmdbDetails(graph: AppGraph, meta: MetaPreview, full: com.vyrk.core.addon.MetaItem?): com.vyrk.core.tmdb.TmdbDetails? {
+    val animeIds = graph.animeArtIds
+    val lookup = androidx.compose.runtime.remember(meta.id, meta.type, full?.id, animeIds) {
+        com.vyrk.core.art.Artwork.lookupId(meta, full) ?: animeIds.lookupId(meta.id, meta.type)
+    }
+    val details by produceState<com.vyrk.core.tmdb.TmdbDetails?>(null, meta.id, lookup) {
+        if (!graph.tmdb.enabled || lookup == null) return@produceState
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { graph.tmdb.details(lookup, meta.type, graph.cardFacts.region) }
+    }
+    return details
+}
+
 /** "42m left" or "1h 5m left" for a started title; null when nothing is left to show. */
 @Composable
 fun timeLeftLabel(state: LibraryItemState?): String? {

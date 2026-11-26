@@ -91,6 +91,26 @@ data class TmdbArtwork(val logo: String?, val backdrop: String?, val poster: Str
 /** A title's facts for media cards: its age certificate in one region, and its IMDb ID. */
 data class TmdbFacts(val certification: String?, val imdbId: String?)
 
+/** A YouTube video TMDB lists for a title. [type] is TMDB's: Trailer, Teaser, Clip, Featurette, Behind the Scenes, Bloopers. */
+data class TmdbVideo(val key: String, val name: String, val type: String, val official: Boolean, val publishedAt: String?)
+
+/**
+ * What the title page shows from TMDB, from one details request: the region's certificate and
+ * IMDb ID, cast and crew, a show's creators, the original language, the release (or first air)
+ * date, production companies and countries (ISO 3166-1 codes), YouTube videos and recommendations.
+ */
+data class TmdbDetails(
+    val facts: TmdbFacts,
+    val credits: Credits,
+    val createdBy: List<Credit>,
+    val originalLanguage: String?,
+    val releaseDate: String?,
+    val productionCompanies: List<String>,
+    val productionCountries: List<String>,
+    val videos: List<TmdbVideo>,
+    val recommendations: List<TmdbTitle>,
+)
+
 /**
  * TMDB v3 API (https://developer.themoviedb.org/reference). Requests carry either a v3 API key
  * (`api_key` query) or a v4 read access token (`Authorization: Bearer`). The key comes from the
@@ -171,6 +191,33 @@ class TmdbClient(
         val facts = parseFacts(o, target.second, country)
         factsCache[cacheKey] = facts
         return facts
+    }
+
+    private val detailsCache = java.util.concurrent.ConcurrentHashMap<String, TmdbDetails>()
+
+    /**
+     * Everything the title page shows from TMDB ([TmdbDetails]) for a Stremio meta id ("tt…" via
+     * /find, or "tmdb:…"), in one request (`append_to_response`). Kept for the session; the facts
+     * part also answers [facts] for the same title and region.
+     */
+    suspend fun details(metaId: String, type: String, region: String): TmdbDetails? {
+        if (!enabled) return null
+        val country = region.trim().uppercase()
+        val cacheKey = "$type:$metaId:$country"
+        detailsCache[cacheKey]?.let { return it }
+        val base = metaId.substringBefore(':')
+        val target: Pair<Long, String> = when {
+            base.startsWith("tt") -> findByImdb(base, preferTv = type == "series") ?: return null
+            metaId.startsWith("tmdb:") -> (metaId.removePrefix("tmdb:").substringBefore(':').toLongOrNull() ?: return null) to (if (type == "series") "tv" else "movie")
+            else -> return null
+        }
+        val append = if (target.second == "tv") "aggregate_credits,content_ratings,external_ids,videos,recommendations"
+            else "credits,release_dates,external_ids,videos,recommendations"
+        val o = get("/${target.second}/${target.first}", "append_to_response=$append") ?: return null
+        val details = parseDetails(o, target.second, country)
+        detailsCache[cacheKey] = details
+        factsCache.putIfAbsent(cacheKey, details.facts)
+        return details
     }
 
     suspend fun credits(tmdbId: Long, mediaType: String): Credits? {
@@ -324,6 +371,45 @@ class TmdbClient(
             val imdb = ((o["external_ids"] as? JsonObject)?.s("imdb_id") ?: o.s("imdb_id"))?.takeIf { it.startsWith("tt") }
             return TmdbFacts(cert?.trim()?.takeIf { it.isNotEmpty() }, imdb)
         }
+
+        /** Video types in the order the title page lists them. */
+        private val videoOrder = listOf("Trailer", "Teaser", "Clip", "Featurette", "Behind the Scenes", "Bloopers")
+
+        /** YouTube videos from an appended `videos` answer: trailers first, official ones first, newest first; one per key. */
+        fun parseVideos(o: JsonObject): List<TmdbVideo> = o.arr("results")
+            .filter { it.s("site").equals("YouTube", ignoreCase = true) }
+            .mapNotNull { v ->
+                TmdbVideo(
+                    key = v.s("key") ?: return@mapNotNull null,
+                    name = v.s("name") ?: return@mapNotNull null,
+                    type = v.s("type") ?: "Clip",
+                    official = (v["official"] as? JsonPrimitive)?.contentOrNull == "true",
+                    publishedAt = v.s("published_at"),
+                )
+            }
+            .sortedWith(
+                compareBy<TmdbVideo> { videoOrder.indexOf(it.type).let { r -> if (r < 0) videoOrder.size else r } }
+                    .thenBy { if (it.official) 0 else 1 }
+                    .thenByDescending { it.publishedAt.orEmpty() },
+            )
+            .distinctBy { it.key }
+
+        /** A details answer with credits (or aggregate_credits), certificates, external_ids, videos and recommendations appended. */
+        fun parseDetails(o: JsonObject, mediaType: String, region: String): TmdbDetails = TmdbDetails(
+            facts = parseFacts(o, mediaType, region),
+            credits = ((o["credits"] ?: o["aggregate_credits"]) as? JsonObject)?.let { parseCredits(it) } ?: Credits(emptyList(), emptyList()),
+            createdBy = o.arr("created_by").mapNotNull { c ->
+                Credit(c.l("id") ?: return@mapNotNull null, c.s("name") ?: return@mapNotNull null, "Creator", "Writing", c.s("profile_path"))
+            },
+            originalLanguage = o.s("original_language"),
+            releaseDate = o.s("release_date") ?: o.s("first_air_date"),
+            productionCompanies = o.arr("production_companies").mapNotNull { it.s("name") }.distinct(),
+            productionCountries = o.arr("production_countries").mapNotNull { it.s("iso_3166_1")?.uppercase() }
+                .ifEmpty { (o["origin_country"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.uppercase() }.orEmpty() }
+                .distinct(),
+            videos = (o["videos"] as? JsonObject)?.let { parseVideos(it) }.orEmpty(),
+            recommendations = (o["recommendations"] as? JsonObject)?.let { parseRecommendations(it, if (mediaType == "tv") "series" else "movie") }.orEmpty(),
+        )
 
         fun parseFind(o: JsonObject, preferTv: Boolean): Pair<Long, String>? {
             val movie = o.arr("movie_results").firstOrNull()?.l("id")?.let { it to "movie" }

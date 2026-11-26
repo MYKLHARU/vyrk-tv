@@ -66,6 +66,11 @@ cap top10-rows
 # An info page for a movie, and add two titles to Library
 key KEYCODE_DPAD_CENTER 6 "info page"
 cap info-page
+# Its tabs: Details first for a film, then Cast & crew; Back returns to Play.
+key KEYCODE_DPAD_DOWN 2 "details tab"
+cap info-details
+if until_focus KEYCODE_DPAD_RIGHT '^info:tab:cast$' 4; then sleep 3; cap info-cast; fi
+key KEYCODE_BACK 2 "back to Play"
 until_focus KEYCODE_DPAD_RIGHT '^info:library$' 4 && key KEYCODE_DPAD_CENTER 1.5 "add to library"
 key KEYCODE_BACK 2
 key KEYCODE_DPAD_RIGHT 1.2
@@ -75,14 +80,11 @@ until_focus KEYCODE_DPAD_DOWN '^menu:library$' 6 && key KEYCODE_DPAD_CENTER 1.5 
 # A series info page (season guide)
 until_focus KEYCODE_DPAD_DOWN '^poster:.*series.*#0$' 10 || true
 key KEYCODE_DPAD_CENTER 7 "series info"
-# The season guide is on the title page's second page (more button); Back returns to page one.
-if until_focus KEYCODE_DPAD_RIGHT '^info:more$' 4; then
-  key KEYCODE_DPAD_CENTER 2 "season guide"
-  cap series-info
-  key KEYCODE_BACK 1.6 "page one"
-else
-  cap series-info
-fi
+# The season guide is the Episodes tab under the hero: Down twice reaches the seasons; Back returns to Play.
+key KEYCODE_DPAD_DOWN 1.5 "episodes tab"
+key KEYCODE_DPAD_DOWN 2 "seasons"
+cap series-info
+key KEYCODE_BACK 1.6 "back to Play"
 key KEYCODE_BACK 2
 
 # Search "big buck bunny" and play it

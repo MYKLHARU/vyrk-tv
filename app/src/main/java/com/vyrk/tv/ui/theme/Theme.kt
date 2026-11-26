@@ -65,6 +65,12 @@ data class VyrkColors(
     val goldGlow: Color = Color(0xFFD4A65A).copy(alpha = 0.25f),
     /** Soft frost, for secondary highlights on dark glass. */
     val frostSoft: Color = Color(0xFFA9E1F3),
+    /** The title page's stage: near-black with a midnight-blue cast, under and around the artwork. */
+    val stage: Color = Color(0xFF070D17),
+    /** A raised surface on the stage (cards, the selected tab's wash, placeholders). */
+    val stageSurface: Color = Color(0xFF101B2C),
+    /** Secondary text on the stage: cooler than [textSecondary], to sit with the midnight blue. */
+    val stageTextSecondary: Color = Color(0xFFA5B1C2),
 )
 
 /** Accent choices offered in Settings. Gold is VYRK's own and the default; the rest follow the spec. */

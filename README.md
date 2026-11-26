@@ -37,7 +37,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **Browse** — a featured hero, Continue Watching, Top 10 rows per streaming service and your catalogue rows. The Anime tab opens with AniList's trending, seasonal, all-time popular and top-rated rows, then a row for each of its genres (no AniList account needed). A title header with an optional muted trailer follows focus. Rows load lazily and page as you scroll.
 
-**Details and sources** — a full-screen title page over the title's own artwork, with cast photos; below it, every source ranked and explained. Play always starts the best one; choosing is optional. Series get a season guide. With a TMDB key, cast and crew get photos and their own pages.
+**Details and sources** — a full-width title page over the title's own artwork, with tabs below it: every source ranked and explained (or a season guide for a series), the details, the cast and crew, related titles and extras. Play always starts the best source; choosing is optional. With a TMDB key, cast and crew get photos and their own pages.
 
 **Playback** — Media3 with the FFmpeg audio decoder, HLS and DASH. Broken links are refreshed or skipped automatically; a source you picked asks before switching. Skip intro and recap from IntroDB timings, a timeline with chapter markers and smart scrubbing, and if an audio track breaks mid-film VYRK switches to the next best one at the same second. Audio and subtitle preferences, subtitle sync, Up Next, sleep timers.
 
@@ -51,7 +51,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **TV integration** — Watch Next on the launcher, MediaSession, frame-rate matching, passthrough, automatic updates from GitHub Releases when you open VYRK.
 
-**Privacy** — no ads, analytics, tracking or VYRK account. Your Stremio key and add-on URLs are encrypted with an Android Keystore key and redacted everywhere they're shown or logged. VYRK talks to your add-ons, the Stremio account service, IntroDB (intro timings, by IMDb ID only), TMDB (cast pages, artwork and age certificates, only when the build has a key), AniList (the Anime tab's rows, no account), YouTube for trailers and GitHub for updates.
+**Privacy** — no ads, analytics, tracking or VYRK account. Your Stremio key and add-on URLs are encrypted with an Android Keystore key and redacted everywhere they're shown or logged. VYRK talks to your add-ons, the Stremio account service, IntroDB (intro timings, by IMDb ID only), TMDB (cast pages, artwork, age certificates and the title page's details, related titles and extras, only when the build has a key), AniList (the Anime tab's rows, no account), YouTube for trailers and GitHub for updates.
 
 The full list, with what is verified and how, is in [docs/FEATURES.md](docs/FEATURES.md).
 
