@@ -189,8 +189,9 @@ class Handler(SimpleHTTPRequestHandler):
             extra = path.rsplit("/", 1)[-1].removesuffix(".json")
             query = dict(p.split("=", 1) for p in extra.split("&") if "=" in p).get("search", "").lower()
             metas = []
-            if "vyrkcards" in query:
-                # Media-card cases for ci/e2e.sh's search-card-cases screenshot: a long title with no
+            if "fixture" in query:
+                # Media-card cases for ci/e2e.sh's search-card-cases screenshot (search ranks by name, so
+                # each name has "Fixture" in it): a long title with no
                 # poster and a real IMDb 0.0 (kept, not hidden); a long anime title on Kitsu key art
                 # with no logo (its name in the logo slot); a wide picture on a portrait card (shown
                 # whole); and a card with no year or ratings (no facts row). IDs are made up, so no
@@ -201,9 +202,9 @@ class Handler(SimpleHTTPRequestHandler):
                     {"id": "kitsu:99999902", "type": "movie", "releaseInfo": "1998",
                      "name": "A Remarkably Long Anime Fixture Title That Has No Logo Anywhere",
                      "poster": "https://media.kitsu.app/anime/poster_images/1/medium.jpg", "imdbRating": "8.8"},
-                    {"id": "vyrk-cards-wide", "type": "movie", "name": "Wide Picture", "releaseInfo": "2021",
+                    {"id": "vyrk-cards-wide", "type": "movie", "name": "Wide Fixture Picture", "releaseInfo": "2021",
                      "poster": f"{BASE}/artwork/wide.png"},
-                    {"id": "vyrk-cards-bare", "type": "movie", "name": "No Year, No Rating", "poster": f"{BASE}/artwork/logo.png"},
+                    {"id": "vyrk-cards-bare", "type": "movie", "name": "Fixture With No Year Or Rating", "poster": f"{BASE}/artwork/logo.png"},
                 ]
             if "bunny" in query:
                 metas.append({

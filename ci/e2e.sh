@@ -329,10 +329,10 @@ adbs am start -a android.intent.action.SEARCH --es query bunny -n "$PKG/.MainAct
 sleep 3
 expect '^key:q$' "a search intent opens Search"
 key KEYCODE_BACK 1.5 "leave search"
-# Media-card cases from the test add-on (see test_addon.py, "vyrkcards"): long titles with no poster
+# Media-card cases from the test add-on (see test_addon.py, "fixture"): long titles with no poster
 # or no logo, a real IMDb 0.0, a kitsu title's add-on score that isn't IMDb's (hidden), a wide picture
 # on a portrait card, and a card with no facts. For review in the screenshots.
-adbs am start -a android.intent.action.SEARCH --es query vyrkcards -n "$PKG/.MainActivity" >/dev/null
+adbs am start -a android.intent.action.SEARCH --es query fixture -n "$PKG/.MainActivity" >/dev/null
 sleep 8
 shot search-card-cases
 key KEYCODE_BACK 1.5 "leave search"
