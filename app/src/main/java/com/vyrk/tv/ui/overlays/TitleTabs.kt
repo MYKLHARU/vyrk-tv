@@ -67,6 +67,7 @@ import com.vyrk.tv.ui.browse.posterState
 import com.vyrk.tv.ui.components.Icon
 import com.vyrk.tv.ui.components.focusHalo
 import com.vyrk.tv.ui.str
+import com.vyrk.tv.ui.theme.Dimens
 import com.vyrk.tv.ui.theme.Vyrk
 import com.vyrk.tv.ui.theme.focusZoom
 import com.vyrk.tv.ui.traceFocus
@@ -74,6 +75,10 @@ import com.vyrk.tv.ui.tryRequestFocus
 import kotlinx.coroutines.launch
 
 // The title page's tabs below the hero (InfoPage): Details, Cast & crew, Related and Extras.
+// Rows run to the screen's edges: they're laid out full width and padded to the margins.
+
+/** A row's padding: the screen's margins at either end, a little room above and below for focus. */
+private fun rowPadding(vertical: androidx.compose.ui.unit.Dp) = PaddingValues(horizontal = Dimens.screenMargin, vertical = vertical)
 
 private val CAST_W = 120.dp
 private val CAST_H = 160.dp
@@ -276,7 +281,7 @@ internal fun CastPanel(people: TitlePeople) {
         LaunchedEffect(Unit) { repeat(2) { withFrameNanos { } }; firstReq.tryRequestFocus() }
         LazyVerticalGrid(
             GridCells.Adaptive(CAST_W + 16.dp), Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
+            contentPadding = PaddingValues(start = Dimens.screenMargin, end = Dimens.screenMargin, top = 16.dp, bottom = 28.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) { PanelHeading(str(R.string.cast), people.cast.size) }
@@ -289,9 +294,9 @@ internal fun CastPanel(people: TitlePeople) {
     }
     Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
         if (people.cast.isNotEmpty()) {
-            PanelHeading(str(R.string.cast), people.cast.size)
+            Box(Modifier.padding(start = Dimens.screenMargin)) { PanelHeading(str(R.string.cast), people.cast.size) }
             // Entering the row lands on the first card, then on the one last focused.
-            LazyRow(Modifier.focusRestorer(castReq), state = rowState, horizontalArrangement = Arrangement.spacedBy(18.dp), contentPadding = PaddingValues(vertical = 12.dp, horizontal = 2.dp)) {
+            LazyRow(Modifier.focusRestorer(castReq), state = rowState, horizontalArrangement = Arrangement.spacedBy(18.dp), contentPadding = rowPadding(12.dp)) {
                 itemsIndexed(people.cast.take(CAST_ROW), key = { i, p -> "${p.id ?: p.name}-$i" }) { i, p ->
                     CastCard(p, "info:person#$i", if (i == 0) Modifier.focusRequester(castReq) else Modifier) { open(p) }
                 }
@@ -302,8 +307,8 @@ internal fun CastPanel(people: TitlePeople) {
         }
         if (people.crew.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
-            PanelHeading(str(R.string.crew))
-            LazyRow(Modifier.focusRestorer(crewReq), horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 10.dp, horizontal = 2.dp)) {
+            Box(Modifier.padding(start = Dimens.screenMargin)) { PanelHeading(str(R.string.crew)) }
+            LazyRow(Modifier.focusRestorer(crewReq), horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = rowPadding(10.dp)) {
                 itemsIndexed(people.crew, key = { i, p -> "crew-${p.id ?: p.name}-$i" }) { i, p ->
                     CrewCard(p, "info:crew#$i", if (i == 0) Modifier.focusRequester(crewReq) else Modifier) { open(p) }
                 }
@@ -418,7 +423,7 @@ internal fun RelatedPanel(titles: List<TmdbTitle>) {
         }
     }
     val firstReq = remember { FocusRequester() }
-    LazyRow(Modifier.padding(top = 18.dp).focusRestorer(firstReq), horizontalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(vertical = 12.dp, horizontal = 2.dp)) {
+    LazyRow(Modifier.padding(top = 18.dp).focusRestorer(firstReq), horizontalArrangement = Arrangement.spacedBy(16.dp), contentPadding = rowPadding(12.dp)) {
         itemsIndexed(metas, key = { _, m -> m.type + m.id }) { i, m ->
             val t = titles[i]
             Poster(m, 120.dp, posterState(null, emptySet()), modifier = if (i == 0) Modifier.focusRequester(firstReq) else Modifier, onClick = {
@@ -441,7 +446,7 @@ internal fun ExtrasPanel(extras: List<TitleExtras.Extra>, playing: Boolean, onPl
     var last by remember(extras) { mutableIntStateOf(-1) }
     // Closing the player returns to the card that started it.
     LaunchedEffect(playing) { if (!playing && last >= 0) { repeat(2) { withFrameNanos { } }; reqs.getOrNull(last)?.tryRequestFocus() } }
-    LazyRow(Modifier.padding(top = 18.dp).then(if (reqs.isNotEmpty()) Modifier.focusRestorer(reqs[0]) else Modifier), horizontalArrangement = Arrangement.spacedBy(18.dp), contentPadding = PaddingValues(vertical = 12.dp, horizontal = 2.dp)) {
+    LazyRow(Modifier.padding(top = 18.dp).then(if (reqs.isNotEmpty()) Modifier.focusRestorer(reqs[0]) else Modifier), horizontalArrangement = Arrangement.spacedBy(18.dp), contentPadding = rowPadding(12.dp)) {
         itemsIndexed(extras, key = { _, x -> x.key }) { i, x ->
             ExtraCard(x, "info:extra#$i", Modifier.focusRequester(reqs[i])) { last = i; onPlay(x) }
         }

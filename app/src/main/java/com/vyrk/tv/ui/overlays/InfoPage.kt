@@ -256,19 +256,22 @@ fun InfoPage(o: Overlay.Info) {
             // ---- The tabs and the open tab ----
             Column(Modifier.fillMaxWidth().onFocusChanged { lowerFocused = it.hasFocus }.focusGroup()) {
                 InfoTabBar(tabs, shownTab, tabReq, onSelect = { tab = it })
-                Box(Modifier.fillMaxWidth().height(contentH).padding(horizontal = Dimens.screenMargin)) {
+                // Rows of cards run to the screen's edges (their own padding keeps them in the margins
+                // at rest); everything else stays inside the margins.
+                Box(Modifier.fillMaxWidth().height(contentH)) {
+                    val inside = Modifier.padding(horizontal = Dimens.screenMargin)
                     when (shownTab) {
-                        InfoTab.EPISODES -> Column(Modifier.fillMaxSize().padding(top = 14.dp)) {
+                        InfoTab.EPISODES -> Column(inside.fillMaxSize().padding(top = 14.dp)) {
                             SeasonGuide(full, details.loading, item, sstate.newEpisodes[meta.id].orEmpty(), settings.blurUnwatched, onPlay = { v ->
                                 Playback.start(activity, graph, session, meta, videoId = v.id, origin = o.origin)
                             }, onMark = { videos, watched -> full?.let { session.markVideos(it, videos, watched) } })
                         }
-                        InfoTab.SOURCES -> Column(Modifier.widthIn(max = 760.dp).fillMaxHeight().padding(top = 14.dp)) {
+                        InfoTab.SOURCES -> Column(inside.widthIn(max = 760.dp).fillMaxHeight().padding(top = 14.dp)) {
                             SourcesPane(sources, sourcesReq, onRefresh = { loadSources() }, onPick = { r ->
                                 Playback.start(activity, graph, session, meta, picked = r, ranked = (sources as? SourcesState.Ready)?.ranked, origin = o.origin)
                             })
                         }
-                        InfoTab.DETAILS -> DetailsPanel(meta, full, tmdb, facts, synopsis.takeIf { synopsisCut && it.isNotBlank() }, loading = details.loading)
+                        InfoTab.DETAILS -> Box(inside) { DetailsPanel(meta, full, tmdb, facts, synopsis.takeIf { synopsisCut && it.isNotBlank() }, loading = details.loading) }
                         InfoTab.CAST -> CastPanel(people)
                         InfoTab.RELATED -> RelatedPanel(related)
                         InfoTab.EXTRAS -> ExtrasPanel(extras, playing = playingExtra != null, onPlay = { playingExtra = it })

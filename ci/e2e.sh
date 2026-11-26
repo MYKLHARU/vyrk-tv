@@ -208,6 +208,10 @@ if until_focus KEYCODE_DPAD_RIGHT '^info:tab:cast$' 4; then
   key KEYCODE_DPAD_DOWN 1.4 "into the cast"
   if focus_matches '^info:(person|crew)#' 4; then log "ok: the cast row takes focus ($(focus_now))"; shot info-cast
   else log "warn: the cast row didn't take focus ($(focus_now))"; fi
+  # Up returns to the open tab; Related and Extras, when the title has them.
+  key KEYCODE_DPAD_UP 1.2 "back to the tabs"
+  if until_focus KEYCODE_DPAD_RIGHT '^info:tab:related$' 2; then sleep 3; shot info-related; fi
+  if until_focus KEYCODE_DPAD_RIGHT '^info:tab:extras$' 2; then sleep 1; shot info-extras; fi
 else
   log "warn: no Cast & crew tab for this title (no credits)"
 fi
