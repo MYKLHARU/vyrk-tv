@@ -34,58 +34,68 @@ key KEYCODE_DPAD_CENTER 2 "guest"
 wait_focus '^hero:watch$' 45
 sleep 4
 
-# The Top 10 suggestion, then install Streaming Catalogs from it
-key KEYCODE_DPAD_DOWN 2 "top10 card"
-sleep 1
-cap top10-suggestion
-key KEYCODE_DPAD_CENTER 6 "add top 10 rows"
-probe "install confirm"
-key KEYCODE_DPAD_CENTER 4 "install streaming catalogs"
-
 # The test add-on (streams for playback)
 adbs am start -a android.intent.action.VIEW -d "'vyrk://install?url=http%3A%2F%2F10.0.2.2%3A${ADDON_PORT:-7000}%2Fmanifest.json'" "$PKG" >/dev/null
 sleep 5
-key KEYCODE_DPAD_CENTER 4 "install test add-on"
+if focus_matches '^install:confirm$' 15; then key KEYCODE_DPAD_CENTER 4 "install test add-on"; fi
+wait_focus '^hero:watch$' 20 || true
+
+# Home: the featured title over the rows (the Top 10 rows come from TMDB)
+sleep 8
+cap home
 
 # Watch from the hero for 35 seconds so Continue Watching has a title
-probe "after installs"
-[[ "$(focus_now)" == hero:watch ]] || until_focus KEYCODE_DPAD_DOWN '^hero:watch$' 4 || true
-sleep 2
-cap home
 key KEYCODE_DPAD_CENTER 3 "watch now"
 sleep 35
 back_from_player
 probe "home with continue watching"
 
-# A Top 10 row with its header
-until_focus KEYCODE_DPAD_DOWN '^poster:.*TOP10#0$' 8 || true
+# A Top 10 row: the title header over the media cards
+until_focus KEYCODE_DPAD_DOWN '^poster:top10:movie#' 8 || true
 key KEYCODE_DPAD_RIGHT 1.5
-sleep 3
+sleep 4
 cap top10-rows
 
-# An info page for a movie, and add two titles to Library
+# A film's title page: the hero, then its Details and Cast & crew tabs
 key KEYCODE_DPAD_CENTER 6 "info page"
+sleep 2
 cap info-page
-# Its tabs: Details first for a film, then Cast & crew; Back returns to Play.
-key KEYCODE_DPAD_DOWN 2 "details tab"
+key KEYCODE_DPAD_DOWN 2 "to the tabs"
+until_focus KEYCODE_DPAD_RIGHT '^info:tab:details$' 3 || until_focus KEYCODE_DPAD_LEFT '^info:tab:details$' 3 || true
+sleep 2
 cap info-details
 if until_focus KEYCODE_DPAD_RIGHT '^info:tab:cast$' 4; then sleep 3; cap info-cast; fi
 key KEYCODE_BACK 2 "back to Play"
+# Add it, and the next title, to Library
 until_focus KEYCODE_DPAD_RIGHT '^info:library$' 4 && key KEYCODE_DPAD_CENTER 1.5 "add to library"
-key KEYCODE_BACK 2
+key KEYCODE_BACK 2 "close the title page"
 key KEYCODE_DPAD_RIGHT 1.2
 longpress KEYCODE_DPAD_CENTER 2
 until_focus KEYCODE_DPAD_DOWN '^menu:library$' 6 && key KEYCODE_DPAD_CENTER 1.5 "add second title"
 
-# A series info page (season guide)
-until_focus KEYCODE_DPAD_DOWN '^poster:.*series.*#0$' 10 || true
+# A series' title page: its Episodes tab
+until_focus KEYCODE_DPAD_DOWN '^poster:top10:series#' 6 || true
 key KEYCODE_DPAD_CENTER 7 "series info"
-# The season guide is the Episodes tab under the hero: Down twice reaches the seasons; Back returns to Play.
 key KEYCODE_DPAD_DOWN 1.5 "episodes tab"
 key KEYCODE_DPAD_DOWN 2 "seasons"
 cap series-info
 key KEYCODE_BACK 1.6 "back to Play"
-key KEYCODE_BACK 2
+key KEYCODE_BACK 2 "close the title page"
+
+# The Anime tab: add Anime Kitsu from its card, then AniList's rows
+for _ in $(seq 1 8); do [[ "$(focus_now)" =~ ^(tab|nav): ]] && break; key KEYCODE_DPAD_UP 1 "up to the tabs"; done
+if until_focus KEYCODE_DPAD_LEFT '^tab:home$' 8 && until_focus KEYCODE_DPAD_RIGHT '^tab:anime$' 6; then
+  sleep 3
+  key KEYCODE_DPAD_DOWN 1.5 "into Anime"
+  if focus_matches '^anilist:add_kitsu$' 10; then
+    key KEYCODE_DPAD_CENTER 2 "add Anime Kitsu"
+    # Not key(): the focused button goes with the card once the add-on is in.
+    if focus_matches '^install:confirm$' 30; then adb_run shell input keyevent KEYCODE_DPAD_CENTER; fi
+  fi
+  wait_focus '^poster:anilist:' 30 || true
+  sleep 5
+  cap anime
+fi
 
 # Search "big buck bunny" and play it
 until_focus KEYCODE_DPAD_UP '^(tab|nav):' 10

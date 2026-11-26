@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Build README images from showcase captures of the real app.
+"""Build the README and website images from showcase captures of the real app.
 
-Usage: python docs/tools/make_images.py <captures-dir> <repo-root>
+Usage: python docs/tools/make_images.py <captures-dir> <repo-root> [<phone-captures-dir>]
 
 Writes:
   docs/images/screenshots/<name>.jpg   1600x900 each
-  docs/images/banner.png               1600x560, Top 10 capture in a TV frame beside the wordmark
+  docs/images/banner.png               1600x560, Home in a TV frame beside the wordmark
   docs/images/social-preview.png       1280x640, same layout
+  site/img/shots/<name>.jpg            1280x720, the website's screens
+  site/img/social-preview.jpg          the website's link preview
+  with phone captures (ci/phone.sh's, ci-phone pre-release): three phone screens side by side as
+  docs/images/screenshots/phone.jpg and site/img/shots/phone.jpg
 Never generates app content: every screen comes from a capture.
 """
 import sys
@@ -24,9 +28,15 @@ MUTED = (159, 177, 185)
 SERIFS = ["NotoSerif-SemiBold.ttf", "NotoSerif-Regular.ttf", "DejaVuSerif.ttf", "FreeSerif.ttf", "LiberationSerif-Regular.ttf"]
 
 NAMES = [
-    "home", "top10-rows", "info-page", "series-info", "player", "audio-subtitles", "search",
-    "library", "top10-suggestion", "addons", "settings", "first-run",
+    "home", "top10-rows", "info-page", "info-details", "info-cast", "series-info", "anime", "player",
+    "audio-subtitles", "search", "library", "addons", "settings", "first-run",
 ]
+# Captures that depend on outside services (TMDB credits, AniList): missing ones are reported, not fatal.
+OPTIONAL = {"info-cast", "anime"}
+# The website's screens (site/index.html): the hero and the gallery.
+SITE_NAMES = ["home", "top10-rows", "info-page", "info-cast", "series-info", "anime", "player", "search", "settings"]
+# Phone captures for the phone picture, in order: Home, a tab's rows, a title page.
+PHONE_NAMES = ["02-phone-home", "04-phone-movies", "06-phone-info"]
 
 
 def font(root: Path, size: int, weight: int = 800) -> ImageFont.FreeTypeFont:
@@ -108,30 +118,79 @@ def hero_image(root: Path, capture: Image.Image, size, out: Path):
     img.save(out)
 
 
+def phone_picture(phone: Path, size) -> Image.Image | None:
+    """Phone captures side by side in rounded phone frames on the obsidian background, 16:9."""
+    caps = [phone / f"{n}.png" for n in PHONE_NAMES]
+    caps = [c for c in caps if c.exists()]
+    if not caps:
+        return None
+    w, h = size
+    img = Image.new("RGB", size, OBSIDIAN)
+    glow = Image.new("RGBA", size, (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse([int(w * 0.15), int(h * 0.1), int(w * 0.85), int(h * 1.2)], fill=(212, 166, 90, 22))
+    glow = glow.filter(ImageFilter.GaussianBlur(h // 5))
+    img.paste(glow, (0, 0), glow)
+    ph = int(h * 0.86)
+    shots = []
+    for c in caps:
+        cap = Image.open(c).convert("RGB")
+        pw = int(ph * cap.width / cap.height)
+        shots.append(cap.resize((pw, ph), Image.LANCZOS))
+    gap = int(w * 0.035)
+    total = sum(s.width for s in shots) + gap * (len(shots) - 1)
+    x = (w - total) // 2
+    y = (h - ph) // 2
+    for s in shots:
+        bezel = max(6, s.width // 40)
+        frame = Image.new("RGBA", (s.width + bezel * 2, s.height + bezel * 2), (0, 0, 0, 0))
+        fd = ImageDraw.Draw(frame)
+        fd.rounded_rectangle([0, 0, frame.width - 1, frame.height - 1], radius=bezel * 5, fill=(18, 22, 28, 255), outline=(60, 70, 80, 255), width=2)
+        mask = Image.new("L", s.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, s.width - 1, s.height - 1], radius=bezel * 4, fill=255)
+        frame.paste(s, (bezel, bezel), mask)
+        img.paste(frame, (x - bezel, y - bezel), frame)
+        x += s.width + gap
+    return img
+
+
 def main() -> int:
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 4):
         print(__doc__)
         return 2
     caps = Path(sys.argv[1])
     root = Path(sys.argv[2])
     shots = root / "docs/images/screenshots"
+    site = root / "site/img"
     shots.mkdir(parents=True, exist_ok=True)
+    (site / "shots").mkdir(parents=True, exist_ok=True)
     missing = []
     for name in NAMES:
         src = caps / f"{name}.png"
         if not src.exists():
             missing.append(name)
             continue
-        Image.open(src).convert("RGB").resize((1600, 900), Image.LANCZOS).save(shots / f"{name}.jpg", quality=88, optimize=True, progressive=True)
-    top10 = caps / "top10-rows.png"
-    if top10.exists():
-        cap = Image.open(top10).convert("RGB")
+        cap = Image.open(src).convert("RGB")
+        cap.resize((1600, 900), Image.LANCZOS).save(shots / f"{name}.jpg", quality=88, optimize=True, progressive=True)
+        if name in SITE_NAMES:
+            cap.resize((1280, 720), Image.LANCZOS).save(site / "shots" / f"{name}.jpg", quality=84, optimize=True, progressive=True)
+    hero = caps / "home.png" if (caps / "home.png").exists() else caps / "top10-rows.png"
+    if hero.exists():
+        cap = Image.open(hero).convert("RGB")
         hero_image(root, cap, (1600, 560), root / "docs/images/banner.png")
         hero_image(root, cap, (1280, 640), root / "docs/images/social-preview.png")
+        Image.open(root / "docs/images/social-preview.png").convert("RGB").save(site / "social-preview.jpg", quality=86, optimize=True, progressive=True)
+    if len(sys.argv) == 4:
+        pic = phone_picture(Path(sys.argv[3]), (1600, 900))
+        if pic is None:
+            missing.append("phone")
+        else:
+            pic.save(shots / "phone.jpg", quality=88, optimize=True, progressive=True)
+            pic.resize((1280, 720), Image.LANCZOS).save(site / "shots" / "phone.jpg", quality=84, optimize=True, progressive=True)
     if missing:
         print("missing captures: " + ", ".join(missing), file=sys.stderr)
-        return 1
-    print(f"wrote {len(NAMES)} screenshots, banner and social preview")
+        if any(m not in OPTIONAL for m in missing):
+            return 1
+    print(f"wrote {len(NAMES) - len(missing)} screenshots, the website's screens, banner and social preview")
     return 0
 
 
