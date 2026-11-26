@@ -198,6 +198,21 @@ expect '^poster:' "focus stays on poster after closing preview"
 key KEYCODE_DPAD_CENTER 5 "open info page"
 expect '^info:play$' "info page opens with Play focused"
 shot info-page
+# The tabs under the hero: Down reaches the open tab (Details, for a film) and the page slides up;
+# Cast & crew opens as focus reaches it, Down enters the cast row, and Back returns to Play.
+key KEYCODE_DPAD_DOWN 1.4 "to the tabs"
+expect '^info:tab:' "Down from the actions reaches the tabs"
+shot info-tabs
+if until_focus KEYCODE_DPAD_RIGHT '^info:tab:cast$' 4; then
+  sleep 2
+  key KEYCODE_DPAD_DOWN 1.4 "into the cast"
+  if focus_matches '^info:(person|crew)#' 4; then log "ok: the cast row takes focus ($(focus_now))"; shot info-cast
+  else log "warn: the cast row didn't take focus ($(focus_now))"; fi
+else
+  log "warn: no Cast & crew tab for this title (no credits)"
+fi
+key KEYCODE_BACK 1.6 "back to Play"
+expect '^info:play$' "Back from the tabs returns to Play"
 
 # ---------------------------------------------------------------- play: broken 4K fails over
 ADDON_START=0
@@ -456,13 +471,15 @@ sleep 7
 probe "series info"
 expect '^info:play$' "vyrk://open opens the series info page"
 shot info-series
-# A series opens with its episodes panel shown; Right from the info button enters it and Back returns to Play.
-until_focus KEYCODE_DPAD_RIGHT '^info:more$' 5
-key KEYCODE_DPAD_RIGHT 1.0 "into the panel"
-expect '^info:tab:episodes$' "series open with the episodes panel"
+# A series opens on its Episodes tab: Down from the actions reaches it, Down again the seasons, and
+# Back returns to Play.
+key KEYCODE_DPAD_DOWN 1.4 "to the tabs"
+expect '^info:tab:episodes$' "series open on their Episodes tab"
+key KEYCODE_DPAD_DOWN 1.4 "into the seasons"
+expect '^season:' "Down from the tabs reaches the seasons"
 shot info-series-page-two
 key KEYCODE_BACK 1.6 "back to Play"
-expect '^info:play$' "Back in the panel returns to Play"
+expect '^info:play$' "Back from the tabs returns to Play"
 adb_run shell input keyevent KEYCODE_DPAD_CENTER
 wait_focus '^(player|prompt):' 40
 sleep 12

@@ -59,7 +59,9 @@
     <string name="cancel">रद्द करें</string>
     <string name="cant_open_title">VYRK इस टाइटल को सीधे नहीं खोल सकता, इसलिए इसे खोजा।</string>
     <string name="cant_play_title">यह टाइटल नहीं चल सकता</string>
+    <string name="cast">कलाकार</string>
     <string name="cast_and_crew">कलाकार और टीम</string>
+    <string name="certification">प्रमाणन</string>
     <string name="chapter_credits">क्रेडिट</string>
     <string name="chapter_intro">इंट्रो</string>
     <string name="chapter_markers_hint">टाइमलाइन पर अध्याय, इंट्रो और क्रेडिट दिखाता है।</string>
@@ -83,6 +85,8 @@
     <string name="continue_watching">देखना जारी रखें</string>
     <string name="copy_diagnostics">डायग्नोस्टिक्स कॉपी करें</string>
     <string name="country">देश</string>
+    <string name="created_by">निर्माता</string>
+    <string name="crew">क्रू</string>
     <string name="debrid">डेब्रिड सेवा</string>
     <string name="debrid_checking">%1$s जाँचा जा रहा है…</string>
     <string name="debrid_connect">जोड़ें</string>
@@ -146,12 +150,22 @@
     <string name="expanding_cards">फैलने वाले कार्ड</string>
     <string name="expanding_cards_desc">फ़ोकस किया गया पोस्टर टाइटल की तस्वीर में फैल जाता है</string>
     <string name="external_player_missing">वह प्लेयर नहीं खुल सका।</string>
+    <string name="extra_behind_scenes">पर्दे के पीछे</string>
+    <string name="extra_bloopers">ब्लूपर्स</string>
+    <string name="extra_clip">क्लिप</string>
+    <string name="extra_featurette">फ़ीचरेट</string>
+    <string name="extra_keys">OK: YouTube में खोलें  ·  Back: बंद करें</string>
+    <string name="extra_refused">यह वीडियो यहाँ नहीं चल सकता। YouTube में खोलने के लिए OK दबाएँ।</string>
+    <string name="extra_teaser">टीज़र</string>
+    <string name="extra_video">वीडियो</string>
+    <string name="extras">एक्स्ट्रा</string>
     <string name="facts_out_of_10">10 में से</string>
     <string name="facts_rated">रेटिंग</string>
     <string name="featured_hero">फ़ीचर्ड हीरो</string>
     <string name="featured_hero_desc">होम के ऊपर बड़े फ़ीचर्ड टाइटल</string>
     <string name="filter_all">सभी</string>
     <string name="finding_sources">स्रोत खोजे जा रहे हैं…</string>
+    <string name="first_aired">पहला प्रसारण</string>
     <string name="forget">भूल जाएँ</string>
     <string name="forward_10">10 सेकंड आगे</string>
     <string name="frame_rate_matching">फ़्रेम रेट मिलाएँ</string>
@@ -159,6 +173,7 @@
     <string name="frozen_forgotten">फ़्रीज़ हुए सोर्स भुला दिए गए</string>
     <string name="frozen_sources">सोर्स जिन्होंने इस टीवी को फ़्रीज़ किया</string>
     <string name="frozen_sources_desc">अब से %1$d छोड़े जाएँगे</string>
+    <string name="genres">शैलियाँ</string>
     <string name="header_hint">OK विवरण · OK दबाए रखें या ☰ विकल्प · ⏯ प्रीव्यू</string>
     <string name="hero_rotation">हीरो घुमाव</string>
     <string name="hero_rotation_desc">अगले फ़ीचर्ड टाइटल पर अपने आप जाएँ</string>
@@ -208,7 +223,6 @@
     <string name="max_resolution">अधिकतम रिज़ॉल्यूशन</string>
     <string name="mono">मोनो</string>
     <string name="more">और</string>
-    <string name="more_count">+%1$d और</string>
     <string name="more_info">और जानकारी</string>
     <string name="move_down">नीचे ले जाएँ</string>
     <string name="move_up">ऊपर ले जाएँ</string>
@@ -218,6 +232,7 @@
     <string name="next">आगे</string>
     <string name="next_episode">अगला एपिसोड</string>
     <string name="no_account">साइन इन नहीं है। आपकी लाइब्रेरी इस टीवी पर सहेजी जाती है।</string>
+    <string name="no_details">इस टाइटल का अभी कोई विवरण नहीं है।</string>
     <string name="no_episodes">किसी ऐड-ऑन ने इस टाइटल के एपिसोड नहीं दिए।</string>
     <string name="no_hidden">कुछ भी छिपा नहीं है।</string>
     <string name="no_picture_trying_next">इस सोर्स से तस्वीर नहीं आई। अगला आज़मा रहे हैं।</string>
@@ -238,7 +253,9 @@
     <string name="ok">ठीक है</string>
     <string name="on">चालू</string>
     <string name="original_language">मूल भाषा का ऑडियो</string>
+    <string name="original_language_label">मूल भाषा</string>
     <string name="other_sources">दूसरे स्रोत</string>
+    <string name="overview">कहानी</string>
     <string name="pairing_error">Stremio खाता सेवा तक पहुँच नहीं हो सकी।</string>
     <string name="pairing_step1">अपने फ़ोन या कंप्यूटर पर खोलें</string>
     <string name="pairing_step2">और यह कोड पुष्टि करें:</string>
@@ -248,6 +265,7 @@
     <string name="passthrough_hint">Dolby और DTS ऑडियो को बिना बदले आपके रिसीवर तक भेजता है।</string>
     <string name="pause">रोकें</string>
     <string name="paused">रुका हुआ</string>
+    <string name="people_count">%1$d लोग</string>
     <string name="person_unavailable">इस व्यक्ति का विवरण लोड नहीं हो सका।</string>
     <string name="phone_open_sign_in">Stremio साइन-इन खोलें</string>
     <string name="phone_sign_in_body">अपने ब्राउज़र में Stremio के पेज पर साइन इन करें, फिर यहाँ लौटें। VYRK साइन-इन अपने आप पूरा कर लेता है।</string>
@@ -280,8 +298,10 @@
     <string name="preview_manual">मैन्युअल</string>
     <string name="preview_sound">प्रीव्यू की आवाज़</string>
     <string name="previews">प्रीव्यू</string>
+    <string name="production">प्रोडक्शन</string>
     <string name="quick_subtitles">सबटाइटल चालू या बंद</string>
     <string name="rating_attribution">IMDb की रेटिंग, आपके ऐड-ऑन के ज़रिए।</string>
+    <string name="ratings">रेटिंग</string>
     <string name="ready_when_you_are">आप तैयार, तो हम तैयार</string>
     <string name="recent_searches">हाल की खोजें</string>
     <string name="recommended">सुझाया गया</string>
@@ -289,6 +309,8 @@
     <string name="reduce_motion">मोशन कम करें</string>
     <string name="reduce_motion_desc">कम एनिमेशन और ट्रांज़िशन</string>
     <string name="refresh">रीफ़्रेश करें</string>
+    <string name="related">मिलते-जुलते</string>
+    <string name="release_date">रिलीज़ की तारीख</string>
     <string name="remove">हटाएँ</string>
     <string name="remove_from_cw">देखना जारी रखें से हटाएँ</string>
     <string name="remove_from_library">लाइब्रेरी से हटाएँ</string>
@@ -364,7 +386,6 @@
     <string name="specials">स्पेशल</string>
     <string name="stall_prompt">प्लेबैक बार-बार रुक रहा है। कम गुणवत्ता आज़माएँ?</string>
     <string name="starring">कलाकार: %1$s</string>
-    <string name="starring_label">कलाकार</string>
     <string name="stereo">स्टीरियो</string>
     <string name="still_watching">क्या आप अब भी देख रहे हैं?</string>
     <string name="stream_may_be_incomplete">यह स्ट्रीम अधूरी हो सकती है</string>
@@ -444,8 +465,10 @@
     <string name="updates">अपडेट</string>
     <string name="updating_to">VYRK को %1$s पर अपडेट किया जा रहा है। यह कुछ पल के लिए बंद होगा: पूरा होने पर फिर से खोलें।</string>
     <string name="use_without_account">बिना खाते के इस्तेमाल करें</string>
+    <string name="view_all">सभी देखें</string>
     <string name="voice_search">आवाज़ से खोज</string>
     <string name="watch_now">अभी देखें</string>
     <string name="watched">देखा गया</string>
+    <string name="writer">लेखक</string>
     <string name="writers">लेखक</string>
 </resources>

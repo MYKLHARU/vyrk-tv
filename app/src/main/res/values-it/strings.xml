@@ -59,7 +59,9 @@
     <string name="cancel">Annulla</string>
     <string name="cant_open_title">VYRK non può aprire direttamente questo titolo, quindi l\'ha cercato.</string>
     <string name="cant_play_title">Impossibile riprodurre questo titolo</string>
+    <string name="cast">Cast</string>
     <string name="cast_and_crew">Cast e troupe</string>
+    <string name="certification">Classificazione</string>
     <string name="chapter_credits">Titoli di coda</string>
     <string name="chapter_intro">Sigla</string>
     <string name="chapter_markers_hint">Segna capitoli, sigle e titoli di coda sulla barra di avanzamento.</string>
@@ -83,6 +85,8 @@
     <string name="continue_watching">Continua a guardare</string>
     <string name="copy_diagnostics">Copia diagnostica</string>
     <string name="country">Paese</string>
+    <string name="created_by">Creata da</string>
+    <string name="crew">Troupe</string>
     <string name="debrid">Servizio debrid</string>
     <string name="debrid_checking">Verifica su %1$s…</string>
     <string name="debrid_connect">Collega</string>
@@ -146,12 +150,22 @@
     <string name="expanding_cards">Schede espandibili</string>
     <string name="expanding_cards_desc">La locandina selezionata si allarga con l\'immagine del titolo</string>
     <string name="external_player_missing">Impossibile aprire quel lettore.</string>
+    <string name="extra_behind_scenes">Dietro le quinte</string>
+    <string name="extra_bloopers">Papere</string>
+    <string name="extra_clip">Clip</string>
+    <string name="extra_featurette">Featurette</string>
+    <string name="extra_keys">OK: apri su YouTube  ·  Indietro: chiudi</string>
+    <string name="extra_refused">Questo video non può essere riprodotto qui. Premi OK per aprirlo su YouTube.</string>
+    <string name="extra_teaser">Teaser</string>
+    <string name="extra_video">Video</string>
+    <string name="extras">Extra</string>
     <string name="facts_out_of_10">su 10</string>
     <string name="facts_rated">classificazione</string>
     <string name="featured_hero">Titolo in evidenza</string>
     <string name="featured_hero_desc">Grandi titoli in evidenza in cima alla Home</string>
     <string name="filter_all">Tutti</string>
     <string name="finding_sources">Ricerca delle fonti…</string>
+    <string name="first_aired">Prima messa in onda</string>
     <string name="forget">Dimentica</string>
     <string name="forward_10">Avanti di 10 secondi</string>
     <string name="frame_rate_matching">Adatta frequenza dei fotogrammi</string>
@@ -159,6 +173,7 @@
     <string name="frozen_forgotten">Fonti bloccate dimenticate</string>
     <string name="frozen_sources">Fonti che hanno bloccato questa TV</string>
     <string name="frozen_sources_desc">%1$d saltate d\'ora in poi</string>
+    <string name="genres">Generi</string>
     <string name="header_hint">OK Dettagli · Tieni premuto OK o ☰ Opzioni · ⏯ Anteprima</string>
     <string name="hero_rotation">Rotazione del titolo in evidenza</string>
     <string name="hero_rotation_desc">Passa automaticamente al titolo in evidenza successivo</string>
@@ -208,7 +223,6 @@
     <string name="max_resolution">Risoluzione massima</string>
     <string name="mono">Mono</string>
     <string name="more">Altro</string>
-    <string name="more_count">+%1$d altri</string>
     <string name="more_info">Altre informazioni</string>
     <string name="move_down">Sposta giù</string>
     <string name="move_up">Sposta su</string>
@@ -218,6 +232,7 @@
     <string name="next">Avanti</string>
     <string name="next_episode">Episodio successivo</string>
     <string name="no_account">Accesso non effettuato. La libreria è salvata su questo televisore.</string>
+    <string name="no_details">Ancora nessun dettaglio per questo titolo.</string>
     <string name="no_episodes">Nessun componente ha fornito episodi per questo titolo.</string>
     <string name="no_hidden">Niente di nascosto.</string>
     <string name="no_picture_trying_next">Nessuna immagine da questa fonte. Provo la successiva.</string>
@@ -238,7 +253,9 @@
     <string name="ok">OK</string>
     <string name="on">Sì</string>
     <string name="original_language">Audio in lingua originale</string>
+    <string name="original_language_label">Lingua originale</string>
     <string name="other_sources">Altre fonti</string>
+    <string name="overview">Trama</string>
     <string name="pairing_error">Impossibile raggiungere il servizio account di Stremio.</string>
     <string name="pairing_step1">Sul telefono o sul computer, apri</string>
     <string name="pairing_step2">e conferma questo codice:</string>
@@ -248,6 +265,7 @@
     <string name="passthrough_hint">Invia l\'audio Dolby e DTS al ricevitore senza modificarlo.</string>
     <string name="pause">Pausa</string>
     <string name="paused">In pausa</string>
+    <string name="people_count">%1$d persone</string>
     <string name="person_unavailable">Impossibile caricare i dati di questa persona.</string>
     <string name="phone_open_sign_in">Apri l\'accesso a Stremio</string>
     <string name="phone_sign_in_body">Accedi alla pagina di Stremio nel browser, poi torna qui. VYRK completa l\'accesso da solo.</string>
@@ -280,8 +298,10 @@
     <string name="preview_manual">Manuale</string>
     <string name="preview_sound">Audio dell\'anteprima</string>
     <string name="previews">Anteprime</string>
+    <string name="production">Produzione</string>
     <string name="quick_subtitles">Sottotitoli sì o no</string>
     <string name="rating_attribution">Voto di IMDb, tramite i tuoi componenti.</string>
+    <string name="ratings">Valutazioni</string>
     <string name="ready_when_you_are">Pronto quando vuoi</string>
     <string name="recent_searches">Ricerche recenti</string>
     <string name="recommended">Consigliato</string>
@@ -289,6 +309,8 @@
     <string name="reduce_motion">Riduci animazioni</string>
     <string name="reduce_motion_desc">Meno animazioni e transizioni</string>
     <string name="refresh">Aggiorna</string>
+    <string name="related">Correlati</string>
+    <string name="release_date">Data di uscita</string>
     <string name="remove">Rimuovi</string>
     <string name="remove_from_cw">Rimuovi da Continua a guardare</string>
     <string name="remove_from_library">Rimuovi dalla libreria</string>
@@ -364,7 +386,6 @@
     <string name="specials">Speciali</string>
     <string name="stall_prompt">La riproduzione si blocca spesso. Provare una qualità inferiore?</string>
     <string name="starring">Con: %1$s</string>
-    <string name="starring_label">Cast</string>
     <string name="stereo">Stereo</string>
     <string name="still_watching">Stai ancora guardando?</string>
     <string name="stream_may_be_incomplete">Questo stream potrebbe essere incompleto</string>
@@ -444,8 +465,10 @@
     <string name="updates">Aggiornamenti</string>
     <string name="updating_to">Aggiornamento di VYRK a %1$s. Si chiude per un attimo: riaprilo quando ha finito.</string>
     <string name="use_without_account">Usa senza account</string>
+    <string name="view_all">Vedi tutto</string>
     <string name="voice_search">Ricerca vocale</string>
     <string name="watch_now">Guarda ora</string>
     <string name="watched">Visto</string>
+    <string name="writer">Sceneggiatura</string>
     <string name="writers">Sceneggiatura</string>
 </resources>

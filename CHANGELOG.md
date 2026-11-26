@@ -2,6 +2,16 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.72
+
+- **A new title page on TVs.** The cramped panel beside the title is gone. The title page is now one full-width page over the title's artwork, which sits on the right and fades into a near-black, midnight-blue background, with nothing laid over it.
+  - **At the top:** the logo (or the name in large type), year · genre · runtime, the certificate, IMDb's score and, for films, the picture and sound of the source Play would use, a synopsis of up to four lines, then Play, Trailer, Library and Watched.
+  - **Tabs below:** Episodes for a series (or Sources for a film), Details, Cast & crew, Related and Extras. A tab opens as soon as you move to it. Press Down from the buttons and the page slides up so the tabs and their content fill the screen; Back returns to Play, and Back again closes the page.
+  - **Details** lists only what your add-ons and TMDB actually give: director or creators, writers, genres, release date, country, original language, production companies, certificate and IMDb's score. The whole synopsis appears there only when the top of the page had to cut it short.
+  - **Cast & crew** shows the cast as large portraits with each character's name, then the crew. View all opens the whole cast. OK on anyone opens their page, as before.
+  - **Related** shows what TMDB recommends, as ordinary poster cards that open through your add-ons. **Extras** lists the title's trailers, teasers, featurettes and behind-the-scenes videos; OK plays one full screen, OK again opens it in YouTube, and Back closes it. Both tabs appear only when there is something in them.
+  - The page's details from TMDB now arrive in one request instead of two. The page follows the accent colour you picked in Settings. The phone app's title page is unchanged.
+
 ## v0.1.71
 
 - **Media cards show their facts.** Every poster, for films, series and anime, on TVs and phones, now has a compact row at its foot, over a soft shade: the year, IMDb's score out of 10 and, where a source supplies it, Rotten Tomatoes' critics' Tomatometer. Each source is labelled. The age certificate sits in the top-right corner. The card's border, glow, size and shape are unchanged.

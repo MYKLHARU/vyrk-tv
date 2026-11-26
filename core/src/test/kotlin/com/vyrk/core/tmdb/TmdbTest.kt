@@ -191,4 +191,85 @@ class TmdbTest {
         kotlin.test.assertEquals(207317L, TmdbClient.keywordId(o, "Christmas"))
         kotlin.test.assertEquals(null, TmdbClient.keywordId(o, "xmas"))
     }
+
+    private val movieDetailsJson = """{"id":603,"imdb_id":"tt0133093","original_language":"en","release_date":"1999-03-31",
+        "production_companies":[{"id":79,"name":"Village Roadshow Pictures"},{"id":372,"name":"Groucho II Film Partnership"}],
+        "production_countries":[{"iso_3166_1":"us","name":"United States of America"},{"iso_3166_1":"AU","name":"Australia"}],
+        "credits":{"cast":[{"id":6384,"name":"Keanu Reeves","character":"Neo","order":0,"profile_path":"/k.jpg"}],
+                   "crew":[{"id":9339,"name":"Lilly Wachowski","job":"Director","department":"Directing"}]},
+        "release_dates":{"results":[{"iso_3166_1":"GB","release_dates":[{"type":3,"certification":"15"}]}]},
+        "external_ids":{"imdb_id":"tt0133093"},
+        "videos":{"results":[
+            {"site":"YouTube","key":"feat1","name":"Making of","type":"Featurette","official":true,"published_at":"2021-01-01"},
+            {"site":"Vimeo","key":"v1","name":"Elsewhere","type":"Trailer","official":true},
+            {"site":"YouTube","key":"tr2","name":"Fan trailer","type":"Trailer","official":false,"published_at":"2022-01-01"},
+            {"site":"YouTube","key":"tr1","name":"Official Trailer","type":"Trailer","official":true,"published_at":"1999-01-01"},
+            {"site":"YouTube","key":"tr1","name":"Duplicate","type":"Teaser","official":true}]},
+        "recommendations":{"results":[{"id":604,"title":"The Matrix Reloaded","poster_path":"/r.jpg","vote_count":900,"release_date":"2003-05-15"},
+                                      {"id":1,"title":"No votes","poster_path":"/n.jpg","vote_count":1}]}}"""
+
+    @Test fun movieDetailsInOneAnswer() {
+        val d = TmdbClient.parseDetails(obj(movieDetailsJson), "movie", "GB")
+        assertEquals("15", d.facts.certification)
+        assertEquals("tt0133093", d.facts.imdbId)
+        assertEquals("en", d.originalLanguage)
+        assertEquals("1999-03-31", d.releaseDate)
+        assertEquals(listOf("Village Roadshow Pictures", "Groucho II Film Partnership"), d.productionCompanies)
+        assertEquals(listOf("US", "AU"), d.productionCountries)
+        assertEquals(listOf("Neo"), d.credits.cast.map { it.role })
+        assertEquals(listOf("Director"), d.credits.keyCrew.map { it.role })
+        assertTrue(d.createdBy.isEmpty())
+        // YouTube only, one per key; trailers first (official before fan-made), then the rest.
+        assertEquals(listOf("tr1", "tr2", "feat1"), d.videos.map { it.key })
+        assertEquals(listOf(true, false, true), d.videos.map { it.official })
+        assertEquals(listOf(604L), d.recommendations.map { it.tmdbId })
+        assertEquals("movie", d.recommendations.single().type)
+    }
+
+    @Test fun showDetailsUseAggregateCreditsCreatorsAndOriginCountry() {
+        val d = TmdbClient.parseDetails(obj("""{"id":1399,"first_air_date":"2011-04-17","original_language":"en",
+            "created_by":[{"id":9813,"name":"David Benioff","profile_path":"/d.jpg"},{"id":228068,"name":"D. B. Weiss"}],
+            "origin_country":["us"],
+            "aggregate_credits":{"cast":[{"id":22970,"name":"Peter Dinklage","roles":[{"character":"Tyrion Lannister"}],"order":0}],"crew":[]},
+            "content_ratings":{"results":[{"iso_3166_1":"GB","rating":"18"}]},
+            "recommendations":{"results":[{"id":1402,"name":"The Walking Dead","poster_path":"/w.jpg","vote_count":500}]}}"""), "tv", "GB")
+        assertEquals("18", d.facts.certification)
+        assertEquals("2011-04-17", d.releaseDate)
+        assertEquals(listOf("David Benioff", "D. B. Weiss"), d.createdBy.map { it.name })
+        assertEquals(listOf("Creator", "Creator"), d.createdBy.map { it.role })
+        assertEquals(listOf("US"), d.productionCountries)
+        assertEquals(listOf("Tyrion Lannister"), d.credits.cast.map { it.role })
+        assertTrue(d.videos.isEmpty())
+        assertEquals("series", d.recommendations.single().type)
+    }
+
+    @Test fun missingDetailsStayEmpty() {
+        val d = TmdbClient.parseDetails(obj("""{"id":5}"""), "movie", "GB")
+        assertNull(d.facts.certification); assertNull(d.originalLanguage); assertNull(d.releaseDate)
+        assertTrue(d.credits.cast.isEmpty() && d.productionCompanies.isEmpty() && d.productionCountries.isEmpty() && d.videos.isEmpty() && d.recommendations.isEmpty())
+    }
+
+    @Test
+    fun detailsAskOnceAndAnswerFactsToo() = runTest {
+        val f = object : HttpTransport {
+            val urls = mutableListOf<String>()
+            override suspend fun get(url: String, headers: Map<String, String>, timeoutMs: Long): HttpResult {
+                urls += url
+                return if ("/find/" in url) HttpResult(200, """{"movie_results":[{"id":603}],"tv_results":[]}""") else HttpResult(200, movieDetailsJson)
+            }
+            override suspend fun postJson(url: String, body: String, timeoutMs: Long) = HttpResult(404, "")
+        }
+        val tmdb = TmdbClient(f, "v3key")
+        val d = tmdb.details("tt0133093", "movie", "gb")
+        assertEquals("15", d?.facts?.certification)
+        assertTrue(f.urls[1].startsWith("https://api.themoviedb.org/3/movie/603?append_to_response=credits,release_dates,external_ids,videos,recommendations&api_key="), f.urls[1])
+        tmdb.details("tt0133093", "movie", "GB")
+        // The card facts for the same title and region come from the same answer.
+        assertEquals("15", tmdb.facts("tt0133093", "movie", "GB")?.certification)
+        assertEquals(2, f.urls.size)
+        tmdb.details("tmdb:1399", "series", "GB")
+        assertTrue(f.urls[2].startsWith("https://api.themoviedb.org/3/tv/1399?append_to_response=aggregate_credits,content_ratings,external_ids,videos,recommendations"), f.urls[2])
+        assertNull(tmdb.details("kitsu:1", "series", "GB"))
+        assertNull(TmdbClient(f, "").details("tt0133093", "movie", "GB"))
+    }
 }
