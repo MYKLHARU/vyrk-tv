@@ -475,5 +475,7 @@
     "anilist_top": "Top rated",
     "anilist_offer_title": "Browse anime from AniList",
     "anilist_offer_body": "Trending, seasonal and top-rated anime from AniList, by genre. Titles open through an anime add-on that reads Kitsu IDs: add the free third-party Anime Kitsu add-on.",
-    "anilist_add_kitsu": "Add Anime Kitsu"
+    "anilist_add_kitsu": "Add Anime Kitsu",
+    "facts_out_of_10": "out of 10",
+    "facts_rated": "rated"
 }

@@ -254,8 +254,9 @@ private fun Facts(meta: MetaPreview, full: MetaItem?) {
             Text(cert, style = Vyrk.type.labelM, color = c.textSecondary, maxLines = 1)
         }
         Text(parts.joinToString("  ·  "), style = Vyrk.type.labelL, color = c.textSecondary)
-        val rating = full?.imdbRating ?: meta.imdbRating
-        if (!rating.isNullOrBlank()) Tag("IMDb $rating", color = c.onGold, background = c.gold)
+        // IMDb's score only: an add-on's imdbRating counts for IMDb-keyed titles, else Cinemeta's (rememberCardFacts).
+        val imdb = com.vyrk.tv.ui.browse.rememberCardFacts(meta, full).imdb
+        if (imdb != null) Tag("IMDb ${com.vyrk.core.catalog.CardFacts.formatImdb(imdb)}", color = c.onGold, background = c.gold)
     }
 }
 
@@ -519,6 +520,8 @@ private fun CreditsBlock(full: MetaItem?) {
         full.directorNames.takeIf { it.isNotEmpty() }?.let { line(str(R.string.director), it.joinToString(", ")) }
         full.writerNames.takeIf { it.isNotEmpty() }?.let { line(str(R.string.writers), it.take(4).joinToString(", ")) }
         full.country?.takeIf { it.isNotBlank() }?.let { line(str(R.string.country), it) }
-        if (full.imdbRating != null) Text(str(R.string.rating_attribution), style = Vyrk.type.labelS, color = c.textMuted, modifier = Modifier.padding(top = 6.dp))
+        // Credited only when an IMDb score is shown (see the facts above).
+        val imdbShown = com.vyrk.tv.ui.browse.rememberCardFacts(com.vyrk.core.addon.MetaPreview(full.id, full.type, full.name), full).imdb != null
+        if (imdbShown) Text(str(R.string.rating_attribution), style = Vyrk.type.labelS, color = c.textMuted, modifier = Modifier.padding(top = 6.dp))
     }
 }

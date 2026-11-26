@@ -475,5 +475,7 @@
     "anilist_top": "Am besten bewertet",
     "anilist_offer_title": "Anime von AniList entdecken",
     "anilist_offer_body": "Angesagte, aktuelle und bestbewertete Anime von AniList, nach Genre. Titel öffnen sich über ein Anime-Add-on, das Kitsu-IDs liest: Füge das kostenlose Drittanbieter-Add-on Anime Kitsu hinzu.",
-    "anilist_add_kitsu": "Anime Kitsu hinzufügen"
+    "anilist_add_kitsu": "Anime Kitsu hinzufügen",
+    "facts_out_of_10": "von 10",
+    "facts_rated": "Altersfreigabe"
 }

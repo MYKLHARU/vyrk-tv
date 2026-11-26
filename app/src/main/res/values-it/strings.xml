@@ -146,6 +146,8 @@
     <string name="expanding_cards">Schede espandibili</string>
     <string name="expanding_cards_desc">La locandina selezionata si allarga con l\'immagine del titolo</string>
     <string name="external_player_missing">Impossibile aprire quel lettore.</string>
+    <string name="facts_out_of_10">su 10</string>
+    <string name="facts_rated">classificazione</string>
     <string name="featured_hero">Titolo in evidenza</string>
     <string name="featured_hero_desc">Grandi titoli in evidenza in cima alla Home</string>
     <string name="filter_all">Tutti</string>

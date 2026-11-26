@@ -475,5 +475,7 @@
     "anilist_top": "सबसे ऊँची रेटिंग",
     "anilist_offer_title": "AniList से एनीमे ब्राउज़ करें",
     "anilist_offer_body": "AniList के ट्रेंडिंग, इस सीज़न के और सबसे ऊँची रेटिंग वाले एनीमे, शैली के अनुसार। टाइटल ऐसे एनीमे ऐड-ऑन से खुलते हैं जो Kitsu ID पढ़ता है: मुफ़्त तृतीय-पक्ष Anime Kitsu ऐड-ऑन जोड़ें।",
-    "anilist_add_kitsu": "Anime Kitsu जोड़ें"
+    "anilist_add_kitsu": "Anime Kitsu जोड़ें",
+    "facts_out_of_10": "10 में से",
+    "facts_rated": "रेटिंग"
 }

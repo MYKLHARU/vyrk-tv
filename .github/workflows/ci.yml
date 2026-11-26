@@ -260,7 +260,10 @@ jobs:
   # Both halves' screenshots, focus traces and logcats in one ci-screens pre-release.
   e2e-screens:
     needs: [build, e2e]
-    if: always() && github.event_name == 'push' && needs.e2e.result != 'skipped'
+    # Pushes, and pull requests from this repository (like ci-phone), so a change's screenshots can be reviewed before it merges.
+    if: >-
+      always() && needs.e2e.result != 'skipped' &&
+      (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v5
@@ -281,7 +284,7 @@ jobs:
           done
           existing=(out/*)
           recreate() { local tag=$1; shift; for i in 1 2 3 4 5; do gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true; gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" >/dev/null 2>&1 || true; sleep $((i * 4)); gh release create "$tag" "$@" && return 0; echo "create retry $i"; done; return 1; }
-          recreate ci-screens --prerelease --target "$GITHUB_SHA" --title "Emulator journey (${{ needs.build.outputs.version }})" \
+          recreate ci-screens --prerelease --target "${{ github.event.pull_request.head.sha || github.sha }}" --title "Emulator journey (${{ needs.build.outputs.version }})" \
             --notes "Screenshots, per-key focus trace and logcat from ci/e2e.sh on an Android TV API 34 emulator (tv_1080p)."
           for i in 1 2 3 4 5; do gh release upload ci-screens "${existing[@]}" --clobber && break; echo "upload retry $i"; sleep $((i * 5)); done
 

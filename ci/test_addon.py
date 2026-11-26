@@ -157,6 +157,15 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/meta/series/kitsu:49425.json":
             return self._json({"meta": {"id": "tt30217403", "type": "series", "name": "DAN DA DAN",
                 "_kitsuId": "49425", "_malId": "60543", "imdb_id": "tt30217403", "logo": f"{BASE}/artwork/logo.png"}})
+        if path == "/artwork/wide.png":
+            # A 32 × 18 landscape picture (blue to gold, left to right) for the wide-picture card case.
+            def chunk(kind, data):
+                return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff)
+            row = b"\0" + b"".join(bytes((30 + 7 * x, 60 + 4 * x, 200 - 5 * x)) for x in range(32))
+            body = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 32, 18, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(row * 18)) + chunk(b"IEND", b"")
+            self.send_response(200); self.send_header("Content-Type", "image/png"); self.send_header("Content-Length", str(len(body))); self.end_headers()
+            self.wfile.write(body)
+            return
         if path == "/artwork/logo.png":
             def chunk(kind, data):
                 return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff)
@@ -180,6 +189,23 @@ class Handler(SimpleHTTPRequestHandler):
             extra = path.rsplit("/", 1)[-1].removesuffix(".json")
             query = dict(p.split("=", 1) for p in extra.split("&") if "=" in p).get("search", "").lower()
             metas = []
+            if "fixture" in query:
+                # Media-card cases for ci/e2e.sh's search-card-cases screenshot (search ranks by name, so
+                # each name has "Fixture" in it): a long title with no
+                # poster and a real IMDb 0.0 (kept, not hidden); a long anime title on Kitsu key art
+                # with no logo (its name in the logo slot); a wide picture on a portrait card (shown
+                # whole); and a card with no year or ratings (no facts row). IDs are made up, so no
+                # certificate or other rating can be found for them.
+                metas += [
+                    {"id": "tt99999901", "type": "movie", "imdbRating": "0.0", "releaseInfo": "2024",
+                     "name": "The Extraordinarily Long-Titled Fixture Film That Has No Poster At All"},
+                    {"id": "kitsu:99999902", "type": "movie", "releaseInfo": "1998",
+                     "name": "A Remarkably Long Anime Fixture Title That Has No Logo Anywhere",
+                     "poster": "https://media.kitsu.app/anime/poster_images/1/medium.jpg", "imdbRating": "8.8"},
+                    {"id": "vyrk-cards-wide", "type": "movie", "name": "Wide Fixture Picture", "releaseInfo": "2021",
+                     "poster": f"{BASE}/artwork/wide.png"},
+                    {"id": "vyrk-cards-bare", "type": "movie", "name": "Fixture With No Year Or Rating", "poster": f"{BASE}/artwork/logo.png"},
+                ]
             if "bunny" in query:
                 metas.append({
                     "id": BBB, "type": "movie", "name": "Big Buck Bunny", "releaseInfo": "2008",

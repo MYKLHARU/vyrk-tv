@@ -51,7 +51,7 @@ Screenshots are captures of the real app on an Android TV emulator with live cat
 
 **TV integration** — Watch Next on the launcher, MediaSession, frame-rate matching, passthrough, automatic updates from GitHub Releases when you open VYRK.
 
-**Privacy** — no ads, analytics, tracking or VYRK account. Your Stremio key and add-on URLs are encrypted with an Android Keystore key and redacted everywhere they're shown or logged. VYRK talks to your add-ons, the Stremio account service, IntroDB (intro timings, by IMDb ID only), TMDB (cast pages, only when the build has a key), AniList (the Anime tab's rows, no account), YouTube for trailers and GitHub for updates.
+**Privacy** — no ads, analytics, tracking or VYRK account. Your Stremio key and add-on URLs are encrypted with an Android Keystore key and redacted everywhere they're shown or logged. VYRK talks to your add-ons, the Stremio account service, IntroDB (intro timings, by IMDb ID only), TMDB (cast pages, artwork and age certificates, only when the build has a key), AniList (the Anime tab's rows, no account), YouTube for trailers and GitHub for updates.
 
 The full list, with what is verified and how, is in [docs/FEATURES.md](docs/FEATURES.md).
 

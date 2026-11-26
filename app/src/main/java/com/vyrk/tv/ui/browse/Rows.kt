@@ -120,11 +120,12 @@ fun Poster(
     val wide = expand && focused
     val shownWidth by androidx.compose.animation.core.animateDpAsState(if (wide) height * (16f / 9f) else width,
         com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.STANDARD), label = "poster-width")
-    val year = meta.releaseInfo?.take(4).orEmpty()
+    val facts = rememberCardFacts(meta)
+    val spoken = spokenFacts(facts)
     val pct = (state.progress * 100).toInt()
     val newLabel = str(R.string.badge_new)
     val desc = buildString {
-        append(meta.name); if (year.isNotEmpty()) append(", ").append(year)
+        append(meta.name); if (spoken.isNotEmpty()) append(", ").append(spoken)
         if (pct > 0) append(", ").append(pct).append("%")
         if (state.watched) append(", ✓")
         if (state.isNew) append(", ").append(newLabel)
@@ -159,13 +160,15 @@ fun Poster(
         // Never a blank card: the add-on's poster, then Cinemeta's by IMDb id, then the title on
         // a tinted card (or the type, when even the name is missing).
         val fallback: @Composable () -> Unit = {
+            // Clear of the facts row at the foot, so a long name never runs into it.
             Box(
-                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(c.raised, c.panel))).padding(10.dp),
+                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(c.raised, c.panel)))
+                    .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = if (facts.hasRow) 46.dp else 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     meta.name.ifBlank { str(if (meta.type == "series") R.string.type_series else R.string.type_movie) },
-                    style = Vyrk.type.titleM, color = c.text, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                    style = Vyrk.type.titleM.forCardName(), color = c.text, maxLines = if (facts.hasRow) 3 else 4, overflow = TextOverflow.Ellipsis,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             }
@@ -174,28 +177,26 @@ fun Poster(
         val candidates = remember(meta.poster, meta.id) { listOfNotNull(meta.poster, com.vyrk.core.art.Artwork.metahubPoster(meta.id)).distinct() }
         var attempt by remember(candidates) { mutableIntStateOf(0) }
         val url = candidates.getOrNull(attempt)
+        val scale = CardScale.Tv
         if (url != null) {
-            AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
+            CardArtwork(url, cardAspect = 2f / 3f, onError = { if (candidates.getOrNull(attempt) == url) attempt += 1 })
         } else fallback()
-        // Anime key art doesn't print the title the way other posters do: draw it at the foot.
-        if (url != null && com.vyrk.core.art.Artwork.isKeyArt(url)) {
-            KeyArtTitle(meta, width, Vyrk.type.titleS, bottomInset = if (state.progress > 0f) 10.dp else 0.dp)
-        }
+        // The foot: anime key art doesn't print the title the way other posters do, so it gets the
+        // logo (or name) too; every poster gets the facts row. The fallback card already shows the name.
+        val keyArt = url != null && com.vyrk.core.art.Artwork.isKeyArt(url)
+        PortraitFoot(meta, facts, showTitle = keyArt, logos = if (keyArt) cardLogos(meta) else emptyList(), width = width, scale = scale,
+            bottomInset = if (state.progress > 0f) 10.dp else 0.dp)
         if (expand) {
             val show by androidx.compose.animation.core.animateFloatAsState(if (wide) 1f else 0f,
                 com.vyrk.tv.ui.theme.motionSpec(com.vyrk.tv.ui.theme.Motion.STANDARD), label = "poster-expand")
-            if (show > 0f) ExpandedArt(meta, height * (16f / 9f), height, detail, Modifier.fillMaxSize().graphicsLayer { alpha = show })
+            if (show > 0f) ExpandedArt(meta, height * (16f / 9f), height, detail, facts, Modifier.fillMaxSize().graphicsLayer { alpha = show })
         }
         if (state.isNew) {
             Box(Modifier.align(Alignment.TopStart).padding(6.dp).background(c.accent, RoundedCornerShape(5.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                 Text(newLabel, style = Vyrk.type.labelS, color = c.onAccent)
             }
         }
-        if (state.watched) {
-            Box(Modifier.align(Alignment.TopEnd).padding(6.dp).size(18.dp).background(c.success, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(R.drawable.ic_check, null, Modifier.size(11.dp), tint = c.background)
-            }
-        }
+        CardCorner(state.watched, facts.certificate, scale, tickSize = 18.dp)
         if (state.progress > 0f) {
             // Slim blue bar inset from the edges, on a soft shade so it reads on bright posters.
             Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(28.dp).background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)))))
@@ -430,14 +431,15 @@ data class FocusArt(val type: String, val id: String, val art: TitleArt)
 val LocalFocusArt = androidx.compose.runtime.compositionLocalOf<FocusArt?> { null }
 
 /**
- * The expanded card's face: the title's backdrop, its logo and one line of detail over a soft
- * shade. Only landscape pictures fill the card: the catalogue's backdrop or Cinemeta's by IMDb ID
- * (from VYRK's anime list for anime), else the header's (the title's details, TMDB, fanart.tv).
- * With none, the whole poster sits at the right over a dimmed, blurred copy of itself, rather than
- * a crop that cuts through faces.
+ * The expanded card's face: the title's backdrop, its logo (or name) in a fixed slot, and at the
+ * foot where you are (when in progress) over the facts row, on a soft shade. Only landscape
+ * pictures fill the card: the catalogue's backdrop or Cinemeta's by IMDb ID (from VYRK's anime
+ * list for anime), else the header's (the title's details, TMDB, fanart.tv). With none, the whole
+ * poster sits at the right over a dimmed, blurred copy of itself. The age certificate is the
+ * card's corner (CardCorner), the same as the portrait face.
  */
 @Composable
-private fun ExpandedArt(meta: MetaPreview, width: Dp, height: Dp, detail: String?, modifier: Modifier) {
+private fun ExpandedArt(meta: MetaPreview, width: Dp, height: Dp, detail: String?, facts: com.vyrk.core.catalog.CardFacts, modifier: Modifier) {
     val c = Vyrk.colors
     val shared = LocalFocusArt.current?.takeIf { it.id == meta.id && it.type == meta.type }?.art
     val artIds = com.vyrk.tv.ui.LocalGraph.current.animeArtIds
@@ -450,26 +452,22 @@ private fun ExpandedArt(meta: MetaPreview, width: Dp, height: Dp, detail: String
     val backdrops = (own + shared?.backdrops.orEmpty()).distinct()
     var failed by remember(meta.type, meta.id) { mutableStateOf(emptySet<String>()) }
     val url = backdrops.firstOrNull { it !in failed }
+    val scale = CardScale.TvWide
     Box(modifier.background(c.raised)) {
-        if (url != null) {
-            AsyncImage(url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(), onError = { failed = failed + url })
-        } else if (meta.poster != null) {
-            AsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().blur(28.dp).graphicsLayer { alpha = 0.45f })
-            AsyncImage(meta.poster, contentDescription = null, contentScale = ContentScale.Fit, alignment = Alignment.CenterEnd,
-                modifier = Modifier.fillMaxSize())
+        val art = url ?: meta.poster
+        if (art != null) CardArtwork(art, cardAspect = 16f / 9f, onError = { if (url != null) failed = failed + url }, knownAspect = if (url == null) 2f / 3f else 0f)
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.72f), 0.6f to Color.Transparent)))
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to c.shade.copy(alpha = 0.88f))))
+        // The header's logos first (TMDB and fanart.tv's, already loaded for the header above).
+        val logos = shared?.logos?.takeIf { it.isNotEmpty() } ?: cardLogos(meta)
+        Box(Modifier.align(Alignment.TopStart).padding(start = scale.pad, top = scale.pad)) {
+            CardTitle(meta, logos, width * 0.5f, height * 0.34f, scale.title, Alignment.BottomStart, androidx.compose.ui.text.style.TextAlign.Start, decodeWidth = 640)
         }
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to c.shade.copy(alpha = 0.78f), 0.6f to Color.Transparent)))
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to c.shade.copy(alpha = 0.9f))))
-        Box(Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 12.dp).width(width * 0.52f).height(height * 0.42f), contentAlignment = Alignment.BottomStart) {
-            // The header's logos first (TMDB and fanart.tv's, already loaded for the header above).
-            val logos = shared?.logos?.takeIf { it.isNotEmpty() } ?: cardLogos(meta)
-            HeroLogo(com.vyrk.core.art.Artwork.titleKey(meta.type, meta.id), meta.name, logos, width * 0.52f, height * 0.42f, Vyrk.type.titleL,
-                Modifier.fillMaxHeight(), loading = shared?.logosLoading == true)
+        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = scale.pad, end = scale.pad, bottom = scale.pad)) {
+            if (detail != null) Text(detail, style = Vyrk.type.labelL, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(bottom = 4.dp))
+            CardFactsRow(facts, scale, centered = false)
         }
-        val line = detail ?: listOfNotNull(meta.releaseInfo?.take(4)?.takeIf { it.isNotBlank() }, meta.imdbRating?.takeIf { it.isNotBlank() }?.let { "★ $it" }).joinToString("  ·  ")
-        if (line.isNotEmpty()) Text(line, style = Vyrk.type.labelL, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.align(Alignment.BottomStart).padding(start = 12.dp, end = 12.dp, bottom = 12.dp))
     }
 }
 

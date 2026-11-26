@@ -239,8 +239,9 @@ fun MetaFacts(meta: MetaPreview, full: MetaItem?, reserve: Boolean = false) {
     )
     Row(if (reserve) Modifier.height(FACTS_H) else Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(parts.joinToString("  ·  "), style = Vyrk.type.labelL, color = c.textSecondary, maxLines = 1)
-        val rating = full?.imdbRating ?: meta.imdbRating
-        if (!rating.isNullOrBlank()) Tag("IMDb $rating", color = c.background, background = c.gold)
+        // IMDb's score only: an add-on's imdbRating counts for IMDb-keyed titles, else Cinemeta's (rememberCardFacts).
+        val imdb = rememberCardFacts(meta, full).imdb
+        if (imdb != null) Tag("IMDb ${com.vyrk.core.catalog.CardFacts.formatImdb(imdb)}", color = c.background, background = c.gold)
     }
     val genres = (full?.allGenres ?: meta.genres).take(4)
     if (reserve) {
