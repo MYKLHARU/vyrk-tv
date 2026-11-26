@@ -160,13 +160,15 @@ fun Poster(
         // Never a blank card: the add-on's poster, then Cinemeta's by IMDb id, then the title on
         // a tinted card (or the type, when even the name is missing).
         val fallback: @Composable () -> Unit = {
+            // Clear of the facts row at the foot, so a long name never runs into it.
             Box(
-                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(c.raised, c.panel))).padding(10.dp),
+                Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(c.raised, c.panel)))
+                    .padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = if (facts.hasRow) 46.dp else 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     meta.name.ifBlank { str(if (meta.type == "series") R.string.type_series else R.string.type_movie) },
-                    style = Vyrk.type.titleM, color = c.text, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                    style = Vyrk.type.titleM, color = c.text, maxLines = if (facts.hasRow) 3 else 4, overflow = TextOverflow.Ellipsis,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             }

@@ -143,8 +143,9 @@ fun CardArtwork(url: String, cardAspect: Float, onError: () -> Unit, focus: Alig
 private val SubjectBias = BiasAlignment(0f, -0.35f)
 
 /**
- * The title in a fixed slot ([slotWidth] × [slotHeight]): its logo, trimmed of transparent margins
- * and fitted, else its name. Every card shape uses the same rule, so logos line up row to row.
+ * The title: its logo in a fixed slot ([slotWidth] × [slotHeight]), trimmed of transparent margins
+ * and fitted, so logos line up row to row; else its name, as wide as the slot and up to
+ * [maxLines] lines tall (never squeezed into the logo's height, where it would overrun the facts).
  */
 @Composable
 fun CardTitle(
@@ -153,7 +154,7 @@ fun CardTitle(
 ) {
     var failed by remember(meta.type, meta.id) { mutableStateOf(emptySet<String>()) }
     val url = logos.firstOrNull { it !in failed }
-    Box(Modifier.width(slotWidth).height(slotHeight), contentAlignment = alignment) {
+    Box(if (url != null) Modifier.width(slotWidth).height(slotHeight) else Modifier.width(slotWidth), contentAlignment = alignment) {
         if (url != null) {
             val context = LocalContext.current
             val request = remember(url, decodeWidth) {
