@@ -69,6 +69,7 @@ import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.vyrk.tv.ui.browse.CardCorner
 import com.vyrk.tv.ui.browse.PortraitFoot
+import com.vyrk.tv.ui.browse.forCardName
 import com.vyrk.core.addon.MetaPreview
 import com.vyrk.tv.R
 import com.vyrk.tv.ui.browse.PosterState
@@ -225,7 +226,7 @@ fun PhonePoster(
         // Clear of the facts row at the foot, so a long name never runs into it.
         Text(
             meta.name.ifBlank { str(if (meta.type == "series") R.string.type_series else R.string.type_movie) },
-            style = Vyrk.type.labelL, color = c.textSecondary, maxLines = if (facts.hasRow) 3 else 4, overflow = TextOverflow.Ellipsis,
+            style = Vyrk.type.labelL.forCardName(), color = c.textSecondary, maxLines = if (facts.hasRow) 3 else 4, overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
             modifier = Modifier.align(Alignment.Center).padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = if (facts.hasRow) 38.dp else 8.dp),
         )

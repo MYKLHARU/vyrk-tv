@@ -168,7 +168,7 @@ fun Poster(
             ) {
                 Text(
                     meta.name.ifBlank { str(if (meta.type == "series") R.string.type_series else R.string.type_movie) },
-                    style = Vyrk.type.titleM, color = c.text, maxLines = if (facts.hasRow) 3 else 4, overflow = TextOverflow.Ellipsis,
+                    style = Vyrk.type.titleM.forCardName(), color = c.text, maxLines = if (facts.hasRow) 3 else 4, overflow = TextOverflow.Ellipsis,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             }

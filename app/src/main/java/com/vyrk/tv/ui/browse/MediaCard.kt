@@ -76,6 +76,10 @@ class CardScale(
     }
 }
 
+/** A title's name on a card: long words are hyphenated rather than split at any letter. */
+fun TextStyle.forCardName(): TextStyle =
+    copy(hyphens = androidx.compose.ui.text.style.Hyphens.Auto, lineBreak = androidx.compose.ui.text.style.LineBreak.Heading)
+
 /** Rotten Tomatoes' red, for its label only. */
 private val Tomato = Color(0xFFFA320A)
 
@@ -164,7 +168,7 @@ fun CardTitle(
                 onError = { failed = failed + url }, modifier = Modifier.fillMaxSize())
         } else {
             Text(meta.name.ifBlank { str(if (meta.type == "series") R.string.type_series else R.string.type_movie) },
-                style = textStyle, color = Color.White, maxLines = maxLines, overflow = TextOverflow.Ellipsis, textAlign = textAlign)
+                style = textStyle.forCardName(), color = Color.White, maxLines = maxLines, overflow = TextOverflow.Ellipsis, textAlign = textAlign)
         }
     }
 }
