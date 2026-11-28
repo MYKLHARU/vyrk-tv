@@ -120,10 +120,24 @@ class AddonClient(
         return alias
     }
 
-    suspend fun allSubtitles(addons: List<Descriptor>, type: String, id: String, extra: List<Pair<String, String>> = emptyList()) =
-        coroutineScope {
-            addons.filter { it.manifest.supports("subtitles", type, id) }
-                .map { a -> async { a to subtitles(a, type, id, extra) } }
-                .map { it.await() }
+    /**
+     * Subtitles from every add-on that supports the type and ID, in parallel, in add-on order. An
+     * add-on that doesn't know the ID (OpenSubtitles knows only IMDb IDs, so not "kitsu:…") is
+     * asked with [imdb], the episode's IMDb equivalent, when there is one and it supports that.
+     */
+    suspend fun allSubtitles(
+        addons: List<Descriptor>, type: String, id: String,
+        extra: List<Pair<String, String>> = emptyList(),
+        imdb: com.vyrk.core.subtitles.SubtitleIds.Target? = null,
+    ) = coroutineScope {
+        addons.mapNotNull { a ->
+            when {
+                a.manifest.supports("subtitles", type, id) -> Triple(a, type, id)
+                imdb != null && a.manifest.supports("subtitles", imdb.type, imdb.id) -> Triple(a, imdb.type, imdb.id)
+                else -> null
+            }
         }
+            .map { (a, t, i) -> async { a to subtitles(a, t, i, extra) } }
+            .map { it.await() }
+    }
 }

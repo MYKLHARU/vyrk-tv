@@ -78,9 +78,17 @@ object TrackSelector {
         }
         val forced = tracks.filter { it.forced }
         if (prefs.forcedOnly) return ordered(forced) ?: forced.firstOrNull { it.language == null || Languages.normalise(it.language) == audio }
+        // Many anime releases leave their subtitle track's language untagged. With foreign audio (a
+        // known language you don't speak) and nothing in yours, the release's own full subtitles
+        // are the best guess: an untagged embedded track, the default one first.
+        val audioForeign = audio != null && audio != "und" && !audioUnderstood
+        fun untagged() = if (!audioForeign) null else tracks
+            .filter { !it.forced && it.source == "Embedded" && (it.language.isNullOrBlank() || Languages.normalise(it.language) == "und") }
+            .sortedByDescending { it.isDefault }
+            .firstOrNull()
         return when (prefs.mode) {
-            SubtitleMode.ALWAYS -> ordered(tracks.filterNot { it.forced }) ?: ordered(tracks)
-            SubtitleMode.FOREIGN_ONLY -> if (audioUnderstood) ordered(forced) else ordered(tracks.filterNot { it.forced }) ?: ordered(tracks)
+            SubtitleMode.ALWAYS -> ordered(tracks.filterNot { it.forced }) ?: ordered(tracks) ?: untagged()
+            SubtitleMode.FOREIGN_ONLY -> if (audioUnderstood) ordered(forced) else ordered(tracks.filterNot { it.forced }) ?: ordered(tracks) ?: untagged()
             SubtitleMode.OFF -> null
         }
     }

@@ -695,7 +695,14 @@ class PlayerModel(
         if (generation != streamGeneration) return
         externalSubs.addAll(found)
         val type = request.meta.type
-        val results = graph.addonClient.allSubtitles(session.effectiveAddons(), type, vid)
+        // Add-ons that know only IMDb IDs (OpenSubtitles) are asked with an anime episode's IMDb
+        // equivalent, from its meta (Anime Kitsu's imdbSeason and imdbEpisode) or, for a film, VYRK's bundled IDs.
+        val imdb = com.vyrk.core.subtitles.SubtitleIds.imdbEquivalent(
+            vid, type, meta, meta?.videos?.firstOrNull { it.id == vid },
+            fallbackImdb = graph.animeArtIds.lookupId(request.meta.id, type)?.takeIf { it.startsWith("tt") },
+        )
+        if (imdb != null) vyrkEvent("subtitles_by_imdb ${imdb.type} ${imdb.id}")
+        val results = graph.addonClient.allSubtitles(session.effectiveAddons(), type, vid, imdb = imdb)
         results.forEach { (addon, r) ->
             (r as? AddonResult.Ok)?.value?.subtitles?.forEachIndexed { i, sub ->
                 found += ExternalSub("${addon.manifest.id}:$vid:$i", Languages.normalise(sub.lang), Languages.label(sub.lang), addon.manifest.name, sub.url)

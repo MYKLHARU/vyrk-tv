@@ -185,4 +185,25 @@ class AddonProtocolTest {
         val f = assertIs<AddonResult.Failed>(r)
         assertFalse(f.reason.contains("KEY"))
     }
+
+    @Test
+    fun animeSubtitlesAskImdbOnlyAddonsWithTheEquivalent() = runTest {
+        val asked = mutableListOf<String>()
+        val http = FakeHttp { url -> asked += url; HttpResult(200, """{"subtitles":[{"id":"1","url":"https://s/1.srt","lang":"eng"}]}""") }
+        fun subs(id: String, json: String) = Descriptor(ProtocolJson.decodeFromString(Manifest.serializer(), json), "https://$id/manifest.json")
+        val openSubtitles = subs("os", """{"id":"os","name":"OpenSubtitles v3","types":["movie","series"],"idPrefixes":["tt"],"resources":["subtitles"]}""")
+        val animeSubs = subs("anime", """{"id":"anime","name":"Anime subs","types":["series","anime"],"resources":[{"name":"subtitles","types":["series","anime"],"idPrefixes":["kitsu:"]}]}""")
+        val films = subs("films", """{"id":"films","name":"Films only","types":["movie"],"idPrefixes":["tt"],"resources":["subtitles"]}""")
+        val imdb = com.vyrk.core.subtitles.SubtitleIds.Target("series", "tt0388629:1:5")
+        val results = AddonClient(http).allSubtitles(listOf(openSubtitles, animeSubs, films), "series", "kitsu:12:5", imdb = imdb)
+        assertEquals(listOf("os", "anime"), results.map { it.first.manifest.id })
+        assertEquals(
+            listOf("https://os/subtitles/series/tt0388629%3A1%3A5.json", "https://anime/subtitles/series/kitsu%3A12%3A5.json"),
+            asked.sorted().let { a -> listOf(a.first { "os" in it }, a.first { "anime" in it }) },
+        )
+        // Without an equivalent, IMDb-only add-ons aren't asked.
+        asked.clear()
+        AddonClient(http).allSubtitles(listOf(openSubtitles, animeSubs), "series", "kitsu:12:900")
+        assertEquals(listOf("https://anime/subtitles/series/kitsu%3A12%3A900.json"), asked)
+    }
 }

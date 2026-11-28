@@ -624,6 +624,22 @@ then log "ok: delayed AIO season metadata renders its inherited logo in the norm
 else fail "AIO season logo failed in normal info page"; fi
 key KEYCODE_BACK 1 "close AIO fixture"
 
+# Anime subtitles: a Kitsu-ID episode asks subtitle add-ons that know only IMDb IDs (here the test
+# add-on, as OpenSubtitles) with its IMDb equivalent from the meta: IMDb season 2, episode 5.
+if [[ -n "$ADDON_LOG" && -f "$ADDON_LOG" ]]; then
+  open_fixture kitsu:90001
+  asked=""
+  for _ in $(seq 1 15); do
+    asked=$(grep -oE 'GET /subtitles/[^ ]+' "$ADDON_LOG" | grep -E 'tt90001|kitsu%3A90001|kitsu:90001' | tail -n 3 | tr '\n' ' ' || true)
+    [[ "$asked" == *"tt90001%3A2%3A5"* ]] && break
+    sleep 1
+  done
+  if [[ "$asked" == *"/subtitles/series/tt90001%3A2%3A5.json"* ]]; then log "ok: an anime episode's subtitles are asked for by its IMDb season and episode"
+  else fail "anime episode subtitles weren't asked for by IMDb ID (asked: ${asked:-nothing})"; fi
+  shot anime-subtitles
+  back_from_player
+fi
+
 if ! python ci/anime_mode_probe.py --adb "$ADB" --package "$PKG" --out "$OUT/anime-mode"; then
   fail "anime mode normal-app journey failed"
 fi

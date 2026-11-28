@@ -34,7 +34,9 @@ MANIFEST = {
     "version": "1.0.0",
     "name": "VYRK Test Add-on",
     "description": "Local add-on for automated tests: a broken 4K link, a working 720p file, a remote sample, a subtitle and a torrent.",
-    "resources": ["stream", "subtitles", "catalog", {"name": "meta", "types": ["series"], "idPrefixes": ["vyrk-", "mal:62516", "kitsu:49425"]}],
+    # Streams also answer the Kitsu anime fixture; subtitles, like OpenSubtitles, only IMDb IDs.
+    "resources": [{"name": "stream", "types": ["movie", "series"], "idPrefixes": ["tt", "vyrk-", "kitsu:90001"]}, "subtitles", "catalog",
+                  {"name": "meta", "types": ["series"], "idPrefixes": ["vyrk-", "mal:62516", "kitsu:49425", "kitsu:90001"]}],
     "types": ["movie", "series"],
     "idPrefixes": ["tt", "vyrk-"],
     "catalogs": [
@@ -173,6 +175,12 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_response(200); self.send_header("Content-Type", "image/png"); self.send_header("Content-Length", str(len(body))); self.end_headers()
             self.wfile.write(body)
             return
+        if path == "/meta/series/kitsu:90001.json":
+            # Anime Kitsu's shape: the show's imdb_id, and each episode's IMDb season and episode
+            # (this Kitsu entry's episode 1 is IMDb's season 2, episode 5).
+            return self._json({"meta": {"id": "kitsu:90001", "type": "series", "name": "Anime Subtitle Fixture", "imdb_id": "tt90001",
+                "videos": [{"id": "kitsu:90001:1", "title": "Episode 1", "season": 1, "episode": 1, "imdb_id": "tt90001",
+                    "imdbSeason": 2, "imdbEpisode": 5, "released": "2020-01-01T00:00:00.000Z"}]}})
         if path.startswith("/meta/series/vyrk-"):
             mid = path.rsplit("/", 1)[-1].removesuffix(".json")
             runtime = "45 min" if mid == "vyrk-short" else "10 min"
@@ -182,6 +190,8 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/stream/"):
             parts = path[len("/stream/"):].removesuffix(".json").split("/")
             vid = parts[1] if len(parts) > 1 else ""
+            if vid.startswith("kitsu:90001"):
+                return self._json({"streams": [{"name": "VYRK anime fixture 720p", "title": "Anime.Fixture.720p.H264.mp4", "url": f"{BASE}/media/sample-720p.mp4"}]})
             return self._json({"streams": streams_for(vid) if vid.startswith(("tt", "vyrk-")) else []})
         if path.startswith("/subtitles/"):
             return self._json({"subtitles": [{"id": "vyrk-en-addon", "url": f"{BASE}/subs/en.srt", "lang": "eng"}]})
