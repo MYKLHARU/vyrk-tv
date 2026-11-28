@@ -161,6 +161,15 @@ data class Video(
     val trailers: List<Stream> = emptyList(),
     /** Episode runtime in minutes or add-on text (for example "45 min"). */
     val runtime: String? = null,
+    /**
+     * The episode's IMDb equivalent, from anime add-ons with their own IDs (Anime Kitsu gives
+     * imdb_id, imdbSeason and imdbEpisode for each episode): subtitle add-ons that know only IMDb
+     * IDs are asked with it (see SubtitleIds).
+     */
+    @kotlinx.serialization.json.JsonNames("imdb_id")
+    val imdbId: String? = null,
+    val imdbSeason: Int? = null,
+    val imdbEpisode: Int? = null,
 ) {
     val seriesInfo: SeriesInfo?
         get() = if (season != null && episode != null) SeriesInfo(season, episode) else null

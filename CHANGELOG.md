@@ -2,6 +2,11 @@
 
 All user-visible changes. Versions follow `vX.Y.Z` tags.
 
+## v0.1.73
+
+- **Subtitles for anime.** Subtitle add-ons such as OpenSubtitles only look titles up by their IMDb ID, while anime from Anime Kitsu (and other anime add-ons) has IDs of its own, so they were never asked and anime episodes had no add-on subtitles. VYRK now asks them with the episode's IMDb equivalent, which Anime Kitsu gives for each episode (its IMDb season and episode, since a Kitsu entry is often one season of a longer show); anime films use their IMDb ID. When an episode has no such mapping, nothing is guessed. Subtitles found this way may be timed for a different release, so subtitle sync (Audio & subtitles) may need a nudge.
+- **Untagged subtitles inside anime files now come on.** Many anime releases don't label their subtitle track's language, so VYRK never picked it even with Japanese audio. Now, when the audio is in a language you haven't listed and nothing matches your subtitle languages, VYRK shows the file's own unlabelled subtitles, the default track first. Signs-and-songs tracks and add-on subtitles without a language are still left off.
+
 ## v0.1.72
 
 - **A new title page on TVs.** The cramped panel beside the title is gone. The title page is now one full-width page over the title's artwork, which sits on the right and fades into a near-black, midnight-blue background, with nothing laid over it.
