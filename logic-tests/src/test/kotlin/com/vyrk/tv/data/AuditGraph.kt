@@ -9,6 +9,8 @@ class AppGraph(val transport: HttpTransport) {
     val addonClient = AddonClient(transport)
     val metaCache = MetaCache(addonClient)
     val animeIds = com.vyrk.core.anime.AnimeIds(transport)
+    /** No bundled anime IDs in these tests. */
+    val animeArtIds = com.vyrk.core.anime.AnimeArtIds.EMPTY
     val deviceSettings = MutableStateFlow(DeviceSettings())
     fun updateDevice(f: (DeviceSettings) -> DeviceSettings) { deviceSettings.value = f(deviceSettings.value) }
     val device = AuditDevice()
